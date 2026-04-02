@@ -136,12 +136,14 @@
 - [ ] 3.2.2 Runner 中 AgentTool 的递归执行
 - [ ] 3.2.3 Agent-as-Tool 测试
 
-### Phase 3.3：Tracing 自动采集
-- [ ] 3.3.1 Runner 中自动创建 Trace + Agent/LLM/Tool Span
-- [ ] 3.3.2 TraceProcessor 回调触发
-- [ ] 3.3.3 PostgreSQL TraceProcessor（Trace/Span 写入数据库）
-- [ ] 3.3.4 ConsoleTraceProcessor（调试用）
-- [ ] 3.3.5 Tracing 数据模型 + 迁移
+### Phase 3.3：Tracing 自动采集 ✅
+- [x] 3.3.1 Runner 中自动创建 Trace + Agent/LLM/Tool Span（`_TracingCtx` 内部上下文管理器）
+- [x] 3.3.2 TraceProcessor 回调触发（Runner.run + Runner.run_streamed 全路径）
+- [x] 3.3.3 ConsoleTraceProcessor（调试用日志输出）
+- [x] 3.3.4 Tracing 测试（20 个测试 — Span/Trace 基础、启禁用、run/streamed/handoff/tool/边界条件）
+- [x] 3.3.5 五轮代码审查（逻辑/边界/规范/安全/性能）
+- [ ] 3.3.6 PostgreSQL TraceProcessor（Trace/Span 写入数据库）— 后续阶段
+- [ ] 3.3.7 Tracing 数据模型 + 迁移 — 后续阶段
 
 ### Phase 3.4：Token 审计基础
 - [ ] 3.4.1 TokenUsageLog 模型 + 迁移
