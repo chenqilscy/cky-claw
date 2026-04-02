@@ -117,7 +117,11 @@ async def _execute_tool_calls(
     tool_calls: list[ToolCall],
     messages: list[Message],
 ) -> Agent | None:
-    """执行一组工具调用，将结果追加到 messages。返回 handoff 目标 Agent（若有）。"""
+    """执行一组工具调用，将结果追加到 messages。返回 handoff 目标 Agent（若有）。
+
+    注意：若同一轮中 LLM 同时返回 Handoff 工具和普通工具，Handoff 之前的普通工具
+    会正常执行，但 Handoff 之后的工具将被跳过（控制权已转移）。
+    """
     for tc in tool_calls:
         # 检查 Handoff
         handoff_target = _find_handoff_target(agent, tc.name)
@@ -190,20 +194,33 @@ class Runner:
 
             # 准备 LLM 调用参数
             system_msg = _build_system_message(current_agent, run_ctx)
-            llm_messages = [system_msg] + messages
+            llm_messages: list[Message] = []
+            if system_msg.content:
+                llm_messages.append(system_msg)
+            llm_messages.extend(messages)
             tool_schemas = _build_tool_schemas(current_agent)
 
             model_name = _resolve_model(current_agent, config)
             settings = _resolve_settings(current_agent, config)
 
             # 调用 LLM
-            response: ModelResponse = await provider.chat(
-                model=model_name,
-                messages=llm_messages,
-                settings=settings,
-                tools=tool_schemas or None,
-                stream=False,
-            )  # type: ignore[assignment]
+            try:
+                response: ModelResponse = await provider.chat(
+                    model=model_name,
+                    messages=llm_messages,
+                    settings=settings,
+                    tools=tool_schemas or None,
+                    stream=False,
+                )  # type: ignore[assignment]
+            except Exception as e:
+                logger.exception("LLM call failed for agent '%s'", current_agent.name)
+                return RunResult(
+                    output=f"Error: LLM call failed: {e}",
+                    messages=messages,
+                    last_agent_name=current_agent.name,
+                    token_usage=total_usage,
+                    turn_count=turn_count,
+                )
 
             _accumulate_usage(total_usage, response.token_usage)
 
@@ -254,7 +271,17 @@ class Runner:
         input: str | list[Message],
         **kwargs: Any,
     ) -> RunResult:
-        """同步运行（内部使用 asyncio.run）。"""
+        """同步运行。兼容已有事件循环（如 Jupyter notebook）。"""
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            loop = None
+
+        if loop and loop.is_running():
+            import concurrent.futures
+            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
+                future = pool.submit(asyncio.run, Runner.run(agent, input, **kwargs))
+                return future.result()
         return asyncio.run(Runner.run(agent, input, **kwargs))
 
     @staticmethod
@@ -290,20 +317,37 @@ class Runner:
             yield StreamEvent(type=StreamEventType.AGENT_START, agent_name=current_agent.name)
 
             system_msg = _build_system_message(current_agent, run_ctx)
-            llm_messages = [system_msg] + messages
+            llm_messages: list[Message] = []
+            if system_msg.content:
+                llm_messages.append(system_msg)
+            llm_messages.extend(messages)
             tool_schemas = _build_tool_schemas(current_agent)
 
             model_name = _resolve_model(current_agent, config)
             settings = _resolve_settings(current_agent, config)
 
             # 流式调用 LLM
-            stream = await provider.chat(
-                model=model_name,
-                messages=llm_messages,
-                settings=settings,
-                tools=tool_schemas or None,
-                stream=True,
-            )
+            try:
+                stream = await provider.chat(
+                    model=model_name,
+                    messages=llm_messages,
+                    settings=settings,
+                    tools=tool_schemas or None,
+                    stream=True,
+                )
+            except Exception as e:
+                logger.exception("LLM stream call failed for agent '%s'", current_agent.name)
+                yield StreamEvent(
+                    type=StreamEventType.RUN_COMPLETE,
+                    data=RunResult(
+                        output=f"Error: LLM call failed: {e}",
+                        messages=messages,
+                        last_agent_name=current_agent.name,
+                        token_usage=total_usage,
+                        turn_count=turn_count,
+                    ),
+                )
+                return
 
             # 聚合流式响应
             full_content = ""

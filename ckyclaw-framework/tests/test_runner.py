@@ -398,6 +398,38 @@ class TestRunnerStreamed:
 # ── 模型/配置解析测试 ────────────────────────────────────────
 
 
+class TestRunnerErrorHandling:
+    @pytest.mark.asyncio
+    async def test_llm_call_failure(self) -> None:
+        """LLM 调用异常被捕获并返回错误结果。"""
+        agent = Agent(name="bot")
+
+        class FailProvider(ModelProvider):
+            async def chat(self, model: str, messages: list[Message], **kwargs: Any) -> ModelResponse:
+                raise ConnectionError("Network down")
+
+        result = await Runner.run(agent, "hi", config=RunConfig(model_provider=FailProvider()))
+        assert "Error" in result.output
+        assert "Network down" in result.output
+
+    @pytest.mark.asyncio
+    async def test_empty_instructions_no_empty_system_msg(self) -> None:
+        """空 instructions 不发送空 system message。"""
+        agent = Agent(name="bot", instructions="")
+
+        call_args: dict[str, Any] = {}
+
+        class SpyProvider(ModelProvider):
+            async def chat(self, model: str, messages: list[Message], **kwargs: Any) -> ModelResponse:
+                call_args["messages"] = messages
+                return ModelResponse(content="ok")
+
+        await Runner.run(agent, "hi", config=RunConfig(model_provider=SpyProvider()))
+        # 不应有 system 消息
+        roles = [m.role for m in call_args["messages"]]
+        assert MessageRole.SYSTEM not in roles
+
+
 class TestRunnerConfigResolution:
     @pytest.mark.asyncio
     async def test_config_model_override(self) -> None:
