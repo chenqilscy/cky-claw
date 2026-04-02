@@ -182,10 +182,13 @@
 - [x] 4.2.7 五轮代码审查（_resolve_approval_mode truthiness → is not None）
 - [ ] 4.2.8 WebSocket 审批通道实现 + 审批请求 API — 后续迭代（需前后端 WebSocket 基础设施）
 
-### Phase 4.3：监督面板
-- [ ] 4.3.1 活跃会话列表 API
-- [ ] 4.3.2 前端监督面板（会话列表 + 只读对话查看）
-- [ ] 4.3.3 审批操作 UI（WebSocket 实时推送）
+### Phase 4.3：监督面板 ✅
+- [x] 4.3.1 活跃会话列表 API（GET /supervision/sessions + GET /{id} 详情 + Token 聚合统计）
+- [x] 4.3.2 暂停/恢复操作 API（POST pause/resume + 状态前置检查 + ConflictError）
+- [x] 4.3.3 前端监督面板（活跃会话 ProTable + 统计卡片 + 详情 Modal + 暂停/恢复操作）
+- [x] 4.3.4 监督面板测试（25 个测试 — Schema/API/认证/路由注册）
+- [x] 4.3.5 五轮代码审查（全部通过）
+- [ ] 4.3.6 审批操作 UI（WebSocket 实时推送）— 后续迭代（需 WebSocket 基础设施）
 
 ### Phase 4.4：Model Provider 管理 ✅
 - [x] 4.4.1 ProviderConfig 模型 + 迁移（provider_configs 表，4 索引 + Fernet API Key 加密）
