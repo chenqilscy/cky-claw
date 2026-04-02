@@ -94,6 +94,7 @@ def _build_agent_from_config(
 ) -> Any:
     """从 DB AgentConfig 构造 Framework Agent 实例。"""
     from ckyclaw_framework.agent.agent import Agent
+    from ckyclaw_framework.approval.mode import ApprovalMode
     from ckyclaw_framework.guardrails.input_guardrail import InputGuardrail
     from ckyclaw_framework.guardrails.regex_guardrail import RegexGuardrail
     from ckyclaw_framework.model.settings import ModelSettings
@@ -128,6 +129,14 @@ def _build_agent_from_config(
                 name=rule.name,
             ))
 
+    # 解析 approval_mode
+    approval_mode_map = {
+        "suggest": ApprovalMode.SUGGEST,
+        "auto-edit": ApprovalMode.AUTO_EDIT,
+        "full-auto": ApprovalMode.FULL_AUTO,
+    }
+    approval_mode = approval_mode_map.get(config.approval_mode)
+
     return Agent(
         name=config.name,
         description=config.description,
@@ -135,6 +144,7 @@ def _build_agent_from_config(
         model=config.model,
         model_settings=model_settings,
         input_guardrails=input_guardrails,
+        approval_mode=approval_mode,
         # tools/handoffs 由 tool_groups/handoffs 名称解析（MVP 暂不实现工具注册）
     )
 
@@ -266,19 +276,31 @@ async def execute_run(
     session_backend = InMemorySessionBackend()
     framework_session = Session(session_id=str(session_id), backend=session_backend)
 
-    # 构建 RunConfig（含 Trace 持久化 Processor）
+    # 构建 RunConfig（含 Trace 持久化 Processor + Approval Handler）
+    from app.services.approval_handler import HttpApprovalHandler
     from app.services.trace_processor import PostgresTraceProcessor
 
+    run_id = str(uuid.uuid4())
     trace_processor = PostgresTraceProcessor(session_id=str(session_id))
     model = request.config.model_override or agent_config.model
+
+    # 审批处理器：非 full-auto 模式时创建 HttpApprovalHandler
+    approval_handler = None
+    if agent_config.approval_mode and agent_config.approval_mode != "full-auto":
+        approval_handler = HttpApprovalHandler(
+            session_id=str(session_id),
+            run_id=run_id,
+            agent_name=agent_config.name,
+        )
+
     framework_config = FrameworkRunConfig(
         model=model,
         model_provider=LiteLLMProvider(),
         trace_processors=[trace_processor],
+        approval_handler=approval_handler,
     )
 
     # 执行
-    run_id = str(uuid.uuid4())
     start_time = time.monotonic()
 
     result = await Runner.run(
@@ -357,17 +379,30 @@ async def execute_run_stream(
     session_backend = InMemorySessionBackend()
     framework_session = Session(session_id=str(session_id), backend=session_backend)
 
+    # 构建 RunConfig（含 Trace 持久化 Processor + Approval Handler）
+    from app.services.approval_handler import HttpApprovalHandler
     from app.services.trace_processor import PostgresTraceProcessor
 
+    run_id = str(uuid.uuid4())
     trace_processor = PostgresTraceProcessor(session_id=str(session_id))
     model = request.config.model_override or agent_config.model
+
+    # 审批处理器：非 full-auto 模式时创建 HttpApprovalHandler
+    approval_handler = None
+    if agent_config.approval_mode and agent_config.approval_mode != "full-auto":
+        approval_handler = HttpApprovalHandler(
+            session_id=str(session_id),
+            run_id=run_id,
+            agent_name=agent_config.name,
+        )
+
     framework_config = FrameworkRunConfig(
         model=model,
         model_provider=LiteLLMProvider(),
         trace_processors=[trace_processor],
+        approval_handler=approval_handler,
     )
 
-    run_id = str(uuid.uuid4())
     start_time = time.monotonic()
     run_result = None  # 用于提取 trace → token_usage_logs
 

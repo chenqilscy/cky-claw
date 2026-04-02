@@ -8,6 +8,7 @@ import {
   CloudServerOutlined,
   ApartmentOutlined,
   SafetyCertificateOutlined,
+  AuditOutlined,
 } from '@ant-design/icons';
 
 const menuRoutes = {
@@ -46,6 +47,11 @@ const menuRoutes = {
       path: '/guardrails',
       name: 'Guardrail 护栏',
       icon: <SafetyCertificateOutlined />,
+    },
+    {
+      path: '/approvals',
+      name: '审批队列',
+      icon: <AuditOutlined />,
     },
   ],
 };

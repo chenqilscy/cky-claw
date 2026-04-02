@@ -257,6 +257,20 @@
 - [x] 6.2.11 前端类型修正 — `AgentConfig.guardrails` 接口修正为 `{ input, output, tool }`
 - [x] 6.2.12 五轮代码审查（全部通过）
 
+### Phase 6.3：Approval 人工审批（P1）✅
+- [x] 6.3.1 数据模型 — `ApprovalRequest` ORM + Alembic 迁移 `0008_create_approval_requests.py`（4 索引）
+- [x] 6.3.2 ApprovalManager 单例 — 进程内 `asyncio.Event` 事件管理（register/wait/resolve/cleanup）
+- [x] 6.3.3 HttpApprovalHandler — 实现 Framework `ApprovalHandler` 接口（DB 记录 + 进程内等待 + 超时）
+- [x] 6.3.4 CRUD 服务 — `list/get/resolve` + status/action 校验 + Manager 通知
+- [x] 6.3.5 Schema — `ApprovalResolveRequest`/`ApprovalResponse`/`ApprovalListResponse`
+- [x] 6.3.6 API 端点 — `GET /api/v1/approvals` + `GET /{id}` + `POST /{id}/resolve` 3 个端点
+- [x] 6.3.7 运行时桥接 — `_build_agent_from_config` 传递 `approval_mode`，`execute_run/stream` 创建 `HttpApprovalHandler` 注入 `RunConfig`
+- [x] 6.3.8 后端测试 — 32 个测试（5 Schema + 8 API + 8 Manager + 2 Handler + 4 Agent集成 + 1 路由 + 4 校验），全部通过
+- [x] 6.3.9 前端服务 — `approvalService.ts`（TypeScript 类型 + list/get/resolve API）
+- [x] 6.3.10 前端 ApprovalQueuePage — ProTable 审批队列 + 批准/拒绝按钮 + 拒绝原因 Modal
+- [x] 6.3.11 路由 + 导航 — `/approvals` 路由 + 侧边栏「审批队列」菜单项
+- [x] 6.3.12 五轮代码审查（1 个问题修复：handler DB 双写保护）
+
 ---
 
 *最后更新：2025-07-19*

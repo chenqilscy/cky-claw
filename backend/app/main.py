@@ -9,6 +9,7 @@ from app.core.config import settings
 from app.core.exceptions import register_exception_handlers
 from app.core.middleware import RequestIDMiddleware
 from app.api.agents import router as agents_router
+from app.api.approvals import router as approvals_router
 from app.api.auth import router as auth_router
 from app.api.health import router as health_router
 from app.api.providers import router as providers_router
@@ -46,6 +47,7 @@ def create_app() -> FastAPI:
     app.include_router(health_router)
     app.include_router(auth_router)
     app.include_router(agents_router)
+    app.include_router(approvals_router)
     app.include_router(providers_router)
     app.include_router(sessions_router)
     app.include_router(supervision_router)
