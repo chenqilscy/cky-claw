@@ -149,10 +149,13 @@
 - [ ] 3.3.6 PostgreSQL TraceProcessor（Trace/Span 写入数据库）— 后续阶段
 - [ ] 3.3.7 Tracing 数据模型 + 迁移 — 后续阶段
 
-### Phase 3.4：Token 审计基础
-- [ ] 3.4.1 TokenUsageLog 模型 + 迁移
-- [ ] 3.4.2 LLM Span 自动填充 token_usage
-- [ ] 3.4.3 Token 统计查询 API
+### Phase 3.4：Token 审计基础 ✅
+- [x] 3.4.1 TokenUsageLog 模型 + 迁移（token_usage_logs 表 + 5 索引）
+- [x] 3.4.2 LLM Span 自动填充 token_usage（_TracingCtx 数据采集与 processor 通知解耦）
+- [x] 3.4.3 Token 统计查询 API（GET /api/v1/token-usage + GET /api/v1/token-usage/summary）
+- [x] 3.4.4 RunResult.trace → TokenUsageLog 自动提取写入（execute_run + execute_run_stream）
+- [x] 3.4.5 Token 审计测试（16 个测试 — Schema/Service/API/Model）
+- [x] 3.4.6 五轮代码审查（异常保护加固）
 
 ### Phase 3.5：前端执行记录页
 - [ ] 3.5.1 执行列表页（Run 列表 + 状态/时间/Token）
