@@ -125,11 +125,14 @@
 
 ## M3：编排与 Tracing
 
-### Phase 3.1：Handoff 机制
-- [ ] 3.1.1 Handoff 定义 + transfer_to 工具生成
-- [ ] 3.1.2 Runner Agent Loop Handoff 分支（Agent 切换 + 消息历史传递）
-- [ ] 3.1.3 InputFilter 历史过滤
-- [ ] 3.1.4 Handoff 测试（Triage → Specialist）
+### Phase 3.1：Handoff 机制 ✅
+- [x] 3.1.1 Handoff 数据类（agent、tool_name、tool_description、input_filter）
+- [x] 3.1.2 InputFilter 类型（`Callable[[list[Message]], list[Message]]`）
+- [x] 3.1.3 自定义 tool_name / tool_description 支持
+- [x] 3.1.4 Runner 中 Handoff 分支应用 InputFilter（run + run_streamed）
+- [x] 3.1.5 向后兼容（Agent 直接引用仍可用）
+- [x] 3.1.6 Handoff 测试（16 个测试 — 数据类/兼容性/Runner/InputFilter/流式）
+- [x] 3.1.7 五轮代码审查（unused import 修复）
 
 ### Phase 3.2：Agent-as-Tool
 - [ ] 3.2.1 Agent.as_tool() 封装
