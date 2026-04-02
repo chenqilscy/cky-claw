@@ -35,25 +35,35 @@ services:
       timeout: 3s
       retries: 5
 
-  # === 应用服务（M0 骨架阶段占位，后续补充 Dockerfile） ===
-  # backend:
-  #   build:
-  #     context: ./backend
-  #     dockerfile: Dockerfile
-  #   ports:
-  #     - "8000:8000"
-  #   depends_on:
-  #     db:
-  #       condition: service_healthy
-  #     redis:
-  #       condition: service_healthy
+  # === 应用服务 ===
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: ckyclaw-backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      CKYCLAW_DATABASE_URL: postgresql+asyncpg://ckyclaw:${POSTGRES_PASSWORD:-ckyclaw_dev}@db:5432/ckyclaw
+      CKYCLAW_REDIS_URL: redis://redis:6379/0
+      CKYCLAW_DEBUG: "true"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
 
-  # frontend:
-  #   build:
-  #     context: ./frontend
-  #     dockerfile: Dockerfile
-  #   ports:
-  #     - "3000:3000"
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: ckyclaw-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
 
 volumes:
   pgdata:
