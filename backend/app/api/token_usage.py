@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.schemas.token_usage import (
+    SummaryGroupBy,
     TokenUsageListResponse,
     TokenUsageLogResponse,
     TokenUsageSummaryResponse,
@@ -24,6 +25,7 @@ async def list_token_usage(
     agent_name: str | None = Query(None, description="按 Agent 筛选"),
     session_id: uuid.UUID | None = Query(None, description="按会话 ID 筛选"),
     user_id: uuid.UUID | None = Query(None, description="按用户 ID 筛选"),
+    model: str | None = Query(None, description="按模型筛选"),
     start_time: datetime | None = Query(None, description="起始时间"),
     end_time: datetime | None = Query(None, description="结束时间"),
     limit: int = Query(20, ge=1, le=100, description="分页大小"),
@@ -36,6 +38,7 @@ async def list_token_usage(
         agent_name=agent_name,
         session_id=session_id,
         user_id=user_id,
+        model=model,
         start_time=start_time,
         end_time=end_time,
         limit=limit,
@@ -53,16 +56,20 @@ async def list_token_usage(
 async def get_token_usage_summary(
     agent_name: str | None = Query(None, description="按 Agent 筛选"),
     user_id: uuid.UUID | None = Query(None, description="按用户 ID 筛选"),
+    model: str | None = Query(None, description="按模型筛选"),
     start_time: datetime | None = Query(None, description="起始时间"),
     end_time: datetime | None = Query(None, description="结束时间"),
+    group_by: SummaryGroupBy = Query(SummaryGroupBy.agent_model, description="汇总维度"),
     db: AsyncSession = Depends(get_db),
 ) -> TokenUsageSummaryResponse:
-    """按 Agent + 模型汇总 Token 消耗。"""
+    """按指定维度汇总 Token 消耗。"""
     items = await token_usage_service.get_token_usage_summary(
         db,
         agent_name=agent_name,
         user_id=user_id,
+        model=model,
         start_time=start_time,
         end_time=end_time,
+        group_by=group_by,
     )
     return TokenUsageSummaryResponse(data=items)

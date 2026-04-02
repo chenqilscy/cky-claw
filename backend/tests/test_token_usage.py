@@ -15,6 +15,9 @@ from fastapi.testclient import TestClient
 from app.main import app
 from app.models.token_usage import TokenUsageLog
 from app.schemas.token_usage import (
+    SummaryGroupBy,
+    TokenUsageByModelItem,
+    TokenUsageByUserItem,
     TokenUsageListResponse,
     TokenUsageLogResponse,
     TokenUsageSummaryItem,
@@ -330,3 +333,127 @@ class TestTokenUsageLogModel:
             "total_tokens", "timestamp",
         }
         assert expected <= columns
+
+
+# ---------------------------------------------------------------------------
+# Phase 4.5 扩展测试 — model 筛选 + group_by 维度
+# ---------------------------------------------------------------------------
+
+
+class TestTokenUsageExtendedSchemas:
+    """Phase 4.5 新增 Schema 校验。"""
+
+    def test_summary_group_by_enum(self) -> None:
+        assert SummaryGroupBy.agent_model == "agent_model"
+        assert SummaryGroupBy.user == "user"
+        assert SummaryGroupBy.model == "model"
+
+    def test_by_user_item(self) -> None:
+        item = TokenUsageByUserItem(
+            user_id=uuid.uuid4(),
+            total_prompt_tokens=500,
+            total_completion_tokens=200,
+            total_tokens=700,
+            call_count=5,
+        )
+        assert item.total_tokens == 700
+
+    def test_by_user_item_none_user(self) -> None:
+        item = TokenUsageByUserItem(
+            user_id=None,
+            total_prompt_tokens=100,
+            total_completion_tokens=50,
+            total_tokens=150,
+            call_count=1,
+        )
+        assert item.user_id is None
+
+    def test_by_model_item(self) -> None:
+        item = TokenUsageByModelItem(
+            model="gpt-4o",
+            total_prompt_tokens=1000,
+            total_completion_tokens=500,
+            total_tokens=1500,
+            call_count=10,
+        )
+        assert item.model == "gpt-4o"
+
+
+class TestTokenUsageExtendedAPI:
+    """Phase 4.5 扩展 API 测试。"""
+
+    @patch("app.services.token_usage.list_token_usage")
+    def test_list_with_model_filter(self, mock_list: AsyncMock, client: TestClient) -> None:
+        """model 筛选参数传递。"""
+        mock_list.return_value = ([], 0)
+        resp = client.get("/api/v1/token-usage?model=gpt-4o")
+        assert resp.status_code == 200
+        call_kwargs = mock_list.call_args[1]
+        assert call_kwargs["model"] == "gpt-4o"
+
+    @patch("app.services.token_usage.get_token_usage_summary")
+    def test_summary_group_by_user(self, mock_summary: AsyncMock, client: TestClient) -> None:
+        """按用户维度汇总。"""
+        uid = uuid.uuid4()
+        mock_summary.return_value = [
+            TokenUsageByUserItem(
+                user_id=uid,
+                total_prompt_tokens=500,
+                total_completion_tokens=200,
+                total_tokens=700,
+                call_count=5,
+            ),
+        ]
+        resp = client.get("/api/v1/token-usage/summary?group_by=user")
+        assert resp.status_code == 200
+        data = resp.json()["data"]
+        assert len(data) == 1
+        assert data[0]["user_id"] == str(uid)
+        assert data[0]["total_tokens"] == 700
+        # 验证 group_by 参数传递
+        call_kwargs = mock_summary.call_args[1]
+        assert call_kwargs["group_by"] == SummaryGroupBy.user
+
+    @patch("app.services.token_usage.get_token_usage_summary")
+    def test_summary_group_by_model(self, mock_summary: AsyncMock, client: TestClient) -> None:
+        """按模型维度汇总。"""
+        mock_summary.return_value = [
+            TokenUsageByModelItem(
+                model="gpt-4o",
+                total_prompt_tokens=1000,
+                total_completion_tokens=500,
+                total_tokens=1500,
+                call_count=10,
+            ),
+        ]
+        resp = client.get("/api/v1/token-usage/summary?group_by=model")
+        assert resp.status_code == 200
+        data = resp.json()["data"]
+        assert len(data) == 1
+        assert data[0]["model"] == "gpt-4o"
+        call_kwargs = mock_summary.call_args[1]
+        assert call_kwargs["group_by"] == SummaryGroupBy.model
+
+    @patch("app.services.token_usage.get_token_usage_summary")
+    def test_summary_with_model_filter(self, mock_summary: AsyncMock, client: TestClient) -> None:
+        """汇总接口 model 筛选参数传递。"""
+        mock_summary.return_value = []
+        resp = client.get("/api/v1/token-usage/summary?model=gpt-4o&group_by=agent_model")
+        assert resp.status_code == 200
+        call_kwargs = mock_summary.call_args[1]
+        assert call_kwargs["model"] == "gpt-4o"
+        assert call_kwargs["group_by"] == SummaryGroupBy.agent_model
+
+    @patch("app.services.token_usage.get_token_usage_summary")
+    def test_summary_default_group_by(self, mock_summary: AsyncMock, client: TestClient) -> None:
+        """默认 group_by=agent_model。"""
+        mock_summary.return_value = []
+        resp = client.get("/api/v1/token-usage/summary")
+        assert resp.status_code == 200
+        call_kwargs = mock_summary.call_args[1]
+        assert call_kwargs["group_by"] == SummaryGroupBy.agent_model
+
+    def test_summary_invalid_group_by(self, client: TestClient) -> None:
+        """无效 group_by 返回 422。"""
+        resp = client.get("/api/v1/token-usage/summary?group_by=invalid")
+        assert resp.status_code == 422
