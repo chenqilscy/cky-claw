@@ -23,6 +23,13 @@ class NotFoundError(AppError):
         super().__init__(message=message, code="NOT_FOUND", status_code=404)
 
 
+class AuthenticationError(AppError):
+    """认证失败。"""
+
+    def __init__(self, message: str = "认证失败") -> None:
+        super().__init__(message=message, code="UNAUTHORIZED", status_code=401)
+
+
 class ConflictError(AppError):
     """资源冲突。"""
 
