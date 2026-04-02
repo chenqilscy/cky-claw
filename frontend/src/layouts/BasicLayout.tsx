@@ -5,6 +5,7 @@ import {
   RobotOutlined,
   UnorderedListOutlined,
   EyeOutlined,
+  CloudServerOutlined,
 } from '@ant-design/icons';
 
 const menuRoutes = {
@@ -18,6 +19,11 @@ const menuRoutes = {
       path: '/agents',
       name: 'Agent 管理',
       icon: <RobotOutlined />,
+    },
+    {
+      path: '/providers',
+      name: '模型厂商',
+      icon: <CloudServerOutlined />,
     },
     {
       path: '/runs',
