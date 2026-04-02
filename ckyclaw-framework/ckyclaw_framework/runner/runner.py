@@ -9,6 +9,7 @@ from datetime import datetime, timezone
 from typing import Any, AsyncIterator
 
 from ckyclaw_framework.agent.agent import Agent
+from ckyclaw_framework.handoff.handoff import Handoff
 from ckyclaw_framework.model._converter import (
     messages_to_litellm,
     model_response_to_assistant_message,
@@ -49,11 +50,17 @@ def _build_tool_schemas(agent: Agent) -> list[dict[str, Any]]:
         schemas.append(tool.to_openai_schema())
     # Handoff 生成特殊工具
     for target in agent.handoffs:
+        if isinstance(target, Handoff):
+            tool_name = target.resolved_tool_name
+            description = target.resolved_tool_description
+        else:
+            tool_name = f"{_HANDOFF_TOOL_PREFIX}{target.name}"
+            description = f"Transfer conversation to {target.name}: {target.description}"
         schemas.append({
             "type": "function",
             "function": {
-                "name": f"{_HANDOFF_TOOL_PREFIX}{target.name}",
-                "description": f"Transfer conversation to {target.name}: {target.description}",
+                "name": tool_name,
+                "description": description,
                 "parameters": {"type": "object", "properties": {}},
             },
         })
@@ -106,14 +113,16 @@ def _find_tool(agent: Agent, name: str) -> FunctionTool | None:
     return None
 
 
-def _find_handoff_target(agent: Agent, tool_name: str) -> Agent | None:
-    """检查 tool_name 是否是 handoff 请求，返回目标 Agent。"""
-    if not tool_name.startswith(_HANDOFF_TOOL_PREFIX):
-        return None
-    target_name = tool_name[len(_HANDOFF_TOOL_PREFIX):]
+def _find_handoff_target(agent: Agent, tool_name: str) -> tuple[Agent, Handoff | None] | None:
+    """检查 tool_name 是否是 handoff 请求。返回 (目标 Agent, Handoff 配置) 或 None。"""
     for target in agent.handoffs:
-        if target.name == target_name:
-            return target
+        if isinstance(target, Handoff):
+            if target.resolved_tool_name == tool_name:
+                return (target.agent, target)
+        else:
+            expected_name = f"{_HANDOFF_TOOL_PREFIX}{target.name}"
+            if expected_name == tool_name:
+                return (target, None)
     return None
 
 
@@ -122,21 +131,22 @@ async def _execute_tool_calls(
     tool_calls: list[ToolCall],
     messages: list[Message],
     tracing: _TracingCtx | None = None,
-) -> Agent | None:
-    """执行一组工具调用，将结果追加到 messages。返回 handoff 目标 Agent（若有）。
+) -> tuple[Agent, Handoff | None] | None:
+    """执行一组工具调用，将结果追加到 messages。返回 (目标 Agent, Handoff 配置) 或 None。
 
     注意：若同一轮中 LLM 同时返回 Handoff 工具和普通工具，Handoff 之前的普通工具
     会正常执行，但 Handoff 之后的工具将被跳过（控制权已转移）。
     """
     for tc in tool_calls:
         # 检查 Handoff
-        handoff_target = _find_handoff_target(agent, tc.name)
-        if handoff_target is not None:
+        handoff_result = _find_handoff_target(agent, tc.name)
+        if handoff_result is not None:
+            target_agent, handoff_config = handoff_result
             # Handoff 工具"执行结果"是空的，控制权转移
             messages.append(tool_result_to_message(tc.id, "", agent.name))
             if tracing:
-                await tracing.handoff_span(agent.name, handoff_target.name)
-            return handoff_target
+                await tracing.handoff_span(agent.name, target_agent.name)
+            return (target_agent, handoff_config)
 
         # 查找普通工具
         tool = _find_tool(agent, tc.name)
@@ -413,17 +423,21 @@ class Runner:
                 )
 
             # 执行工具调用
-            handoff_target = await _execute_tool_calls(
+            handoff_result = await _execute_tool_calls(
                 current_agent, response.tool_calls, messages,
                 tracing=tracing if tracing.active else None,
             )
 
             # Handoff: 切换 Agent，不增加 turn_count
-            if handoff_target is not None:
-                logger.info("Handoff: %s → %s", current_agent.name, handoff_target.name)
+            if handoff_result is not None:
+                target_agent, handoff_config = handoff_result
+                logger.info("Handoff: %s → %s", current_agent.name, target_agent.name)
                 if agent_span:
                     await tracing.end_span(agent_span)
-                current_agent = handoff_target
+                # 应用 InputFilter
+                if handoff_config and handoff_config.input_filter:
+                    messages = handoff_config.input_filter(messages)
+                current_agent = target_agent
                 turn_count -= 1  # Handoff 本身不算一轮
             # 非 Handoff 工具调用：结束 agent span 并在下一轮重建
             elif agent_span:
@@ -637,7 +651,7 @@ class Runner:
             if llm_span:
                 await tracing.end_span(llm_span, output=full_content)
 
-            handoff_target = await _execute_tool_calls(
+            handoff_result = await _execute_tool_calls(
                 current_agent, aggregated_tool_calls, messages,
                 tracing=tracing if tracing.active else None,
             )
@@ -649,15 +663,19 @@ class Runner:
                     agent_name=current_agent.name,
                 )
 
-            if handoff_target is not None:
+            if handoff_result is not None:
+                target_agent, handoff_config = handoff_result
                 yield StreamEvent(
                     type=StreamEventType.HANDOFF,
-                    data={"from": current_agent.name, "to": handoff_target.name},
+                    data={"from": current_agent.name, "to": target_agent.name},
                     agent_name=current_agent.name,
                 )
                 if agent_span:
                     await tracing.end_span(agent_span)
-                current_agent = handoff_target
+                # 应用 InputFilter
+                if handoff_config and handoff_config.input_filter:
+                    messages = handoff_config.input_filter(messages)
+                current_agent = target_agent
                 turn_count -= 1
             elif agent_span:
                 await tracing.end_span(agent_span)

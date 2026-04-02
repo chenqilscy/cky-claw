@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Callable
 
 if TYPE_CHECKING:
+    from ckyclaw_framework.handoff.handoff import Handoff
     from ckyclaw_framework.model.settings import ModelSettings
     from ckyclaw_framework.runner.run_context import RunContext
     from ckyclaw_framework.tools.function_tool import FunctionTool
@@ -33,8 +34,8 @@ class Agent:
     tools: list[FunctionTool] = field(default_factory=list)
     """可调用的工具列表"""
 
-    handoffs: list[Agent] = field(default_factory=list)
-    """可移交的目标 Agent 列表"""
+    handoffs: list[Agent | Handoff] = field(default_factory=list)
+    """可移交的目标列表。支持 Agent（简写）或 Handoff（完整配置）。"""
 
     output_type: type | None = None
     """结构化输出类型（Pydantic BaseModel 子类）"""
