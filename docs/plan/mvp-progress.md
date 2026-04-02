@@ -195,9 +195,10 @@
 - [x] 4.4.5 五轮代码审查（认证保护 + rate_limit 校验修复）
 - [ ] 4.4.6 Provider 管理前端页面 — 后续迭代
 
-### Phase 4.5：Token 统计
-- [ ] 4.5.1 按用户/模型 Token 消耗查询 API
-- [ ] 4.5.2 Token 统计基础前端页面
+### Phase 4.5：Token 统计 ✅
+- [x] 4.5.1 按用户/模型 Token 消耗查询 API（SummaryGroupBy 多维度分组 + model 筛选参数 + 10 新测试）
+- [x] 4.5.2 Token 统计前端页面增强（模型筛选 + Segmented 维度切换 + 动态汇总列）
+- [x] 4.5.3 五轮代码审查（后端 + 前端全部通过）
 
 ## M5：MVP 完整交付
 
