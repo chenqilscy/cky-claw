@@ -1,0 +1,60 @@
+# CkyClaw Docker Compose — 开发环境
+# 使用: docker-compose up -d
+
+services:
+  # === 基础设施 ===
+  db:
+    image: postgres:16-alpine
+    container_name: ckyclaw-db
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: ckyclaw
+      POSTGRES_USER: ckyclaw
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ckyclaw_dev}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ckyclaw"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: ckyclaw-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # === 应用服务（M0 骨架阶段占位，后续补充 Dockerfile） ===
+  # backend:
+  #   build:
+  #     context: ./backend
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "8000:8000"
+  #   depends_on:
+  #     db:
+  #       condition: service_healthy
+  #     redis:
+  #       condition: service_healthy
+
+  # frontend:
+  #   build:
+  #     context: ./frontend
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "3000:3000"
+
+volumes:
+  pgdata:
+  redisdata:
