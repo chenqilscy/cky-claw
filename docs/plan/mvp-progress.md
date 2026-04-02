@@ -228,4 +228,21 @@
 
 ---
 
-*最后更新：2025-07-18*
+## M6：迭代功能
+
+### Phase 6.1：Trace 持久化与查询（P0）✅
+- [x] 6.1.1 数据模型 — `TraceRecord`、`SpanRecord` ORM 模型 + Alembic 迁移 `0006_create_traces_spans.py`（9 索引）
+- [x] 6.1.2 PostgresTraceProcessor — 实现 Framework TraceProcessor 接口，收集 Trace/Span 数据
+- [x] 6.1.3 Trace 查询服务 — `list_traces`（多维筛选 + 分页）、`get_trace_detail`、`save_trace`
+- [x] 6.1.4 Trace 查询 API — `GET /api/v1/traces`（列表）、`GET /api/v1/traces/{trace_id}`（详情含 Span 树）
+- [x] 6.1.5 Schema 定义 — `SpanResponse`（alias input/output）、`TraceResponse`、`TraceDetailResponse`、`TraceListResponse`
+- [x] 6.1.6 Session 集成 — `execute_run` 与 `execute_run_stream` 均注入 PostgresTraceProcessor
+- [x] 6.1.7 后端测试 — 15 个测试（4 Schema + 6 API + 4 Processor + 1 路由验证），全部通过
+- [x] 6.1.8 前端 Trace 服务 — `traceService.ts`（TypeScript 类型 + list/detail API）
+- [x] 6.1.9 前端 TracesPage — ProTable 列表 + Agent 筛选 + 详情 Modal（Span 树 + Span 详情面板）
+- [x] 6.1.10 路由 + 导航 — `/traces` 路由 + 侧边栏「Trace 追踪」菜单项
+- [x] 6.1.11 五轮代码审查（2 个问题修复：flush 替代 commit + Pydantic model 序列化）
+
+---
+
+*最后更新：2025-07-19*

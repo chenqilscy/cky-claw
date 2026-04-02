@@ -168,6 +168,29 @@ def _find_parent_agent_name(spans: list[Any], target_span: Any) -> str | None:
     return None
 
 
+async def _save_trace_from_processor(
+    db: AsyncSession,
+    processor: Any,
+) -> None:
+    """从 PostgresTraceProcessor 收集的数据写入 traces/spans 表。"""
+    from app.models.trace import SpanRecord, TraceRecord
+
+    trace_data, span_data_list = processor.get_collected_data()
+    if trace_data is None:
+        return
+
+    try:
+        trace_record = TraceRecord(**trace_data)
+        span_records = [SpanRecord(**sd) for sd in span_data_list]
+        db.add(trace_record)
+        if span_records:
+            db.add_all(span_records)
+        await db.flush()
+    except Exception:
+        logger.exception("Failed to save trace data")
+        await db.rollback()
+
+
 # ---------------------------------------------------------------------------
 # Run 执行
 # ---------------------------------------------------------------------------
@@ -205,11 +228,15 @@ async def execute_run(
     session_backend = InMemorySessionBackend()
     framework_session = Session(session_id=str(session_id), backend=session_backend)
 
-    # 构建 RunConfig
+    # 构建 RunConfig（含 Trace 持久化 Processor）
+    from app.services.trace_processor import PostgresTraceProcessor
+
+    trace_processor = PostgresTraceProcessor(session_id=str(session_id))
     model = request.config.model_override or agent_config.model
     framework_config = FrameworkRunConfig(
         model=model,
         model_provider=LiteLLMProvider(),
+        trace_processors=[trace_processor],
     )
 
     # 执行
@@ -228,6 +255,9 @@ async def execute_run(
 
     # Token 审计：从 Trace 提取 LLM Span token_usage 写入
     await _save_token_usage_from_trace(db, result.trace, session_id=session_id)
+
+    # Trace 持久化：写入 traces/spans 表
+    await _save_trace_from_processor(db, trace_processor)
 
     # 更新 session 的 updated_at
     session_record.updated_at = datetime.now(timezone.utc)
@@ -283,10 +313,14 @@ async def execute_run_stream(
     session_backend = InMemorySessionBackend()
     framework_session = Session(session_id=str(session_id), backend=session_backend)
 
+    from app.services.trace_processor import PostgresTraceProcessor
+
+    trace_processor = PostgresTraceProcessor(session_id=str(session_id))
     model = request.config.model_override or agent_config.model
     framework_config = FrameworkRunConfig(
         model=model,
         model_provider=LiteLLMProvider(),
+        trace_processors=[trace_processor],
     )
 
     run_id = str(uuid.uuid4())
@@ -345,6 +379,9 @@ async def execute_run_stream(
     # Token 审计：从 Trace 提取 LLM Span token_usage 写入
     if run_result and hasattr(run_result, "trace"):
         await _save_token_usage_from_trace(db, run_result.trace, session_id=session_id)
+
+    # Trace 持久化：写入 traces/spans 表
+    await _save_trace_from_processor(db, trace_processor)
 
     # 更新 session
     session_record.updated_at = datetime.now(timezone.utc)

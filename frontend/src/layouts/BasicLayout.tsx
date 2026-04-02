@@ -6,6 +6,7 @@ import {
   UnorderedListOutlined,
   EyeOutlined,
   CloudServerOutlined,
+  ApartmentOutlined,
 } from '@ant-design/icons';
 
 const menuRoutes = {
@@ -34,6 +35,11 @@ const menuRoutes = {
       path: '/supervision',
       name: '监督面板',
       icon: <EyeOutlined />,
+    },
+    {
+      path: '/traces',
+      name: 'Trace 追踪',
+      icon: <ApartmentOutlined />,
     },
   ],
 };
