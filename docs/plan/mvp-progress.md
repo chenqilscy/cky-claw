@@ -164,11 +164,13 @@
 
 ## M4：监督与安全
 
-### Phase 4.1：Input Guardrail
-- [ ] 4.1.1 InputGuardrail 执行（Runner 中 blocking/parallel 模式）
-- [ ] 4.1.2 基础 Prompt 注入检测护栏
-- [ ] 4.1.3 GuardrailResult → TripwireTriggered 错误处理
-- [ ] 4.1.4 Guardrail 测试
+### Phase 4.1：Input Guardrail ✅
+- [x] 4.1.1 InputGuardrail 执行（Runner 中 blocking 阻塞模式 + run/run_streamed 集成）
+- [x] 4.1.2 GuardrailResult + InputGuardrailTripwireError 定义
+- [x] 4.1.3 Agent.input_guardrails 字段 + Guardrail Span Tracing
+- [x] 4.1.4 Guardrail 测试（23 个测试 — Result/InputGuardrail/执行函数/Runner 集成/Tracing/流式）
+- [x] 4.1.5 五轮代码审查（run_streamed guardrail 异常处理对齐）
+- [ ] 4.1.6 基础 Prompt 注入检测内置护栏 — 后续迭代（需 LLM-Based 模式）
 
 ### Phase 4.2：Approval Mode
 - [ ] 4.2.1 ApprovalHandler 接口实现（WebSocket 推送 + 等待响应）
