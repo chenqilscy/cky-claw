@@ -6,6 +6,8 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Callable
 
 if TYPE_CHECKING:
+    from ckyclaw_framework.approval.handler import ApprovalHandler
+    from ckyclaw_framework.approval.mode import ApprovalMode
     from ckyclaw_framework.model.provider import ModelProvider
     from ckyclaw_framework.model.settings import ModelSettings
     from ckyclaw_framework.session.session import SessionBackend
@@ -47,3 +49,9 @@ class RunConfig:
     on_agent_end: Callable | None = None
     on_tool_call: Callable | None = None
     on_handoff: Callable | None = None
+
+    approval_mode: ApprovalMode | None = None
+    """全局覆盖 Agent 的审批模式"""
+
+    approval_handler: ApprovalHandler | None = None
+    """审批处理器实例。suggest/auto-edit 模式下必须提供。"""

@@ -9,6 +9,8 @@ from datetime import datetime, timezone
 from typing import Any, AsyncIterator
 
 from ckyclaw_framework.agent.agent import Agent
+from ckyclaw_framework.approval.handler import ApprovalHandler
+from ckyclaw_framework.approval.mode import ApprovalDecision, ApprovalMode, ApprovalRejectedError
 from ckyclaw_framework.guardrails.input_guardrail import InputGuardrail
 from ckyclaw_framework.guardrails.result import GuardrailResult, InputGuardrailTripwireError
 from ckyclaw_framework.handoff.handoff import Handoff
@@ -188,11 +190,59 @@ async def _execute_input_guardrails(
             )
 
 
+def _resolve_approval_mode(agent: Agent, config: RunConfig | None) -> ApprovalMode:
+    """确定审批模式（RunConfig 覆盖 > Agent 定义 > 默认 full-auto）。"""
+    if config and config.approval_mode is not None:
+        return config.approval_mode
+    if agent.approval_mode is not None:
+        return agent.approval_mode
+    return ApprovalMode.FULL_AUTO
+
+
+async def _check_approval(
+    run_context: RunContext,
+    handler: ApprovalHandler | None,
+    mode: ApprovalMode,
+    tool_name: str,
+    arguments: dict[str, Any],
+) -> None:
+    """检查工具调用是否需要审批。需要时调用 handler 并处理结果。
+
+    full-auto: 直接返回（不审批）。
+    suggest: 所有工具调用需审批。
+    auto-edit: MVP 阶段等同 full-auto（待 RiskClassifier 实现）。
+    """
+    if mode == ApprovalMode.FULL_AUTO:
+        return
+    if mode == ApprovalMode.AUTO_EDIT:
+        # MVP: auto-edit 暂等同 full-auto，后续加 RiskClassifier
+        return
+    # suggest 模式: 必须有 handler
+    if handler is None:
+        raise ApprovalRejectedError(
+            tool_name=tool_name,
+            reason="suggest mode requires an ApprovalHandler but none was provided",
+        )
+    decision = await handler.request_approval(
+        run_context=run_context,
+        action_type="tool_call",
+        action_detail={"tool_name": tool_name, "arguments": arguments},
+    )
+    if decision == ApprovalDecision.REJECTED:
+        raise ApprovalRejectedError(tool_name=tool_name, reason="rejected by approver")
+    if decision == ApprovalDecision.TIMEOUT:
+        raise ApprovalRejectedError(tool_name=tool_name, reason="approval timed out")
+
+
 async def _execute_tool_calls(
     agent: Agent,
     tool_calls: list[ToolCall],
     messages: list[Message],
     tracing: _TracingCtx | None = None,
+    *,
+    run_context: RunContext | None = None,
+    approval_handler: ApprovalHandler | None = None,
+    approval_mode: ApprovalMode = ApprovalMode.FULL_AUTO,
 ) -> tuple[Agent, Handoff | None] | None:
     """执行一组工具调用，将结果追加到 messages。返回 (目标 Agent, Handoff 配置) 或 None。
 
@@ -224,9 +274,12 @@ async def _execute_tool_calls(
         except json.JSONDecodeError:
             arguments = {}
 
-        # 执行工具（带 Tracing）
+        # 执行工具（带 Tracing + Approval 检查）
         tool_span = await tracing.start_tool_span(tc.name, arguments) if tracing else None
         try:
+            # Approval: 在执行前检查审批
+            if run_context is not None:
+                await _check_approval(run_context, approval_handler, approval_mode, tc.name, arguments)
             result = await tool.execute(arguments)
             messages.append(tool_result_to_message(tc.id, result, agent.name))
             if tool_span:
@@ -383,6 +436,8 @@ class Runner:
         config = config or RunConfig()
         provider = _resolve_provider(config)
         total_usage = TokenUsage()
+        approval_mode = _resolve_approval_mode(agent, config)
+        approval_handler = config.approval_handler
 
         # Tracing 上下文
         tracing = _TracingCtx(config, agent.name)
@@ -515,6 +570,9 @@ class Runner:
             handoff_result = await _execute_tool_calls(
                 current_agent, response.tool_calls, messages,
                 tracing=tracing if tracing.active else None,
+                run_context=run_ctx,
+                approval_handler=approval_handler,
+                approval_mode=approval_mode,
             )
 
             # Handoff: 切换 Agent，不增加 turn_count
@@ -595,6 +653,8 @@ class Runner:
         messages = _normalize_input(input)
         current_agent = agent
         turn_count = 0
+        approval_mode = _resolve_approval_mode(agent, config)
+        approval_handler = config.approval_handler
 
         # Tracing 上下文
         tracing = _TracingCtx(config, agent.name)
@@ -769,6 +829,9 @@ class Runner:
             handoff_result = await _execute_tool_calls(
                 current_agent, aggregated_tool_calls, messages,
                 tracing=tracing if tracing.active else None,
+                run_context=run_ctx,
+                approval_handler=approval_handler,
+                approval_mode=approval_mode,
             )
 
             for tc in aggregated_tool_calls:

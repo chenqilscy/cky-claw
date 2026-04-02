@@ -16,6 +16,10 @@ from ckyclaw_framework.handoff.handoff import Handoff, InputFilter
 from ckyclaw_framework.guardrails.input_guardrail import InputGuardrail
 from ckyclaw_framework.guardrails.result import GuardrailResult, InputGuardrailTripwireError
 
+# === Approval ===
+from ckyclaw_framework.approval.mode import ApprovalDecision, ApprovalMode, ApprovalRejectedError
+from ckyclaw_framework.approval.handler import ApprovalHandler
+
 # === Tools ===
 from ckyclaw_framework.tools.function_tool import FunctionTool, function_tool
 from ckyclaw_framework.tools.tool_context import ToolContext
@@ -51,6 +55,11 @@ __all__ = [
     "InputGuardrail",
     "GuardrailResult",
     "InputGuardrailTripwireError",
+    # Approval
+    "ApprovalDecision",
+    "ApprovalMode",
+    "ApprovalRejectedError",
+    "ApprovalHandler",
     # Tools
     "FunctionTool",
     "function_tool",

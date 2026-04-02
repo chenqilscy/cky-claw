@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Callable
 
 if TYPE_CHECKING:
+    from ckyclaw_framework.approval.mode import ApprovalMode
     from ckyclaw_framework.guardrails.input_guardrail import InputGuardrail
     from ckyclaw_framework.handoff.handoff import Handoff
     from ckyclaw_framework.model.settings import ModelSettings
@@ -41,6 +42,9 @@ class Agent:
 
     input_guardrails: list[InputGuardrail] = field(default_factory=list)
     """输入安全护栏列表。在首次 LLM 调用前执行检测。"""
+
+    approval_mode: ApprovalMode | None = None
+    """审批模式。None 时使用 RunConfig 默认模式。"""
 
     output_type: type | None = None
     """结构化输出类型（Pydantic BaseModel 子类）"""
