@@ -4,6 +4,8 @@ import { Button, Card, Form, Input, Select, Space, message, Spin } from 'antd';
 import { ArrowLeftOutlined } from '@ant-design/icons';
 import { agentService } from '../../services/agentService';
 import type { AgentConfig, AgentCreateInput, AgentUpdateInput } from '../../services/agentService';
+import { guardrailService } from '../../services/guardrailService';
+import type { GuardrailRuleItem } from '../../services/guardrailService';
 
 const { TextArea } = Input;
 
@@ -20,6 +22,19 @@ const AgentEditPage: React.FC = () => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [guardrailOptions, setGuardrailOptions] = useState<{ label: string; value: string }[]>([]);
+
+  useEffect(() => {
+    guardrailService.list({ enabled_only: true, limit: 200 })
+      .then((res) => {
+        setGuardrailOptions(
+          res.items
+            .filter((r: GuardrailRuleItem) => r.type === 'input')
+            .map((r: GuardrailRuleItem) => ({ label: `${r.name} (${r.mode})`, value: r.name }))
+        );
+      })
+      .catch(() => { /* ignore */ });
+  }, []);
 
   useEffect(() => {
     if (isEdit && name) {
@@ -34,6 +49,7 @@ const AgentEditPage: React.FC = () => {
             approval_mode: agent.approval_mode,
             tool_groups: agent.tool_groups?.join(', ') || '',
             handoffs: agent.handoffs?.join(', ') || '',
+            input_guardrails: agent.guardrails?.input || [],
           });
         })
         .catch(() => message.error('加载 Agent 失败'))
@@ -56,6 +72,11 @@ const AgentEditPage: React.FC = () => {
         handoffs: (values.handoffs as string)
           ? (values.handoffs as string).split(',').map((s) => s.trim()).filter(Boolean)
           : [],
+        guardrails: {
+          input: (values.input_guardrails as string[]) || [],
+          output: [],
+          tool: [],
+        },
       };
 
       if (isEdit && name) {
@@ -127,6 +148,15 @@ const AgentEditPage: React.FC = () => {
 
             <Form.Item name="handoffs" label="Handoff 目标（逗号分隔）">
               <Input placeholder="specialist-agent, reviewer-agent" />
+            </Form.Item>
+
+            <Form.Item name="input_guardrails" label="Input Guardrails">
+              <Select
+                mode="multiple"
+                placeholder="选择要启用的输入安全护栏"
+                options={guardrailOptions}
+                allowClear
+              />
             </Form.Item>
 
             <Form.Item>

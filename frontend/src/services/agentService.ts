@@ -10,8 +10,9 @@ export interface AgentConfig {
   tool_groups: string[];
   handoffs: string[];
   guardrails: {
-    input_guardrails: string[];
-    output_guardrails: string[];
+    input: string[];
+    output: string[];
+    tool: string[];
   };
   approval_mode: string;
   mcp_servers: string[];
@@ -38,8 +39,9 @@ export interface AgentCreateInput {
   tool_groups?: string[];
   handoffs?: string[];
   guardrails?: {
-    input_guardrails?: string[];
-    output_guardrails?: string[];
+    input?: string[];
+    output?: string[];
+    tool?: string[];
   };
   approval_mode?: string;
   mcp_servers?: string[];

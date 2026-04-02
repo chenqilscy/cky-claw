@@ -88,14 +88,45 @@ async def delete_session(db: AsyncSession, session_id: uuid.UUID) -> None:
 # ---------------------------------------------------------------------------
 
 
-def _build_agent_from_config(config: AgentConfig) -> Any:
+def _build_agent_from_config(
+    config: AgentConfig,
+    guardrail_rules: list | None = None,
+) -> Any:
     """从 DB AgentConfig 构造 Framework Agent 实例。"""
     from ckyclaw_framework.agent.agent import Agent
+    from ckyclaw_framework.guardrails.input_guardrail import InputGuardrail
+    from ckyclaw_framework.guardrails.regex_guardrail import RegexGuardrail
     from ckyclaw_framework.model.settings import ModelSettings
 
     model_settings = None
     if config.model_settings:
         model_settings = ModelSettings(**config.model_settings)
+
+    # 构建 Input Guardrails
+    input_guardrails: list[InputGuardrail] = []
+    if guardrail_rules:
+        for rule in guardrail_rules:
+            if rule.type != "input":
+                continue
+            rule_config = rule.config or {}
+            if rule.mode == "regex":
+                rg = RegexGuardrail(
+                    patterns=rule_config.get("patterns", []),
+                    message=rule_config.get("message", f"规则 '{rule.name}' 拦截"),
+                    name=rule.name,
+                )
+            elif rule.mode == "keyword":
+                rg = RegexGuardrail(
+                    keywords=rule_config.get("keywords", []),
+                    message=rule_config.get("message", f"规则 '{rule.name}' 拦截"),
+                    name=rule.name,
+                )
+            else:
+                continue
+            input_guardrails.append(InputGuardrail(
+                guardrail_function=rg.as_input_fn(),
+                name=rule.name,
+            ))
 
     return Agent(
         name=config.name,
@@ -103,6 +134,7 @@ def _build_agent_from_config(config: AgentConfig) -> Any:
         instructions=config.instructions,
         model=config.model,
         model_settings=model_settings,
+        input_guardrails=input_guardrails,
         # tools/handoffs 由 tool_groups/handoffs 名称解析（MVP 暂不实现工具注册）
     )
 
@@ -220,8 +252,14 @@ async def execute_run(
     if agent_config is None:
         raise NotFoundError(f"Agent '{session_record.agent_name}' 不存在或已被禁用")
 
+    # 加载 Guardrail 规则
+    from app.services.guardrail import get_guardrail_rules_by_names
+
+    guardrail_names = (agent_config.guardrails or {}).get("input", [])
+    guardrail_rules = await get_guardrail_rules_by_names(db, guardrail_names)
+
     # 构建 Framework Agent
-    agent = _build_agent_from_config(agent_config)
+    agent = _build_agent_from_config(agent_config, guardrail_rules=guardrail_rules)
 
     # 构建 Framework Session（使用 InMemory，消息随请求生命周期）
     # TODO: 后续切换到 PostgresSessionBackend 实现跨请求持久化
@@ -308,7 +346,13 @@ async def execute_run_stream(
     if agent_config is None:
         raise NotFoundError(f"Agent '{session_record.agent_name}' 不存在或已被禁用")
 
-    agent = _build_agent_from_config(agent_config)
+    # 加载 Guardrail 规则
+    from app.services.guardrail import get_guardrail_rules_by_names
+
+    guardrail_names = (agent_config.guardrails or {}).get("input", [])
+    guardrail_rules = await get_guardrail_rules_by_names(db, guardrail_names)
+
+    agent = _build_agent_from_config(agent_config, guardrail_rules=guardrail_rules)
 
     session_backend = InMemorySessionBackend()
     framework_session = Session(session_id=str(session_id), backend=session_backend)

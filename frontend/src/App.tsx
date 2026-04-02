@@ -9,6 +9,7 @@ import SupervisionPage from './pages/supervision/SupervisionPage';
 import ProviderListPage from './pages/providers/ProviderListPage';
 import ProviderEditPage from './pages/providers/ProviderEditPage';
 import TracesPage from './pages/traces/TracesPage';
+import GuardrailRulesPage from './pages/guardrails/GuardrailRulesPage';
 import useAuthStore from './stores/authStore';
 
 const RequireAuth: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -42,6 +43,7 @@ const App: React.FC = () => {
         <Route path="providers/new" element={<ProviderEditPage />} />
         <Route path="providers/:id/edit" element={<ProviderEditPage />} />
         <Route path="traces" element={<TracesPage />} />
+        <Route path="guardrails" element={<GuardrailRulesPage />} />
       </Route>
     </Routes>
   );

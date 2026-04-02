@@ -243,6 +243,20 @@
 - [x] 6.1.10 路由 + 导航 — `/traces` 路由 + 侧边栏「Trace 追踪」菜单项
 - [x] 6.1.11 五轮代码审查（2 个问题修复：flush 替代 commit + Pydantic model 序列化）
 
+### Phase 6.2：Guardrails 配置化（P1）✅
+- [x] 6.2.1 Framework 层 — `RegexGuardrail` 内置护栏类（支持 patterns + keywords + case_sensitive）
+- [x] 6.2.2 数据模型 — `GuardrailRule` ORM + Alembic 迁移 `0007_create_guardrail_rules.py`（3 索引）
+- [x] 6.2.3 CRUD 服务 — `create/list/get/update/delete` + `get_by_names` + regex/keyword 配置校验（正则预编译验证 + 长度限制）
+- [x] 6.2.4 API 端点 — `POST/GET/PUT/DELETE /api/v1/guardrails` 5 个端点
+- [x] 6.2.5 运行时桥接 — `_build_agent_from_config` 加载 GuardrailRule → 构造 InputGuardrail 注入 Agent
+- [x] 6.2.6 后端测试 — 35 个测试（6 Schema + 8 API + 9 RegexGuardrail + 4 Agent集成 + 1 路由 + 7 校验），全部通过
+- [x] 6.2.7 前端服务 — `guardrailService.ts`（TypeScript 类型 + CRUD API）
+- [x] 6.2.8 前端 GuardrailRulesPage — ProTable 列表 + 创建/编辑 Modal（regex/keyword 切换）+ 启用开关 + 删除
+- [x] 6.2.9 Agent 编辑页集成 — Input Guardrails 多选下拉框 + 保存到 `guardrails.input`
+- [x] 6.2.10 路由 + 导航 — `/guardrails` 路由 + 侧边栏「Guardrail 护栏」菜单项
+- [x] 6.2.11 前端类型修正 — `AgentConfig.guardrails` 接口修正为 `{ input, output, tool }`
+- [x] 6.2.12 五轮代码审查（全部通过）
+
 ---
 
 *最后更新：2025-07-19*

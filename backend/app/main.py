@@ -16,6 +16,7 @@ from app.api.sessions import router as sessions_router
 from app.api.supervision import router as supervision_router
 from app.api.token_usage import router as token_usage_router
 from app.api.traces import router as traces_router
+from app.api.guardrails import router as guardrails_router
 
 
 def create_app() -> FastAPI:
@@ -50,6 +51,7 @@ def create_app() -> FastAPI:
     app.include_router(supervision_router)
     app.include_router(token_usage_router)
     app.include_router(traces_router)
+    app.include_router(guardrails_router)
 
     return app
 
