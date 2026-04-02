@@ -41,15 +41,143 @@
 
 ---
 
-## M1：Agent 核心引擎（待拆分）
+## M1：Agent 核心引擎
 
-## M2：Web 对话与 Agent 管理（待拆分）
+### Phase 1.1：Model 抽象层
+- [ ] 1.1.1 LiteLLMProvider 实现（litellm.acompletion 封装 + 流式支持）
+- [ ] 1.1.2 Message ↔ LiteLLM 格式互转
+- [ ] 1.1.3 ModelProvider 单元测试（mock litellm）
 
-## M3：编排与 Tracing（待拆分）
+### Phase 1.2：Function Tool 系统
+- [ ] 1.2.1 @function_tool 装饰器完善（自动 JSON Schema 生成）
+- [ ] 1.2.2 工具执行引擎（参数解析 + 调用 + 超时处理）
+- [ ] 1.2.3 ToolContext 注入 RunContext
+- [ ] 1.2.4 Function Tool 单元测试
 
-## M4：监督与安全（待拆分）
+### Phase 1.3：Runner Agent Loop
+- [ ] 1.3.1 Runner.run 核心循环（LLM → 工具调用 → 消息追加 → 循环）
+- [ ] 1.3.2 max_turns 控制 + on_max_turns_exceeded 回调
+- [ ] 1.3.3 final_output 解析（文本 + 结构化）
+- [ ] 1.3.4 Runner.run_streamed 流式输出（StreamEvent 产出）
+- [ ] 1.3.5 Runner.run_sync 同步封装
+- [ ] 1.3.6 Agent Loop 集成测试（mock LLM，多轮对话 + 工具调用）
 
-## M5：MVP 完整交付（待拆分）
+### Phase 1.4：Session 基础持久化
+- [ ] 1.4.1 PostgreSQL SessionBackend 实现（load/save/delete/list）
+- [ ] 1.4.2 SQLite SessionBackend（开发用，无需外部 DB）
+- [ ] 1.4.3 Session 与 Runner 集成（历史加载 + 新消息追加）
+- [ ] 1.4.4 Session 单元测试
+
+### Phase 1.5：集成验证
+- [ ] 1.5.1 端到端冒烟测试：Python REPL 创建 Agent → 发送消息 → 获得回复
+- [ ] 1.5.2 端到端冒烟测试：Agent + 工具调用 → 工具执行 → 回复
+- [ ] 1.5.3 端到端冒烟测试：多轮对话 + Session 持久化
+
+## M2：Web 对话与 Agent 管理
+
+### Phase 2.1：Agent CRUD API
+- [ ] 2.1.1 AgentConfig SQLAlchemy 模型
+- [ ] 2.1.2 Alembic 迁移：agent_configs 表
+- [ ] 2.1.3 Agent CRUD API（创建/查看/列表/编辑/删除）
+- [ ] 2.1.4 Agent API 单元测试
+
+### Phase 2.2：对话 API + SSE
+- [ ] 2.2.1 Session/Run SQLAlchemy 模型 + 迁移
+- [ ] 2.2.2 创建 Session + 发起 Run API
+- [ ] 2.2.3 SSE 流式事件输出端点
+- [ ] 2.2.4 Runner 与 FastAPI 集成（后台任务 + 事件推送）
+- [ ] 2.2.5 对话 API 测试
+
+### Phase 2.3：用户认证
+- [ ] 2.3.1 User 模型 + 迁移
+- [ ] 2.3.2 注册/登录 API（JWT）
+- [ ] 2.3.3 认证中间件（依赖注入 current_user）
+- [ ] 2.3.4 2 个角色：Admin + User
+
+### Phase 2.4：前端对话页
+- [ ] 2.4.1 对话页 UI（消息列表 + 输入框 + 流式渲染）
+- [ ] 2.4.2 SSE 客户端（EventSource 封装）
+- [ ] 2.4.3 Agent 选择器
+- [ ] 2.4.4 对话历史列表
+
+### Phase 2.5：前端 Agent 管理页
+- [ ] 2.5.1 Agent 列表页（ProTable）
+- [ ] 2.5.2 Agent 创建/编辑表单（ProForm）
+- [ ] 2.5.3 登录页对接后端认证
+
+## M3：编排与 Tracing
+
+### Phase 3.1：Handoff 机制
+- [ ] 3.1.1 Handoff 定义 + transfer_to 工具生成
+- [ ] 3.1.2 Runner Agent Loop Handoff 分支（Agent 切换 + 消息历史传递）
+- [ ] 3.1.3 InputFilter 历史过滤
+- [ ] 3.1.4 Handoff 测试（Triage → Specialist）
+
+### Phase 3.2：Agent-as-Tool
+- [ ] 3.2.1 Agent.as_tool() 封装
+- [ ] 3.2.2 Runner 中 AgentTool 的递归执行
+- [ ] 3.2.3 Agent-as-Tool 测试
+
+### Phase 3.3：Tracing 自动采集
+- [ ] 3.3.1 Runner 中自动创建 Trace + Agent/LLM/Tool Span
+- [ ] 3.3.2 TraceProcessor 回调触发
+- [ ] 3.3.3 PostgreSQL TraceProcessor（Trace/Span 写入数据库）
+- [ ] 3.3.4 ConsoleTraceProcessor（调试用）
+- [ ] 3.3.5 Tracing 数据模型 + 迁移
+
+### Phase 3.4：Token 审计基础
+- [ ] 3.4.1 TokenUsageLog 模型 + 迁移
+- [ ] 3.4.2 LLM Span 自动填充 token_usage
+- [ ] 3.4.3 Token 统计查询 API
+
+### Phase 3.5：前端执行记录页
+- [ ] 3.5.1 执行列表页（Run 列表 + 状态/时间/Token）
+- [ ] 3.5.2 Span 详情展示（树形结构）
+
+## M4：监督与安全
+
+### Phase 4.1：Input Guardrail
+- [ ] 4.1.1 InputGuardrail 执行（Runner 中 blocking/parallel 模式）
+- [ ] 4.1.2 基础 Prompt 注入检测护栏
+- [ ] 4.1.3 GuardrailResult → TripwireTriggered 错误处理
+- [ ] 4.1.4 Guardrail 测试
+
+### Phase 4.2：Approval Mode
+- [ ] 4.2.1 ApprovalHandler 接口实现（WebSocket 推送 + 等待响应）
+- [ ] 4.2.2 suggest 模式 Runner 集成
+- [ ] 4.2.3 审批请求 API（创建/查询/批准/拒绝）
+- [ ] 4.2.4 审批超时处理
+
+### Phase 4.3：监督面板
+- [ ] 4.3.1 活跃会话列表 API
+- [ ] 4.3.2 前端监督面板（会话列表 + 只读对话查看）
+- [ ] 4.3.3 审批操作 UI（WebSocket 实时推送）
+
+### Phase 4.4：Model Provider 管理
+- [ ] 4.4.1 ProviderConfig 模型 + 迁移
+- [ ] 4.4.2 Provider CRUD API（API Key 加密存储）
+- [ ] 4.4.3 Provider 管理前端页面
+
+### Phase 4.5：Token 统计
+- [ ] 4.5.1 按用户/模型 Token 消耗查询 API
+- [ ] 4.5.2 Token 统计基础前端页面
+
+## M5：MVP 完整交付
+
+### Phase 5.1：集成测试
+- [ ] 5.1.1 端到端场景：对话 + Handoff + 工具调用
+- [ ] 5.1.2 端到端场景：审批触发 + 批准 + 继续执行
+- [ ] 5.1.3 端到端场景：Tracing 完整链路验证
+
+### Phase 5.2：性能测试
+- [ ] 5.2.1 并发 10 用户基准测试
+- [ ] 5.2.2 p95 API 响应 < 200ms 验证
+- [ ] 5.2.3 首 Token < 2s SSE 延迟验证
+
+### Phase 5.3：文档与部署
+- [ ] 5.3.1 Docker Compose 一键部署指南
+- [ ] 5.3.2 用户手册（创建 Agent + 对话 + 查看执行记录）
+- [ ] 5.3.3 API 文档最终校验
 
 ---
 
