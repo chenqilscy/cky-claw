@@ -4,6 +4,7 @@ import {
   MessageOutlined,
   RobotOutlined,
   UnorderedListOutlined,
+  EyeOutlined,
 } from '@ant-design/icons';
 
 const menuRoutes = {
@@ -22,6 +23,11 @@ const menuRoutes = {
       path: '/runs',
       name: '执行记录',
       icon: <UnorderedListOutlined />,
+    },
+    {
+      path: '/supervision',
+      name: '监督面板',
+      icon: <EyeOutlined />,
     },
   ],
 };

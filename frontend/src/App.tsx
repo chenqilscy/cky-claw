@@ -5,6 +5,7 @@ import ChatPage from './pages/chat/ChatPage';
 import AgentListPage from './pages/agents/AgentListPage';
 import AgentEditPage from './pages/agents/AgentEditPage';
 import RunListPage from './pages/runs/RunListPage';
+import SupervisionPage from './pages/supervision/SupervisionPage';
 import useAuthStore from './stores/authStore';
 
 const RequireAuth: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -33,6 +34,7 @@ const App: React.FC = () => {
         <Route path="agents/new" element={<AgentEditPage />} />
         <Route path="agents/:name/edit" element={<AgentEditPage />} />
         <Route path="runs" element={<RunListPage />} />
+        <Route path="supervision" element={<SupervisionPage />} />
       </Route>
     </Routes>
   );
