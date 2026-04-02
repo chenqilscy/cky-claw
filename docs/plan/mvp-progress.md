@@ -196,7 +196,7 @@
 - [x] 4.4.3 Pydantic Schema（ProviderCreate/Update/Response + provider_type/auth_type 枚举校验）
 - [x] 4.4.4 Provider API 单元测试（36 个测试 — Schema/Crypto/API/认证/路由注册）
 - [x] 4.4.5 五轮代码审查（认证保护 + rate_limit 校验修复）
-- [ ] 4.4.6 Provider 管理前端页面 — 后续迭代
+- [x] 4.4.6 Provider 管理前端页面（列表 ProTable + 创建/编辑表单 + 启禁用 Switch + 删除确认）
 
 ### Phase 4.5：Token 统计 ✅
 - [x] 4.5.1 按用户/模型 Token 消耗查询 API（SummaryGroupBy 多维度分组 + model 筛选参数 + 10 新测试）
