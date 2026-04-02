@@ -23,6 +23,13 @@ class NotFoundError(AppError):
         super().__init__(message=message, code="NOT_FOUND", status_code=404)
 
 
+class ConflictError(AppError):
+    """资源冲突。"""
+
+    def __init__(self, message: str = "资源冲突") -> None:
+        super().__init__(message=message, code="CONFLICT", status_code=409)
+
+
 class ValidationError(AppError):
     """参数校验失败。"""
 
