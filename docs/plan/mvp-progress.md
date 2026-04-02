@@ -63,16 +63,20 @@
 - [x] 1.3.6 Agent Loop 集成测试（20 个测试 — mock LLM，多轮对话/工具调用/Handoff/错误处理）
 - [x] 1.3.7 五轮代码审查（逻辑正确性/边界条件/架构一致性/安全性/性能）
 
-### Phase 1.4：Session 基础持久化
-- [ ] 1.4.1 PostgreSQL SessionBackend 实现（load/save/delete/list）
-- [ ] 1.4.2 InMemorySessionBackend（开发/测试用）
-- [ ] 1.4.3 Session 与 Runner 集成（历史加载 + 新消息追加）
-- [ ] 1.4.4 Session 单元测试
+### Phase 1.4：Session 基础持久化 ✅
+- [x] 1.4.1 PostgreSQL SessionBackend 实现（asyncpg，DDL + CRUD + 事务）
+- [x] 1.4.2 InMemorySessionBackend（内存 + asyncio.Lock 并发安全）
+- [x] 1.4.3 Session 与 Runner 集成（session 参数、历史加载 + 新消息追加、所有退出路径均保存）
+- [x] 1.4.4 Message.to_dict() / from_dict() 序列化
+- [x] 1.4.5 Session 单元测试（21 个测试 — 序列化/Backend CRUD/Runner 集成）
+- [x] 1.4.6 五轮代码审查（Postgres 序列化修复、LLM 异常 session 保存修复）
 
-### Phase 1.5：集成验证
-- [ ] 1.5.1 端到端冒烟测试：Python REPL 创建 Agent → 发送消息 → 获得回复
-- [ ] 1.5.2 端到端冒烟测试：Agent + 工具调用 → 工具执行 → 回复
-- [ ] 1.5.3 端到端冒烟测试：多轮对话 + Session 持久化
+### Phase 1.5：集成验证 ✅
+- [x] 1.5.1 端到端冒烟：Agent → 发消息 → 回复（智谱 GLM-4-Flash）
+- [x] 1.5.2 端到端冒烟：Agent + 工具调用 → 执行 → 回复
+- [x] 1.5.3 端到端冒烟：多轮对话 + Session 持久化
+- [x] 1.5.4 流式对话验证
+- [x] 集成测试标记 `pytest.mark.integration`，CI 默认不跑
 
 ## M2：Web 对话与 Agent 管理
 
