@@ -21,6 +21,7 @@ from ckyclaw_framework.session.in_memory import InMemorySessionBackend
 from ckyclaw_framework.tracing.trace import Trace
 from ckyclaw_framework.tracing.span import Span, SpanType, SpanStatus
 from ckyclaw_framework.tracing.processor import TraceProcessor
+from ckyclaw_framework.tracing.console_processor import ConsoleTraceProcessor
 
 # === Model ===
 from ckyclaw_framework.model.provider import ModelProvider, ToolCall, ToolCallChunk
@@ -51,6 +52,7 @@ __all__ = [
     "SpanType",
     "SpanStatus",
     "TraceProcessor",
+    "ConsoleTraceProcessor",
     # Model
     "ModelProvider",
     "ModelSettings",

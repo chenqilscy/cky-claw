@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+from datetime import datetime, timezone
 from typing import Any, AsyncIterator
 
 from ckyclaw_framework.agent.agent import Agent
@@ -22,6 +23,9 @@ from ckyclaw_framework.runner.run_config import RunConfig
 from ckyclaw_framework.runner.run_context import RunContext
 from ckyclaw_framework.session.session import Session
 from ckyclaw_framework.tools.function_tool import FunctionTool
+from ckyclaw_framework.tracing.processor import TraceProcessor
+from ckyclaw_framework.tracing.span import Span, SpanStatus, SpanType
+from ckyclaw_framework.tracing.trace import Trace
 
 logger = logging.getLogger(__name__)
 
@@ -117,6 +121,7 @@ async def _execute_tool_calls(
     agent: Agent,
     tool_calls: list[ToolCall],
     messages: list[Message],
+    tracing: _TracingCtx | None = None,
 ) -> Agent | None:
     """执行一组工具调用，将结果追加到 messages。返回 handoff 目标 Agent（若有）。
 
@@ -129,6 +134,8 @@ async def _execute_tool_calls(
         if handoff_target is not None:
             # Handoff 工具"执行结果"是空的，控制权转移
             messages.append(tool_result_to_message(tc.id, "", agent.name))
+            if tracing:
+                await tracing.handoff_span(agent.name, handoff_target.name)
             return handoff_target
 
         # 查找普通工具
@@ -145,11 +152,135 @@ async def _execute_tool_calls(
         except json.JSONDecodeError:
             arguments = {}
 
-        # 执行
-        result = await tool.execute(arguments)
-        messages.append(tool_result_to_message(tc.id, result, agent.name))
+        # 执行工具（带 Tracing）
+        tool_span = await tracing.start_tool_span(tc.name, arguments) if tracing else None
+        try:
+            result = await tool.execute(arguments)
+            messages.append(tool_result_to_message(tc.id, result, agent.name))
+            if tool_span:
+                await tracing.end_span(tool_span, output=result)
+        except Exception as e:
+            error_result = f"Error: {e}"
+            messages.append(tool_result_to_message(tc.id, error_result, agent.name))
+            if tool_span:
+                await tracing.end_span(tool_span, output=error_result, status=SpanStatus.FAILED)
 
     return None
+
+
+class _TracingCtx:
+    """Runner 内部 Tracing 上下文管理器。零 processor 时所有操作为 noop。"""
+
+    def __init__(self, config: RunConfig, agent_name: str) -> None:
+        self.processors: list[TraceProcessor] = config.trace_processors if config.tracing_enabled else []
+        self.include_sensitive = config.trace_include_sensitive_data
+        self.trace: Trace | None = None
+        self._agent_span: Span | None = None
+        self._agent_name = agent_name
+
+    @property
+    def active(self) -> bool:
+        return bool(self.processors)
+
+    async def start_trace(self, workflow_name: str) -> None:
+        if not self.active:
+            return
+        self.trace = Trace(workflow_name=workflow_name)
+        for p in self.processors:
+            await p.on_trace_start(self.trace)
+
+    async def end_trace(self) -> Trace | None:
+        if not self.active or self.trace is None:
+            return None
+        self.trace.end_time = datetime.now(timezone.utc)
+        for p in self.processors:
+            await p.on_trace_end(self.trace)
+        return self.trace
+
+    async def start_agent_span(self, agent_name: str) -> Span:
+        span = Span(
+            trace_id=self.trace.trace_id if self.trace else "",
+            type=SpanType.AGENT,
+            name=agent_name,
+            status=SpanStatus.RUNNING,
+        )
+        if self.trace:
+            self.trace.spans.append(span)
+        self._agent_span = span
+        self._agent_name = agent_name
+        for p in self.processors:
+            await p.on_span_start(span)
+        return span
+
+    async def start_llm_span(self, model: str, input_messages: list[Message] | None = None) -> Span:
+        span = Span(
+            trace_id=self.trace.trace_id if self.trace else "",
+            parent_span_id=self._agent_span.span_id if self._agent_span else None,
+            type=SpanType.LLM,
+            name=model,
+            status=SpanStatus.RUNNING,
+            model=model,
+        )
+        if self.include_sensitive and input_messages:
+            span.input = [{"role": m.role.value, "content": m.content[:500] if m.content else ""} for m in input_messages[-5:]]
+        if self.trace:
+            self.trace.spans.append(span)
+        for p in self.processors:
+            await p.on_span_start(span)
+        return span
+
+    async def start_tool_span(self, tool_name: str, arguments: dict[str, Any] | None = None) -> Span:
+        span = Span(
+            trace_id=self.trace.trace_id if self.trace else "",
+            parent_span_id=self._agent_span.span_id if self._agent_span else None,
+            type=SpanType.TOOL,
+            name=tool_name,
+            status=SpanStatus.RUNNING,
+        )
+        if self.include_sensitive and arguments:
+            span.input = arguments
+        if self.trace:
+            self.trace.spans.append(span)
+        for p in self.processors:
+            await p.on_span_start(span)
+        return span
+
+    async def handoff_span(self, from_agent: str, to_agent: str) -> Span:
+        span = Span(
+            trace_id=self.trace.trace_id if self.trace else "",
+            parent_span_id=self._agent_span.span_id if self._agent_span else None,
+            type=SpanType.HANDOFF,
+            name=f"{from_agent} → {to_agent}",
+            status=SpanStatus.COMPLETED,
+        )
+        span.end_time = datetime.now(timezone.utc)
+        span.metadata = {"from": from_agent, "to": to_agent}
+        if self.trace:
+            self.trace.spans.append(span)
+        for p in self.processors:
+            await p.on_span_start(span)
+            await p.on_span_end(span)
+        return span
+
+    async def end_span(
+        self,
+        span: Span,
+        output: Any = None,
+        status: SpanStatus = SpanStatus.COMPLETED,
+        token_usage: TokenUsage | None = None,
+    ) -> None:
+        span.end_time = datetime.now(timezone.utc)
+        span.status = status
+        if self.include_sensitive and output is not None:
+            span.output = str(output)[:1000] if isinstance(output, str) else output
+        if token_usage:
+            span.token_usage = {
+                "prompt_tokens": token_usage.prompt_tokens,
+                "completion_tokens": token_usage.completion_tokens,
+                "total_tokens": token_usage.total_tokens,
+            }
+        for p in self.processors:
+            await p.on_span_end(span)
 
 
 class Runner:
@@ -180,6 +311,11 @@ class Runner:
         provider = _resolve_provider(config)
         total_usage = TokenUsage()
 
+        # Tracing 上下文
+        tracing = _TracingCtx(config, agent.name)
+        if tracing.active:
+            await tracing.start_trace(config.workflow_name)
+
         # 初始化消息历史
         messages = _normalize_input(input)
         current_agent = agent
@@ -204,6 +340,9 @@ class Runner:
                 turn_count=turn_count,
             )
 
+            # Tracing: Agent Span
+            agent_span = await tracing.start_agent_span(current_agent.name) if tracing.active else None
+
             # 准备 LLM 调用参数
             system_msg = _build_system_message(current_agent, run_ctx)
             llm_messages: list[Message] = []
@@ -214,6 +353,9 @@ class Runner:
 
             model_name = _resolve_model(current_agent, config)
             settings = _resolve_settings(current_agent, config)
+
+            # Tracing: LLM Span
+            llm_span = await tracing.start_llm_span(model_name, llm_messages) if tracing.active else None
 
             # 调用 LLM
             try:
@@ -226,6 +368,11 @@ class Runner:
                 )  # type: ignore[assignment]
             except Exception as e:
                 logger.exception("LLM call failed for agent '%s'", current_agent.name)
+                if llm_span:
+                    await tracing.end_span(llm_span, output=str(e), status=SpanStatus.FAILED)
+                if agent_span:
+                    await tracing.end_span(agent_span, status=SpanStatus.FAILED)
+                trace = await tracing.end_trace()
                 # Session: 异常时也保存已有消息
                 if session is not None:
                     await session.append(messages[history_offset:])
@@ -235,9 +382,14 @@ class Runner:
                     last_agent_name=current_agent.name,
                     token_usage=total_usage,
                     turn_count=turn_count,
+                    trace=trace,
                 )
 
             _accumulate_usage(total_usage, response.token_usage)
+
+            # Tracing: 结束 LLM Span
+            if llm_span:
+                await tracing.end_span(llm_span, output=response.content, token_usage=response.token_usage)
 
             # 将 LLM 回复追加到历史
             assistant_msg = model_response_to_assistant_message(response, current_agent.name)
@@ -245,6 +397,9 @@ class Runner:
 
             # 无工具调用 → 最终输出
             if not response.tool_calls:
+                if agent_span:
+                    await tracing.end_span(agent_span, output=response.content)
+                trace = await tracing.end_trace()
                 # Session: 保存新增消息
                 if session is not None:
                     await session.append(messages[history_offset:])
@@ -254,18 +409,25 @@ class Runner:
                     last_agent_name=current_agent.name,
                     token_usage=total_usage,
                     turn_count=turn_count,
+                    trace=trace,
                 )
 
             # 执行工具调用
             handoff_target = await _execute_tool_calls(
                 current_agent, response.tool_calls, messages,
+                tracing=tracing if tracing.active else None,
             )
 
             # Handoff: 切换 Agent，不增加 turn_count
             if handoff_target is not None:
                 logger.info("Handoff: %s → %s", current_agent.name, handoff_target.name)
+                if agent_span:
+                    await tracing.end_span(agent_span)
                 current_agent = handoff_target
                 turn_count -= 1  # Handoff 本身不算一轮
+            # 非 Handoff 工具调用：结束 agent span 并在下一轮重建
+            elif agent_span:
+                await tracing.end_span(agent_span)
 
         # 超过 max_turns
         logger.warning("Agent loop exceeded max_turns=%d", max_turns)
@@ -274,6 +436,8 @@ class Runner:
             if msg.role == MessageRole.ASSISTANT and msg.content:
                 last_content = msg.content
                 break
+
+        trace = await tracing.end_trace()
 
         # Session: 保存新增消息
         if session is not None:
@@ -285,6 +449,7 @@ class Runner:
             last_agent_name=current_agent.name,
             token_usage=total_usage,
             turn_count=turn_count,
+            trace=trace,
         )
 
     @staticmethod
@@ -328,6 +493,11 @@ class Runner:
         current_agent = agent
         turn_count = 0
 
+        # Tracing 上下文
+        tracing = _TracingCtx(config, agent.name)
+        if tracing.active:
+            await tracing.start_trace(config.workflow_name)
+
         # Session: 加载历史消息
         history_offset = 0
         if session is not None:
@@ -348,6 +518,9 @@ class Runner:
 
             yield StreamEvent(type=StreamEventType.AGENT_START, agent_name=current_agent.name)
 
+            # Tracing: Agent Span
+            agent_span = await tracing.start_agent_span(current_agent.name) if tracing.active else None
+
             system_msg = _build_system_message(current_agent, run_ctx)
             llm_messages: list[Message] = []
             if system_msg.content:
@@ -357,6 +530,9 @@ class Runner:
 
             model_name = _resolve_model(current_agent, config)
             settings = _resolve_settings(current_agent, config)
+
+            # Tracing: LLM Span
+            llm_span = await tracing.start_llm_span(model_name, llm_messages) if tracing.active else None
 
             # 流式调用 LLM
             try:
@@ -369,6 +545,11 @@ class Runner:
                 )
             except Exception as e:
                 logger.exception("LLM stream call failed for agent '%s'", current_agent.name)
+                if llm_span:
+                    await tracing.end_span(llm_span, output=str(e), status=SpanStatus.FAILED)
+                if agent_span:
+                    await tracing.end_span(agent_span, status=SpanStatus.FAILED)
+                trace = await tracing.end_trace()
                 # Session: 异常时也保存已有消息
                 if session is not None:
                     await session.append(messages[history_offset:])
@@ -380,6 +561,7 @@ class Runner:
                         last_agent_name=current_agent.name,
                         token_usage=total_usage,
                         turn_count=turn_count,
+                        trace=trace,
                     ),
                 )
                 return
@@ -420,6 +602,12 @@ class Runner:
             messages.append(assistant_msg)
 
             if not aggregated_tool_calls:
+                # Tracing: 结束 LLM + Agent Span
+                if llm_span:
+                    await tracing.end_span(llm_span, output=full_content)
+                if agent_span:
+                    await tracing.end_span(agent_span, output=full_content)
+                trace = await tracing.end_trace()
                 # Session: 保存新增消息
                 if session is not None:
                     await session.append(messages[history_offset:])
@@ -432,6 +620,7 @@ class Runner:
                         last_agent_name=current_agent.name,
                         token_usage=total_usage,
                         turn_count=turn_count,
+                        trace=trace,
                     ),
                 )
                 return
@@ -444,8 +633,13 @@ class Runner:
                     agent_name=current_agent.name,
                 )
 
+            # Tracing: 结束 LLM Span（流式聚合完成后）
+            if llm_span:
+                await tracing.end_span(llm_span, output=full_content)
+
             handoff_target = await _execute_tool_calls(
                 current_agent, aggregated_tool_calls, messages,
+                tracing=tracing if tracing.active else None,
             )
 
             for tc in aggregated_tool_calls:
@@ -461,8 +655,12 @@ class Runner:
                     data={"from": current_agent.name, "to": handoff_target.name},
                     agent_name=current_agent.name,
                 )
+                if agent_span:
+                    await tracing.end_span(agent_span)
                 current_agent = handoff_target
                 turn_count -= 1
+            elif agent_span:
+                await tracing.end_span(agent_span)
 
         # 超过 max_turns
         last_content = ""
@@ -470,6 +668,8 @@ class Runner:
             if msg.role == MessageRole.ASSISTANT and msg.content:
                 last_content = msg.content
                 break
+
+        trace = await tracing.end_trace()
 
         # Session: 保存新增消息
         if session is not None:
@@ -483,5 +683,6 @@ class Runner:
                 last_agent_name=current_agent.name,
                 token_usage=total_usage,
                 turn_count=turn_count,
+                trace=trace,
             ),
         )
