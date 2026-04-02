@@ -1,15 +1,28 @@
-import { Button, Card, Form, Input, Typography } from 'antd';
+import { Button, Card, Form, Input, Typography, message } from 'antd';
 import { LockOutlined, UserOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
+import useAuthStore from '../stores/authStore';
 
 const { Title } = Typography;
 
+interface LoginFormValues {
+  username: string;
+  password: string;
+}
+
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
+  const { login, loading, error, clearError } = useAuthStore();
 
-  const onFinish = () => {
-    // TODO: 接入后端认证 API
-    navigate('/chat');
+  const onFinish = async (values: LoginFormValues) => {
+    clearError();
+    try {
+      await login(values.username, values.password);
+      message.success('登录成功');
+      navigate('/chat');
+    } catch {
+      // error 已由 store 处理
+    }
   };
 
   return (
@@ -24,6 +37,11 @@ const LoginPage: React.FC = () => {
         <Title level={3} style={{ textAlign: 'center', marginBottom: 32 }}>
           CkyClaw
         </Title>
+        {error && (
+          <div style={{ color: '#ff4d4f', textAlign: 'center', marginBottom: 16 }}>
+            {error}
+          </div>
+        )}
         <Form onFinish={onFinish} size="large">
           <Form.Item
             name="username"
@@ -38,7 +56,7 @@ const LoginPage: React.FC = () => {
             <Input.Password prefix={<LockOutlined />} placeholder="密码" />
           </Form.Item>
           <Form.Item>
-            <Button type="primary" htmlType="submit" block>
+            <Button type="primary" htmlType="submit" block loading={loading}>
               登录
             </Button>
           </Form.Item>

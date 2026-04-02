@@ -99,22 +99,29 @@
 - [x] 2.2.6 对话 API 测试（15 个测试）
 - [x] 2.2.7 五轮代码审查（unused import + StreamingResponse 生命周期确认）
 
-### Phase 2.3：用户认证
-- [ ] 2.3.1 User 模型 + 迁移
-- [ ] 2.3.2 注册/登录 API（JWT）
-- [ ] 2.3.3 认证中间件（依赖注入 current_user）
-- [ ] 2.3.4 2 个角色：Admin + User
+### Phase 2.3：用户认证 ✅
+- [x] 2.3.1 User 模型 + 迁移（UUID PK, username/email unique, bcrypt hash, role, is_active）
+- [x] 2.3.2 注册/登录 API（JWT HS256 + bcrypt 密码哈希）
+- [x] 2.3.3 认证中间件（get_current_user / require_admin 依赖注入）
+- [x] 2.3.4 2 个角色：Admin + User
+- [x] 2.3.5 AuthenticationError（401）异常类型
+- [x] 2.3.6 认证 API 测试（16 个测试）
+- [x] 2.3.7 五轮代码审查（AuthenticationError 语义修正 + 延迟导入提升 + 未用 import 清理）
 
-### Phase 2.4：前端对话页
-- [ ] 2.4.1 对话页 UI（消息列表 + 输入框 + 流式渲染）
-- [ ] 2.4.2 SSE 客户端（EventSource 封装）
-- [ ] 2.4.3 Agent 选择器
-- [ ] 2.4.4 对话历史列表
+### Phase 2.4：前端对话页 ✅
+- [x] 2.4.1 对话页 UI（ChatPage + ChatSidebar + ChatWindow 三组件布局）
+- [x] 2.4.2 SSE 客户端（fetch + ReadableStream 流式解析，AbortController 生命周期管理）
+- [x] 2.4.3 Agent 选择器（下拉选择 + 自动加载列表）
+- [x] 2.4.4 对话历史列表（按 Agent 筛选会话列表）
+- [x] 2.4.5 流式消息渲染（text_delta 实时拼接 + agent_start/run_end 状态处理）
 
-### Phase 2.5：前端 Agent 管理页
-- [ ] 2.5.1 Agent 列表页（ProTable）
-- [ ] 2.5.2 Agent 创建/编辑表单（ProForm）
-- [ ] 2.5.3 登录页对接后端认证
+### Phase 2.5：前端 Agent 管理页 ✅
+- [x] 2.5.1 Agent 列表页（ProTable + 搜索 + 分页 + 删除确认）
+- [x] 2.5.2 Agent 创建/编辑表单（Ant Design Form + name 正则校验 + approval_mode 枚举）
+- [x] 2.5.3 登录页对接后端认证（authStore + JWT Token 管理 + 路由守卫）
+- [x] 2.5.4 API 服务层（fetch 封装 + JWT 自动注入 + 错误解析）
+- [x] 2.5.5 TypeScript 零错误 + ESLint 零新增错误
+- [x] 2.5.6 五轮代码审查（逻辑/边界/规范/安全/性能）
 
 ## M3：编排与 Tracing
 
