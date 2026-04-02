@@ -271,6 +271,15 @@
 - [x] 6.3.11 路由 + 导航 — `/approvals` 路由 + 侧边栏「审批队列」菜单项
 - [x] 6.3.12 五轮代码审查（1 个问题修复：handler DB 双写保护）
 
+### Phase 6.4：Multi-Agent Handoff 编排（P0）✅
+- [x] 6.4.1 `_resolve_handoff_agents` 递归解析 — 从 DB `AgentConfig.handoffs` 名称列表批量加载目标 Agent 配置，递归构建 Framework Agent 对象图
+- [x] 6.4.2 循环引用检测 — `visited` 集合 + `_MAX_HANDOFF_DEPTH = 5` 深度限制，安全跳过并打印警告
+- [x] 6.4.3 目标 Agent 完整构建 — 子 Agent 的 guardrails、approval_mode、model_settings 均从 DB 加载
+- [x] 6.4.4 运行时桥接 — `execute_run` 和 `execute_run_stream` 均调用 `_resolve_handoff_agents`，传入 `handoff_agents` 构建主 Agent
+- [x] 6.4.5 后端测试 — 18 个测试（4 构建 + 9 解析 + 2 常量 + 2 工具集成 + 1 运行集成），全部通过
+- [x] 6.4.6 前端 UI — Agent 编辑页已有 Handoff 目标配置（逗号分隔输入），无需新增
+- [x] 6.4.7 五轮代码审查通过，无阻塞问题
+
 ---
 
 *最后更新：2025-07-19*

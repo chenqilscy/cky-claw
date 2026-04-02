@@ -88,9 +88,14 @@ async def delete_session(db: AsyncSession, session_id: uuid.UUID) -> None:
 # ---------------------------------------------------------------------------
 
 
+_MAX_HANDOFF_DEPTH = 5
+"""Handoff 递归构建最大深度，防止循环引用或无限递归。"""
+
+
 def _build_agent_from_config(
     config: AgentConfig,
     guardrail_rules: list | None = None,
+    handoff_agents: list[Any] | None = None,
 ) -> Any:
     """从 DB AgentConfig 构造 Framework Agent 实例。"""
     from ckyclaw_framework.agent.agent import Agent
@@ -145,8 +150,85 @@ def _build_agent_from_config(
         model_settings=model_settings,
         input_guardrails=input_guardrails,
         approval_mode=approval_mode,
-        # tools/handoffs 由 tool_groups/handoffs 名称解析（MVP 暂不实现工具注册）
+        handoffs=handoff_agents or [],
     )
+
+
+async def _resolve_handoff_agents(
+    db: AsyncSession,
+    config: AgentConfig,
+    visited: set[str] | None = None,
+    depth: int = 0,
+) -> list[Any]:
+    """递归解析 AgentConfig.handoffs 名称列表，构建 Framework Agent 对象图。
+
+    - 使用 visited 集合检测循环引用
+    - 使用 depth 限制递归深度
+    - 缺失或禁用的目标 Agent 被安全跳过（warn）
+    """
+    from ckyclaw_framework.handoff.handoff import Handoff
+
+    if not config.handoffs:
+        return []
+
+    if depth >= _MAX_HANDOFF_DEPTH:
+        logger.warning(
+            "Handoff 递归深度达到上限 %d，Agent '%s' 的 handoffs 将被截断",
+            _MAX_HANDOFF_DEPTH,
+            config.name,
+        )
+        return []
+
+    if visited is None:
+        visited = set()
+    visited = visited | {config.name}  # 不可变拷贝，每条路径独立
+
+    # 批量加载目标 AgentConfig
+    target_names = [n for n in config.handoffs if n not in visited]
+    if not target_names:
+        # 所有 handoff 目标都在 visited 中（循环引用）
+        for name in config.handoffs:
+            if name in visited:
+                logger.warning("检测到循环 Handoff 引用：Agent '%s' → '%s'，已跳过", config.name, name)
+        return []
+
+    stmt = select(AgentConfig).where(
+        AgentConfig.name.in_(target_names),
+        AgentConfig.is_active == True,  # noqa: E712
+    )
+    target_configs = {c.name: c for c in (await db.execute(stmt)).scalars().all()}
+
+    # 加载目标 Agent 的 Guardrail 规则
+    from app.services.guardrail import get_guardrail_rules_by_names
+
+    handoff_list: list[Any] = []
+    for name in config.handoffs:
+        if name in visited and name not in target_names:
+            logger.warning("检测到循环 Handoff 引用：Agent '%s' → '%s'，已跳过", config.name, name)
+            continue
+
+        target_config = target_configs.get(name)
+        if target_config is None:
+            logger.warning("Handoff 目标 Agent '%s' 不存在或已禁用，已跳过", name)
+            continue
+
+        # 加载目标的 guardrail 规则
+        target_guardrail_names = (target_config.guardrails or {}).get("input", [])
+        target_guardrail_rules = await get_guardrail_rules_by_names(db, target_guardrail_names)
+
+        # 递归解析目标的 handoffs
+        sub_handoffs = await _resolve_handoff_agents(db, target_config, visited, depth + 1)
+
+        # 构建目标 Agent
+        target_agent = _build_agent_from_config(
+            target_config,
+            guardrail_rules=target_guardrail_rules,
+            handoff_agents=sub_handoffs,
+        )
+
+        handoff_list.append(Handoff(agent=target_agent))
+
+    return handoff_list
 
 
 # ---------------------------------------------------------------------------
@@ -268,8 +350,11 @@ async def execute_run(
     guardrail_names = (agent_config.guardrails or {}).get("input", [])
     guardrail_rules = await get_guardrail_rules_by_names(db, guardrail_names)
 
+    # 解析 Handoff 目标 Agent 图
+    handoff_agents = await _resolve_handoff_agents(db, agent_config)
+
     # 构建 Framework Agent
-    agent = _build_agent_from_config(agent_config, guardrail_rules=guardrail_rules)
+    agent = _build_agent_from_config(agent_config, guardrail_rules=guardrail_rules, handoff_agents=handoff_agents)
 
     # 构建 Framework Session（使用 InMemory，消息随请求生命周期）
     # TODO: 后续切换到 PostgresSessionBackend 实现跨请求持久化
@@ -374,7 +459,10 @@ async def execute_run_stream(
     guardrail_names = (agent_config.guardrails or {}).get("input", [])
     guardrail_rules = await get_guardrail_rules_by_names(db, guardrail_names)
 
-    agent = _build_agent_from_config(agent_config, guardrail_rules=guardrail_rules)
+    # 解析 Handoff 目标 Agent 图
+    handoff_agents = await _resolve_handoff_agents(db, agent_config)
+
+    agent = _build_agent_from_config(agent_config, guardrail_rules=guardrail_rules, handoff_agents=handoff_agents)
 
     session_backend = InMemorySessionBackend()
     framework_session = Session(session_id=str(session_id), backend=session_backend)
