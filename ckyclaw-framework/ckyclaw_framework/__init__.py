@@ -22,9 +22,10 @@ from ckyclaw_framework.tracing.span import Span, SpanType, SpanStatus
 from ckyclaw_framework.tracing.processor import TraceProcessor
 
 # === Model ===
-from ckyclaw_framework.model.provider import ModelProvider
+from ckyclaw_framework.model.provider import ModelProvider, ToolCall, ToolCallChunk
 from ckyclaw_framework.model.settings import ModelSettings
 from ckyclaw_framework.model.message import Message, MessageRole, TokenUsage
+from ckyclaw_framework.model.litellm_provider import LiteLLMProvider
 
 __all__ = [
     # Core
@@ -54,6 +55,9 @@ __all__ = [
     "Message",
     "MessageRole",
     "TokenUsage",
+    "ToolCall",
+    "ToolCallChunk",
+    "LiteLLMProvider",
 ]
 
 __version__ = "0.1.0"

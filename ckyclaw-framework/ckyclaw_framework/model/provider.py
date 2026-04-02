@@ -3,22 +3,53 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, AsyncIterator
 
 if TYPE_CHECKING:
-    from ckyclaw_framework.model.message import Message
+    from ckyclaw_framework.model.message import Message, TokenUsage
     from ckyclaw_framework.model.settings import ModelSettings
 
 
 @dataclass
+class ToolCall:
+    """LLM 返回的工具调用请求。"""
+
+    id: str
+    """工具调用唯一标识（由 LLM 生成）"""
+
+    name: str
+    """工具名称"""
+
+    arguments: str
+    """JSON 字符串形式的参数"""
+
+
+@dataclass
+class ToolCallChunk:
+    """流式模式下的工具调用增量片段。"""
+
+    index: int
+    """tool_calls 数组中的索引"""
+
+    id: str | None = None
+    """首个 chunk 携带 id"""
+
+    name: str | None = None
+    """首个 chunk 携带 name"""
+
+    arguments_delta: str = ""
+    """arguments 的增量片段"""
+
+
+@dataclass
 class ModelResponse:
-    """LLM 响应。"""
+    """LLM 完整响应。"""
 
     content: str | None = None
-    tool_calls: list[dict[str, Any]] | None = None
+    tool_calls: list[ToolCall] = field(default_factory=list)
     finish_reason: str | None = None
-    usage: dict[str, int] | None = None
+    token_usage: TokenUsage | None = None
 
 
 @dataclass
@@ -26,7 +57,7 @@ class ModelChunk:
     """LLM 流式响应片段。"""
 
     content: str | None = None
-    tool_calls: list[dict[str, Any]] | None = None
+    tool_call_chunks: list[ToolCallChunk] = field(default_factory=list)
     finish_reason: str | None = None
 
 
