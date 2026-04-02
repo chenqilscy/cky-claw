@@ -65,3 +65,6 @@ warn_unused_configs = true
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+markers = [
+    "integration: 端到端集成测试（需要真实 LLM API Key）",
+]
