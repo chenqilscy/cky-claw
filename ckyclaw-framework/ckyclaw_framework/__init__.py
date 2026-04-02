@@ -12,6 +12,10 @@ from ckyclaw_framework.runner.result import RunResult, StreamEvent
 # === Orchestration ===
 from ckyclaw_framework.handoff.handoff import Handoff, InputFilter
 
+# === Guardrails ===
+from ckyclaw_framework.guardrails.input_guardrail import InputGuardrail
+from ckyclaw_framework.guardrails.result import GuardrailResult, InputGuardrailTripwireError
+
 # === Tools ===
 from ckyclaw_framework.tools.function_tool import FunctionTool, function_tool
 from ckyclaw_framework.tools.tool_context import ToolContext
@@ -43,6 +47,10 @@ __all__ = [
     # Orchestration
     "Handoff",
     "InputFilter",
+    # Guardrails
+    "InputGuardrail",
+    "GuardrailResult",
+    "InputGuardrailTripwireError",
     # Tools
     "FunctionTool",
     "function_tool",

@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Callable
 
 if TYPE_CHECKING:
+    from ckyclaw_framework.guardrails.input_guardrail import InputGuardrail
     from ckyclaw_framework.handoff.handoff import Handoff
     from ckyclaw_framework.model.settings import ModelSettings
     from ckyclaw_framework.runner.run_config import RunConfig
@@ -37,6 +38,9 @@ class Agent:
 
     handoffs: list[Agent | Handoff] = field(default_factory=list)
     """可移交的目标列表。支持 Agent（简写）或 Handoff（完整配置）。"""
+
+    input_guardrails: list[InputGuardrail] = field(default_factory=list)
+    """输入安全护栏列表。在首次 LLM 调用前执行检测。"""
 
     output_type: type | None = None
     """结构化输出类型（Pydantic BaseModel 子类）"""

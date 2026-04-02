@@ -9,6 +9,8 @@ from datetime import datetime, timezone
 from typing import Any, AsyncIterator
 
 from ckyclaw_framework.agent.agent import Agent
+from ckyclaw_framework.guardrails.input_guardrail import InputGuardrail
+from ckyclaw_framework.guardrails.result import GuardrailResult, InputGuardrailTripwireError
 from ckyclaw_framework.handoff.handoff import Handoff
 from ckyclaw_framework.model._converter import (
     messages_to_litellm,
@@ -124,6 +126,66 @@ def _find_handoff_target(agent: Agent, tool_name: str) -> tuple[Agent, Handoff |
             if expected_name == tool_name:
                 return (target, None)
     return None
+
+
+async def _execute_input_guardrails(
+    guardrails: list[InputGuardrail],
+    run_context: RunContext,
+    input_text: str,
+    tracing: _TracingCtx | None = None,
+) -> None:
+    """执行 Input Guardrails（阻塞模式）。
+
+    按列表顺序依次执行。首个 Tripwire 触发后立即中断（短路）。
+    触发时抛出 InputGuardrailTripwireError。
+    """
+    for guardrail in guardrails:
+        # Tracing: Guardrail Span
+        guardrail_span = None
+        if tracing and tracing.active:
+            guardrail_span = Span(
+                trace_id=tracing.trace.trace_id if tracing.trace else "",
+                parent_span_id=tracing._agent_span.span_id if tracing._agent_span else None,
+                type=SpanType.GUARDRAIL,
+                name=guardrail.name,
+                status=SpanStatus.RUNNING,
+            )
+            if tracing.trace:
+                tracing.trace.spans.append(guardrail_span)
+            for p in tracing.processors:
+                await p.on_span_start(guardrail_span)
+
+        try:
+            result: GuardrailResult = await guardrail.guardrail_function(run_context, input_text)
+        except Exception as e:
+            logger.exception("Input guardrail '%s' raised an exception", guardrail.name)
+            if guardrail_span and tracing:
+                await tracing.end_span(
+                    guardrail_span,
+                    output=str(e),
+                    status=SpanStatus.FAILED,
+                )
+            raise InputGuardrailTripwireError(
+                guardrail_name=guardrail.name,
+                message=f"Guardrail execution error: {e}",
+            ) from e
+
+        metadata = {
+            "guardrail_name": guardrail.name,
+            "guardrail_type": "input",
+            "triggered": result.tripwire_triggered,
+            "message": result.message,
+        }
+        if guardrail_span and tracing:
+            guardrail_span.metadata = metadata
+            status = SpanStatus.COMPLETED if not result.tripwire_triggered else SpanStatus.FAILED
+            await tracing.end_span(guardrail_span, output=result.message, status=status)
+
+        if result.tripwire_triggered:
+            raise InputGuardrailTripwireError(
+                guardrail_name=guardrail.name,
+                message=result.message,
+            )
 
 
 async def _execute_tool_calls(
@@ -340,6 +402,32 @@ class Runner:
                 messages = history + messages
                 history_offset = len(history)
 
+        # Input Guardrails: 首次执行前检测用户输入
+        if current_agent.input_guardrails:
+            user_text = ""
+            for msg in reversed(messages):
+                if msg.role == MessageRole.USER and msg.content:
+                    user_text = msg.content
+                    break
+            guardrail_ctx = RunContext(
+                agent=current_agent,
+                config=config,
+                context=context or {},
+                turn_count=0,
+            )
+            try:
+                await _execute_input_guardrails(
+                    current_agent.input_guardrails,
+                    guardrail_ctx,
+                    user_text,
+                    tracing=tracing if tracing.active else None,
+                )
+            except InputGuardrailTripwireError:
+                trace = await tracing.end_trace()
+                if session is not None:
+                    await session.append(messages[history_offset:])
+                raise
+
         while turn_count < max_turns:
             turn_count += 1
 
@@ -520,6 +608,32 @@ class Runner:
             if history:
                 messages = history + messages
                 history_offset = len(history)
+
+        # Input Guardrails: 首次执行前检测用户输入
+        if current_agent.input_guardrails:
+            user_text = ""
+            for msg in reversed(messages):
+                if msg.role == MessageRole.USER and msg.content:
+                    user_text = msg.content
+                    break
+            guardrail_ctx = RunContext(
+                agent=current_agent,
+                config=config,
+                context=context or {},
+                turn_count=0,
+            )
+            try:
+                await _execute_input_guardrails(
+                    current_agent.input_guardrails,
+                    guardrail_ctx,
+                    user_text,
+                    tracing=tracing if tracing.active else None,
+                )
+            except InputGuardrailTripwireError:
+                await tracing.end_trace()
+                if session is not None:
+                    await session.append(messages[history_offset:])
+                raise
 
         while turn_count < max_turns:
             turn_count += 1
