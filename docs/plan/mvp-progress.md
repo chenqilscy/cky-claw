@@ -187,10 +187,13 @@
 - [ ] 4.3.2 前端监督面板（会话列表 + 只读对话查看）
 - [ ] 4.3.3 审批操作 UI（WebSocket 实时推送）
 
-### Phase 4.4：Model Provider 管理
-- [ ] 4.4.1 ProviderConfig 模型 + 迁移
-- [ ] 4.4.2 Provider CRUD API（API Key 加密存储）
-- [ ] 4.4.3 Provider 管理前端页面
+### Phase 4.4：Model Provider 管理 ✅
+- [x] 4.4.1 ProviderConfig 模型 + 迁移（provider_configs 表，4 索引 + Fernet API Key 加密）
+- [x] 4.4.2 Provider CRUD API（6 端点：列表/创建/详情/更新/删除/启禁用 + require_admin 认证）
+- [x] 4.4.3 Pydantic Schema（ProviderCreate/Update/Response + provider_type/auth_type 枚举校验）
+- [x] 4.4.4 Provider API 单元测试（36 个测试 — Schema/Crypto/API/认证/路由注册）
+- [x] 4.4.5 五轮代码审查（认证保护 + rate_limit 校验修复）
+- [ ] 4.4.6 Provider 管理前端页面 — 后续迭代
 
 ### Phase 4.5：Token 统计
 - [ ] 4.5.1 按用户/模型 Token 消耗查询 API
