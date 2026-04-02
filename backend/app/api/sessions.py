@@ -1,0 +1,96 @@
+"""Session 与 Run API 路由。"""
+
+from __future__ import annotations
+
+import uuid
+
+from fastapi import APIRouter, Depends, Query
+from fastapi.responses import StreamingResponse
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.database import get_db
+from app.schemas.session import (
+    RunRequest,
+    RunResponse,
+    SessionCreate,
+    SessionListResponse,
+    SessionResponse,
+)
+from app.services import session as session_service
+
+router = APIRouter(prefix="/api/v1/sessions", tags=["sessions"])
+
+
+@router.post("", response_model=SessionResponse, status_code=201)
+async def create_session(
+    data: SessionCreate,
+    db: AsyncSession = Depends(get_db),
+) -> SessionResponse:
+    """创建 Session。"""
+    session = await session_service.create_session(db, data)
+    return SessionResponse.model_validate(session)
+
+
+@router.get("", response_model=SessionListResponse)
+async def list_sessions(
+    agent_name: str | None = Query(None, description="按 Agent 筛选"),
+    status: str | None = Query(None, description="按状态筛选"),
+    limit: int = Query(20, ge=1, le=100, description="分页大小"),
+    offset: int = Query(0, ge=0, description="偏移量"),
+    db: AsyncSession = Depends(get_db),
+) -> SessionListResponse:
+    """获取 Session 列表。"""
+    sessions, total = await session_service.list_sessions(
+        db, agent_name=agent_name, status=status, limit=limit, offset=offset
+    )
+    return SessionListResponse(
+        data=[SessionResponse.model_validate(s) for s in sessions],
+        total=total,
+        limit=limit,
+        offset=offset,
+    )
+
+
+@router.get("/{session_id}", response_model=SessionResponse)
+async def get_session(
+    session_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+) -> SessionResponse:
+    """获取 Session 详情。"""
+    session = await session_service.get_session(db, session_id)
+    return SessionResponse.model_validate(session)
+
+
+@router.delete("/{session_id}")
+async def delete_session(
+    session_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, str]:
+    """删除 Session。"""
+    await session_service.delete_session(db, session_id)
+    return {"message": "Session deleted"}
+
+
+@router.post("/{session_id}/run", response_model=None)
+async def run_session(
+    session_id: uuid.UUID,
+    data: RunRequest,
+    db: AsyncSession = Depends(get_db),
+) -> RunResponse | StreamingResponse:
+    """发起 Run。
+
+    stream=false 返回 JSON 响应。
+    stream=true 返回 SSE 事件流。
+    """
+    if data.config.stream:
+        return StreamingResponse(
+            session_service.execute_run_stream(db, session_id, data),
+            media_type="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache",
+                "Connection": "keep-alive",
+                "X-Accel-Buffering": "no",
+            },
+        )
+    else:
+        return await session_service.execute_run(db, session_id, data)

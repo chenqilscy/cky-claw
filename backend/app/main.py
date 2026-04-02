@@ -10,6 +10,7 @@ from app.core.exceptions import register_exception_handlers
 from app.core.middleware import RequestIDMiddleware
 from app.api.health import router as health_router
 from app.api.agents import router as agents_router
+from app.api.sessions import router as sessions_router
 
 
 def create_app() -> FastAPI:
@@ -38,6 +39,7 @@ def create_app() -> FastAPI:
     # 路由
     app.include_router(health_router)
     app.include_router(agents_router)
+    app.include_router(sessions_router)
 
     return app
 
