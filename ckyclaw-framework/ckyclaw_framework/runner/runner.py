@@ -20,6 +20,7 @@ from ckyclaw_framework.model.settings import ModelSettings
 from ckyclaw_framework.runner.result import RunResult, StreamEvent, StreamEventType
 from ckyclaw_framework.runner.run_config import RunConfig
 from ckyclaw_framework.runner.run_context import RunContext
+from ckyclaw_framework.session.session import Session
 from ckyclaw_framework.tools.function_tool import FunctionTool
 
 logger = logging.getLogger(__name__)
@@ -159,6 +160,7 @@ class Runner:
         agent: Agent,
         input: str | list[Message],
         *,
+        session: Session | None = None,
         config: RunConfig | None = None,
         context: dict[str, Any] | None = None,
         max_turns: int = 10,
@@ -171,6 +173,8 @@ class Runner:
         3. 若 LLM 返回 tool_calls → 执行工具 → 回到步骤 2
         4. 若 LLM 返回纯文本 → 循环结束
         5. 若检测到 Handoff → 切换 Agent → 回到步骤 1
+
+        若提供 session，自动加载历史消息并在结束后保存新增消息。
         """
         config = config or RunConfig()
         provider = _resolve_provider(config)
@@ -180,6 +184,14 @@ class Runner:
         messages = _normalize_input(input)
         current_agent = agent
         turn_count = 0
+
+        # Session: 加载历史消息
+        history_offset = 0
+        if session is not None:
+            history = await session.get_history()
+            if history:
+                messages = history + messages
+                history_offset = len(history)
 
         while turn_count < max_turns:
             turn_count += 1
@@ -230,6 +242,9 @@ class Runner:
 
             # 无工具调用 → 最终输出
             if not response.tool_calls:
+                # Session: 保存新增消息
+                if session is not None:
+                    await session.append(messages[history_offset:])
                 return RunResult(
                     output=response.content or "",
                     messages=messages,
@@ -256,6 +271,10 @@ class Runner:
             if msg.role == MessageRole.ASSISTANT and msg.content:
                 last_content = msg.content
                 break
+
+        # Session: 保存新增消息
+        if session is not None:
+            await session.append(messages[history_offset:])
 
         return RunResult(
             output=last_content,
@@ -289,6 +308,7 @@ class Runner:
         agent: Agent,
         input: str | list[Message],
         *,
+        session: Session | None = None,
         config: RunConfig | None = None,
         context: dict[str, Any] | None = None,
         max_turns: int = 10,
@@ -296,6 +316,7 @@ class Runner:
         """异步流式运行。逐步产出 StreamEvent。
 
         与 run() 相同的 Agent Loop，但 LLM 响应以流式 chunk 产出。
+        若提供 session，自动加载历史消息并在结束后保存新增消息。
         """
         config = config or RunConfig()
         provider = _resolve_provider(config)
@@ -303,6 +324,14 @@ class Runner:
         messages = _normalize_input(input)
         current_agent = agent
         turn_count = 0
+
+        # Session: 加载历史消息
+        history_offset = 0
+        if session is not None:
+            history = await session.get_history()
+            if history:
+                messages = history + messages
+                history_offset = len(history)
 
         while turn_count < max_turns:
             turn_count += 1
@@ -385,6 +414,9 @@ class Runner:
             messages.append(assistant_msg)
 
             if not aggregated_tool_calls:
+                # Session: 保存新增消息
+                if session is not None:
+                    await session.append(messages[history_offset:])
                 yield StreamEvent(type=StreamEventType.AGENT_END, agent_name=current_agent.name)
                 yield StreamEvent(
                     type=StreamEventType.RUN_COMPLETE,
@@ -432,6 +464,10 @@ class Runner:
             if msg.role == MessageRole.ASSISTANT and msg.content:
                 last_content = msg.content
                 break
+
+        # Session: 保存新增消息
+        if session is not None:
+            await session.append(messages[history_offset:])
 
         yield StreamEvent(
             type=StreamEventType.RUN_COMPLETE,

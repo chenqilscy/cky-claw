@@ -15,6 +15,7 @@ from ckyclaw_framework.tools.tool_context import ToolContext
 
 # === Session ===
 from ckyclaw_framework.session.session import Session, SessionBackend, SessionMetadata
+from ckyclaw_framework.session.in_memory import InMemorySessionBackend
 
 # === Tracing ===
 from ckyclaw_framework.tracing.trace import Trace
@@ -43,6 +44,7 @@ __all__ = [
     "Session",
     "SessionBackend",
     "SessionMetadata",
+    "InMemorySessionBackend",
     # Tracing
     "Trace",
     "Span",
