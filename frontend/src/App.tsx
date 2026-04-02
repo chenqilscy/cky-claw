@@ -4,6 +4,7 @@ import LoginPage from './pages/Login';
 import ChatPage from './pages/chat/ChatPage';
 import AgentListPage from './pages/agents/AgentListPage';
 import AgentEditPage from './pages/agents/AgentEditPage';
+import RunListPage from './pages/runs/RunListPage';
 import useAuthStore from './stores/authStore';
 
 const RequireAuth: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -31,7 +32,7 @@ const App: React.FC = () => {
         <Route path="agents" element={<AgentListPage />} />
         <Route path="agents/new" element={<AgentEditPage />} />
         <Route path="agents/:name/edit" element={<AgentEditPage />} />
-        <Route path="runs" element={<div>执行记录页（待实现）</div>} />
+        <Route path="runs" element={<RunListPage />} />
       </Route>
     </Routes>
   );
