@@ -108,11 +108,11 @@ class PostgresSessionBackend(SessionBackend):
                         msg.agent_name,
                         msg.tool_call_id,
                         json.dumps(msg.tool_calls) if msg.tool_calls else None,
-                        json.dumps(msg.token_usage and {
+                        json.dumps({
                             "prompt_tokens": msg.token_usage.prompt_tokens,
                             "completion_tokens": msg.token_usage.completion_tokens,
                             "total_tokens": msg.token_usage.total_tokens,
-                        }),
+                        }) if msg.token_usage else None,
                         json.dumps(msg.metadata) if msg.metadata else "{}",
                     )
                 # 更新元数据

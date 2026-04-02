@@ -226,6 +226,9 @@ class Runner:
                 )  # type: ignore[assignment]
             except Exception as e:
                 logger.exception("LLM call failed for agent '%s'", current_agent.name)
+                # Session: 异常时也保存已有消息
+                if session is not None:
+                    await session.append(messages[history_offset:])
                 return RunResult(
                     output=f"Error: LLM call failed: {e}",
                     messages=messages,
@@ -366,6 +369,9 @@ class Runner:
                 )
             except Exception as e:
                 logger.exception("LLM stream call failed for agent '%s'", current_agent.name)
+                # Session: 异常时也保存已有消息
+                if session is not None:
+                    await session.append(messages[history_offset:])
                 yield StreamEvent(
                     type=StreamEventType.RUN_COMPLETE,
                     data=RunResult(
