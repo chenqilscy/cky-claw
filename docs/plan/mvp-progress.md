@@ -172,11 +172,15 @@
 - [x] 4.1.5 五轮代码审查（run_streamed guardrail 异常处理对齐）
 - [ ] 4.1.6 基础 Prompt 注入检测内置护栏 — 后续迭代（需 LLM-Based 模式）
 
-### Phase 4.2：Approval Mode
-- [ ] 4.2.1 ApprovalHandler 接口实现（WebSocket 推送 + 等待响应）
-- [ ] 4.2.2 suggest 模式 Runner 集成
-- [ ] 4.2.3 审批请求 API（创建/查询/批准/拒绝）
-- [ ] 4.2.4 审批超时处理
+### Phase 4.2：Approval Mode ✅
+- [x] 4.2.1 ApprovalMode 枚举（SUGGEST/AUTO_EDIT/FULL_AUTO）+ ApprovalDecision 枚举 + ApprovalRejectedError
+- [x] 4.2.2 ApprovalHandler 抽象接口（request_approval → ApprovalDecision）
+- [x] 4.2.3 Agent.approval_mode 字段 + RunConfig 覆盖（RunConfig > Agent > 默认 FULL_AUTO）
+- [x] 4.2.4 Runner 集成（_resolve_approval_mode + _check_approval + _execute_tool_calls 审批检查）
+- [x] 4.2.5 三种模式语义：SUGGEST 必审批 / AUTO_EDIT MVP 等同 FULL_AUTO / FULL_AUTO 跳过
+- [x] 4.2.6 Approval 测试（15 个测试 — 枚举/Handler/Runner 集成/RunConfig 覆盖/auto-edit/handler 详情）
+- [x] 4.2.7 五轮代码审查（_resolve_approval_mode truthiness → is not None）
+- [ ] 4.2.8 WebSocket 审批通道实现 + 审批请求 API — 后续迭代（需前后端 WebSocket 基础设施）
 
 ### Phase 4.3：监督面板
 - [ ] 4.3.1 活跃会话列表 API
