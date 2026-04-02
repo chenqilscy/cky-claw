@@ -8,12 +8,18 @@ CkyClaw 是基于自研 **CkyClaw Framework** 构建的 AI Agent 管理与运行
 
 我（AI 助手）的名字叫 cky，老板也叫 boss。永远使用中文回答。
 
-## 代理网络 只在mac 平台生效
+## 代理网络（仅 macOS）
 
-当访问外部 URL（GitHub、npm、crates.io 等）时，必须先设置代理：
+当在 macOS 上访问外部 URL（GitHub、npm、PyPI 等）时，必须先设置代理：
 
+```bash
+export HTTP_PROXY=http://127.0.0.1:7890
+export HTTPS_PROXY=http://127.0.0.1:7890
+export NO_PROXY=localhost,127.0.0.1
+```
 
-适用于所有 `curl`、`wget`、`npm install`、`cargo install`、`git clone` 等网络命令。
+适用于所有 `curl`、`wget`、`pip install`、`uv sync`、`pnpm install`、`git clone` 等网络命令。
+Windows 环境无需设置代理。
 
 ## 核心信念
 
@@ -38,19 +44,89 @@ CkyClaw 是基于自研 **CkyClaw Framework** 构建的 AI Agent 管理与运行
 - 能用一个函数表达的逻辑，不要拆成三个抽象层
 - 配置项越少越好，合理的默认值比灵活的配置更有价值
 
-## Python 编码规范
-// 待补充
+## Monorepo 结构
 
-## TypeScript 规范（brain/ 目录）
+```
+cky-claw/
+├── ckyclaw-framework/   # CkyClaw Framework — Python Agent 运行时库
+├── backend/             # CkyClaw Backend — FastAPI 后端服务
+├── frontend/            # CkyClaw Frontend — React Web 前端
+├── docs/                # 产品与技术文档
+├── .github/             # GitHub Actions CI + 编辑器指令
+└── docker-compose.yml   # 开发环境基础设施
+```
+
+## Python 编码规范
+
+### 版本与工具
+- Python **3.12+**
+- 包管理：**uv**
+- Lint：**ruff**（替代 flake8 + isort + black）
+- 类型检查：**mypy** strict mode
+- 测试：**pytest** + pytest-asyncio
+
+### 风格
+- 缩进：4 空格
+- 行宽：120 字符
+- 引号：双引号
+- Docstring：Google Style
+- 类型注解：所有公共函数必须完整类型注解
+- `from __future__ import annotations` 写在每个文件首行
+
+### 命名
+- 模块/包：`snake_case`
+- 类：`PascalCase`
+- 函数/方法/变量：`snake_case`
+- 常量：`UPPER_SNAKE_CASE`
+- 私有：前缀 `_`
+
+### 异步
+- IO 密集型操作一律使用 `async/await`
+- 永远不在异步上下文中执行同步阻塞调用
+- 使用 `asyncio.TaskGroup` 管理并发任务
+
+### Import 顺序
+1. 标准库
+2. 第三方库
+3. 本项目库（`ckyclaw_framework`）
+4. 本应用库（`app`）
+
+各组之间空一行。
+
+## TypeScript 规范（frontend/ 目录）
 
 ### 开发命令
 ```bash
-cd brain
-npm run start:dev      # 开发模式
-npm run build          # 编译
-NODE_OPTIONS='--experimental-vm-modules' npx jest --no-cache  # 测试
+cd frontend
+pnpm dev               # 开发模式
+pnpm build             # 编译
+pnpm lint              # ESLint 检查
+pnpm test              # Vitest 测试
 npx tsc --noEmit       # 类型检查
 ```
+
+### 风格
+- 缩进：2 空格
+- 分号：必须
+- 引号：单引号
+- TypeScript strict mode 开启
+- 禁止 `any`，必须使用具体类型
+
+## Git 提交规范
+
+格式：`<type>: <description>`
+
+| type | 说明 |
+|------|------|
+| feat | 新功能 |
+| fix | Bug 修复 |
+| chore | 构建/工具/配置 |
+| docs | 文档变更 |
+| refactor | 重构（不改功能/不修 bug） |
+| test | 测试 |
+| perf | 性能优化 |
+
+语言：中文描述。示例：`feat: Agent CRUD API 实现`
 
 ## 十角色团队流程
 
@@ -115,12 +191,12 @@ npx tsc --noEmit       # 类型检查
 每个需求开始前，产品经理必须回答：
 
 1. **AI 场景相关性**：是否直接服务于 AI Agent 平台场景？
-2. **差异化价值**：是否体现 NextCrab 与竞品的差异化？
+2. **差异化价值**：是否体现 CkyClaw 与竞品的差异化？
 3. **用户优先级**：目标用户（中国企业 AI 团队）是否真的需要？
 
 优先级：
-- **P0**：核心 Agent 能力（Brain 编排、团队规划、工具执行、技能系统）
-- **P1**：支撑能力（LLM 可靠性、聊天桥接、经验记忆）
+- **P0**：核心 Agent 能力（CkyClaw Framework 编排、Agent Loop、工具执行、Tracing）
+- **P1**：支撑能力（LLM 多模型适配、Session 管理、Guardrails、Approval）
 - **P2**：垂直 Agent（代码审查、DevOps、客服、数据分析）
 - **P3**：锦上添花（高级 UI、非核心集成）
 
@@ -139,10 +215,17 @@ npx tsc --noEmit       # 类型检查
 
 ## 技术选型
 
-- Python 后端：
-- 数据库：postgresql
-- Brain：NestJS + TypeScript
-- 包管理：pnpm workspace（前端）、?（Python）
+| 层 | 技术 |
+|----|------|
+| **Framework** | Python 3.12+, CkyClaw Framework (自研) |
+| **Backend** | FastAPI, SQLAlchemy (async), Alembic, LiteLLM, Pydantic v2 |
+| **Frontend** | React 18, Vite 5, TypeScript, Ant Design 5, ProComponents, TanStack Query, ReactFlow, ECharts, Zustand |
+| **Database** | PostgreSQL 16, Redis 7 |
+| **Deploy** | Docker Compose (MVP), Kubernetes (后续) |
+| **Python 包管理** | uv |
+| **前端包管理** | pnpm |
+| **Lint** | ruff (Python), ESLint (TypeScript) |
+| **CI** | GitHub Actions |
 
 ## 底线
 
