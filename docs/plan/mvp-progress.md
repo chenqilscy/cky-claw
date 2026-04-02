@@ -80,18 +80,24 @@
 
 ## M2：Web 对话与 Agent 管理
 
-### Phase 2.1：Agent CRUD API
-- [ ] 2.1.1 AgentConfig SQLAlchemy 模型
-- [ ] 2.1.2 Alembic 迁移：agent_configs 表
-- [ ] 2.1.3 Agent CRUD API（创建/查看/列表/编辑/删除）
-- [ ] 2.1.4 Agent API 单元测试
+### Phase 2.1：Agent CRUD API ✅
+- [x] 2.1.1 AgentConfig SQLAlchemy 模型（18 字段完整对应 Data Model v1.3）
+- [x] 2.1.2 Alembic 迁移：agent_configs 表（3 索引）
+- [x] 2.1.3 Agent CRUD API（5 端点：列表/创建/详情/更新/软删除）
+- [x] 2.1.4 Pydantic Schema（AgentCreate/AgentUpdate/AgentResponse + name 正则校验 + approval_mode 枚举）
+- [x] 2.1.5 Service 层（分页搜索 + LIKE 转义 + IntegrityError 并发冲突处理）
+- [x] 2.1.6 ConflictError 异常（409）
+- [x] 2.1.7 Agent API 单元测试（23 个测试）
+- [x] 2.1.8 五轮代码审查（LIKE 转义 + IntegrityError + populate_by_name + import 顺序）
 
-### Phase 2.2：对话 API + SSE
-- [ ] 2.2.1 Session/Run SQLAlchemy 模型 + 迁移
-- [ ] 2.2.2 创建 Session + 发起 Run API
-- [ ] 2.2.3 SSE 流式事件输出端点
-- [ ] 2.2.4 Runner 与 FastAPI 集成（后台任务 + 事件推送）
-- [ ] 2.2.5 对话 API 测试
+### Phase 2.2：对话 API + SSE ✅
+- [x] 2.2.1 SessionRecord SQLAlchemy 模型 + Alembic 迁移（sessions 表）
+- [x] 2.2.2 Session CRUD API（创建/列表/详情/删除）
+- [x] 2.2.3 POST /sessions/{id}/run — 非流式 JSON 响应
+- [x] 2.2.4 POST /sessions/{id}/run — SSE 流式事件输出（10 种事件类型）
+- [x] 2.2.5 AgentConfig → Framework Agent 构建桥梁
+- [x] 2.2.6 对话 API 测试（15 个测试）
+- [x] 2.2.7 五轮代码审查（unused import + StreamingResponse 生命周期确认）
 
 ### Phase 2.3：用户认证
 - [ ] 2.3.1 User 模型 + 迁移
