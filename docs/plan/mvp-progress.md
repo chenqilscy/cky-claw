@@ -219,10 +219,12 @@
 - [x] 5.2.4 综合基准（1 个测试 — 混合负载 10 并发 agent+session+health p95<200ms）
 - [x] 5.2.5 五轮代码审查（unused import 清理 + mock 数据修复）
 
-### Phase 5.3：文档与部署
-- [ ] 5.3.1 Docker Compose 一键部署指南
-- [ ] 5.3.2 用户手册（创建 Agent + 对话 + 查看执行记录）
-- [ ] 5.3.3 API 文档最终校验
+### Phase 5.3：文档与部署 ✅
+- [x] 5.3.1 Docker Compose 一键部署指南（`docs/deployment-guide.md` — 快速部署/环境变量/运维命令/故障排查）
+- [x] 5.3.2 用户手册（`docs/user-guide.md` — 登录/Agent 管理/对话/执行记录/监督面板/Provider 管理）
+- [x] 5.3.3 API 文档最终校验（`docs/api-validation.md` — 26 端点全部实现/SSE 事件类型/后续迭代规划）
+- [x] 5.3.4 Nginx SSE 代理路径修正（`/api/v1/chat/` → `/api/v1/sessions/.+/run`）
+- [x] 5.3.5 五轮文档审查（全部通过）
 
 ---
 
