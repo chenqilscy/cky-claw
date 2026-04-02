@@ -2,6 +2,7 @@
 
 from app.models.agent import AgentConfig
 from app.models.session import SessionRecord
+from app.models.token_usage import TokenUsageLog
 from app.models.user import User
 
-__all__ = ["AgentConfig", "SessionRecord", "User"]
+__all__ = ["AgentConfig", "SessionRecord", "TokenUsageLog", "User"]

@@ -179,10 +179,11 @@ async def _execute_tool_calls(
 
 
 class _TracingCtx:
-    """Runner 内部 Tracing 上下文管理器。零 processor 时所有操作为 noop。"""
+    """Runner 内部 Tracing 上下文管理器。tracing_enabled=False 时所有操作为 noop。"""
 
     def __init__(self, config: RunConfig, agent_name: str) -> None:
-        self.processors: list[TraceProcessor] = config.trace_processors if config.tracing_enabled else []
+        self._enabled = config.tracing_enabled
+        self.processors: list[TraceProcessor] = config.trace_processors if self._enabled else []
         self.include_sensitive = config.trace_include_sensitive_data
         self.trace: Trace | None = None
         self._agent_span: Span | None = None
@@ -190,7 +191,7 @@ class _TracingCtx:
 
     @property
     def active(self) -> bool:
-        return bool(self.processors)
+        return self._enabled
 
     async def start_trace(self, workflow_name: str) -> None:
         if not self.active:

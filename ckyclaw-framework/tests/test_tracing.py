@@ -145,8 +145,8 @@ class TestTracingDisabled:
         assert result.trace is None
 
     @pytest.mark.asyncio
-    async def test_no_trace_when_no_processors(self) -> None:
-        """无 trace_processors 时 RunResult.trace 应为 None。"""
+    async def test_trace_without_processors_still_collects(self) -> None:
+        """tracing_enabled=True 但无 processors 时仍产出 Trace（数据采集与通知解耦）。"""
         agent = Agent(name="bot")
         provider = MockProvider([ModelResponse(content="Hi")])
         config = RunConfig(model_provider=provider, tracing_enabled=True, trace_processors=[])
@@ -154,7 +154,8 @@ class TestTracingDisabled:
         result = await Runner.run(agent, "hello", config=config)
 
         assert result.output == "Hi"
-        assert result.trace is None
+        assert result.trace is not None
+        assert len(result.trace.spans) == 2  # agent + llm
 
 
 # ── Runner.run() Tracing 测试 ────────────────────────────────────

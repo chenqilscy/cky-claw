@@ -15,6 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.exceptions import NotFoundError
 from app.models.agent import AgentConfig
 from app.models.session import SessionRecord
+from app.models.token_usage import TokenUsageLog
 from app.schemas.session import MessageItem, RunRequest, RunResponse, SessionCreate, TokenUsageResponse
 
 logger = logging.getLogger(__name__)
@@ -107,6 +108,67 @@ def _build_agent_from_config(config: AgentConfig) -> Any:
 
 
 # ---------------------------------------------------------------------------
+# Token Usage 采集辅助
+# ---------------------------------------------------------------------------
+
+
+async def _save_token_usage_from_trace(
+    db: AsyncSession,
+    trace: Any,
+    *,
+    session_id: uuid.UUID | None = None,
+    user_id: uuid.UUID | None = None,
+) -> None:
+    """从 RunResult.trace 中提取 LLM Span 的 token_usage，写入 token_usage_logs。"""
+    if trace is None or not hasattr(trace, "spans"):
+        return
+
+    logs: list[TokenUsageLog] = []
+    for span in trace.spans:
+        # 只采集 LLM 类型且有 token_usage 的 Span
+        if getattr(span, "type", None) != "llm":
+            continue
+        usage = getattr(span, "token_usage", None)
+        if not usage:
+            continue
+
+        # 查找父 agent span 获取 agent_name
+        agent_name = _find_parent_agent_name(trace.spans, span) or "unknown"
+
+        logs.append(
+            TokenUsageLog(
+                trace_id=trace.trace_id,
+                span_id=span.span_id,
+                session_id=session_id,
+                user_id=user_id,
+                agent_name=agent_name,
+                model=span.model or span.name or "unknown",
+                prompt_tokens=usage.get("prompt_tokens", 0),
+                completion_tokens=usage.get("completion_tokens", 0),
+                total_tokens=usage.get("total_tokens", 0),
+            )
+        )
+
+    if logs:
+        try:
+            db.add_all(logs)
+            await db.commit()
+        except Exception:
+            logger.exception("Failed to save token usage logs")
+            await db.rollback()
+
+
+def _find_parent_agent_name(spans: list[Any], target_span: Any) -> str | None:
+    """在 spans 列表中查找 target_span 的父 Agent Span 名称。"""
+    if target_span.parent_span_id is None:
+        return None
+    for span in spans:
+        if span.span_id == target_span.parent_span_id and getattr(span, "type", None) == "agent":
+            return span.name
+    return None
+
+
+# ---------------------------------------------------------------------------
 # Run 执行
 # ---------------------------------------------------------------------------
 
@@ -163,6 +225,9 @@ async def execute_run(
     )
 
     duration_ms = int((time.monotonic() - start_time) * 1000)
+
+    # Token 审计：从 Trace 提取 LLM Span token_usage 写入
+    await _save_token_usage_from_trace(db, result.trace, session_id=session_id)
 
     # 更新 session 的 updated_at
     session_record.updated_at = datetime.now(timezone.utc)
@@ -226,6 +291,7 @@ async def execute_run_stream(
 
     run_id = str(uuid.uuid4())
     start_time = time.monotonic()
+    run_result = None  # 用于提取 trace → token_usage_logs
 
     # SSE 事件映射
     _EVENT_MAP = {
@@ -255,6 +321,7 @@ async def execute_run_stream(
             if event.type == StreamEventType.LLM_CHUNK:
                 payload["delta"] = event.data if isinstance(event.data, str) else str(event.data or "")
             elif event.type == StreamEventType.RUN_COMPLETE:
+                run_result = event.data  # RunResult
                 duration_ms = int((time.monotonic() - start_time) * 1000)
                 payload["run_id"] = run_id
                 payload["status"] = "completed"
@@ -274,6 +341,10 @@ async def execute_run_stream(
     except Exception as exc:
         logger.exception("Run 执行异常: session_id=%s", session_id)
         yield _sse_event("error", {"code": "RUN_FAILED", "message": str(exc)})
+
+    # Token 审计：从 Trace 提取 LLM Span token_usage 写入
+    if run_result and hasattr(run_result, "trace"):
+        await _save_token_usage_from_trace(db, run_result.trace, session_id=session_id)
 
     # 更新 session
     session_record.updated_at = datetime.now(timezone.utc)
