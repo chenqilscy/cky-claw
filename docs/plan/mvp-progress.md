@@ -205,10 +205,12 @@
 
 ## M5：MVP 完整交付
 
-### Phase 5.1：集成测试
-- [ ] 5.1.1 端到端场景：对话 + Handoff + 工具调用
-- [ ] 5.1.2 端到端场景：审批触发 + 批准 + 继续执行
-- [ ] 5.1.3 端到端场景：Tracing 完整链路验证
+### Phase 5.1：集成测试 ✅
+- [x] 5.1.1 端到端场景：对话 + Handoff + 工具调用（7 个测试 — 单级/三级 Handoff + Tool + Session 持久化 + InputFilter + 自定义 tool_name + 多工具并行 + 流式）
+- [x] 5.1.2 端到端场景：审批触发 + 批准 + 继续执行（7 个测试 — 通过/拒绝/Handoff+审批/full-auto/RunConfig 覆盖/多工具审批/流式审批）
+- [x] 5.1.3 端到端场景：Tracing 完整链路验证（11 个测试 — 基本 Span/Tool Span/Handoff Span/全类型/token_usage/禁用/敏感数据/流式/Guardrail 拦截/workflow_name/审批+Tracing）
+- [x] 5.1.4 综合管线测试（2 个测试 — 全能力协作/Guardrail 拦截终止）
+- [x] 5.1.5 五轮代码审查（unused import 修复）
 
 ### Phase 5.2：性能测试
 - [ ] 5.2.1 并发 10 用户基准测试
@@ -222,4 +224,4 @@
 
 ---
 
-*最后更新：2025-07-15*
+*最后更新：2025-07-17*
