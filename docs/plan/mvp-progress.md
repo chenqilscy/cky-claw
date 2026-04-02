@@ -134,10 +134,11 @@
 - [x] 3.1.6 Handoff 测试（16 个测试 — 数据类/兼容性/Runner/InputFilter/流式）
 - [x] 3.1.7 五轮代码审查（unused import 修复）
 
-### Phase 3.2：Agent-as-Tool
-- [ ] 3.2.1 Agent.as_tool() 封装
-- [ ] 3.2.2 Runner 中 AgentTool 的递归执行
-- [ ] 3.2.3 Agent-as-Tool 测试
+### Phase 3.2：Agent-as-Tool ✅
+- [x] 3.2.1 Agent.as_tool() 封装（FunctionTool 包装 + 延迟导入避免循环 + config 注入）
+- [x] 3.2.2 Runner 中 AgentTool 的递归执行（独立 Runner.run 子调用 + 消息历史隔离）
+- [x] 3.2.3 Agent-as-Tool 测试（11 个测试 — 基础/执行/流式/边界条件）
+- [x] 3.2.4 五轮代码审查（unused import 修复）
 
 ### Phase 3.3：Tracing 自动采集 ✅
 - [x] 3.3.1 Runner 中自动创建 Trace + Agent/LLM/Tool Span（`_TracingCtx` 内部上下文管理器）
