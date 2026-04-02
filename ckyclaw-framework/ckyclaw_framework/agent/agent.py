@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any, Callable
 if TYPE_CHECKING:
     from ckyclaw_framework.handoff.handoff import Handoff
     from ckyclaw_framework.model.settings import ModelSettings
+    from ckyclaw_framework.runner.run_config import RunConfig
     from ckyclaw_framework.runner.run_context import RunContext
     from ckyclaw_framework.tools.function_tool import FunctionTool
 
@@ -39,6 +40,55 @@ class Agent:
 
     output_type: type | None = None
     """结构化输出类型（Pydantic BaseModel 子类）"""
+
+    def as_tool(
+        self,
+        tool_name: str | None = None,
+        tool_description: str | None = None,
+        config: RunConfig | None = None,
+    ) -> FunctionTool:
+        """将此 Agent 包装为 Tool，供 Manager Agent 调用。
+
+        Agent-as-Tool 场景下，Manager Agent 通过 tool_call 调用子 Agent。
+        子 Agent 使用独立的消息历史运行，最终输出作为 tool_result 返回。
+
+        Args:
+            tool_name: 工具名称（默认 agent.name）
+            tool_description: 工具描述（默认 agent.description）
+            config: 子 Agent 运行配置（默认 None，使用默认 RunConfig）
+
+        Returns:
+            FunctionTool 实例
+        """
+        from ckyclaw_framework.tools.function_tool import FunctionTool
+
+        agent = self
+        inner_config = config
+
+        async def _agent_tool_fn(input: str) -> str:
+            from ckyclaw_framework.runner.runner import Runner
+
+            result = await Runner.run(agent, input, config=inner_config)
+            return result.output
+
+        name = tool_name or self.name
+        description = tool_description or self.description or f"Run agent '{self.name}'"
+
+        return FunctionTool(
+            name=name,
+            description=description,
+            fn=_agent_tool_fn,
+            parameters_schema={
+                "type": "object",
+                "properties": {
+                    "input": {
+                        "type": "string",
+                        "description": "Input message to the agent",
+                    },
+                },
+                "required": ["input"],
+            },
+        )
 
     @classmethod
     def from_yaml(cls, path: str) -> Agent:
