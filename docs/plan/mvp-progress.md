@@ -292,6 +292,17 @@
 - [x] 6.5.9 路由 + 导航 — `/mcp-servers` 路由 + 侧边栏「MCP Server」菜单项
 - [x] 6.5.10 五轮代码审查（1 个问题修复：write 端点 require_admin 安全加固）
 
+### Phase 6.6：MCP SDK 集成（P0）✅
+- [x] 6.6.1 Framework `mcp/` 模块 — `MCPServerConfig` 数据类（name/transport/command/url/args/env/headers/connect_timeout/tool_call_timeout）
+- [x] 6.6.2 Framework `mcp/connection.py` — `connect_and_discover(stack, config)` 支持 stdio/sse/http 三种传输，工具以 `{server_name}::{tool_name}` 命名空间隔离
+- [x] 6.6.3 MCP SDK 可选依赖 — `pyproject.toml` 新增 `[mcp]` extras（`mcp>=1.0.0`）
+- [x] 6.6.4 Backend 运行时桥接 — `_resolve_mcp_tools(db, config, stack)` 通过 `AsyncExitStack` 管理 MCP 连接生命周期，`execute_run`/`execute_run_stream` 均接入
+- [x] 6.6.5 FunctionTool `**kwargs` 参数透传修复 — MCP 工具调用正确传递所有参数
+- [x] 6.6.6 安全降级 — `connect_and_discover` 中 `_ensure_mcp_installed()` + backend 捕获 `ImportError` 优雅降级
+- [x] 6.6.7 Framework 测试 — 29 个新测试（MCPServerConfig 5 + _ensure_mcp_installed 2 + _create_mcp_tool 8 + _discover_tools 4 + connect_and_discover 8 + kwargs 修复 1 + 原有 15 FunctionTool）
+- [x] 6.6.8 Backend 测试 — 11 个新测试（_resolve_mcp_tools 7 + _build_agent_from_config 4）
+- [x] 6.6.9 五轮代码审查（2 个问题修复：FunctionTool **kwargs bug + ImportError 优雅降级）
+
 ---
 
-*最后更新：2025-07-20*
+*最后更新：2025-07-21*

@@ -95,11 +95,12 @@ _MAX_HANDOFF_DEPTH = 5
 async def _resolve_mcp_tools(
     db: AsyncSession,
     config: AgentConfig,
+    stack: Any | None = None,
 ) -> list[Any]:
-    """从 AgentConfig.mcp_servers 名称列表加载 MCP Server 配置。
+    """从 AgentConfig.mcp_servers 名称列表加载 MCP Server 配置并连接。
 
-    当前阶段：加载配置并记录日志，返回空工具列表。
-    后续阶段：连接 MCP Server，发现并注册工具。
+    当提供 ``stack`` (AsyncExitStack) 时，实际连接 MCP Server 并发现工具。
+    未提供时仅做配置日志记录。
     """
     if not config.mcp_servers:
         return []
@@ -108,29 +109,81 @@ async def _resolve_mcp_tools(
 
     mcp_configs = await get_mcp_servers_by_names(db, config.mcp_servers)
 
-    if mcp_configs:
-        server_names = [c.name for c in mcp_configs]
-        logger.info(
-            "Agent '%s' 关联 %d 个 MCP Server: %s（工具发现待 MCP SDK 集成）",
-            config.name,
-            len(mcp_configs),
-            server_names,
-        )
-
     # 检查缺失的 MCP Server
     found_names = {c.name for c in mcp_configs}
     for name in config.mcp_servers:
         if name not in found_names:
             logger.warning("MCP Server '%s' 不存在或已禁用，Agent '%s' 无法加载其工具", name, config.name)
 
-    # TODO: 集成 MCP SDK 后，连接 MCP Server → list_tools → 封装为 FunctionTool
-    return []
+    if not mcp_configs:
+        return []
+
+    # 无 stack 时仅日志，不实际连接
+    if stack is None:
+        server_names = [c.name for c in mcp_configs]
+        logger.info(
+            "Agent '%s' 关联 %d 个 MCP Server: %s（未提供 AsyncExitStack，跳过连接）",
+            config.name,
+            len(mcp_configs),
+            server_names,
+        )
+        return []
+
+    # 实际连接 MCP Server，发现工具
+    from app.core.crypto import decrypt_api_key
+    from ckyclaw_framework.mcp.connection import connect_and_discover
+    from ckyclaw_framework.mcp.server import MCPServerConfig as FrameworkMCPConfig
+
+    all_tools: list[Any] = []
+    for db_config in mcp_configs:
+        # 解密 auth_config 中的敏感字段作为 headers
+        headers: dict[str, str] = {}
+        if db_config.auth_config:
+            for key, value in db_config.auth_config.items():
+                if isinstance(value, str) and value:
+                    try:
+                        headers[key] = decrypt_api_key(value)
+                    except Exception:
+                        headers[key] = value
+
+        # 解密 env 中的值（如果是加密的）
+        env: dict[str, str] = {}
+        if db_config.env:
+            for key, value in db_config.env.items():
+                env[key] = str(value) if value else ""
+
+        fw_config = FrameworkMCPConfig(
+            name=db_config.name,
+            transport=db_config.transport_type,
+            command=db_config.command,
+            url=db_config.url,
+            env=env,
+            headers=headers,
+        )
+
+        try:
+            tools = await connect_and_discover(stack, fw_config)
+            all_tools.extend(tools)
+        except ImportError:
+            logger.warning("MCP SDK 未安装，跳过 MCP Server '%s'", db_config.name)
+            break
+        except Exception:
+            logger.exception("MCP Server '%s' 连接异常", db_config.name)
+
+    logger.info(
+        "Agent '%s' 通过 %d 个 MCP Server 加载了 %d 个工具",
+        config.name,
+        len(mcp_configs),
+        len(all_tools),
+    )
+    return all_tools
 
 
 def _build_agent_from_config(
     config: AgentConfig,
     guardrail_rules: list | None = None,
     handoff_agents: list[Any] | None = None,
+    mcp_tools: list[Any] | None = None,
 ) -> Any:
     """从 DB AgentConfig 构造 Framework Agent 实例。"""
     from ckyclaw_framework.agent.agent import Agent
@@ -183,6 +236,7 @@ def _build_agent_from_config(
         instructions=config.instructions,
         model=config.model,
         model_settings=model_settings,
+        tools=mcp_tools or [],
         input_guardrails=input_guardrails,
         approval_mode=approval_mode,
         handoffs=handoff_agents or [],
@@ -388,53 +442,60 @@ async def execute_run(
     # 解析 Handoff 目标 Agent 图
     handoff_agents = await _resolve_handoff_agents(db, agent_config)
 
-    # 加载 MCP Server 工具（当前阶段仅记录日志，待 MCP SDK 集成）
-    await _resolve_mcp_tools(db, agent_config)
+    # 加载 MCP Server 工具（通过 AsyncExitStack 管理连接生命周期）
+    from contextlib import AsyncExitStack
 
-    # 构建 Framework Agent
-    agent = _build_agent_from_config(agent_config, guardrail_rules=guardrail_rules, handoff_agents=handoff_agents)
+    async with AsyncExitStack() as mcp_stack:
+        mcp_tools = await _resolve_mcp_tools(db, agent_config, stack=mcp_stack)
 
-    # 构建 Framework Session（使用 InMemory，消息随请求生命周期）
-    # TODO: 后续切换到 PostgresSessionBackend 实现跨请求持久化
-    session_backend = InMemorySessionBackend()
-    framework_session = Session(session_id=str(session_id), backend=session_backend)
-
-    # 构建 RunConfig（含 Trace 持久化 Processor + Approval Handler）
-    from app.services.approval_handler import HttpApprovalHandler
-    from app.services.trace_processor import PostgresTraceProcessor
-
-    run_id = str(uuid.uuid4())
-    trace_processor = PostgresTraceProcessor(session_id=str(session_id))
-    model = request.config.model_override or agent_config.model
-
-    # 审批处理器：非 full-auto 模式时创建 HttpApprovalHandler
-    approval_handler = None
-    if agent_config.approval_mode and agent_config.approval_mode != "full-auto":
-        approval_handler = HttpApprovalHandler(
-            session_id=str(session_id),
-            run_id=run_id,
-            agent_name=agent_config.name,
+        # 构建 Framework Agent
+        agent = _build_agent_from_config(
+            agent_config, guardrail_rules=guardrail_rules, handoff_agents=handoff_agents, mcp_tools=mcp_tools,
         )
 
-    framework_config = FrameworkRunConfig(
-        model=model,
-        model_provider=LiteLLMProvider(),
-        trace_processors=[trace_processor],
-        approval_handler=approval_handler,
-    )
+        # 构建 Framework Session（使用 InMemory，消息随请求生命周期）
+        # TODO: 后续切换到 PostgresSessionBackend 实现跨请求持久化
+        session_backend = InMemorySessionBackend()
+        framework_session = Session(session_id=str(session_id), backend=session_backend)
 
-    # 执行
-    start_time = time.monotonic()
+        # 构建 RunConfig（含 Trace 持久化 Processor + Approval Handler）
+        from app.services.approval_handler import HttpApprovalHandler
+        from app.services.trace_processor import PostgresTraceProcessor
 
-    result = await Runner.run(
-        agent=agent,
-        input=request.input,
-        session=framework_session,
-        config=framework_config,
-        max_turns=request.config.max_turns,
-    )
+        run_id = str(uuid.uuid4())
+        trace_processor = PostgresTraceProcessor(session_id=str(session_id))
+        model = request.config.model_override or agent_config.model
 
-    duration_ms = int((time.monotonic() - start_time) * 1000)
+        # 审批处理器：非 full-auto 模式时创建 HttpApprovalHandler
+        approval_handler = None
+        if agent_config.approval_mode and agent_config.approval_mode != "full-auto":
+            approval_handler = HttpApprovalHandler(
+                session_id=str(session_id),
+                run_id=run_id,
+                agent_name=agent_config.name,
+            )
+
+        framework_config = FrameworkRunConfig(
+            model=model,
+            model_provider=LiteLLMProvider(),
+            trace_processors=[trace_processor],
+            approval_handler=approval_handler,
+        )
+
+        # 执行
+        start_time = time.monotonic()
+
+        result = await Runner.run(
+            agent=agent,
+            input=request.input,
+            session=framework_session,
+            config=framework_config,
+            max_turns=request.config.max_turns,
+        )
+
+        duration_ms = int((time.monotonic() - start_time) * 1000)
+
+    # ---- MCP 连接已关闭，以下为后处理 ----
 
     # Token 审计：从 Trace 提取 LLM Span token_usage 写入
     await _save_token_usage_from_trace(db, result.trace, session_id=session_id)
@@ -500,10 +561,20 @@ async def execute_run_stream(
     # 解析 Handoff 目标 Agent 图
     handoff_agents = await _resolve_handoff_agents(db, agent_config)
 
-    # 加载 MCP Server 工具（当前阶段仅记录日志，待 MCP SDK 集成）
-    await _resolve_mcp_tools(db, agent_config)
+    # 加载 MCP Server 工具（通过 AsyncExitStack 管理连接生命周期）
+    from contextlib import AsyncExitStack
 
-    agent = _build_agent_from_config(agent_config, guardrail_rules=guardrail_rules, handoff_agents=handoff_agents)
+    mcp_stack = AsyncExitStack()
+    await mcp_stack.__aenter__()
+    try:
+        mcp_tools = await _resolve_mcp_tools(db, agent_config, stack=mcp_stack)
+    except Exception:
+        await mcp_stack.__aexit__(None, None, None)
+        raise
+
+    agent = _build_agent_from_config(
+        agent_config, guardrail_rules=guardrail_rules, handoff_agents=handoff_agents, mcp_tools=mcp_tools,
+    )
 
     session_backend = InMemorySessionBackend()
     framework_session = Session(session_id=str(session_id), backend=session_backend)
@@ -583,6 +654,9 @@ async def execute_run_stream(
     except Exception as exc:
         logger.exception("Run 执行异常: session_id=%s", session_id)
         yield _sse_event("error", {"code": "RUN_FAILED", "message": str(exc)})
+    finally:
+        # 关闭 MCP 连接
+        await mcp_stack.__aexit__(None, None, None)
 
     # Token 审计：从 Trace 提取 LLM Span token_usage 写入
     if run_result and hasattr(run_result, "trace"):

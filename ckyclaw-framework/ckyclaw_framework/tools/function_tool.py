@@ -137,11 +137,20 @@ class FunctionTool:
             # 过滤函数签名中实际接受的参数
             sig = inspect.signature(self.fn)
             filtered_args: dict[str, Any] = {}
+            has_var_keyword = False
             for param_name, param in sig.parameters.items():
-                if param_name in arguments:
+                if param.kind == inspect.Parameter.VAR_KEYWORD:
+                    has_var_keyword = True
+                elif param_name in arguments:
                     filtered_args[param_name] = arguments[param_name]
                 elif param_name in extra_kwargs:
                     filtered_args[param_name] = extra_kwargs[param_name]
+
+            # **kwargs 函数接收所有参数（MCP 工具等场景）
+            if has_var_keyword:
+                for k, v in arguments.items():
+                    if k not in filtered_args:
+                        filtered_args[k] = v
 
             # 带超时执行
             if asyncio.iscoroutinefunction(self.fn):
