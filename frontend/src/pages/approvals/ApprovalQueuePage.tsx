@@ -1,10 +1,11 @@
 import { useState, useCallback } from 'react';
-import { Tag, Button, Space, Modal, Input, message, Popconfirm } from 'antd';
-import { CheckOutlined, CloseOutlined, ReloadOutlined } from '@ant-design/icons';
+import { Tag, Button, Space, Modal, Input, message, Popconfirm, Badge } from 'antd';
+import { CheckOutlined, CloseOutlined, ReloadOutlined, WifiOutlined } from '@ant-design/icons';
 import type { ProColumns, ActionType } from '@ant-design/pro-components';
 import { ProTable } from '@ant-design/pro-components';
 import { useRef } from 'react';
 import { approvalService } from '../../services/approvalService';
+import { useApprovalWs } from '../../hooks/useApprovalWs';
 import type { ApprovalItem } from '../../services/approvalService';
 
 const statusColorMap: Record<string, string> = {
@@ -25,7 +26,20 @@ const ApprovalQueuePage: React.FC = () => {
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
   const [rejectingId, setRejectingId] = useState<string>('');
   const [rejectComment, setRejectComment] = useState('');
+  const [wsConnected, setWsConnected] = useState(false);
 
+  // WebSocket 实时审批事件
+  useApprovalWs({
+    onEvent: (event) => {
+      setWsConnected(true);
+      if (event.type === 'approval_created') {
+        message.info(`新审批请求: ${(event.data.agent_name as string) || 'Agent'}`);
+        actionRef.current?.reload();
+      } else if (event.type === 'approval_resolved') {
+        actionRef.current?.reload();
+      }
+    },
+  });
   const handleApprove = useCallback(async (id: string) => {
     try {
       await approvalService.resolve(id, { action: 'approve', comment: '批准' });
@@ -189,6 +203,16 @@ const ApprovalQueuePage: React.FC = () => {
         }}
         pagination={{ defaultPageSize: 20 }}
         toolBarRender={() => [
+          <Badge
+            key="ws-status"
+            status={wsConnected ? 'success' : 'default'}
+            text={
+              <span style={{ fontSize: 12, color: wsConnected ? '#52c41a' : '#999' }}>
+                <WifiOutlined style={{ marginRight: 4 }} />
+                {wsConnected ? '实时连接' : '未连接'}
+              </span>
+            }
+          />,
           <Button
             key="refresh"
             icon={<ReloadOutlined />}

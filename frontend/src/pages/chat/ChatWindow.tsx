@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Button, Input, Space, Spin, Typography, message } from 'antd';
 import { SendOutlined } from '@ant-design/icons';
 import { chatService } from '../../services/chatService';
+import MarkdownRenderer from '../../components/MarkdownRenderer';
 import type { ChatMessage } from './ChatPage';
 
 const { Text } = Typography;
@@ -192,7 +193,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
               background: msg.role === 'user' ? '#1677ff' : '#fff',
               color: msg.role === 'user' ? '#fff' : '#000',
               boxShadow: '0 1px 2px rgba(0,0,0,0.06)',
-              whiteSpace: 'pre-wrap',
+              whiteSpace: msg.role === 'user' ? 'pre-wrap' : undefined,
               wordBreak: 'break-word',
             }}>
               {msg.agentName && msg.role === 'assistant' && (
@@ -200,7 +201,11 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                   {msg.agentName}
                 </Text>
               )}
-              {msg.content}
+              {msg.role === 'assistant' ? (
+                <MarkdownRenderer content={msg.content} />
+              ) : (
+                msg.content
+              )}
               {msg.streaming && <Spin size="small" style={{ marginLeft: 8 }} />}
             </div>
           </div>

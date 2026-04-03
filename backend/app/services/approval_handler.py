@@ -79,6 +79,19 @@ class HttpApprovalHandler(ApprovalHandler):
             action_detail.get("tool_name", "unknown"),
         )
 
+        # 1.5. 发布 Redis 事件（非阻塞，失败不影响审批流程）
+        from app.api.ws import publish_approval_event
+
+        await publish_approval_event("approval_created", {
+            "id": str(approval_id),
+            "session_id": self._session_id,
+            "run_id": self._run_id,
+            "agent_name": self._agent_name,
+            "trigger": action_type,
+            "content": action_detail,
+            "status": "pending",
+        })
+
         # 2. 注册事件 & 等待
         manager.register(approval_id)
         decision = await manager.wait_for_decision(approval_id, timeout=timeout)

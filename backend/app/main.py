@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from contextlib import asynccontextmanager
+from collections.abc import AsyncIterator
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -21,6 +24,19 @@ from app.api.traces import router as traces_router
 from app.api.guardrails import router as guardrails_router
 from app.api.mcp_servers import router as mcp_servers_router
 from app.api.tool_groups import router as tool_groups_router
+from app.api.ws import router as ws_router
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    """应用生命周期管理 — 启动/关闭 Redis 订阅。"""
+    from app.api.ws import start_subscriber, stop_subscriber
+    from app.core.redis import close_redis
+
+    await start_subscriber()
+    yield
+    await stop_subscriber()
+    await close_redis()
 
 
 def create_app() -> FastAPI:
@@ -31,6 +47,7 @@ def create_app() -> FastAPI:
         version="0.1.0",
         docs_url="/docs" if settings.debug else None,
         redoc_url="/redoc" if settings.debug else None,
+        lifespan=lifespan,
     )
 
     # 中间件（后添加的先执行）
@@ -60,6 +77,7 @@ def create_app() -> FastAPI:
     app.include_router(guardrails_router)
     app.include_router(mcp_servers_router)
     app.include_router(tool_groups_router)
+    app.include_router(ws_router)
 
     return app
 

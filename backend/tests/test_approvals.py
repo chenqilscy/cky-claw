@@ -347,7 +347,8 @@ class TestHttpApprovalHandler:
 
         run_context = MagicMock()
 
-        with patch("app.services.approval_handler.async_session_factory", return_value=mock_session):
+        with patch("app.services.approval_handler.async_session_factory", return_value=mock_session), \
+             patch("app.api.ws.get_redis", new_callable=AsyncMock):
             asyncio.create_task(auto_approve())
             decision = await handler.request_approval(
                 run_context=run_context,
@@ -382,7 +383,8 @@ class TestHttpApprovalHandler:
 
         run_context = MagicMock()
 
-        with patch("app.services.approval_handler.async_session_factory", return_value=mock_session):
+        with patch("app.services.approval_handler.async_session_factory", return_value=mock_session), \
+             patch("app.api.ws.get_redis", new_callable=AsyncMock):
             decision = await handler.request_approval(
                 run_context=run_context,
                 action_type="tool_call",

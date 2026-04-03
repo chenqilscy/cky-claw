@@ -100,4 +100,14 @@ async def resolve_approval_request(
 
     await db.commit()
     await db.refresh(record)
+
+    # 发布 Redis 事件（非阻塞，失败不影响审批流程）
+    from app.api.ws import publish_approval_event
+
+    await publish_approval_event("approval_resolved", {
+        "id": str(approval_id),
+        "status": record.status,
+        "comment": record.comment,
+    })
+
     return record
