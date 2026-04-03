@@ -253,6 +253,7 @@ class TestAgentSchemaWithAgentTools:
             description="",
             instructions="",
             model=None,
+            provider_name=None,
             model_settings=None,
             tool_groups=[],
             handoffs=[],

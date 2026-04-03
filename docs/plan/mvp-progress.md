@@ -439,6 +439,18 @@
 - [x] 7.6.9 全量测试 — Framework 381 + Backend 399 = 780 全部通过
 - [x] 7.6.10 五轮代码审查（无问题）
 
+### Phase 7.7：Multi-Provider 多模型厂商管理（P1）✅
+- [x] 7.7.1 LiteLLMProvider `__init__` 增强 — 支持 `api_key`, `api_base`, `extra_headers` 构造参数，条件注入到 `litellm.acompletion` kwargs
+- [x] 7.7.2 AgentConfig 新增 `provider_name` 字段 — Alembic migration 0014 + ORM + Schema（Create/Update/Response）
+- [x] 7.7.3 `_resolve_provider(db, agent_config)` 运行时桥接 — 根据 provider_name 加载 ProviderConfig，解密 API Key，构建 LiteLLMProvider 构造参数
+- [x] 7.7.4 `execute_run` / `execute_run_stream` 接入 — 调用 `_resolve_provider`，LiteLLMProvider 和子 Agent RunConfig 均使用 provider_kwargs
+- [x] 7.7.5 Provider 连通性测试 — `POST /api/v1/providers/{id}/test` 端点，`_DEFAULT_TEST_MODELS` 覆盖 9 种 provider_type，更新 health_status
+- [x] 7.7.6 前端 Provider 测试按钮 — ProviderListPage 增加⚡测试按钮 + 结果 Modal（成功/失败/延迟/模型）
+- [x] 7.7.7 前端 Agent 编辑页 Provider 选择器 — AgentEditPage 增加 Provider Select（加载启用的 Provider，allowClear，保存/加载 provider_name）
+- [x] 7.7.8 Agent 版本快照 — `_snapshot_from_agent` 包含 `provider_name`
+- [x] 7.7.9 测试 — Framework 新增 6 个（LiteLLMProvider init），Backend 新增 21 个（ProviderTestResult/API/DefaultModels/AgentProviderNameSchema/ResolveProvider），全量 Framework 387 + Backend 399 = 786 通过
+- [x] 7.7.10 五轮代码审查（无问题）
+
 ---
 
 *最后更新：2025-07-22*

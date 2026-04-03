@@ -6,6 +6,7 @@ export interface AgentConfig {
   description: string;
   instructions: string;
   model: string;
+  provider_name: string | null;
   model_settings: Record<string, unknown>;
   tool_groups: string[];
   handoffs: string[];
@@ -36,6 +37,7 @@ export interface AgentCreateInput {
   description?: string;
   instructions?: string;
   model?: string;
+  provider_name?: string | null;
   model_settings?: Record<string, unknown>;
   tool_groups?: string[];
   handoffs?: string[];

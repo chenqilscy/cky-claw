@@ -20,6 +20,7 @@ def _snapshot_from_agent(agent: AgentConfig) -> dict:
         "description": agent.description,
         "instructions": agent.instructions,
         "model": agent.model,
+        "provider_name": agent.provider_name,
         "model_settings": agent.model_settings,
         "tool_groups": list(agent.tool_groups) if agent.tool_groups else [],
         "handoffs": list(agent.handoffs) if agent.handoffs else [],

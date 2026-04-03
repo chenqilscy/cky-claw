@@ -14,6 +14,7 @@ from app.schemas.provider import (
     ProviderCreate,
     ProviderListResponse,
     ProviderResponse,
+    ProviderTestResult,
     ProviderToggle,
     ProviderUpdate,
 )
@@ -119,3 +120,14 @@ async def toggle_provider(
     """启用/禁用 Provider。"""
     provider = await provider_service.toggle_provider(db, provider_id, data.is_enabled)
     return _to_response(provider)
+
+
+@router.post("/{provider_id}/test", response_model=ProviderTestResult)
+async def test_provider_connection(
+    provider_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    _user: User = Depends(require_admin),
+) -> ProviderTestResult:
+    """测试 Provider 连通性。"""
+    result = await provider_service.test_connection(db, provider_id)
+    return ProviderTestResult(**result)

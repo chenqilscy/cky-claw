@@ -604,6 +604,75 @@ async def _save_trace_from_processor(
 
 
 # ---------------------------------------------------------------------------
+# Provider 解析辅助
+# ---------------------------------------------------------------------------
+
+
+async def _resolve_provider(
+    db: AsyncSession,
+    agent_config: AgentConfig,
+) -> dict[str, str | None]:
+    """从 AgentConfig.provider_name 加载 ProviderConfig，返回 LiteLLMProvider 构造参数。
+
+    Returns:
+        dict with keys: api_key, api_base, extra_headers (all optional).
+        若 provider_name 为空或 Provider 未找到/已禁用，返回空 dict（使用环境变量）。
+    """
+    provider_name = getattr(agent_config, "provider_name", None)
+    if not provider_name:
+        return {}
+
+    from app.core.crypto import decrypt_api_key
+    from app.models.provider import ProviderConfig
+
+    stmt = select(ProviderConfig).where(
+        ProviderConfig.name == provider_name,
+    )
+    provider = (await db.execute(stmt)).scalar_one_or_none()
+    if provider is None:
+        logger.warning("Agent '%s' 指定的 Provider '%s' 不存在", agent_config.name, provider_name)
+        return {}
+
+    if not provider.is_enabled:
+        raise NotFoundError(f"Provider '{provider_name}' 已被禁用，无法执行 Agent '{agent_config.name}'")
+
+    result: dict[str, str | None] = {}
+
+    # 解密 API Key
+    if provider.api_key_encrypted:
+        try:
+            result["api_key"] = decrypt_api_key(provider.api_key_encrypted)
+        except Exception:
+            logger.exception("Provider '%s' API Key 解密失败", provider_name)
+            raise NotFoundError(f"Provider '{provider_name}' API Key 解密失败，请重新配置")
+
+    # Base URL
+    if provider.base_url:
+        result["api_base"] = provider.base_url
+
+    # 额外认证头（auth_config 中的 KV 对）
+    if provider.auth_config:
+        headers: dict[str, str] = {}
+        for key, value in provider.auth_config.items():
+            if isinstance(value, str) and value:
+                try:
+                    headers[key] = decrypt_api_key(value)
+                except Exception:
+                    headers[key] = value
+        if headers:
+            result["extra_headers"] = headers  # type: ignore[assignment]
+
+    logger.info(
+        "Agent '%s' 使用 Provider '%s' (type=%s, base_url=%s)",
+        agent_config.name,
+        provider_name,
+        provider.provider_type,
+        provider.base_url,
+    )
+    return result
+
+
+# ---------------------------------------------------------------------------
 # Run 执行
 # ---------------------------------------------------------------------------
 
@@ -642,6 +711,9 @@ async def execute_run(
     # 解析 Handoff 目标 Agent 图
     handoff_agents = await _resolve_handoff_agents(db, agent_config)
 
+    # 解析 Provider 配置
+    provider_kwargs = await _resolve_provider(db, agent_config)
+
     # 加载 MCP Server 工具（通过 AsyncExitStack 管理连接生命周期）
     from contextlib import AsyncExitStack
 
@@ -650,7 +722,7 @@ async def execute_run(
 
         # 解析 Agent-as-Tool（子 Agent 包装为 FunctionTool）
         # 先创建子 Agent 的轻量 RunConfig（共享 model_provider，无 trace/approval）
-        sub_model_provider = LiteLLMProvider()
+        sub_model_provider = LiteLLMProvider(**provider_kwargs)
         sub_run_config = FrameworkRunConfig(
             model=request.config.model_override or agent_config.model,
             model_provider=sub_model_provider,
@@ -692,7 +764,7 @@ async def execute_run(
 
         framework_config = FrameworkRunConfig(
             model=model,
-            model_provider=LiteLLMProvider(),
+            model_provider=LiteLLMProvider(**provider_kwargs),
             trace_processors=[trace_processor],
             approval_handler=approval_handler,
         )
@@ -777,6 +849,9 @@ async def execute_run_stream(
     # 解析 Handoff 目标 Agent 图
     handoff_agents = await _resolve_handoff_agents(db, agent_config)
 
+    # 解析 Provider 配置
+    provider_kwargs = await _resolve_provider(db, agent_config)
+
     # 加载 MCP Server 工具（通过 AsyncExitStack 管理连接生命周期）
     from contextlib import AsyncExitStack
 
@@ -789,7 +864,7 @@ async def execute_run_stream(
         raise
 
     # 解析 Agent-as-Tool
-    sub_model_provider = LiteLLMProvider()
+    sub_model_provider = LiteLLMProvider(**provider_kwargs)
     sub_run_config = FrameworkRunConfig(
         model=request.config.model_override or agent_config.model,
         model_provider=sub_model_provider,
@@ -835,7 +910,7 @@ async def execute_run_stream(
 
     framework_config = FrameworkRunConfig(
         model=model,
-        model_provider=LiteLLMProvider(),
+        model_provider=LiteLLMProvider(**provider_kwargs),
         trace_processors=[trace_processor],
         approval_handler=approval_handler,
     )

@@ -26,6 +26,9 @@ class AgentConfig(Base):
     description: Mapped[str] = mapped_column(Text, nullable=False, default="")
     instructions: Mapped[str] = mapped_column(Text, nullable=False, default="")
     model: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    provider_name: Mapped[str | None] = mapped_column(
+        String(64), nullable=True, index=True
+    )
     model_settings: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     tool_groups: Mapped[list[str]] = mapped_column(
         ARRAY(String), nullable=False, server_default=text("'{}'::varchar[]")

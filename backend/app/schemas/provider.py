@@ -104,3 +104,12 @@ class ProviderListResponse(BaseModel):
     total: int
     limit: int
     offset: int
+
+
+class ProviderTestResult(BaseModel):
+    """Provider 连通性测试结果。"""
+
+    success: bool
+    latency_ms: int = 0
+    error: str | None = None
+    model_used: str | None = None

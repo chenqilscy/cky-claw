@@ -64,6 +64,13 @@ export interface ProviderListParams {
   offset?: number;
 }
 
+export interface ProviderTestResult {
+  success: boolean;
+  latency_ms: number;
+  error: string | null;
+  model_used: string | null;
+}
+
 export const providerService = {
   list: (params?: ProviderListParams) =>
     api.get<ProviderListResponse>('/providers', params ? { ...params } as Record<string, string | number | undefined> : undefined),
@@ -82,4 +89,7 @@ export const providerService = {
 
   toggle: (id: string, isEnabled: boolean) =>
     api.put<ProviderResponse>(`/providers/${id}/toggle`, { is_enabled: isEnabled }),
+
+  testConnection: (id: string) =>
+    api.post<ProviderTestResult>(`/providers/${id}/test`),
 };

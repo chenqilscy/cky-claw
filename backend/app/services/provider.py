@@ -2,16 +2,20 @@
 
 from __future__ import annotations
 
+import logging
+import time
 import uuid
 from datetime import datetime, timezone
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.crypto import encrypt_api_key
+from app.core.crypto import decrypt_api_key, encrypt_api_key
 from app.core.exceptions import NotFoundError
 from app.models.provider import ProviderConfig
 from app.schemas.provider import ProviderCreate, ProviderUpdate
+
+logger = logging.getLogger(__name__)
 
 
 async def list_providers(
@@ -104,3 +108,101 @@ async def toggle_provider(
     await db.commit()
     await db.refresh(provider)
     return provider
+
+
+# 厂商类型 → LiteLLM 测试模型标识映射
+_DEFAULT_TEST_MODELS: dict[str, str] = {
+    "openai": "gpt-4o-mini",
+    "anthropic": "claude-3-haiku-20240307",
+    "azure": "azure/gpt-4o-mini",
+    "deepseek": "deepseek/deepseek-chat",
+    "qwen": "openai/qwen-turbo",
+    "doubao": "openai/doubao-lite-32k",
+    "zhipu": "openai/glm-4-flash",
+    "moonshot": "openai/moonshot-v1-8k",
+    "custom": "openai/default",
+}
+
+
+async def test_connection(
+    db: AsyncSession,
+    provider_id: uuid.UUID,
+) -> dict:
+    """测试 Provider 连通性：发送一个轻量请求验证 API Key + base_url 可用。
+
+    Returns:
+        dict: {success, latency_ms, error, model_used}
+    """
+    import litellm
+
+    provider = await get_provider(db, provider_id)
+
+    # 解密 API Key
+    api_key: str | None = None
+    if provider.api_key_encrypted:
+        try:
+            api_key = decrypt_api_key(provider.api_key_encrypted)
+        except Exception:
+            return {
+                "success": False,
+                "latency_ms": 0,
+                "error": "API Key 解密失败，请重新配置",
+                "model_used": None,
+            }
+
+    # 确定测试模型
+    test_model = _DEFAULT_TEST_MODELS.get(provider.provider_type, "openai/default")
+
+    # 构造请求参数
+    kwargs: dict = {
+        "model": test_model,
+        "messages": [{"role": "user", "content": "Hi"}],
+        "max_tokens": 5,
+    }
+    if api_key:
+        kwargs["api_key"] = api_key
+    if provider.base_url:
+        kwargs["api_base"] = provider.base_url
+
+    # 额外认证头
+    if provider.auth_config:
+        headers: dict[str, str] = {}
+        for key, value in provider.auth_config.items():
+            if isinstance(value, str) and value:
+                try:
+                    headers[key] = decrypt_api_key(value)
+                except Exception:
+                    headers[key] = value
+        if headers:
+            kwargs["extra_headers"] = headers
+
+    start = time.monotonic()
+    try:
+        await litellm.acompletion(**kwargs)
+        latency_ms = int((time.monotonic() - start) * 1000)
+
+        # 更新健康状态
+        provider.health_status = "healthy"
+        provider.last_health_check = datetime.now(timezone.utc)
+        await db.commit()
+
+        return {
+            "success": True,
+            "latency_ms": latency_ms,
+            "error": None,
+            "model_used": test_model,
+        }
+    except Exception as e:
+        latency_ms = int((time.monotonic() - start) * 1000)
+
+        # 更新健康状态
+        provider.health_status = "unhealthy"
+        provider.last_health_check = datetime.now(timezone.utc)
+        await db.commit()
+
+        return {
+            "success": False,
+            "latency_ms": latency_ms,
+            "error": str(e),
+            "model_used": test_model,
+        }

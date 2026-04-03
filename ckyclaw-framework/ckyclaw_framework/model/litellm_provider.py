@@ -20,7 +20,24 @@ logger = logging.getLogger(__name__)
 
 
 class LiteLLMProvider(ModelProvider):
-    """基于 LiteLLM 的多模型适配实现。支持 100+ 模型。"""
+    """基于 LiteLLM 的多模型适配实现。支持 100+ 模型。
+
+    Args:
+        api_key: API 密钥。不传则使用环境变量。
+        api_base: API 端点 URL。不传则使用 LiteLLM 默认值。
+        extra_headers: 额外请求头（如自定义认证头）。
+    """
+
+    def __init__(
+        self,
+        *,
+        api_key: str | None = None,
+        api_base: str | None = None,
+        extra_headers: dict[str, str] | None = None,
+    ) -> None:
+        self._api_key = api_key
+        self._api_base = api_base
+        self._extra_headers = extra_headers
 
     async def chat(
         self,
@@ -36,6 +53,14 @@ class LiteLLMProvider(ModelProvider):
             "model": model,
             "messages": messages_to_litellm(messages),
         }
+
+        # Provider 级别参数
+        if self._api_key is not None:
+            kwargs["api_key"] = self._api_key
+        if self._api_base is not None:
+            kwargs["api_base"] = self._api_base
+        if self._extra_headers:
+            kwargs["extra_headers"] = self._extra_headers
 
         if tools:
             kwargs["tools"] = tools

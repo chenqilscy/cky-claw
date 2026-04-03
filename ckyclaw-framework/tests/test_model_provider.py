@@ -261,3 +261,123 @@ class TestConverterUtils:
         assert msg.role == MessageRole.TOOL
         assert msg.content == "42"
         assert msg.tool_call_id == "call_1"
+
+
+# ── LiteLLMProvider 构造参数测试 ──────────────────────────────
+
+
+class TestLiteLLMProviderInit:
+    """验证 LiteLLMProvider api_key/api_base/extra_headers 透传给 litellm。"""
+
+    @pytest.mark.asyncio
+    async def test_default_no_extra_params(self) -> None:
+        mock_resp = _make_litellm_response()
+        with patch("ckyclaw_framework.model.litellm_provider.litellm") as mock_litellm:
+            mock_litellm.acompletion = AsyncMock(return_value=mock_resp)
+
+            provider = LiteLLMProvider()
+            await provider.chat(
+                model="gpt-4o-mini",
+                messages=[Message(role=MessageRole.USER, content="Hi")],
+            )
+
+            call_kwargs = mock_litellm.acompletion.call_args[1]
+            assert "api_key" not in call_kwargs
+            assert "api_base" not in call_kwargs
+            assert "extra_headers" not in call_kwargs
+
+    @pytest.mark.asyncio
+    async def test_api_key_passed(self) -> None:
+        mock_resp = _make_litellm_response()
+        with patch("ckyclaw_framework.model.litellm_provider.litellm") as mock_litellm:
+            mock_litellm.acompletion = AsyncMock(return_value=mock_resp)
+
+            provider = LiteLLMProvider(api_key="sk-test-123")
+            await provider.chat(
+                model="gpt-4o-mini",
+                messages=[Message(role=MessageRole.USER, content="Hi")],
+            )
+
+            call_kwargs = mock_litellm.acompletion.call_args[1]
+            assert call_kwargs["api_key"] == "sk-test-123"
+
+    @pytest.mark.asyncio
+    async def test_api_base_passed(self) -> None:
+        mock_resp = _make_litellm_response()
+        with patch("ckyclaw_framework.model.litellm_provider.litellm") as mock_litellm:
+            mock_litellm.acompletion = AsyncMock(return_value=mock_resp)
+
+            provider = LiteLLMProvider(api_base="https://custom.api.com/v1")
+            await provider.chat(
+                model="gpt-4o-mini",
+                messages=[Message(role=MessageRole.USER, content="Hi")],
+            )
+
+            call_kwargs = mock_litellm.acompletion.call_args[1]
+            assert call_kwargs["api_base"] == "https://custom.api.com/v1"
+
+    @pytest.mark.asyncio
+    async def test_extra_headers_passed(self) -> None:
+        mock_resp = _make_litellm_response()
+        with patch("ckyclaw_framework.model.litellm_provider.litellm") as mock_litellm:
+            mock_litellm.acompletion = AsyncMock(return_value=mock_resp)
+
+            provider = LiteLLMProvider(extra_headers={"X-Custom": "value"})
+            await provider.chat(
+                model="gpt-4o-mini",
+                messages=[Message(role=MessageRole.USER, content="Hi")],
+            )
+
+            call_kwargs = mock_litellm.acompletion.call_args[1]
+            assert call_kwargs["extra_headers"] == {"X-Custom": "value"}
+
+    @pytest.mark.asyncio
+    async def test_all_params_combined(self) -> None:
+        mock_resp = _make_litellm_response()
+        with patch("ckyclaw_framework.model.litellm_provider.litellm") as mock_litellm:
+            mock_litellm.acompletion = AsyncMock(return_value=mock_resp)
+
+            provider = LiteLLMProvider(
+                api_key="sk-combined",
+                api_base="https://my-endpoint.com",
+                extra_headers={"Authorization": "Bearer xyz"},
+            )
+            await provider.chat(
+                model="deepseek-chat",
+                messages=[Message(role=MessageRole.USER, content="Hi")],
+            )
+
+            call_kwargs = mock_litellm.acompletion.call_args[1]
+            assert call_kwargs["api_key"] == "sk-combined"
+            assert call_kwargs["api_base"] == "https://my-endpoint.com"
+            assert call_kwargs["extra_headers"]["Authorization"] == "Bearer xyz"
+
+    @pytest.mark.asyncio
+    async def test_stream_passes_provider_params(self) -> None:
+        chunk = MagicMock()
+        delta = MagicMock()
+        delta.content = "Hi"
+        delta.tool_calls = None
+        choice = MagicMock()
+        choice.delta = delta
+        choice.finish_reason = "stop"
+        chunk.choices = [choice]
+
+        async def mock_stream() -> Any:
+            yield chunk
+
+        with patch("ckyclaw_framework.model.litellm_provider.litellm") as mock_litellm:
+            mock_litellm.acompletion = AsyncMock(return_value=mock_stream())
+
+            provider = LiteLLMProvider(api_key="sk-stream", api_base="https://stream.api.com")
+            result = await provider.chat(
+                model="gpt-4o-mini",
+                messages=[Message(role=MessageRole.USER, content="Hi")],
+                stream=True,
+            )
+            async for _ in result:
+                pass
+
+            call_kwargs = mock_litellm.acompletion.call_args[1]
+            assert call_kwargs["api_key"] == "sk-stream"
+            assert call_kwargs["api_base"] == "https://stream.api.com"

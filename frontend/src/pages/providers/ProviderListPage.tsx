@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Button, message, Popconfirm, Switch, Tag, Space } from 'antd';
-import { PlusOutlined, ReloadOutlined } from '@ant-design/icons';
+import { Button, message, Modal, Popconfirm, Switch, Tag, Space } from 'antd';
+import { PlusOutlined, ReloadOutlined, ThunderboltOutlined } from '@ant-design/icons';
 import { ProTable } from '@ant-design/pro-components';
 import type { ProColumns } from '@ant-design/pro-components';
 import { useNavigate } from 'react-router-dom';
 import { providerService } from '../../services/providerService';
-import type { ProviderResponse } from '../../services/providerService';
+import type { ProviderResponse, ProviderTestResult } from '../../services/providerService';
 
 const HEALTH_STATUS_MAP: Record<string, { color: string; text: string }> = {
   healthy: { color: 'green', text: '健康' },
@@ -55,6 +55,31 @@ const ProviderListPage: React.FC = () => {
       fetchProviders();
     } catch {
       message.error('操作失败');
+    }
+  };
+
+  const [testing, setTesting] = useState<string | null>(null);
+
+  const handleTest = async (record: ProviderResponse) => {
+    setTesting(record.id);
+    try {
+      const result: ProviderTestResult = await providerService.testConnection(record.id);
+      if (result.success) {
+        Modal.success({
+          title: '连接成功',
+          content: `模型: ${result.model_used ?? '-'}，延迟: ${result.latency_ms}ms`,
+        });
+      } else {
+        Modal.error({
+          title: '连接失败',
+          content: result.error ?? '未知错误',
+        });
+      }
+      fetchProviders();
+    } catch {
+      message.error('测试请求失败');
+    } finally {
+      setTesting(null);
     }
   };
 
@@ -121,10 +146,16 @@ const ProviderListPage: React.FC = () => {
     },
     {
       title: '操作',
-      width: 160,
+      width: 200,
       render: (_, record) => (
         <Space>
           <a onClick={() => navigate(`/providers/${record.id}/edit`)}>编辑</a>
+          <a
+            onClick={() => handleTest(record)}
+            style={{ color: testing === record.id ? '#999' : undefined }}
+          >
+            {testing === record.id ? '测试中...' : <><ThunderboltOutlined /> 测试</>}
+          </a>
           <Popconfirm
             title="确定删除此 Provider？"
             onConfirm={() => handleDelete(record.id)}

@@ -43,6 +43,8 @@ def _make_agent_config(**overrides: Any) -> MagicMock:
         "guardrails": {"input": [], "output": [], "tool": []},
         "approval_mode": "full-auto",
         "mcp_servers": [],
+        "agent_tools": [],
+        "provider_name": None,
         "skills": [],
         "metadata_": {},
         "org_id": None,

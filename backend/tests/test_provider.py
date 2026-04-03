@@ -17,6 +17,7 @@ from app.core.deps import require_admin as require_admin_original
 from app.core.exceptions import NotFoundError
 from app.main import app
 from app.schemas.provider import ProviderCreate, ProviderResponse, ProviderUpdate
+from app.schemas.agent import AgentCreate, AgentResponse, AgentUpdate
 
 
 # ---------------------------------------------------------------------------
@@ -468,3 +469,249 @@ class TestProviderRouteRegistration:
         assert "/api/v1/providers" in paths
         assert "/api/v1/providers/{provider_id}" in paths
         assert "/api/v1/providers/{provider_id}/toggle" in paths
+        assert "/api/v1/providers/{provider_id}/test" in paths
+
+
+# ---------------------------------------------------------------------------
+# Phase 7.7: Multi-Provider 新增测试
+# ---------------------------------------------------------------------------
+
+
+class TestProviderTestResult:
+    """ProviderTestResult Schema 测试。"""
+
+    def test_success_result(self) -> None:
+        from app.schemas.provider import ProviderTestResult
+
+        r = ProviderTestResult(success=True, latency_ms=230, model_used="gpt-4o-mini")
+        assert r.success is True
+        assert r.latency_ms == 230
+        assert r.error is None
+
+    def test_failure_result(self) -> None:
+        from app.schemas.provider import ProviderTestResult
+
+        r = ProviderTestResult(success=False, latency_ms=50, error="Invalid API Key")
+        assert r.success is False
+        assert r.error == "Invalid API Key"
+
+    def test_defaults(self) -> None:
+        from app.schemas.provider import ProviderTestResult
+
+        r = ProviderTestResult(success=True)
+        assert r.latency_ms == 0
+        assert r.error is None
+        assert r.model_used is None
+
+
+class TestProviderTestAPI:
+    """Provider 连通性测试 API 测试。"""
+
+    @patch("app.api.providers.provider_service")
+    def test_test_connection_success(self, mock_svc: MagicMock, client: TestClient) -> None:
+        pid = uuid.uuid4()
+        mock_svc.test_connection = AsyncMock(return_value={
+            "success": True, "latency_ms": 200, "error": None, "model_used": "gpt-4o-mini",
+        })
+        _setup_overrides()
+        try:
+            resp = client.post(f"/api/v1/providers/{pid}/test")
+        finally:
+            _clear_overrides()
+
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["success"] is True
+        assert body["latency_ms"] == 200
+        assert body["model_used"] == "gpt-4o-mini"
+
+    @patch("app.api.providers.provider_service")
+    def test_test_connection_failure(self, mock_svc: MagicMock, client: TestClient) -> None:
+        pid = uuid.uuid4()
+        mock_svc.test_connection = AsyncMock(return_value={
+            "success": False, "latency_ms": 100, "error": "Invalid API Key", "model_used": "gpt-4o-mini",
+        })
+        _setup_overrides()
+        try:
+            resp = client.post(f"/api/v1/providers/{pid}/test")
+        finally:
+            _clear_overrides()
+
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["success"] is False
+        assert body["error"] == "Invalid API Key"
+
+    @patch("app.api.providers.provider_service")
+    def test_test_connection_not_found(self, mock_svc: MagicMock, client: TestClient) -> None:
+        pid = uuid.uuid4()
+        mock_svc.test_connection = AsyncMock(side_effect=NotFoundError(f"Provider '{pid}' 不存在"))
+        _setup_overrides()
+        try:
+            resp = client.post(f"/api/v1/providers/{pid}/test")
+        finally:
+            _clear_overrides()
+
+        assert resp.status_code == 404
+
+
+class TestDefaultTestModels:
+    """_DEFAULT_TEST_MODELS 映射测试。"""
+
+    def test_known_provider_types(self) -> None:
+        from app.services.provider import _DEFAULT_TEST_MODELS
+
+        assert "openai" in _DEFAULT_TEST_MODELS
+        assert "anthropic" in _DEFAULT_TEST_MODELS
+        assert "deepseek" in _DEFAULT_TEST_MODELS
+        assert "qwen" in _DEFAULT_TEST_MODELS
+        assert "azure" in _DEFAULT_TEST_MODELS
+
+    def test_all_schema_types_have_default_model(self) -> None:
+        from app.schemas.provider import _VALID_PROVIDER_TYPES
+        from app.services.provider import _DEFAULT_TEST_MODELS
+
+        for pt in _VALID_PROVIDER_TYPES:
+            assert pt in _DEFAULT_TEST_MODELS, f"缺少 provider_type '{pt}' 的默认测试模型"
+
+
+class TestAgentProviderNameSchema:
+    """Agent Schema 中 provider_name 字段测试。"""
+
+    def test_create_with_provider_name(self) -> None:
+        a = AgentCreate(name="test-agent", provider_name="my-openai")
+        assert a.provider_name == "my-openai"
+
+    def test_create_without_provider_name(self) -> None:
+        a = AgentCreate(name="test-agent")
+        assert a.provider_name is None
+
+    def test_update_with_provider_name(self) -> None:
+        u = AgentUpdate(provider_name="my-deepseek")
+        assert u.provider_name == "my-deepseek"
+
+    def test_response_includes_provider_name(self) -> None:
+        r = AgentResponse(
+            id=uuid.uuid4(),
+            name="test-agent",
+            description="",
+            instructions="",
+            model="gpt-4o",
+            provider_name="my-openai",
+            model_settings=None,
+            tool_groups=[],
+            handoffs=[],
+            guardrails={"input": [], "output": [], "tool": []},
+            approval_mode="suggest",
+            mcp_servers=[],
+            agent_tools=[],
+            skills=[],
+            metadata_={},
+            org_id=None,
+            is_active=True,
+            created_by=None,
+            created_at=_NOW,
+            updated_at=_NOW,
+        )
+        assert r.provider_name == "my-openai"
+
+
+class TestResolveProvider:
+    """_resolve_provider 运行时桥接测试。"""
+
+    @pytest.mark.asyncio
+    async def test_no_provider_name_returns_empty(self) -> None:
+        from app.services.session import _resolve_provider
+
+        mock_config = MagicMock()
+        mock_config.provider_name = None
+        mock_config.name = "test-agent"
+        result = await _resolve_provider(AsyncMock(), mock_config)
+        assert result == {}
+
+    @pytest.mark.asyncio
+    async def test_provider_not_found_returns_empty(self) -> None:
+        from app.services.session import _resolve_provider
+
+        mock_config = MagicMock()
+        mock_config.provider_name = "nonexistent"
+        mock_config.name = "test-agent"
+
+        mock_db = AsyncMock()
+        mock_result = MagicMock()
+        mock_result.scalar_one_or_none.return_value = None
+        mock_db.execute = AsyncMock(return_value=mock_result)
+
+        result = await _resolve_provider(mock_db, mock_config)
+        assert result == {}
+
+    @pytest.mark.asyncio
+    async def test_provider_disabled_raises(self) -> None:
+        from app.services.session import _resolve_provider
+
+        mock_config = MagicMock()
+        mock_config.provider_name = "disabled-provider"
+        mock_config.name = "test-agent"
+
+        mock_provider = MagicMock()
+        mock_provider.is_enabled = False
+        mock_provider.name = "disabled-provider"
+
+        mock_db = AsyncMock()
+        mock_result = MagicMock()
+        mock_result.scalar_one_or_none.return_value = mock_provider
+        mock_db.execute = AsyncMock(return_value=mock_result)
+
+        with pytest.raises(NotFoundError, match="已被禁用"):
+            await _resolve_provider(mock_db, mock_config)
+
+    @pytest.mark.asyncio
+    @patch("app.core.crypto.decrypt_api_key", return_value="sk-test-123")
+    async def test_provider_found_returns_kwargs(self, _mock_decrypt: MagicMock) -> None:
+        from app.services.session import _resolve_provider
+
+        mock_config = MagicMock()
+        mock_config.provider_name = "my-openai"
+        mock_config.name = "test-agent"
+
+        mock_provider = MagicMock()
+        mock_provider.is_enabled = True
+        mock_provider.name = "my-openai"
+        mock_provider.provider_type = "openai"
+        mock_provider.api_key_encrypted = "encrypted_key"
+        mock_provider.base_url = "https://custom.openai.com/v1"
+        mock_provider.auth_config = {}
+
+        mock_db = AsyncMock()
+        mock_result = MagicMock()
+        mock_result.scalar_one_or_none.return_value = mock_provider
+        mock_db.execute = AsyncMock(return_value=mock_result)
+
+        result = await _resolve_provider(mock_db, mock_config)
+        assert result["api_key"] == "sk-test-123"
+        assert result["api_base"] == "https://custom.openai.com/v1"
+
+    @pytest.mark.asyncio
+    @patch("app.core.crypto.decrypt_api_key", side_effect=Exception("decrypt failed"))
+    async def test_provider_decrypt_failure_raises(self, _mock_decrypt: MagicMock) -> None:
+        from app.services.session import _resolve_provider
+
+        mock_config = MagicMock()
+        mock_config.provider_name = "broken"
+        mock_config.name = "test-agent"
+
+        mock_provider = MagicMock()
+        mock_provider.is_enabled = True
+        mock_provider.name = "broken"
+        mock_provider.provider_type = "openai"
+        mock_provider.api_key_encrypted = "bad_cipher"
+        mock_provider.base_url = ""
+        mock_provider.auth_config = {}
+
+        mock_db = AsyncMock()
+        mock_result = MagicMock()
+        mock_result.scalar_one_or_none.return_value = mock_provider
+        mock_db.execute = AsyncMock(return_value=mock_result)
+
+        with pytest.raises(NotFoundError, match="解密失败"):
+            await _resolve_provider(mock_db, mock_config)

@@ -6,6 +6,7 @@ import { agentService } from '../../services/agentService';
 import type { AgentConfig, AgentCreateInput, AgentUpdateInput } from '../../services/agentService';
 import { guardrailService } from '../../services/guardrailService';
 import type { GuardrailRuleItem } from '../../services/guardrailService';
+import { providerService } from '../../services/providerService';
 import { toolGroupService } from '../../services/toolGroupService';
 
 const { TextArea } = Input;
@@ -26,6 +27,7 @@ const AgentEditPage: React.FC = () => {
   const [guardrailOptions, setGuardrailOptions] = useState<{ label: string; value: string }[]>([]);
   const [agentOptions, setAgentOptions] = useState<{ label: string; value: string }[]>([]);
   const [toolGroupOptions, setToolGroupOptions] = useState<{ label: string; value: string }[]>([]);
+  const [providerOptions, setProviderOptions] = useState<{ label: string; value: string }[]>([]);
 
   useEffect(() => {
     guardrailService.list({ enabled_only: true, limit: 200 })
@@ -59,6 +61,15 @@ const AgentEditPage: React.FC = () => {
         );
       })
       .catch(() => { /* ignore */ });
+
+    // 加载可选的 Provider 列表
+    providerService.list({ is_enabled: true, limit: 100 })
+      .then((res) => {
+        setProviderOptions(
+          res.data.map((p) => ({ label: `${p.name} (${p.provider_type})`, value: p.name }))
+        );
+      })
+      .catch(() => { /* ignore */ });
   }, [name]);
 
   useEffect(() => {
@@ -71,6 +82,7 @@ const AgentEditPage: React.FC = () => {
             description: agent.description,
             instructions: agent.instructions,
             model: agent.model,
+            provider_name: agent.provider_name || undefined,
             approval_mode: agent.approval_mode,
             tool_groups: agent.tool_groups || [],
             handoffs: agent.handoffs?.join(', ') || '',
@@ -91,6 +103,7 @@ const AgentEditPage: React.FC = () => {
         description: (values.description as string) || '',
         instructions: (values.instructions as string) || '',
         model: (values.model as string) || 'openai/glm-4-flash',
+        provider_name: (values.provider_name as string) || null,
         approval_mode: (values.approval_mode as string) || 'suggest',
         tool_groups: (values.tool_groups as string[]) || [],
         handoffs: (values.handoffs as string)
@@ -161,6 +174,14 @@ const AgentEditPage: React.FC = () => {
 
             <Form.Item name="model" label="模型">
               <Input placeholder="openai/glm-4-flash" />
+            </Form.Item>
+
+            <Form.Item name="provider_name" label="模型厂商">
+              <Select
+                placeholder="使用环境变量默认配置"
+                options={providerOptions}
+                allowClear
+              />
             </Form.Item>
 
             <Form.Item name="approval_mode" label="审批模式">
