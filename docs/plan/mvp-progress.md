@@ -469,6 +469,15 @@
 - [x] 7.9.5 后端测试 — 8 个新测试（2 execute_run 拦截 + 3 execute_run_stream SSE 错误码 + 2 _build_agent LLM output/tool + 1 RunResponse status），全量 Framework 387 + Backend 427 = 814 通过
 - [x] 7.9.6 五轮代码审查（全部通过）
 
+### Phase 7.10：Trace 可视化增强（P1）✅
+- [x] 7.10.1 时间范围筛选 — RangePicker（showTime）传递 `start_time` / `end_time` 参数
+- [x] 7.10.2 耗时范围筛选 — min/max InputNumber 传递 `min_duration_ms` / `max_duration_ms`
+- [x] 7.10.3 Guardrail 拦截筛选 — Switch 传递 `has_guardrail_triggered` 布尔参数
+- [x] 7.10.4 Session ID 列 — 显示前 8 字符 + Tooltip 可复制完整 ID
+- [x] 7.10.5 JSON 导出 — 详情弹窗底部导出按钮，Blob API 下载 `trace-{id}.json`
+- [x] 7.10.6 类型安全优化 — 使用 `TraceListParams` 替代 Record 强制转型
+- [x] 7.10.7 五轮代码审查（第 1 轮发现类型转型问题并修复，第 2-5 轮全部通过）
+
 ---
 
 *最后更新：2025-07-22*

@@ -14,6 +14,11 @@ import {
   Statistic,
   Select,
   Alert,
+  DatePicker,
+  InputNumber,
+  Switch,
+  Button,
+  Tooltip,
 } from 'antd';
 import {
   ApartmentOutlined,
@@ -22,15 +27,18 @@ import {
   SafetyOutlined,
   ThunderboltOutlined,
   WarningOutlined,
+  DownloadOutlined,
 } from '@ant-design/icons';
 import { ProTable } from '@ant-design/pro-components';
 import type { ProColumns } from '@ant-design/pro-components';
 import { traceService } from '../../services/traceService';
-import type { TraceItem, SpanItem, TraceStatsResponse } from '../../services/traceService';
+import type { TraceItem, SpanItem, TraceStatsResponse, TraceListParams } from '../../services/traceService';
 import type { DataNode } from 'antd/es/tree';
+import type { Dayjs } from 'dayjs';
 import SpanWaterfall from './SpanWaterfall';
 
 const { Text } = Typography;
+const { RangePicker } = DatePicker;
 
 const SPAN_TYPE_COLORS: Record<string, string> = {
   agent: 'blue',
@@ -112,6 +120,10 @@ const TracesPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [agentFilter, setAgentFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
+  const [timeRange, setTimeRange] = useState<[Dayjs, Dayjs] | null>(null);
+  const [minDuration, setMinDuration] = useState<number | null>(null);
+  const [maxDuration, setMaxDuration] = useState<number | null>(null);
+  const [guardrailTriggered, setGuardrailTriggered] = useState(false);
   const [pagination, setPagination] = useState({ current: 1, pageSize: 20 });
   const [stats, setStats] = useState<TraceStatsResponse | null>(null);
 
@@ -136,12 +148,19 @@ const TracesPage: React.FC = () => {
   const fetchList = useCallback(async () => {
     setLoading(true);
     try {
-      const params: Record<string, string | number | undefined> = {
+      const params: TraceListParams = {
         limit: pagination.pageSize,
         offset: (pagination.current - 1) * pagination.pageSize,
       };
       if (agentFilter) params.agent_name = agentFilter;
       if (statusFilter) params.status = statusFilter;
+      if (timeRange) {
+        params.start_time = timeRange[0].toISOString();
+        params.end_time = timeRange[1].toISOString();
+      }
+      if (minDuration !== null) params.min_duration_ms = minDuration;
+      if (maxDuration !== null) params.max_duration_ms = maxDuration;
+      if (guardrailTriggered) params.has_guardrail_triggered = true;
       const res = await traceService.list(params);
       setData(res.items);
       setTotal(res.total);
@@ -150,7 +169,7 @@ const TracesPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [pagination, agentFilter, statusFilter]);
+  }, [pagination, agentFilter, statusFilter, timeRange, minDuration, maxDuration, guardrailTriggered]);
 
   useEffect(() => {
     fetchList();
@@ -189,6 +208,20 @@ const TracesPage: React.FC = () => {
       width: 160,
       render: (_, record) =>
         record.agent_name ? <Tag color="blue">{record.agent_name}</Tag> : '-',
+    },
+    {
+      title: 'Session',
+      dataIndex: 'session_id',
+      width: 120,
+      ellipsis: true,
+      render: (_, record) =>
+        record.session_id ? (
+          <Tooltip title={record.session_id}>
+            <Text copyable={{ text: record.session_id }} style={{ fontSize: 12 }}>
+              {record.session_id.slice(0, 8)}...
+            </Text>
+          </Tooltip>
+        ) : '-',
     },
     {
       title: 'Workflow',
@@ -294,7 +327,47 @@ const TracesPage: React.FC = () => {
           </Space>
         }
         extra={
-          <Space>
+          <Space wrap>
+            <RangePicker
+              showTime
+              placeholder={['开始时间', '结束时间']}
+              onChange={(dates) => {
+                setTimeRange(dates as [Dayjs, Dayjs] | null);
+                setPagination((p) => ({ ...p, current: 1 }));
+              }}
+              style={{ width: 340 }}
+            />
+            <InputNumber
+              placeholder="最小耗时(ms)"
+              min={0}
+              value={minDuration}
+              onChange={(v) => {
+                setMinDuration(v);
+                setPagination((p) => ({ ...p, current: 1 }));
+              }}
+              style={{ width: 130 }}
+            />
+            <InputNumber
+              placeholder="最大耗时(ms)"
+              min={0}
+              value={maxDuration}
+              onChange={(v) => {
+                setMaxDuration(v);
+                setPagination((p) => ({ ...p, current: 1 }));
+              }}
+              style={{ width: 130 }}
+            />
+            <Space size={4}>
+              <Text type="secondary" style={{ fontSize: 12 }}>Guardrail 拦截</Text>
+              <Switch
+                size="small"
+                checked={guardrailTriggered}
+                onChange={(v) => {
+                  setGuardrailTriggered(v);
+                  setPagination((p) => ({ ...p, current: 1 }));
+                }}
+              />
+            </Space>
             <Select
               placeholder="状态筛选"
               value={statusFilter}
@@ -348,7 +421,28 @@ const TracesPage: React.FC = () => {
         }
         open={detailVisible}
         onCancel={() => setDetailVisible(false)}
-        footer={null}
+        footer={
+          detailTrace ? (
+            <Button
+              icon={<DownloadOutlined />}
+              onClick={() => {
+                const exportData = {
+                  trace: detailTrace,
+                  spans: detailSpans,
+                };
+                const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `trace-${detailTrace.id.slice(0, 8)}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+              }}
+            >
+              导出 JSON
+            </Button>
+          ) : null
+        }
         width={1100}
         loading={detailLoading}
       >
