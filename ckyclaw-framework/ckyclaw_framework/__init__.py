@@ -22,6 +22,8 @@ from ckyclaw_framework.guardrails.pii_guardrail import PIIDetectionGuardrail
 from ckyclaw_framework.guardrails.max_token_guardrail import MaxTokenGuardrail
 from ckyclaw_framework.guardrails.tool_whitelist_guardrail import ToolWhitelistGuardrail
 from ckyclaw_framework.guardrails.llm_guardrail import LLMGuardrail
+from ckyclaw_framework.guardrails.prompt_injection_guardrail import PromptInjectionGuardrail
+from ckyclaw_framework.guardrails.content_safety_guardrail import ContentSafetyGuardrail
 
 # === Approval ===
 from ckyclaw_framework.approval.mode import ApprovalDecision, ApprovalMode, ApprovalRejectedError
@@ -70,6 +72,8 @@ __all__ = [
     "MaxTokenGuardrail",
     "ToolWhitelistGuardrail",
     "LLMGuardrail",
+    "PromptInjectionGuardrail",
+    "ContentSafetyGuardrail",
     # Approval
     "ApprovalDecision",
     "ApprovalMode",
