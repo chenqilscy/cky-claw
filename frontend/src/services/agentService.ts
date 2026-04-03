@@ -19,6 +19,7 @@ export interface AgentConfig {
   mcp_servers: string[];
   agent_tools: string[];
   skills: string[];
+  output_type: Record<string, unknown> | null;
   metadata: Record<string, unknown>;
   is_active: boolean;
   created_at: string;
@@ -50,6 +51,7 @@ export interface AgentCreateInput {
   mcp_servers?: string[];
   agent_tools?: string[];
   skills?: string[];
+  output_type?: Record<string, unknown> | null;
   metadata?: Record<string, unknown>;
 }
 

@@ -102,6 +102,7 @@ const AgentEditPage: React.FC = () => {
             input_guardrails: agent.guardrails?.input || [],
             output_guardrails: agent.guardrails?.output || [],
             tool_guardrails: agent.guardrails?.tool || [],
+            output_type: agent.output_type ? JSON.stringify(agent.output_type, null, 2) : '',
           });
         })
         .catch(() => message.error('加载 Agent 失败'))
@@ -129,7 +130,18 @@ const AgentEditPage: React.FC = () => {
           output: (values.output_guardrails as string[]) || [],
           tool: (values.tool_guardrails as string[]) || [],
         },
+        output_type: (() => {
+          const raw = (values.output_type as string || '').trim();
+          if (!raw) return null;
+          try { return JSON.parse(raw) as Record<string, unknown>; }
+          catch { message.error('output_type 必须是有效的 JSON Schema'); return undefined; }
+        })(),
       };
+
+      if (payload.output_type === undefined) {
+        setSaving(false);
+        return;
+      }
 
       if (isEdit && name) {
         const updatePayload: AgentUpdateInput = { ...payload };
@@ -248,6 +260,26 @@ const AgentEditPage: React.FC = () => {
                 placeholder="选择要启用的工具调用护栏"
                 options={toolGuardrailOptions}
                 allowClear
+              />
+            </Form.Item>
+
+            <Form.Item
+              name="output_type"
+              label="结构化输出（JSON Schema）"
+              tooltip="定义 Agent 返回的结构化数据格式，留空则返回纯文本"
+              rules={[
+                {
+                  validator: (_, value) => {
+                    if (!value || !(value as string).trim()) return Promise.resolve();
+                    try { JSON.parse(value as string); return Promise.resolve(); }
+                    catch { return Promise.reject(new Error('请输入有效的 JSON Schema')); }
+                  },
+                },
+              ]}
+            >
+              <TextArea
+                rows={6}
+                placeholder={'{\n  "type": "object",\n  "properties": {\n    "summary": { "type": "string" },\n    "score": { "type": "integer" }\n  },\n  "required": ["summary", "score"]\n}'}
               />
             </Form.Item>
 

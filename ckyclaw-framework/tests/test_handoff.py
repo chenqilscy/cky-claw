@@ -35,6 +35,7 @@ class MockProvider(ModelProvider):
         settings: ModelSettings | None = None,
         tools: list[dict[str, Any]] | None = None,
         stream: bool = False,
+        response_format: dict[str, Any] | None = None,
     ) -> ModelResponse | AsyncIterator[ModelChunk]:
         if stream:
             return self._stream_response()
@@ -209,6 +210,7 @@ class TestInputFilter:
                 settings: ModelSettings | None = None,
                 tools: list[dict[str, Any]] | None = None,
                 stream: bool = False,
+                response_format: dict[str, Any] | None = None,
             ) -> ModelResponse | AsyncIterator[ModelChunk]:
                 call_messages.append(list(messages))
                 resp = self._responses[min(self._call_count, len(self._responses) - 1)]
@@ -275,6 +277,7 @@ class TestInputFilter:
                 settings: ModelSettings | None = None,
                 tools: list[dict[str, Any]] | None = None,
                 stream: bool = False,
+                response_format: dict[str, Any] | None = None,
             ) -> ModelResponse | AsyncIterator[ModelChunk]:
                 nonlocal call_count
                 captured_msg_counts.append(len(messages))

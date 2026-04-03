@@ -233,6 +233,48 @@ async def _resolve_tool_groups(
     return tools
 
 
+# JSON Schema type 到 Python annotation 的映射
+_JSON_SCHEMA_TYPE_MAP: dict[str, type] = {
+    "string": str,
+    "integer": int,
+    "number": float,
+    "boolean": bool,
+}
+
+
+def _build_output_type_from_schema(schema: dict[str, Any], agent_name: str) -> type | None:
+    """从 JSON Schema 动态构建 Pydantic BaseModel 类。
+
+    仅支持 flat 对象结构（properties 均为基本类型或 array[string]）。
+    复杂嵌套场景在后续迭代中扩展。
+    """
+    from pydantic import create_model
+
+    properties = schema.get("properties")
+    if not properties:
+        return None
+
+    required_set = set(schema.get("required", []))
+    field_definitions: dict[str, Any] = {}
+    for field_name, field_schema in properties.items():
+        field_type = field_schema.get("type", "string")
+        if field_type == "array":
+            items_type = field_schema.get("items", {}).get("type", "string")
+            python_type = list[_JSON_SCHEMA_TYPE_MAP.get(items_type, str)]  # type: ignore[index]
+        else:
+            python_type = _JSON_SCHEMA_TYPE_MAP.get(field_type, str)  # type: ignore[assignment]
+
+        if field_name in required_set:
+            field_definitions[field_name] = (python_type, ...)
+        else:
+            default = field_schema.get("default")
+            field_definitions[field_name] = (python_type, default)
+
+    # 使用 Agent name 生成可辨识的 Model 类名
+    model_name = f"{agent_name.replace('-', '_').title().replace('_', '')}Output"
+    return create_model(model_name, **field_definitions)
+
+
 def _build_agent_from_config(
     config: AgentConfig,
     guardrail_rules: list | None = None,
@@ -343,6 +385,11 @@ def _build_agent_from_config(
     }
     approval_mode = approval_mode_map.get(config.approval_mode)
 
+    # 解析 output_type: JSON Schema → 动态 Pydantic Model
+    output_type = None
+    if config.output_type:
+        output_type = _build_output_type_from_schema(config.output_type, config.name)
+
     return Agent(
         name=config.name,
         description=config.description,
@@ -355,6 +402,7 @@ def _build_agent_from_config(
         tool_guardrails=tool_guardrails,
         approval_mode=approval_mode,
         handoffs=handoff_agents or [],
+        output_type=output_type,
     )
 
 

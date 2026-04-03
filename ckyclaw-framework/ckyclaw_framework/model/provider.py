@@ -73,6 +73,11 @@ class ModelProvider(ABC):
         settings: ModelSettings | None = None,
         tools: list[dict[str, Any]] | None = None,
         stream: bool = False,
+        response_format: dict[str, Any] | None = None,
     ) -> ModelResponse | AsyncIterator[ModelChunk]:
-        """发送聊天请求。"""
+        """发送聊天请求。
+
+        Args:
+            response_format: 结构化输出格式（如 {"type": "json_object"} 或 JSON Schema）。
+        """
         ...

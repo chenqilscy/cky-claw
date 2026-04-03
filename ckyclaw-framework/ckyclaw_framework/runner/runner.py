@@ -42,6 +42,59 @@ logger = logging.getLogger(__name__)
 _HANDOFF_TOOL_PREFIX = "transfer_to_"
 
 
+def _build_response_format(output_type: type | None) -> dict[str, Any] | None:
+    """为结构化输出构建 response_format 参数。
+
+    当 Agent.output_type 是 Pydantic BaseModel 子类时，构建 JSON Schema response_format
+    交给 LLM（OpenAI、智谱等支持 response_format 的模型）。
+    """
+    if output_type is None:
+        return None
+    # Pydantic BaseModel: 使用 model_json_schema() 生成 JSON Schema
+    if hasattr(output_type, "model_json_schema"):
+        schema = output_type.model_json_schema()
+        return {
+            "type": "json_schema",
+            "json_schema": {
+                "name": output_type.__name__,
+                "schema": schema,
+                "strict": False,
+            },
+        }
+    # 普通 dict 型 JSON Schema（从 API/DB 传入的原始 schema）
+    if isinstance(output_type, dict):
+        return {"type": "json_object"}
+    return None
+
+
+def _parse_structured_output(raw: str, output_type: type | None) -> Any:
+    """将 LLM 返回的文本解析为结构化输出。
+
+    Args:
+        raw: LLM 返回的原始文本。
+        output_type: Agent.output_type。
+
+    Returns:
+        解析后的结构化对象，或原始字符串（解析失败时 fallback）。
+    """
+    if output_type is None or not raw:
+        return raw
+    # Pydantic BaseModel
+    if hasattr(output_type, "model_validate_json"):
+        try:
+            return output_type.model_validate_json(raw)
+        except Exception:
+            # Fallback: 尝试从文本中提取 JSON 块
+            try:
+                start = raw.index("{")
+                end = raw.rindex("}") + 1
+                return output_type.model_validate_json(raw[start:end])
+            except Exception:
+                logger.warning("Failed to parse structured output for %s, returning raw text", output_type.__name__)
+                return raw
+    return raw
+
+
 def _build_trim_config(config: RunConfig) -> HistoryTrimConfig | None:
     """从 RunConfig 构建 HistoryTrimConfig。任何 trim 字段非空即启用裁剪。"""
     if config.max_history_tokens is None and config.max_history_messages is None:
@@ -59,6 +112,15 @@ def _build_system_message(agent: Agent, run_context: RunContext) -> Message:
         text = agent.instructions(run_context)
     else:
         text = agent.instructions or ""
+    # output_type: 注入 JSON Schema 描述到 system prompt 作为 fallback 指引
+    if agent.output_type is not None and hasattr(agent.output_type, "model_json_schema"):
+        schema = agent.output_type.model_json_schema()
+        hint = (
+            f"\n\nYou MUST respond with a valid JSON object conforming to the following JSON Schema:\n"
+            f"```json\n{json.dumps(schema, ensure_ascii=False, indent=2)}\n```\n"
+            f"Do NOT include any text outside the JSON object."
+        )
+        text = text + hint
     return Message(role=MessageRole.SYSTEM, content=text)
 
 
@@ -735,6 +797,7 @@ class Runner:
 
             model_name = _resolve_model(current_agent, config)
             settings = _resolve_settings(current_agent, config)
+            response_format = _build_response_format(current_agent.output_type)
 
             # Tracing: LLM Span
             llm_span = await tracing.start_llm_span(model_name, llm_messages) if tracing.active else None
@@ -751,6 +814,7 @@ class Runner:
                     settings=settings,
                     tools=tool_schemas or None,
                     stream=False,
+                    response_format=response_format,
                 )  # type: ignore[assignment]
             except Exception as e:
                 logger.exception("LLM call failed for agent '%s'", current_agent.name)
@@ -795,14 +859,18 @@ class Runner:
 
             # 无工具调用 → 最终输出
             if not response.tool_calls:
-                # Output Guardrails: final_output 后检测
+                raw_output = response.content or ""
+                # 结构化输出解析
+                final_output: Any = _parse_structured_output(raw_output, current_agent.output_type)
+
+                # Output Guardrails: final_output 后检测（使用原始文本）
                 _merged_output_guardrails = current_agent.output_guardrails + config.output_guardrails
                 if _merged_output_guardrails:
                     try:
                         await _execute_output_guardrails(
                             _merged_output_guardrails,
                             run_ctx,
-                            response.content or "",
+                            raw_output,
                             tracing=tracing if tracing.active else None,
                         )
                     except OutputGuardrailTripwireError:
@@ -817,13 +885,13 @@ class Runner:
                 if hooks:
                     await _invoke_hook(hooks.on_agent_end, "on_agent_end", run_ctx, current_agent.name)
                 if agent_span:
-                    await tracing.end_span(agent_span, output=response.content)
+                    await tracing.end_span(agent_span, output=raw_output)
                 trace = await tracing.end_trace()
                 # Session: 保存新增消息
                 if session is not None:
                     await session.append(messages[history_offset:])
                 _ok_result = RunResult(
-                    output=response.content or "",
+                    output=final_output,
                     messages=messages,
                     last_agent_name=current_agent.name,
                     token_usage=total_usage,
@@ -1013,6 +1081,7 @@ class Runner:
 
             model_name = _resolve_model(current_agent, config)
             settings = _resolve_settings(current_agent, config)
+            response_format = _build_response_format(current_agent.output_type)
 
             # Tracing: LLM Span
             llm_span = await tracing.start_llm_span(model_name, llm_messages) if tracing.active else None
@@ -1029,6 +1098,7 @@ class Runner:
                     settings=settings,
                     tools=tool_schemas or None,
                     stream=True,
+                    response_format=response_format,
                 )
             except Exception as e:
                 logger.exception("LLM stream call failed for agent '%s'", current_agent.name)
@@ -1101,19 +1171,23 @@ class Runner:
                 await _invoke_hook(hooks.on_llm_end, "on_llm_end", run_ctx, aggregated_response)
 
             if not aggregated_tool_calls:
-                # Output Guardrails: final_output 后检测（流式）
+                raw_output = full_content
+                # 结构化输出解析
+                final_output: Any = _parse_structured_output(raw_output, current_agent.output_type)
+
+                # Output Guardrails: final_output 后检测（流式，使用原始文本）
                 _merged_output_guardrails = current_agent.output_guardrails + config.output_guardrails
                 if _merged_output_guardrails:
                     try:
                         await _execute_output_guardrails(
                             _merged_output_guardrails,
                             run_ctx,
-                            full_content,
+                            raw_output,
                             tracing=tracing if tracing.active else None,
                         )
                     except OutputGuardrailTripwireError:
                         if llm_span:
-                            await tracing.end_span(llm_span, output=full_content)
+                            await tracing.end_span(llm_span, output=raw_output)
                         if agent_span:
                             await tracing.end_span(agent_span, status=SpanStatus.FAILED)
                         trace = await tracing.end_trace()
@@ -1123,18 +1197,18 @@ class Runner:
 
                 # Tracing: 结束 LLM + Agent Span
                 if llm_span:
-                    await tracing.end_span(llm_span, output=full_content)
+                    await tracing.end_span(llm_span, output=raw_output)
                 # Hooks: on_agent_end
                 if hooks:
                     await _invoke_hook(hooks.on_agent_end, "on_agent_end", run_ctx, current_agent.name)
                 if agent_span:
-                    await tracing.end_span(agent_span, output=full_content)
+                    await tracing.end_span(agent_span, output=raw_output)
                 trace = await tracing.end_trace()
                 # Session: 保存新增消息
                 if session is not None:
                     await session.append(messages[history_offset:])
                 _ok_result = RunResult(
-                    output=full_content,
+                    output=final_output,
                     messages=messages,
                     last_agent_name=current_agent.name,
                     token_usage=total_usage,

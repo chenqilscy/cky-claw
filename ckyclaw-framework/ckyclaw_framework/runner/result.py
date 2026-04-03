@@ -15,8 +15,8 @@ if TYPE_CHECKING:
 class RunResult:
     """Agent 执行结果。"""
 
-    output: str
-    """Agent 最终输出"""
+    output: Any
+    """Agent 最终输出（字符串或结构化对象，取决于 Agent.output_type）"""
 
     messages: list[Message] = field(default_factory=list)
     """完整消息历史"""

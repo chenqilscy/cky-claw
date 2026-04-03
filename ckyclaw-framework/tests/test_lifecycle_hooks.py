@@ -38,6 +38,7 @@ class MockProvider(ModelProvider):
         settings: ModelSettings | None = None,
         tools: list[dict[str, Any]] | None = None,
         stream: bool = False,
+        response_format: dict[str, Any] | None = None,
     ) -> ModelResponse | AsyncIterator[ModelChunk]:
         if stream:
             return self._stream_response()

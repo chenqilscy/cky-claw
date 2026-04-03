@@ -36,6 +36,7 @@ class AgentCreate(BaseModel):
     mcp_servers: list[str] = Field(default_factory=list, description="MCP Server 名称")
     agent_tools: list[str] = Field(default_factory=list, description="作为工具调用的 Agent 名称列表")
     skills: list[str] = Field(default_factory=list, description="已启用 Skill 名称")
+    output_type: dict | None = Field(default=None, description="结构化输出 JSON Schema")
     metadata: dict = Field(default_factory=dict, description="自定义元数据")
 
     @field_validator("name")
@@ -69,6 +70,7 @@ class AgentUpdate(BaseModel):
     mcp_servers: list[str] | None = None
     agent_tools: list[str] | None = None
     skills: list[str] | None = None
+    output_type: dict | None = None
     metadata: dict | None = None
 
     @field_validator("approval_mode")
@@ -100,6 +102,7 @@ class AgentResponse(BaseModel):
     mcp_servers: list[str]
     agent_tools: list[str]
     skills: list[str]
+    output_type: dict | None
     metadata: dict = Field(alias="metadata_")
     org_id: uuid.UUID | None
     is_active: bool

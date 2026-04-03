@@ -262,6 +262,7 @@ class TestAgentSchemaWithAgentTools:
             mcp_servers=[],
             agent_tools=["sub-a"],
             skills=[],
+            output_type=None,
             metadata_={},
             org_id=None,
             is_active=True,

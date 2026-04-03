@@ -46,6 +46,7 @@ def _make_agent_config(**overrides: Any) -> MagicMock:
         "agent_tools": [],
         "provider_name": None,
         "skills": [],
+        "output_type": None,
         "metadata_": {},
         "org_id": None,
         "is_active": True,

@@ -51,6 +51,9 @@ class AgentConfig(Base):
     skills: Mapped[list[str]] = mapped_column(
         ARRAY(String), nullable=False, server_default=text("'{}'::varchar[]")
     )
+    output_type: Mapped[dict | None] = mapped_column(
+        JSONB, nullable=True, comment="结构化输出 JSON Schema"
+    )
     metadata_: Mapped[dict] = mapped_column(
         "metadata", JSONB, nullable=False, server_default=text("'{}'::jsonb")
     )

@@ -54,6 +54,7 @@ class MockProvider(ModelProvider):
         settings: ModelSettings | None = None,
         tools: list[dict[str, Any]] | None = None,
         stream: bool = False,
+        response_format: dict[str, Any] | None = None,
     ) -> ModelResponse | AsyncIterator[ModelChunk]:
         self.call_messages.append(list(messages))
         if stream:

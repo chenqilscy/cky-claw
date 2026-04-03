@@ -47,12 +47,16 @@ class LiteLLMProvider(ModelProvider):
         settings: ModelSettings | None = None,
         tools: list[dict[str, Any]] | None = None,
         stream: bool = False,
+        response_format: dict[str, Any] | None = None,
     ) -> ModelResponse | AsyncIterator[ModelChunk]:
         """通过 litellm.acompletion 调用。"""
         kwargs: dict[str, Any] = {
             "model": model,
             "messages": messages_to_litellm(messages),
         }
+
+        if response_format is not None:
+            kwargs["response_format"] = response_format
 
         # Provider 级别参数
         if self._api_key is not None:

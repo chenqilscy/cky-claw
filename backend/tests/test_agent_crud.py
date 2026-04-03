@@ -41,6 +41,7 @@ def _make_agent_config(**overrides) -> MagicMock:  # type: ignore[no-untyped-def
         "mcp_servers": [],
         "agent_tools": [],
         "skills": [],
+        "output_type": None,
         "metadata_": {},
         "org_id": None,
         "is_active": True,

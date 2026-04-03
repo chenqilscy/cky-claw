@@ -86,7 +86,13 @@ class Agent:
             from ckyclaw_framework.runner.runner import Runner
 
             result = await Runner.run(agent, input, config=inner_config)
-            return result.output
+            output = result.output
+            if isinstance(output, str):
+                return output
+            # 结构化输出：序列化为 JSON 字符串作为 tool result
+            if hasattr(output, "model_dump_json"):
+                return output.model_dump_json()
+            return str(output)
 
         name = tool_name or self.name
         description = tool_description or self.description or f"Run agent '{self.name}'"
