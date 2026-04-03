@@ -16,7 +16,7 @@ class GuardrailRuleCreate(BaseModel):
     name: str = Field(..., min_length=2, max_length=64, description="规则唯一标识")
     description: str = Field(default="", description="规则描述")
     type: str = Field(default="input", description="护栏类型: input / output / tool")
-    mode: str = Field(default="regex", description="检测模式: regex / keyword")
+    mode: str = Field(default="regex", description="检测模式: regex / keyword / llm")
     config: dict[str, Any] = Field(default_factory=dict, description="模式配置")
 
     @field_validator("type")
@@ -30,7 +30,7 @@ class GuardrailRuleCreate(BaseModel):
     @field_validator("mode")
     @classmethod
     def validate_mode(cls, v: str) -> str:
-        allowed = {"regex", "keyword"}
+        allowed = {"regex", "keyword", "llm"}
         if v not in allowed:
             raise ValueError(f"mode 必须是 {allowed} 之一")
         return v
@@ -65,7 +65,7 @@ class GuardrailRuleUpdate(BaseModel):
     @classmethod
     def validate_mode(cls, v: str | None) -> str | None:
         if v is not None:
-            allowed = {"regex", "keyword"}
+            allowed = {"regex", "keyword", "llm"}
             if v not in allowed:
                 raise ValueError(f"mode 必须是 {allowed} 之一")
         return v

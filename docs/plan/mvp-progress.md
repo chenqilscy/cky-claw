@@ -404,6 +404,17 @@
 - [x] 7.3.12 全量测试 — Framework 372 + Backend 382 = 754 全部通过
 - [x] 7.3.13 五轮代码审查（1 个问题修复：create_agent 事务隔离 — flush 替代首次 commit 确保 Agent+版本同事务提交）
 
+### Phase 7.4：LLM-based Guardrails 配置化（P1）✅
+- [x] 7.4.1 Framework 基础设施确认 — `LLMGuardrail`（基类 evaluate + JSON 解析 + timeout/fail-open + as_input_fn/as_output_fn/as_tool_before_fn/as_tool_after_fn）、`PromptInjectionGuardrail`（预设 threshold=0.7）、`ContentSafetyGuardrail`（预设 threshold=0.75）已就绪
+- [x] 7.4.2 Backend — `_validate_config` 扩展 mode="llm"（preset 枚举、custom 必须 {content} 模板、threshold 0-1、model 字符串校验）
+- [x] 7.4.3 Backend Schema — `GuardrailRuleCreate`/`Update` mode validator 放开 "llm"，description 更新
+- [x] 7.4.4 Backend Bridge — `_build_agent_from_config` 新增 LLM 分支（prompt_injection→PromptInjectionGuardrail、content_safety→ContentSafetyGuardrail、custom→LLMGuardrail），input/output/tool 三类型全支持
+- [x] 7.4.5 Frontend — GuardrailRulesPage 新增 LLM 模式（MODE_OPTIONS + LLM_PRESET_OPTIONS、preset/model/threshold/prompt_template 表单、mode 列 purple Tag、规则数列显示 preset）
+- [x] 7.4.6 后端测试 — 新增 3 个 Schema 测试 + 11 个 Service _validate_config 测试 + 3 个 API 端点测试 = 17 个 LLM 模式测试；修复旧测试 test_rule_create_invalid_mode（"llm"→"magic"）
+- [x] 7.4.7 Framework 测试 — 已有 24 个 LLM Guardrail 测试覆盖（TestLLMGuardrail 11 + TestPromptInjectionGuardrail 5 + TestContentSafetyGuardrail 6）
+- [x] 7.4.8 全量测试 — Framework 372 + Backend 399 = 771 全部通过，TypeScript 零错误
+- [x] 7.4.9 五轮代码审查（2 个问题修复：Schema description 缺 "llm" + 前端 InputNumber 替换 Input type="number" 避免字符串类型问题）
+
 ---
 
 *最后更新：2025-07-22*

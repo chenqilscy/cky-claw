@@ -4,6 +4,7 @@ import {
   Card,
   Form,
   Input,
+  InputNumber,
   message,
   Modal,
   Radio,
@@ -39,6 +40,13 @@ const TYPE_OPTIONS = [
 const MODE_OPTIONS = [
   { label: 'Regex（正则)', value: 'regex' },
   { label: 'Keyword（关键词）', value: 'keyword' },
+  { label: 'LLM（AI 语义检测）', value: 'llm' },
+];
+
+const LLM_PRESET_OPTIONS = [
+  { label: 'Prompt 注入检测', value: 'prompt_injection' },
+  { label: '内容安全检测', value: 'content_safety' },
+  { label: '自定义 Prompt', value: 'custom' },
 ];
 
 const TYPE_COLORS: Record<string, string> = {
@@ -100,6 +108,10 @@ const GuardrailRulesPage: React.FC = () => {
       patterns: record.mode === 'regex' ? (config.patterns as string[] || []).join('\n') : '',
       keywords: record.mode === 'keyword' ? (config.keywords as string[] || []).join('\n') : '',
       message: (config.message as string) || '',
+      llm_preset: record.mode === 'llm' ? (config.preset as string) || 'custom' : 'prompt_injection',
+      llm_model: record.mode === 'llm' ? (config.model as string) || '' : '',
+      llm_threshold: record.mode === 'llm' ? (config.threshold as number) ?? 0.8 : 0.8,
+      llm_prompt_template: record.mode === 'llm' ? (config.prompt_template as string) || '' : '',
     });
     setModalVisible(true);
   };
@@ -115,11 +127,18 @@ const GuardrailRulesPage: React.FC = () => {
           .split('\n')
           .map((s: string) => s.trim())
           .filter(Boolean);
-      } else {
+      } else if (values.mode === 'keyword') {
         config.keywords = (values.keywords as string)
           .split('\n')
           .map((s: string) => s.trim())
           .filter(Boolean);
+      } else if (values.mode === 'llm') {
+        config.preset = values.llm_preset || 'custom';
+        if (values.llm_model) config.model = values.llm_model;
+        if (values.llm_threshold !== undefined) config.threshold = values.llm_threshold;
+        if (values.llm_preset === 'custom' && values.llm_prompt_template) {
+          config.prompt_template = values.llm_prompt_template;
+        }
       }
       if (values.message) {
         config.message = values.message;
@@ -199,15 +218,24 @@ const GuardrailRulesPage: React.FC = () => {
       title: '模式',
       dataIndex: 'mode',
       width: 120,
-      render: (_, record) => (
-        <Tag>{record.mode === 'regex' ? '正则' : '关键词'}</Tag>
-      ),
+      render: (_, record) => {
+        const modeMap: Record<string, { label: string; color: string }> = {
+          regex: { label: '正则', color: 'default' },
+          keyword: { label: '关键词', color: 'default' },
+          llm: { label: 'LLM', color: 'purple' },
+        };
+        const m = modeMap[record.mode] || { label: record.mode, color: 'default' };
+        return <Tag color={m.color}>{m.label}</Tag>;
+      },
     },
     {
       title: '规则数',
-      width: 80,
+      width: 100,
       render: (_, record) => {
         const config = record.config;
+        if (record.mode === 'llm') {
+          return <Tag color="purple">{(config.preset as string) || 'custom'}</Tag>;
+        }
         const count = (config.patterns as string[] || []).length
           + (config.keywords as string[] || []).length;
         return count;
@@ -337,6 +365,44 @@ const GuardrailRulesPage: React.FC = () => {
             >
               <TextArea rows={4} placeholder={'暴力\n色情\n违禁'} />
             </Form.Item>
+          )}
+
+          {selectedMode === 'llm' && (
+            <>
+              <Form.Item
+                name="llm_preset"
+                label="LLM 预设场景"
+                initialValue="prompt_injection"
+              >
+                <Select options={LLM_PRESET_OPTIONS} />
+              </Form.Item>
+
+              <Form.Item name="llm_model" label="LLM 模型">
+                <Input placeholder="gpt-4o-mini（留空使用默认）" />
+              </Form.Item>
+
+              <Form.Item name="llm_threshold" label="判定阈值" initialValue={0.8}>
+                <InputNumber min={0} max={1} step={0.05} placeholder="0.8" style={{ width: '100%' }} />
+              </Form.Item>
+
+              <Form.Item
+                noStyle
+                shouldUpdate={(prev, cur) => prev.llm_preset !== cur.llm_preset}
+              >
+                {({ getFieldValue }) =>
+                  getFieldValue('llm_preset') === 'custom' ? (
+                    <Form.Item
+                      name="llm_prompt_template"
+                      label="自定义 Prompt"
+                      rules={[{ required: true, message: '自定义模式必须提供 Prompt' }]}
+                      extra="必须包含 {content} 占位符，LLM 需返回 JSON: {safe, confidence, reason}"
+                    >
+                      <TextArea rows={6} placeholder={'判断以下内容是否安全：\n{content}\n\n回复 JSON: {"safe": true/false, "confidence": 0.0~1.0, "reason": "理由"}'} />
+                    </Form.Item>
+                  ) : null
+                }
+              </Form.Item>
+            </>
           )}
 
           <Form.Item name="message" label="拦截提示消息">

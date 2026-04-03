@@ -83,7 +83,7 @@ class TestGuardrailSchemas:
         from app.schemas.guardrail import GuardrailRuleCreate
 
         with pytest.raises(Exception):
-            GuardrailRuleCreate(name="test-rule", type="input", mode="llm")
+            GuardrailRuleCreate(name="test-rule", type="input", mode="magic")
 
     def test_rule_list_response(self) -> None:
         from app.schemas.guardrail import GuardrailRuleListResponse, GuardrailRuleResponse
@@ -197,6 +197,202 @@ class TestGuardrailAPI:
         client = TestClient(app)
         resp = client.delete(f"/api/v1/guardrails/{uuid.uuid4()}")
         assert resp.status_code == 204
+
+
+# ═══════════════════════════════════════════════════════════════════
+# LLM 模式 Schema 验证测试
+# ═══════════════════════════════════════════════════════════════════
+
+
+class TestLLMModeSchemas:
+    """LLM 模式 Guardrail Schema 测试。"""
+
+    def test_create_llm_mode_accepted(self) -> None:
+        """mode=llm 在 Schema 层应通过。"""
+        from app.schemas.guardrail import GuardrailRuleCreate
+
+        data = GuardrailRuleCreate(
+            name="llm-injection-check",
+            type="input",
+            mode="llm",
+            config={"preset": "prompt_injection"},
+        )
+        assert data.mode == "llm"
+
+    def test_create_llm_custom_with_template(self) -> None:
+        from app.schemas.guardrail import GuardrailRuleCreate
+
+        data = GuardrailRuleCreate(
+            name="llm-custom-rule",
+            type="output",
+            mode="llm",
+            config={
+                "preset": "custom",
+                "prompt_template": "检查以下内容: {content}",
+                "model": "gpt-4o-mini",
+                "threshold": 0.85,
+            },
+        )
+        assert data.mode == "llm"
+        assert data.config["preset"] == "custom"
+
+    def test_update_llm_mode_accepted(self) -> None:
+        from app.schemas.guardrail import GuardrailRuleUpdate
+
+        data = GuardrailRuleUpdate(mode="llm")
+        assert data.mode == "llm"
+
+
+# ═══════════════════════════════════════════════════════════════════
+# LLM 模式 Service _validate_config 测试
+# ═══════════════════════════════════════════════════════════════════
+
+
+class TestLLMModeValidation:
+    """LLM 模式 _validate_config 逻辑测试。"""
+
+    def test_valid_prompt_injection_preset(self) -> None:
+        from app.services.guardrail import _validate_config
+
+        _validate_config("llm", {"preset": "prompt_injection"})
+
+    def test_valid_content_safety_preset(self) -> None:
+        from app.services.guardrail import _validate_config
+
+        _validate_config("llm", {"preset": "content_safety"})
+
+    def test_valid_custom_preset(self) -> None:
+        from app.services.guardrail import _validate_config
+
+        _validate_config("llm", {
+            "preset": "custom",
+            "prompt_template": "请判断以下内容是否安全: {content}",
+        })
+
+    def test_invalid_preset(self) -> None:
+        from app.services.guardrail import _validate_config
+
+        with pytest.raises(Exception, match="preset"):
+            _validate_config("llm", {"preset": "unknown_preset"})
+
+    def test_custom_without_template_raises(self) -> None:
+        from app.services.guardrail import _validate_config
+
+        with pytest.raises(Exception, match="prompt_template"):
+            _validate_config("llm", {"preset": "custom"})
+
+    def test_custom_template_missing_placeholder(self) -> None:
+        from app.services.guardrail import _validate_config
+
+        with pytest.raises(Exception, match="prompt_template"):
+            _validate_config("llm", {
+                "preset": "custom",
+                "prompt_template": "检查内容",
+            })
+
+    def test_threshold_out_of_range(self) -> None:
+        from app.services.guardrail import _validate_config
+
+        with pytest.raises(Exception, match="threshold"):
+            _validate_config("llm", {"preset": "prompt_injection", "threshold": 1.5})
+
+    def test_threshold_negative(self) -> None:
+        from app.services.guardrail import _validate_config
+
+        with pytest.raises(Exception, match="threshold"):
+            _validate_config("llm", {"preset": "prompt_injection", "threshold": -0.1})
+
+    def test_model_not_string(self) -> None:
+        from app.services.guardrail import _validate_config
+
+        with pytest.raises(Exception, match="model"):
+            _validate_config("llm", {"preset": "prompt_injection", "model": 123})
+
+    def test_valid_with_all_options(self) -> None:
+        """完整 LLM 配置应通过验证。"""
+        from app.services.guardrail import _validate_config
+
+        _validate_config("llm", {
+            "preset": "custom",
+            "prompt_template": "检查: {content}",
+            "model": "gpt-4o",
+            "threshold": 0.6,
+        })
+
+    def test_empty_config_valid(self) -> None:
+        """空 config 下 LLM 模式不应报错（preset 为 None，无 threshold/model）。"""
+        from app.services.guardrail import _validate_config
+
+        _validate_config("llm", {})
+
+
+# ═══════════════════════════════════════════════════════════════════
+# LLM 模式 API 端点测试
+# ═══════════════════════════════════════════════════════════════════
+
+
+class TestLLMModeAPI:
+    """LLM 模式 Guardrail API 端点测试。"""
+
+    @patch("app.api.guardrails.guardrail_service")
+    def test_create_llm_rule(self, mock_svc: MagicMock) -> None:
+        """创建 LLM 模式规则成功。"""
+        rule = _make_guardrail_rule(
+            mode="llm",
+            config={"preset": "prompt_injection", "model": "gpt-4o-mini", "threshold": 0.7},
+        )
+        mock_svc.create_guardrail_rule = AsyncMock(return_value=rule)
+
+        client = TestClient(app)
+        resp = client.post("/api/v1/guardrails", json={
+            "name": "llm-injection",
+            "type": "input",
+            "mode": "llm",
+            "config": {"preset": "prompt_injection"},
+        })
+        assert resp.status_code == 201
+        data = resp.json()
+        assert data["mode"] == "llm"
+
+    @patch("app.api.guardrails.guardrail_service")
+    def test_create_llm_custom_rule(self, mock_svc: MagicMock) -> None:
+        """创建 custom LLM 规则。"""
+        rule = _make_guardrail_rule(
+            mode="llm",
+            config={
+                "preset": "custom",
+                "prompt_template": "检查: {content}",
+                "model": "gpt-4o",
+                "threshold": 0.85,
+            },
+        )
+        mock_svc.create_guardrail_rule = AsyncMock(return_value=rule)
+
+        client = TestClient(app)
+        resp = client.post("/api/v1/guardrails", json={
+            "name": "llm-custom",
+            "type": "output",
+            "mode": "llm",
+            "config": {
+                "preset": "custom",
+                "prompt_template": "检查: {content}",
+                "model": "gpt-4o",
+                "threshold": 0.85,
+            },
+        })
+        assert resp.status_code == 201
+
+    @patch("app.api.guardrails.guardrail_service")
+    def test_list_llm_rules(self, mock_svc: MagicMock) -> None:
+        """按 mode=llm 过滤列表。"""
+        rules = [_make_guardrail_rule(mode="llm", name=f"llm-rule-{i}") for i in range(2)]
+        mock_svc.list_guardrail_rules = AsyncMock(return_value=(rules, 2))
+
+        client = TestClient(app)
+        resp = client.get("/api/v1/guardrails?mode=llm")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert len(data["items"]) == 2
 
 
 # ═══════════════════════════════════════════════════════════════════

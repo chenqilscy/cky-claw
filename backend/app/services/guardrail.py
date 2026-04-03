@@ -12,7 +12,7 @@ from app.core.exceptions import ConflictError, NotFoundError, ValidationError
 from app.models.guardrail import GuardrailRule
 
 VALID_TYPES = {"input", "output", "tool"}
-VALID_MODES = {"regex", "keyword"}
+VALID_MODES = {"regex", "keyword", "llm"}
 MAX_PATTERN_LENGTH = 500
 
 
@@ -38,6 +38,23 @@ def _validate_config(mode: str, config: dict) -> None:
         for kw in keywords:
             if not isinstance(kw, str) or not kw.strip():
                 raise ValidationError("keyword 必须是非空字符串")
+    elif mode == "llm":
+        preset = config.get("preset")
+        valid_presets = {"prompt_injection", "content_safety", "custom"}
+        if preset and preset not in valid_presets:
+            raise ValidationError(f"LLM preset 必须是 {valid_presets} 之一")
+        # custom 模式必须有 prompt_template
+        if preset == "custom":
+            template = config.get("prompt_template", "")
+            if not template or "{content}" not in template:
+                raise ValidationError("自定义 LLM 模式必须提供包含 {content} 占位符的 prompt_template")
+        threshold = config.get("threshold")
+        if threshold is not None:
+            if not isinstance(threshold, (int, float)) or not (0.0 <= threshold <= 1.0):
+                raise ValidationError("threshold 必须在 0.0 到 1.0 之间")
+        model = config.get("model")
+        if model is not None and not isinstance(model, str):
+            raise ValidationError("model 必须是字符串")
 
 
 async def create_guardrail_rule(

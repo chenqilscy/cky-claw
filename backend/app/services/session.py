@@ -242,8 +242,11 @@ def _build_agent_from_config(
     """从 DB AgentConfig 构造 Framework Agent 实例。"""
     from ckyclaw_framework.agent.agent import Agent
     from ckyclaw_framework.approval.mode import ApprovalMode
+    from ckyclaw_framework.guardrails.content_safety_guardrail import ContentSafetyGuardrail
     from ckyclaw_framework.guardrails.input_guardrail import InputGuardrail
+    from ckyclaw_framework.guardrails.llm_guardrail import LLMGuardrail
     from ckyclaw_framework.guardrails.output_guardrail import OutputGuardrail
+    from ckyclaw_framework.guardrails.prompt_injection_guardrail import PromptInjectionGuardrail
     from ckyclaw_framework.guardrails.regex_guardrail import RegexGuardrail
     from ckyclaw_framework.guardrails.tool_guardrail import ToolGuardrail
     from ckyclaw_framework.model.settings import ModelSettings
@@ -273,6 +276,45 @@ def _build_agent_from_config(
                     message=rule_config.get("message", f"规则 '{rule.name}' 拦截"),
                     name=rule.name,
                 )
+            elif rule.mode == "llm":
+                preset = rule_config.get("preset", "custom")
+                if preset == "prompt_injection":
+                    lg: LLMGuardrail = PromptInjectionGuardrail(
+                        name=rule.name,
+                        model=rule_config.get("model", "gpt-4o-mini"),
+                        threshold=rule_config.get("threshold", 0.7),
+                    )
+                elif preset == "content_safety":
+                    lg = ContentSafetyGuardrail(
+                        name=rule.name,
+                        model=rule_config.get("model", "gpt-4o-mini"),
+                        threshold=rule_config.get("threshold", 0.75),
+                    )
+                else:  # custom
+                    lg = LLMGuardrail(
+                        name=rule.name,
+                        model=rule_config.get("model", "gpt-4o-mini"),
+                        prompt_template=rule_config.get("prompt_template", ""),
+                        threshold=rule_config.get("threshold", 0.8),
+                    )
+
+                if rule.type == "input":
+                    input_guardrails.append(InputGuardrail(
+                        guardrail_function=lg.as_input_fn(),
+                        name=rule.name,
+                    ))
+                elif rule.type == "output":
+                    output_guardrails.append(OutputGuardrail(
+                        guardrail_function=lg.as_output_fn(),
+                        name=rule.name,
+                    ))
+                elif rule.type == "tool":
+                    tool_guardrails.append(ToolGuardrail(
+                        name=rule.name,
+                        before_fn=lg.as_tool_before_fn(),
+                        after_fn=lg.as_tool_after_fn(),
+                    ))
+                continue
             else:
                 continue
 
