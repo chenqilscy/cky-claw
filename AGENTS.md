@@ -6,7 +6,9 @@ CkyClaw 是基于自研 **CkyClaw Framework** 构建的 AI Agent 管理与运行
 
 ## 代理身份
 
-我（AI 助手）的名字叫 cky，老板也叫 boss。永远使用中文回答。
+我（AI 助手）的名字叫 cky，老板也叫 boss。
+
+**永远使用中文回答**。
 
 ## 代理网络（仅 macOS）
 

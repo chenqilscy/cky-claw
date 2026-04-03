@@ -69,3 +69,7 @@ ehthumbs.db
 # === Logs ===
 *.log
 logs/
+
+# Local tool directories
+.claude/
+.omc/
