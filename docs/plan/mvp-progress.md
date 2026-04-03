@@ -503,6 +503,13 @@
 - [x] 7.13.5 `README.md` 全面更新 — Docker 一键部署 / 本地开发 / 环境变量表格 / 数据库迁移 / 测试命令 / 功能列表
 - [x] 7.13.6 五轮代码审查（第 2 轮修复 curl → Python 健康检查，其余全部通过）
 
+### Phase 7.14：测试与 CI 完善（P1）✅
+- [x] 7.14.1 启用 CI workflow — 取消注释 `.github/workflows/ci.yml`，5 个 job 全激活
+- [x] 7.14.2 新增 TypeScript Type Check — 在 lint-frontend job 中添加 `npx tsc --noEmit` 步骤
+- [x] 7.14.3 测试排除策略 — Framework 排除 4 个需 API key 的集成测试，Backend 排除 smoke/performance/e2e/mcp
+- [x] 7.14.4 全量测试验证 — Backend 401 + Framework 316 + Frontend 1 = **718 通过**
+- [x] 7.14.5 五轮代码审查（全部通过）
+
 ---
 
 *最后更新：2025-07-22*
