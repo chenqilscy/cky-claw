@@ -92,6 +92,41 @@ _MAX_HANDOFF_DEPTH = 5
 """Handoff 递归构建最大深度，防止循环引用或无限递归。"""
 
 
+async def _resolve_mcp_tools(
+    db: AsyncSession,
+    config: AgentConfig,
+) -> list[Any]:
+    """从 AgentConfig.mcp_servers 名称列表加载 MCP Server 配置。
+
+    当前阶段：加载配置并记录日志，返回空工具列表。
+    后续阶段：连接 MCP Server，发现并注册工具。
+    """
+    if not config.mcp_servers:
+        return []
+
+    from app.services.mcp_server import get_mcp_servers_by_names
+
+    mcp_configs = await get_mcp_servers_by_names(db, config.mcp_servers)
+
+    if mcp_configs:
+        server_names = [c.name for c in mcp_configs]
+        logger.info(
+            "Agent '%s' 关联 %d 个 MCP Server: %s（工具发现待 MCP SDK 集成）",
+            config.name,
+            len(mcp_configs),
+            server_names,
+        )
+
+    # 检查缺失的 MCP Server
+    found_names = {c.name for c in mcp_configs}
+    for name in config.mcp_servers:
+        if name not in found_names:
+            logger.warning("MCP Server '%s' 不存在或已禁用，Agent '%s' 无法加载其工具", name, config.name)
+
+    # TODO: 集成 MCP SDK 后，连接 MCP Server → list_tools → 封装为 FunctionTool
+    return []
+
+
 def _build_agent_from_config(
     config: AgentConfig,
     guardrail_rules: list | None = None,
@@ -353,6 +388,9 @@ async def execute_run(
     # 解析 Handoff 目标 Agent 图
     handoff_agents = await _resolve_handoff_agents(db, agent_config)
 
+    # 加载 MCP Server 工具（当前阶段仅记录日志，待 MCP SDK 集成）
+    await _resolve_mcp_tools(db, agent_config)
+
     # 构建 Framework Agent
     agent = _build_agent_from_config(agent_config, guardrail_rules=guardrail_rules, handoff_agents=handoff_agents)
 
@@ -461,6 +499,9 @@ async def execute_run_stream(
 
     # 解析 Handoff 目标 Agent 图
     handoff_agents = await _resolve_handoff_agents(db, agent_config)
+
+    # 加载 MCP Server 工具（当前阶段仅记录日志，待 MCP SDK 集成）
+    await _resolve_mcp_tools(db, agent_config)
 
     agent = _build_agent_from_config(agent_config, guardrail_rules=guardrail_rules, handoff_agents=handoff_agents)
 

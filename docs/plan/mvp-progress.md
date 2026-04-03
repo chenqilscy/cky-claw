@@ -280,6 +280,18 @@
 - [x] 6.4.6 前端 UI — Agent 编辑页已有 Handoff 目标配置（逗号分隔输入），无需新增
 - [x] 6.4.7 五轮代码审查通过，无阻塞问题
 
+### Phase 6.5：MCP Server 配置管理（P1）✅
+- [x] 6.5.1 数据模型 — `MCPServerConfig` ORM + Alembic 迁移 `0009_create_mcp_server_configs.py`（4 索引：name unique + org_id + transport_type + is_enabled）
+- [x] 6.5.2 Schema — `MCPServerCreate`（transport_type 枚举校验 + model_validator 跨字段校验 stdio/command、sse+http/url）、`MCPServerUpdate`（PATCH 语义）、`MCPServerResponse`（auth_config 自动脱敏）、`MCPServerListResponse`
+- [x] 6.5.3 CRUD 服务 — `create/list/get/update/delete` + `get_mcp_servers_by_names` 批量加载 + auth_config 加密存储（Fernet）+ 解密容错
+- [x] 6.5.4 API 端点 — `POST/GET/PUT/DELETE /api/v1/mcp/servers` 5 个端点（create/update/delete 需 require_admin）
+- [x] 6.5.5 运行时桥接 — `_resolve_mcp_tools(db, config)` 加载 MCP 配置 + 日志记录 + 缺失告警，返回空列表（MCP SDK 集成待后续）
+- [x] 6.5.6 后端测试 — 37 个测试（13 Schema + 4 脱敏 + 8 API + 6 Service + 1 路由 + 2 ORM + 3 运行时桥接），全部通过
+- [x] 6.5.7 前端服务 — `mcpServerService.ts`（TypeScript 类型 + CRUD API）
+- [x] 6.5.8 前端 MCPServerPage — ProTable 列表 + 创建/编辑 Modal（transport_type 动态表单 + 环境变量 KEY=VALUE 编辑）+ 启用开关 + 删除
+- [x] 6.5.9 路由 + 导航 — `/mcp-servers` 路由 + 侧边栏「MCP Server」菜单项
+- [x] 6.5.10 五轮代码审查（1 个问题修复：write 端点 require_admin 安全加固）
+
 ---
 
-*最后更新：2025-07-19*
+*最后更新：2025-07-20*

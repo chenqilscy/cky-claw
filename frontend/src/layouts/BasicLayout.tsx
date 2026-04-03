@@ -9,6 +9,7 @@ import {
   ApartmentOutlined,
   SafetyCertificateOutlined,
   AuditOutlined,
+  ApiOutlined,
 } from '@ant-design/icons';
 
 const menuRoutes = {
@@ -52,6 +53,11 @@ const menuRoutes = {
       path: '/approvals',
       name: '审批队列',
       icon: <AuditOutlined />,
+    },
+    {
+      path: '/mcp-servers',
+      name: 'MCP Server',
+      icon: <ApiOutlined />,
     },
   ],
 };
