@@ -14,6 +14,7 @@ from ckyclaw_framework.approval.mode import ApprovalDecision, ApprovalMode, Appr
 from ckyclaw_framework.guardrails.input_guardrail import InputGuardrail
 from ckyclaw_framework.guardrails.output_guardrail import OutputGuardrail
 from ckyclaw_framework.guardrails.result import GuardrailResult, InputGuardrailTripwireError, OutputGuardrailTripwireError
+from ckyclaw_framework.guardrails.tool_guardrail import ToolGuardrail
 from ckyclaw_framework.handoff.handoff import Handoff
 from ckyclaw_framework.model._converter import (
     messages_to_litellm,
@@ -335,6 +336,54 @@ async def _execute_tool_calls(
         except json.JSONDecodeError:
             arguments = {}
 
+        # Tool Guardrail (before): 执行前检测参数
+        before_blocked = False
+        if agent.tool_guardrails and run_context is not None:
+            for tg in agent.tool_guardrails:
+                if tg.before_fn is None:
+                    continue
+                # Tracing: Guardrail Span
+                g_span = None
+                if tracing and tracing.active:
+                    g_span = Span(
+                        trace_id=tracing.trace.trace_id if tracing.trace else "",
+                        parent_span_id=tracing._agent_span.span_id if tracing._agent_span else None,
+                        type=SpanType.GUARDRAIL,
+                        name=tg.name,
+                        status=SpanStatus.RUNNING,
+                    )
+                    if tracing.trace:
+                        tracing.trace.spans.append(g_span)
+                    for p in tracing.processors:
+                        await p.on_span_start(g_span)
+
+                try:
+                    g_result = await tg.before_fn(run_context, tc.name, arguments)
+                except Exception as e:
+                    logger.exception("Tool guardrail '%s' before_fn raised: %s", tg.name, e)
+                    g_result = GuardrailResult(tripwire_triggered=True, message=f"Guardrail error: {e}")
+
+                g_meta = {
+                    "guardrail_name": tg.name,
+                    "guardrail_type": "tool_before",
+                    "triggered": g_result.tripwire_triggered,
+                    "message": g_result.message,
+                    "tool_name": tc.name,
+                }
+                if g_span and tracing:
+                    g_span.metadata = g_meta
+                    g_status = SpanStatus.COMPLETED if not g_result.tripwire_triggered else SpanStatus.FAILED
+                    await tracing.end_span(g_span, output=g_result.message, status=g_status)
+
+                if g_result.tripwire_triggered:
+                    blocked_msg = f"Tool guardrail '{tg.name}' blocked: {g_result.message}"
+                    messages.append(tool_result_to_message(tc.id, f"Error: {blocked_msg}", agent.name))
+                    before_blocked = True
+                    break  # 短路：首个 before 拦截后跳过后续 guardrails 和工具执行
+
+        if before_blocked:
+            continue
+
         # 执行工具（带 Tracing + Approval 检查）
         tool_span = await tracing.start_tool_span(tc.name, arguments) if tracing else None
         try:
@@ -342,14 +391,57 @@ async def _execute_tool_calls(
             if run_context is not None:
                 await _check_approval(run_context, approval_handler, approval_mode, tc.name, arguments)
             result = await tool.execute(arguments)
-            messages.append(tool_result_to_message(tc.id, result, agent.name))
-            if tool_span:
-                await tracing.end_span(tool_span, output=result)
         except Exception as e:
             error_result = f"Error: {e}"
             messages.append(tool_result_to_message(tc.id, error_result, agent.name))
             if tool_span:
                 await tracing.end_span(tool_span, output=error_result, status=SpanStatus.FAILED)
+            continue
+
+        # Tool Guardrail (after): 执行后检测返回值
+        if agent.tool_guardrails and run_context is not None:
+            for tg in agent.tool_guardrails:
+                if tg.after_fn is None:
+                    continue
+                g_span = None
+                if tracing and tracing.active:
+                    g_span = Span(
+                        trace_id=tracing.trace.trace_id if tracing.trace else "",
+                        parent_span_id=tracing._agent_span.span_id if tracing._agent_span else None,
+                        type=SpanType.GUARDRAIL,
+                        name=tg.name,
+                        status=SpanStatus.RUNNING,
+                    )
+                    if tracing.trace:
+                        tracing.trace.spans.append(g_span)
+                    for p in tracing.processors:
+                        await p.on_span_start(g_span)
+
+                try:
+                    g_result = await tg.after_fn(run_context, tc.name, result)
+                except Exception as e:
+                    logger.exception("Tool guardrail '%s' after_fn raised: %s", tg.name, e)
+                    g_result = GuardrailResult(tripwire_triggered=True, message=f"Guardrail error: {e}")
+
+                g_meta = {
+                    "guardrail_name": tg.name,
+                    "guardrail_type": "tool_after",
+                    "triggered": g_result.tripwire_triggered,
+                    "message": g_result.message,
+                    "tool_name": tc.name,
+                }
+                if g_span and tracing:
+                    g_span.metadata = g_meta
+                    g_status = SpanStatus.COMPLETED if not g_result.tripwire_triggered else SpanStatus.FAILED
+                    await tracing.end_span(g_span, output=g_result.message, status=g_status)
+
+                if g_result.tripwire_triggered:
+                    result = f"Error: Tool guardrail '{tg.name}' blocked result: {g_result.message}"
+                    break  # 短路：首个 after 拦截后替换结果
+
+        messages.append(tool_result_to_message(tc.id, result, agent.name))
+        if tool_span:
+            await tracing.end_span(tool_span, output=result)
 
     return None
 

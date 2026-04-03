@@ -9,6 +9,7 @@ if TYPE_CHECKING:
     from ckyclaw_framework.approval.mode import ApprovalMode
     from ckyclaw_framework.guardrails.input_guardrail import InputGuardrail
     from ckyclaw_framework.guardrails.output_guardrail import OutputGuardrail
+    from ckyclaw_framework.guardrails.tool_guardrail import ToolGuardrail
     from ckyclaw_framework.handoff.handoff import Handoff
     from ckyclaw_framework.model.settings import ModelSettings
     from ckyclaw_framework.runner.run_config import RunConfig
@@ -46,6 +47,10 @@ class Agent:
 
     output_guardrails: list[OutputGuardrail] = field(default_factory=list)
     """输出安全护栏列表。在 LLM 返回 final_output 后、构建 RunResult 前执行检测。"""
+
+    tool_guardrails: list[ToolGuardrail] = field(default_factory=list)
+    """工具安全护栏列表。在工具调用前（before）/后（after）执行检测。
+    触发 Tripwire 时不中断 Run，而是返回错误消息给 LLM。"""
 
     approval_mode: ApprovalMode | None = None
     """审批模式。None 时使用 RunConfig 默认模式。"""

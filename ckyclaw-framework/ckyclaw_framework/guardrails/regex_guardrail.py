@@ -74,3 +74,29 @@ class RegexGuardrail:
 
         _fn.__name__ = self.name
         return _fn
+
+    def as_tool_before_fn(self):
+        """返回与 ToolGuardrail.before_fn 兼容的异步函数。
+
+        检测工具调用参数的 JSON 序列化文本。
+        """
+        import json
+
+        async def _fn(ctx, tool_name: str, arguments: dict) -> GuardrailResult:
+            text = json.dumps(arguments, ensure_ascii=False)
+            return await self.check(text)
+
+        _fn.__name__ = self.name
+        return _fn
+
+    def as_tool_after_fn(self):
+        """返回与 ToolGuardrail.after_fn 兼容的异步函数。
+
+        检测工具返回值文本。
+        """
+
+        async def _fn(ctx, tool_name: str, result: str) -> GuardrailResult:
+            return await self.check(result)
+
+        _fn.__name__ = self.name
+        return _fn

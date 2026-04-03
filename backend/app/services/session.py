@@ -245,6 +245,7 @@ def _build_agent_from_config(
     from ckyclaw_framework.guardrails.input_guardrail import InputGuardrail
     from ckyclaw_framework.guardrails.output_guardrail import OutputGuardrail
     from ckyclaw_framework.guardrails.regex_guardrail import RegexGuardrail
+    from ckyclaw_framework.guardrails.tool_guardrail import ToolGuardrail
     from ckyclaw_framework.model.settings import ModelSettings
 
     model_settings = None
@@ -255,6 +256,8 @@ def _build_agent_from_config(
     input_guardrails: list[InputGuardrail] = []
     # 构建 Output Guardrails
     output_guardrails: list[OutputGuardrail] = []
+    # 构建 Tool Guardrails
+    tool_guardrails: list[ToolGuardrail] = []
     if guardrail_rules:
         for rule in guardrail_rules:
             rule_config = rule.config or {}
@@ -283,6 +286,12 @@ def _build_agent_from_config(
                     guardrail_function=rg.as_output_fn(),
                     name=rule.name,
                 ))
+            elif rule.type == "tool":
+                tool_guardrails.append(ToolGuardrail(
+                    name=rule.name,
+                    before_fn=rg.as_tool_before_fn(),
+                    after_fn=rg.as_tool_after_fn(),
+                ))
 
     # 解析 approval_mode
     approval_mode_map = {
@@ -301,6 +310,7 @@ def _build_agent_from_config(
         tools=mcp_tools or [],
         input_guardrails=input_guardrails,
         output_guardrails=output_guardrails,
+        tool_guardrails=tool_guardrails,
         approval_mode=approval_mode,
         handoffs=handoff_agents or [],
     )
@@ -364,9 +374,9 @@ async def _resolve_handoff_agents(
             logger.warning("Handoff 目标 Agent '%s' 不存在或已禁用，已跳过", name)
             continue
 
-        # 加载目标的 guardrail 规则（input + output）
+        # 加载目标的 guardrail 规则（input + output + tool）
         _tgr = target_config.guardrails or {}
-        target_guardrail_names = list(set(_tgr.get("input", []) + _tgr.get("output", [])))
+        target_guardrail_names = list(set(_tgr.get("input", []) + _tgr.get("output", []) + _tgr.get("tool", [])))
         target_guardrail_rules = await get_guardrail_rules_by_names(db, target_guardrail_names)
 
         # 递归解析目标的 handoffs
@@ -443,9 +453,9 @@ async def _resolve_agent_tools(
             logger.warning("Agent-as-Tool 目标 Agent '%s' 不存在或已禁用，已跳过", name)
             continue
 
-        # 加载目标的 guardrail 规则（input + output）
+        # 加载目标的 guardrail 规则（input + output + tool）
         _tgr = target_config.guardrails or {}
-        target_guardrail_names = list(set(_tgr.get("input", []) + _tgr.get("output", [])))
+        target_guardrail_names = list(set(_tgr.get("input", []) + _tgr.get("output", []) + _tgr.get("tool", [])))
         target_guardrail_rules = await get_guardrail_rules_by_names(db, target_guardrail_names)
 
         # 递归解析目标的 handoffs 和 agent_tools
@@ -580,11 +590,11 @@ async def execute_run(
     if agent_config is None:
         raise NotFoundError(f"Agent '{session_record.agent_name}' 不存在或已被禁用")
 
-    # 加载 Guardrail 规则（input + output）
+    # 加载 Guardrail 规则（input + output + tool）
     from app.services.guardrail import get_guardrail_rules_by_names
 
     _gr_cfg = agent_config.guardrails or {}
-    guardrail_names = list(set(_gr_cfg.get("input", []) + _gr_cfg.get("output", [])))
+    guardrail_names = list(set(_gr_cfg.get("input", []) + _gr_cfg.get("output", []) + _gr_cfg.get("tool", [])))
     guardrail_rules = await get_guardrail_rules_by_names(db, guardrail_names)
 
     # 解析 Handoff 目标 Agent 图
@@ -715,11 +725,11 @@ async def execute_run_stream(
     if agent_config is None:
         raise NotFoundError(f"Agent '{session_record.agent_name}' 不存在或已被禁用")
 
-    # 加载 Guardrail 规则（input + output）
+    # 加载 Guardrail 规则（input + output + tool）
     from app.services.guardrail import get_guardrail_rules_by_names
 
     _gr_cfg = agent_config.guardrails or {}
-    guardrail_names = list(set(_gr_cfg.get("input", []) + _gr_cfg.get("output", [])))
+    guardrail_names = list(set(_gr_cfg.get("input", []) + _gr_cfg.get("output", []) + _gr_cfg.get("tool", [])))
     guardrail_rules = await get_guardrail_rules_by_names(db, guardrail_names)
 
     # 解析 Handoff 目标 Agent 图

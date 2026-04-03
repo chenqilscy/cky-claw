@@ -15,6 +15,7 @@ from ckyclaw_framework.handoff.handoff import Handoff, InputFilter
 # === Guardrails ===
 from ckyclaw_framework.guardrails.input_guardrail import InputGuardrail
 from ckyclaw_framework.guardrails.output_guardrail import OutputGuardrail
+from ckyclaw_framework.guardrails.tool_guardrail import ToolGuardrail
 from ckyclaw_framework.guardrails.result import GuardrailResult, InputGuardrailTripwireError, OutputGuardrailTripwireError
 
 # === Approval ===
@@ -55,6 +56,7 @@ __all__ = [
     # Guardrails
     "InputGuardrail",
     "OutputGuardrail",
+    "ToolGuardrail",
     "GuardrailResult",
     "InputGuardrailTripwireError",
     "OutputGuardrailTripwireError",

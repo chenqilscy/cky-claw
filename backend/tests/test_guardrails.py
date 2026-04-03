@@ -443,6 +443,98 @@ class TestBuildAgentWithGuardrails:
         assert len(agent.output_guardrails) == 1
         assert agent.output_guardrails[0].name == "out-rule"
 
+    def test_tool_guardrail_regex_injected(self) -> None:
+        """tool + regex 规则被正确注入到 tool_guardrails。"""
+        from app.services.session import _build_agent_from_config
+
+        config = MagicMock()
+        config.name = "test-agent"
+        config.description = "desc"
+        config.instructions = "inst"
+        config.model = "gpt-4o"
+        config.model_settings = None
+        config.guardrails = {}
+        config.approval_mode = None
+        config.handoffs = []
+
+        rule = MagicMock()
+        rule.type = "tool"
+        rule.mode = "regex"
+        rule.name = "tool-regex-check"
+        rule.config = {"patterns": [r"rm -rf"]}
+
+        agent = _build_agent_from_config(config, guardrail_rules=[rule])
+        assert len(agent.input_guardrails) == 0
+        assert len(agent.output_guardrails) == 0
+        assert len(agent.tool_guardrails) == 1
+        assert agent.tool_guardrails[0].name == "tool-regex-check"
+        assert agent.tool_guardrails[0].before_fn is not None
+        assert agent.tool_guardrails[0].after_fn is not None
+
+    def test_tool_guardrail_keyword_injected(self) -> None:
+        """tool + keyword 规则被正确注入到 tool_guardrails。"""
+        from app.services.session import _build_agent_from_config
+
+        config = MagicMock()
+        config.name = "test-agent"
+        config.description = "desc"
+        config.instructions = "inst"
+        config.model = "gpt-4o"
+        config.model_settings = None
+        config.guardrails = {}
+        config.approval_mode = None
+        config.handoffs = []
+
+        rule = MagicMock()
+        rule.type = "tool"
+        rule.mode = "keyword"
+        rule.name = "tool-kw-check"
+        rule.config = {"keywords": ["DELETE", "DROP"], "message": "危险操作"}
+
+        agent = _build_agent_from_config(config, guardrail_rules=[rule])
+        assert len(agent.tool_guardrails) == 1
+        assert agent.tool_guardrails[0].name == "tool-kw-check"
+
+    def test_mixed_all_three_guardrails(self) -> None:
+        """input + output + tool 三类规则各自正确注入。"""
+        from app.services.session import _build_agent_from_config
+
+        config = MagicMock()
+        config.name = "test-agent"
+        config.description = "desc"
+        config.instructions = "inst"
+        config.model = "gpt-4o"
+        config.model_settings = None
+        config.guardrails = {"input": ["in-r"], "output": ["out-r"], "tool": ["tool-r"]}
+        config.approval_mode = None
+        config.handoffs = []
+
+        in_rule = MagicMock()
+        in_rule.type = "input"
+        in_rule.mode = "regex"
+        in_rule.name = "in-r"
+        in_rule.config = {"patterns": [r"hack"]}
+
+        out_rule = MagicMock()
+        out_rule.type = "output"
+        out_rule.mode = "keyword"
+        out_rule.name = "out-r"
+        out_rule.config = {"keywords": ["password"], "message": "PII"}
+
+        tool_rule = MagicMock()
+        tool_rule.type = "tool"
+        tool_rule.mode = "keyword"
+        tool_rule.name = "tool-r"
+        tool_rule.config = {"keywords": ["rm", "delete"], "message": "危险操作"}
+
+        agent = _build_agent_from_config(config, guardrail_rules=[in_rule, out_rule, tool_rule])
+        assert len(agent.input_guardrails) == 1
+        assert len(agent.output_guardrails) == 1
+        assert len(agent.tool_guardrails) == 1
+        assert agent.input_guardrails[0].name == "in-r"
+        assert agent.output_guardrails[0].name == "out-r"
+        assert agent.tool_guardrails[0].name == "tool-r"
+
 
 # ═══════════════════════════════════════════════════════════════════
 # 路由注册验证

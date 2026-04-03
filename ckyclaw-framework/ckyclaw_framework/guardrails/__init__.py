@@ -10,10 +10,12 @@ from ckyclaw_framework.guardrails.result import (
     InputGuardrailTripwireError,
     OutputGuardrailTripwireError,
 )
+from ckyclaw_framework.guardrails.tool_guardrail import ToolGuardrail
 
 __all__ = [
     "InputGuardrail",
     "OutputGuardrail",
+    "ToolGuardrail",
     "RegexGuardrail",
     "GuardrailResult",
     "InputGuardrailTripwireError",
