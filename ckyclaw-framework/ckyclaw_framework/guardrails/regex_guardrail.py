@@ -65,3 +65,12 @@ class RegexGuardrail:
 
         _fn.__name__ = self.name
         return _fn
+
+    def as_output_fn(self):
+        """返回与 OutputGuardrail.guardrail_function 兼容的异步函数。"""
+
+        async def _fn(ctx, output_text: str) -> GuardrailResult:
+            return await self.check(output_text)
+
+        _fn.__name__ = self.name
+        return _fn

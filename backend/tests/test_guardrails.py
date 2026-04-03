@@ -368,7 +368,7 @@ class TestBuildAgentWithGuardrails:
         assert agent.input_guardrails[0].name == "kw-check"
 
     def test_output_guardrail_skipped(self) -> None:
-        """output 类型规则不注入到 input_guardrails。"""
+        """output 类型规则不注入到 input_guardrails，注入到 output_guardrails。"""
         from app.services.session import _build_agent_from_config
 
         config = MagicMock()
@@ -387,6 +387,61 @@ class TestBuildAgentWithGuardrails:
 
         agent = _build_agent_from_config(config, guardrail_rules=[rule])
         assert len(agent.input_guardrails) == 0
+        assert len(agent.output_guardrails) == 1
+        assert agent.output_guardrails[0].name == "output-check"
+
+    def test_output_guardrail_keyword_injected(self) -> None:
+        """output + keyword 规则被正确注入到 output_guardrails。"""
+        from app.services.session import _build_agent_from_config
+
+        config = MagicMock()
+        config.name = "test-agent"
+        config.description = "desc"
+        config.instructions = "inst"
+        config.model = "gpt-4o"
+        config.model_settings = None
+        config.guardrails = {}
+
+        rule = MagicMock()
+        rule.type = "output"
+        rule.mode = "keyword"
+        rule.name = "pii-detect"
+        rule.config = {"keywords": ["身份证号", "手机号"], "message": "PII 泄露"}
+
+        agent = _build_agent_from_config(config, guardrail_rules=[rule])
+        assert len(agent.input_guardrails) == 0
+        assert len(agent.output_guardrails) == 1
+        assert agent.output_guardrails[0].name == "pii-detect"
+
+    def test_mixed_input_output_guardrails(self) -> None:
+        """input + output 规则混合时各自正确注入。"""
+        from app.services.session import _build_agent_from_config
+
+        config = MagicMock()
+        config.name = "test-agent"
+        config.description = "desc"
+        config.instructions = "inst"
+        config.model = "gpt-4o"
+        config.model_settings = None
+        config.guardrails = {"input": ["in-rule"], "output": ["out-rule"]}
+
+        in_rule = MagicMock()
+        in_rule.type = "input"
+        in_rule.mode = "regex"
+        in_rule.name = "in-rule"
+        in_rule.config = {"patterns": [r"DROP TABLE"]}
+
+        out_rule = MagicMock()
+        out_rule.type = "output"
+        out_rule.mode = "keyword"
+        out_rule.name = "out-rule"
+        out_rule.config = {"keywords": ["密码"], "message": "敏感信息"}
+
+        agent = _build_agent_from_config(config, guardrail_rules=[in_rule, out_rule])
+        assert len(agent.input_guardrails) == 1
+        assert agent.input_guardrails[0].name == "in-rule"
+        assert len(agent.output_guardrails) == 1
+        assert agent.output_guardrails[0].name == "out-rule"
 
 
 # ═══════════════════════════════════════════════════════════════════

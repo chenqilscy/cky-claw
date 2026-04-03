@@ -14,7 +14,8 @@ from ckyclaw_framework.handoff.handoff import Handoff, InputFilter
 
 # === Guardrails ===
 from ckyclaw_framework.guardrails.input_guardrail import InputGuardrail
-from ckyclaw_framework.guardrails.result import GuardrailResult, InputGuardrailTripwireError
+from ckyclaw_framework.guardrails.output_guardrail import OutputGuardrail
+from ckyclaw_framework.guardrails.result import GuardrailResult, InputGuardrailTripwireError, OutputGuardrailTripwireError
 
 # === Approval ===
 from ckyclaw_framework.approval.mode import ApprovalDecision, ApprovalMode, ApprovalRejectedError
@@ -53,8 +54,10 @@ __all__ = [
     "InputFilter",
     # Guardrails
     "InputGuardrail",
+    "OutputGuardrail",
     "GuardrailResult",
     "InputGuardrailTripwireError",
+    "OutputGuardrailTripwireError",
     # Approval
     "ApprovalDecision",
     "ApprovalMode",

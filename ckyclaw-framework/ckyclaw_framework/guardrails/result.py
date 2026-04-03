@@ -26,3 +26,15 @@ class InputGuardrailTripwireError(Exception):
         self.guardrail_name = guardrail_name
         self.message = message
         super().__init__(f"Input guardrail '{guardrail_name}' tripwire triggered: {message}")
+
+
+class OutputGuardrailTripwireError(Exception):
+    """Output Guardrail 触发 Tripwire 时抛出的异常。
+
+    调用方可捕获此异常做后续处理（告知用户、记录日志等）。
+    """
+
+    def __init__(self, guardrail_name: str, message: str) -> None:
+        self.guardrail_name = guardrail_name
+        self.message = message
+        super().__init__(f"Output guardrail '{guardrail_name}' tripwire triggered: {message}")

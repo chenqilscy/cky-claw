@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any, Callable
 if TYPE_CHECKING:
     from ckyclaw_framework.approval.mode import ApprovalMode
     from ckyclaw_framework.guardrails.input_guardrail import InputGuardrail
+    from ckyclaw_framework.guardrails.output_guardrail import OutputGuardrail
     from ckyclaw_framework.handoff.handoff import Handoff
     from ckyclaw_framework.model.settings import ModelSettings
     from ckyclaw_framework.runner.run_config import RunConfig
@@ -42,6 +43,9 @@ class Agent:
 
     input_guardrails: list[InputGuardrail] = field(default_factory=list)
     """输入安全护栏列表。在首次 LLM 调用前执行检测。"""
+
+    output_guardrails: list[OutputGuardrail] = field(default_factory=list)
+    """输出安全护栏列表。在 LLM 返回 final_output 后、构建 RunResult 前执行检测。"""
 
     approval_mode: ApprovalMode | None = None
     """审批模式。None 时使用 RunConfig 默认模式。"""

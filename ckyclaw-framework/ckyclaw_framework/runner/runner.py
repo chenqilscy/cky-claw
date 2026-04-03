@@ -12,7 +12,8 @@ from ckyclaw_framework.agent.agent import Agent
 from ckyclaw_framework.approval.handler import ApprovalHandler
 from ckyclaw_framework.approval.mode import ApprovalDecision, ApprovalMode, ApprovalRejectedError
 from ckyclaw_framework.guardrails.input_guardrail import InputGuardrail
-from ckyclaw_framework.guardrails.result import GuardrailResult, InputGuardrailTripwireError
+from ckyclaw_framework.guardrails.output_guardrail import OutputGuardrail
+from ckyclaw_framework.guardrails.result import GuardrailResult, InputGuardrailTripwireError, OutputGuardrailTripwireError
 from ckyclaw_framework.handoff.handoff import Handoff
 from ckyclaw_framework.model._converter import (
     messages_to_litellm,
@@ -185,6 +186,66 @@ async def _execute_input_guardrails(
 
         if result.tripwire_triggered:
             raise InputGuardrailTripwireError(
+                guardrail_name=guardrail.name,
+                message=result.message,
+            )
+
+
+async def _execute_output_guardrails(
+    guardrails: list[OutputGuardrail],
+    run_context: RunContext,
+    output_text: str,
+    tracing: _TracingCtx | None = None,
+) -> None:
+    """执行 Output Guardrails（阻塞模式）。
+
+    按列表顺序依次执行。首个 Tripwire 触发后立即中断（短路）。
+    触发时抛出 OutputGuardrailTripwireError。
+    """
+    for guardrail in guardrails:
+        # Tracing: Guardrail Span
+        guardrail_span = None
+        if tracing and tracing.active:
+            guardrail_span = Span(
+                trace_id=tracing.trace.trace_id if tracing.trace else "",
+                parent_span_id=tracing._agent_span.span_id if tracing._agent_span else None,
+                type=SpanType.GUARDRAIL,
+                name=guardrail.name,
+                status=SpanStatus.RUNNING,
+            )
+            if tracing.trace:
+                tracing.trace.spans.append(guardrail_span)
+            for p in tracing.processors:
+                await p.on_span_start(guardrail_span)
+
+        try:
+            result: GuardrailResult = await guardrail.guardrail_function(run_context, output_text)
+        except Exception as e:
+            logger.exception("Output guardrail '%s' raised an exception", guardrail.name)
+            if guardrail_span and tracing:
+                await tracing.end_span(
+                    guardrail_span,
+                    output=str(e),
+                    status=SpanStatus.FAILED,
+                )
+            raise OutputGuardrailTripwireError(
+                guardrail_name=guardrail.name,
+                message=f"Guardrail execution error: {e}",
+            ) from e
+
+        metadata = {
+            "guardrail_name": guardrail.name,
+            "guardrail_type": "output",
+            "triggered": result.tripwire_triggered,
+            "message": result.message,
+        }
+        if guardrail_span and tracing:
+            guardrail_span.metadata = metadata
+            status = SpanStatus.COMPLETED if not result.tripwire_triggered else SpanStatus.FAILED
+            await tracing.end_span(guardrail_span, output=result.message, status=status)
+
+        if result.tripwire_triggered:
+            raise OutputGuardrailTripwireError(
                 guardrail_name=guardrail.name,
                 message=result.message,
             )
@@ -551,6 +612,23 @@ class Runner:
 
             # 无工具调用 → 最终输出
             if not response.tool_calls:
+                # Output Guardrails: final_output 后检测
+                if current_agent.output_guardrails:
+                    try:
+                        await _execute_output_guardrails(
+                            current_agent.output_guardrails,
+                            run_ctx,
+                            response.content or "",
+                            tracing=tracing if tracing.active else None,
+                        )
+                    except OutputGuardrailTripwireError:
+                        if agent_span:
+                            await tracing.end_span(agent_span, status=SpanStatus.FAILED)
+                        trace = await tracing.end_trace()
+                        if session is not None:
+                            await session.append(messages[history_offset:])
+                        raise
+
                 if agent_span:
                     await tracing.end_span(agent_span, output=response.content)
                 trace = await tracing.end_trace()
@@ -791,6 +869,25 @@ class Runner:
             messages.append(assistant_msg)
 
             if not aggregated_tool_calls:
+                # Output Guardrails: final_output 后检测（流式）
+                if current_agent.output_guardrails:
+                    try:
+                        await _execute_output_guardrails(
+                            current_agent.output_guardrails,
+                            run_ctx,
+                            full_content,
+                            tracing=tracing if tracing.active else None,
+                        )
+                    except OutputGuardrailTripwireError:
+                        if llm_span:
+                            await tracing.end_span(llm_span, output=full_content)
+                        if agent_span:
+                            await tracing.end_span(agent_span, status=SpanStatus.FAILED)
+                        trace = await tracing.end_trace()
+                        if session is not None:
+                            await session.append(messages[history_offset:])
+                        raise
+
                 # Tracing: 结束 LLM + Agent Span
                 if llm_span:
                     await tracing.end_span(llm_span, output=full_content)
