@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Button, message, Popconfirm, Input, Space, Tag } from 'antd';
-import { PlusOutlined, ReloadOutlined, HistoryOutlined } from '@ant-design/icons';
+import { PlusOutlined, ReloadOutlined, HistoryOutlined, ApartmentOutlined } from '@ant-design/icons';
 import { ProTable } from '@ant-design/pro-components';
 import type { ProColumns } from '@ant-design/pro-components';
 import { useNavigate } from 'react-router-dom';
@@ -130,6 +130,13 @@ const AgentListPage: React.FC = () => {
             icon={<ReloadOutlined />}
             onClick={fetchAgents}
           />,
+          <Button
+            key="handoff"
+            icon={<ApartmentOutlined />}
+            onClick={() => navigate('/agents/handoff-editor')}
+          >
+            Handoff 编排
+          </Button>,
           <Button
             key="create"
             type="primary"

@@ -415,6 +415,18 @@
 - [x] 7.4.8 全量测试 — Framework 372 + Backend 399 = 771 全部通过，TypeScript 零错误
 - [x] 7.4.9 五轮代码审查（2 个问题修复：Schema description 缺 "llm" + 前端 InputNumber 替换 Input type="number" 避免字符串类型问题）
 
+### Phase 7.5：Agent Handoff 可视化编排（P0）✅
+- [x] 7.5.1 安装依赖 — `@xyflow/react` v12 + `@dagrejs/dagre` v3
+- [x] 7.5.2 HandoffEditorPage — ReactFlow 画布，自定义 AgentNode（name + model + handoff 数量），拖拽连线创建 Handoff 关系
+- [x] 7.5.3 dagre 自动布局 — TB 方向（上→下），nodesep=60 ranksep=80
+- [x] 7.5.4 循环检测 — DFS 检测循环引用，显示 Warning Tag（不阻断保存，Framework 有 _MAX_HANDOFF_DEPTH=5 保护）
+- [x] 7.5.5 智能保存 — diff 比对初始快照，只更新变更的 Agent，批量 PUT
+- [x] 7.5.6 悬挂引用过滤 — 加载时忽略 handoff_targets 中不存在的 Agent
+- [x] 7.5.7 路由集成 — `/agents/handoff-editor` 路由 + Agent 列表页 "Handoff 编排" 按钮入口
+- [x] 7.5.8 TypeScript 零错误
+- [x] 7.5.9 全量测试 — Framework 372 + Backend 399 = 771 全部通过
+- [x] 7.5.10 五轮代码审查（1 个问题修复：Card bodyStyle → styles.body 适配 Ant Design 5.x）
+
 ---
 
 *最后更新：2025-07-22*
