@@ -152,3 +152,86 @@ async def get_mcp_servers_by_names(
     )
     rows = (await db.execute(stmt)).scalars().all()
     return list(rows)
+
+
+async def test_mcp_connection(
+    db: AsyncSession,
+    server_id: uuid.UUID,
+) -> dict:
+    """测试 MCP Server 连接：连接 → list_tools → 返回工具列表或错误。
+
+    Returns:
+        dict with keys: success (bool), tools (list), error (str | None), duration_ms (int)
+    """
+    import time
+    from contextlib import AsyncExitStack
+
+    record = await get_mcp_server(db, server_id)
+
+    # 解密 auth_config 中的敏感字段作为 headers
+    headers: dict[str, str] = {}
+    decrypted_auth = _decrypt_auth_config(record.auth_config)
+    if decrypted_auth:
+        for key, value in decrypted_auth.items():
+            if isinstance(value, str) and value:
+                headers[key] = value
+
+    # 解密 env
+    env: dict[str, str] = {}
+    if record.env:
+        for key, value in record.env.items():
+            env[key] = str(value) if value else ""
+
+    start_time = time.monotonic()
+
+    try:
+        from ckyclaw_framework.mcp.connection import connect_and_discover
+        from ckyclaw_framework.mcp.server import MCPServerConfig as FrameworkMCPConfig
+
+        fw_config = FrameworkMCPConfig(
+            name=record.name,
+            transport=record.transport_type,
+            command=record.command,
+            url=record.url,
+            env=env,
+            headers=headers,
+            connect_timeout=15.0,
+            tool_call_timeout=15.0,
+        )
+
+        async with AsyncExitStack() as stack:
+            tools = await connect_and_discover(stack, fw_config)
+
+        duration_ms = int((time.monotonic() - start_time) * 1000)
+
+        tool_infos = []
+        for tool in tools:
+            tool_infos.append({
+                "name": tool.name,
+                "description": tool.description,
+                "parameters_schema": tool.parameters_schema or {},
+            })
+
+        return {
+            "success": True,
+            "tools": tool_infos,
+            "error": None,
+            "duration_ms": duration_ms,
+        }
+    except ImportError:
+        duration_ms = int((time.monotonic() - start_time) * 1000)
+        return {
+            "success": False,
+            "tools": [],
+            "error": "MCP SDK 未安装。请运行: pip install 'ckyclaw-framework[mcp]'",
+            "duration_ms": duration_ms,
+        }
+    except Exception as e:
+        duration_ms = int((time.monotonic() - start_time) * 1000)
+        logger.exception("MCP Server '%s' 连接测试失败", record.name)
+        return {
+            "success": False,
+            "tools": [],
+            "error": str(e),
+            "duration_ms": duration_ms,
+        }

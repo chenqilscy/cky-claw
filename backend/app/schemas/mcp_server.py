@@ -102,3 +102,20 @@ class MCPServerListResponse(BaseModel):
 
     items: list[MCPServerResponse]
     total: int
+
+
+class MCPToolInfo(BaseModel):
+    """MCP Server 发现的单个工具信息。"""
+
+    name: str
+    description: str = ""
+    parameters_schema: dict = Field(default_factory=dict)
+
+
+class MCPTestResult(BaseModel):
+    """MCP Server 连接测试结果。"""
+
+    success: bool
+    tools: list[MCPToolInfo] = Field(default_factory=list)
+    error: str | None = None
+    duration_ms: int = 0

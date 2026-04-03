@@ -347,6 +347,18 @@
 - [x] 6.9.3 全量测试运行 — Framework 242 + Backend 346 = 588 全部通过
 - [x] 6.9.4 五轮代码审查（3 处未使用 import 移除）
 
+### Phase 6.10：MCP Server 管理前端完善（P1）✅
+- [x] 6.10.1 后端 Schema — `MCPToolInfo`（name/description/parameters_schema）+ `MCPTestResult`（success/tools/error/duration_ms）
+- [x] 6.10.2 后端 Service — `test_mcp_connection()`：解密 auth_config → FrameworkMCPConfig(timeout=15s) → connect_and_discover → 返回工具列表或错误
+- [x] 6.10.3 后端 API — `POST /api/v1/mcp/servers/{id}/test`（require_admin）
+- [x] 6.10.4 前端 Service — `MCPToolInfo`/`MCPTestResult` 接口 + `testConnection()` 方法
+- [x] 6.10.5 前端 MCPServerPage 增强：
+  - **认证配置 KV 编辑器**：Form.List 动态键值对编辑，Input.Password 输入，编辑时 *** 脱敏值不回填
+  - **连接测试按钮**：表格操作列增加「测试」按钮（ThunderboltOutlined）
+  - **工具预览 Modal**：连接成功显示 Result + Table 列出发现的工具名称和描述
+- [x] 6.10.6 全量测试 — TypeScript 零错误 + Framework 242 + Backend 346 = 588 全部通过
+- [x] 6.10.7 五轮代码审查（均通过）
+
 ---
 
 *最后更新：2025-07-22*

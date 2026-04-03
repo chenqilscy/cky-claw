@@ -14,6 +14,7 @@ from app.schemas.mcp_server import (
     MCPServerListResponse,
     MCPServerResponse,
     MCPServerUpdate,
+    MCPTestResult,
 )
 from app.services import mcp_server as mcp_service
 
@@ -79,3 +80,14 @@ async def delete_mcp_server(
 ) -> None:
     """删除 MCP Server 配置。"""
     await mcp_service.delete_mcp_server(db, server_id)
+
+
+@router.post("/{server_id}/test", response_model=MCPTestResult)
+async def test_mcp_server(
+    server_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    _user: User = Depends(require_admin),
+) -> MCPTestResult:
+    """测试 MCP Server 连接并发现工具。"""
+    result = await mcp_service.test_mcp_connection(db, server_id)
+    return MCPTestResult(**result)

@@ -51,6 +51,19 @@ export interface MCPServerListParams {
   offset?: number;
 }
 
+export interface MCPToolInfo {
+  name: string;
+  description: string;
+  parameters_schema: Record<string, unknown>;
+}
+
+export interface MCPTestResult {
+  success: boolean;
+  tools: MCPToolInfo[];
+  error: string | null;
+  duration_ms: number;
+}
+
 export const mcpServerService = {
   async list(params?: MCPServerListParams): Promise<MCPServerListResponse> {
     const cleanParams: Record<string, string | number | undefined> = {};
@@ -76,5 +89,9 @@ export const mcpServerService = {
 
   async delete(id: string): Promise<void> {
     await api.delete(`/mcp/servers/${id}`);
+  },
+
+  async testConnection(id: string): Promise<MCPTestResult> {
+    return api.post<MCPTestResult>(`/mcp/servers/${id}/test`);
   },
 };
