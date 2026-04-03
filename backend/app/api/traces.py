@@ -9,10 +9,62 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.deps import get_db
-from app.schemas.trace import TraceDetailResponse, TraceListResponse, TraceResponse, SpanResponse
+from app.schemas.trace import (
+    SpanListResponse,
+    SpanResponse,
+    TraceDetailResponse,
+    TraceListResponse,
+    TraceResponse,
+    TraceStatsResponse,
+)
 from app.services import trace as trace_service
 
 router = APIRouter(prefix="/api/v1/traces", tags=["traces"])
+
+
+@router.get("/stats", response_model=TraceStatsResponse)
+async def get_trace_stats(
+    session_id: uuid.UUID | None = Query(None, description="按 Session 筛选"),
+    agent_name: str | None = Query(None, description="按 Agent 筛选"),
+    start_time: datetime | None = Query(None, description="起始时间（默认最近 7 天）"),
+    end_time: datetime | None = Query(None, description="结束时间"),
+    db: AsyncSession = Depends(get_db),
+) -> TraceStatsResponse:
+    """获取 Trace 统计数据。"""
+    stats = await trace_service.get_trace_stats(
+        db,
+        session_id=session_id,
+        agent_name=agent_name,
+        start_time=start_time,
+        end_time=end_time,
+    )
+    return TraceStatsResponse(**stats)
+
+
+@router.get("/spans", response_model=SpanListResponse)
+async def list_spans(
+    trace_id: str | None = Query(None, description="按 Trace 筛选"),
+    type: str | None = Query(None, description="Span 类型: agent/llm/tool/handoff/guardrail"),
+    status: str | None = Query(None, description="Span 状态: completed/failed/cancelled"),
+    name: str | None = Query(None, description="按名称模糊搜索"),
+    min_duration_ms: int | None = Query(None, ge=0, description="最小耗时（毫秒）"),
+    limit: int = Query(20, ge=1, le=100, description="每页数量"),
+    offset: int = Query(0, ge=0, description="偏移量"),
+    db: AsyncSession = Depends(get_db),
+) -> SpanListResponse:
+    """搜索 Span。"""
+    spans, total = await trace_service.list_spans(
+        db,
+        trace_id=trace_id,
+        type=type,
+        status=status,
+        name=name,
+        min_duration_ms=min_duration_ms,
+        limit=limit,
+        offset=offset,
+    )
+    items = [SpanResponse.model_validate(s) for s in spans]
+    return SpanListResponse(items=items, total=total)
 
 
 @router.get("", response_model=TraceListResponse)
@@ -20,8 +72,12 @@ async def list_traces(
     session_id: uuid.UUID | None = Query(None, description="按 Session 筛选"),
     agent_name: str | None = Query(None, description="按 Agent 筛选"),
     workflow_name: str | None = Query(None, description="按 Workflow 筛选"),
+    status: str | None = Query(None, description="按状态筛选"),
     start_time: datetime | None = Query(None, description="起始时间"),
     end_time: datetime | None = Query(None, description="结束时间"),
+    min_duration_ms: int | None = Query(None, ge=0, description="最小耗时（毫秒）"),
+    max_duration_ms: int | None = Query(None, ge=0, description="最大耗时（毫秒）"),
+    has_guardrail_triggered: bool | None = Query(None, description="是否含 Guardrail 触发"),
     limit: int = Query(20, ge=1, le=100, description="每页数量"),
     offset: int = Query(0, ge=0, description="偏移量"),
     db: AsyncSession = Depends(get_db),
@@ -32,8 +88,12 @@ async def list_traces(
         session_id=session_id,
         agent_name=agent_name,
         workflow_name=workflow_name,
+        status=status,
         start_time=start_time,
         end_time=end_time,
+        min_duration_ms=min_duration_ms,
+        max_duration_ms=max_duration_ms,
+        has_guardrail_triggered=has_guardrail_triggered,
         limit=limit,
         offset=offset,
     )

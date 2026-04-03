@@ -46,6 +46,9 @@ class TraceRecord(Base):
     end_time: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
+    duration_ms: Mapped[int | None] = mapped_column(
+        nullable=True
+    )
     metadata_: Mapped[dict] = mapped_column(
         "metadata", JSONB, nullable=False, server_default=text("'{}'::jsonb")
     )
@@ -86,6 +89,9 @@ class SpanRecord(Base):
     )
     end_time: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
+    )
+    duration_ms: Mapped[int | None] = mapped_column(
+        nullable=True
     )
     input_data: Mapped[dict | None] = mapped_column(
         "input", JSONB, nullable=True

@@ -31,6 +31,7 @@ def _make_trace_record(**overrides: Any) -> MagicMock:
         "span_count": 3,
         "start_time": now,
         "end_time": now,
+        "duration_ms": 150,
         "metadata": {},
         "created_at": now,
     }
@@ -54,6 +55,7 @@ def _make_span_record(**overrides: Any) -> MagicMock:
         "status": "completed",
         "start_time": now,
         "end_time": now,
+        "duration_ms": 50,
         "input": {"text": "hello"},
         "input_data": {"text": "hello"},
         "output": {"text": "world"},
@@ -197,6 +199,224 @@ class TestTraceAPI:
         assert data["spans"][0]["type"] == "agent"
         assert data["spans"][1]["type"] == "llm"
         assert data["spans"][2]["type"] == "tool"
+
+
+# ═══════════════════════════════════════════════════════════════════
+# 增强 API 测试
+# ═══════════════════════════════════════════════════════════════════
+
+
+class TestTraceAPIEnhanced:
+    """Trace 增强查询 API 端点测试。"""
+
+    @patch("app.api.traces.trace_service")
+    def test_list_traces_status_filter(self, mock_svc: MagicMock) -> None:
+        """按状态筛选。"""
+        mock_svc.list_traces = AsyncMock(return_value=([], 0))
+
+        client = TestClient(app)
+        resp = client.get("/api/v1/traces?status=failed")
+        assert resp.status_code == 200
+        call_kwargs = mock_svc.list_traces.call_args
+        assert call_kwargs.kwargs["status"] == "failed"
+
+    @patch("app.api.traces.trace_service")
+    def test_list_traces_duration_filter(self, mock_svc: MagicMock) -> None:
+        """按耗时筛选。"""
+        mock_svc.list_traces = AsyncMock(return_value=([], 0))
+
+        client = TestClient(app)
+        resp = client.get("/api/v1/traces?min_duration_ms=100&max_duration_ms=5000")
+        assert resp.status_code == 200
+        call_kwargs = mock_svc.list_traces.call_args
+        assert call_kwargs.kwargs["min_duration_ms"] == 100
+        assert call_kwargs.kwargs["max_duration_ms"] == 5000
+
+    @patch("app.api.traces.trace_service")
+    def test_list_traces_guardrail_triggered_filter(self, mock_svc: MagicMock) -> None:
+        """按 Guardrail 触发筛选。"""
+        mock_svc.list_traces = AsyncMock(return_value=([], 0))
+
+        client = TestClient(app)
+        resp = client.get("/api/v1/traces?has_guardrail_triggered=true")
+        assert resp.status_code == 200
+        call_kwargs = mock_svc.list_traces.call_args
+        assert call_kwargs.kwargs["has_guardrail_triggered"] is True
+
+    @patch("app.api.traces.trace_service")
+    def test_get_trace_stats(self, mock_svc: MagicMock) -> None:
+        """获取统计数据。"""
+        mock_svc.get_trace_stats = AsyncMock(return_value={
+            "total_traces": 50,
+            "total_spans": 200,
+            "avg_duration_ms": 320.5,
+            "total_tokens": {
+                "prompt_tokens": 5000,
+                "completion_tokens": 2000,
+                "total_tokens": 7000,
+            },
+            "span_type_counts": {
+                "agent": 50,
+                "llm": 80,
+                "tool": 40,
+                "handoff": 10,
+                "guardrail": 20,
+            },
+            "guardrail_stats": {
+                "total": 20,
+                "triggered": 3,
+                "trigger_rate": 0.15,
+            },
+            "error_rate": 0.02,
+        })
+
+        client = TestClient(app)
+        resp = client.get("/api/v1/traces/stats")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["total_traces"] == 50
+        assert data["total_spans"] == 200
+        assert data["avg_duration_ms"] == 320.5
+        assert data["total_tokens"]["total_tokens"] == 7000
+        assert data["span_type_counts"]["guardrail"] == 20
+        assert data["guardrail_stats"]["triggered"] == 3
+        assert data["guardrail_stats"]["trigger_rate"] == 0.15
+        assert data["error_rate"] == 0.02
+
+    @patch("app.api.traces.trace_service")
+    def test_get_trace_stats_with_filters(self, mock_svc: MagicMock) -> None:
+        """统计 API 参数传递。"""
+        sid = uuid.uuid4()
+        mock_svc.get_trace_stats = AsyncMock(return_value={
+            "total_traces": 0, "total_spans": 0, "avg_duration_ms": None,
+            "total_tokens": {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0},
+            "span_type_counts": {"agent": 0, "llm": 0, "tool": 0, "handoff": 0, "guardrail": 0},
+            "guardrail_stats": {"total": 0, "triggered": 0, "trigger_rate": 0.0},
+            "error_rate": 0.0,
+        })
+
+        client = TestClient(app)
+        resp = client.get(f"/api/v1/traces/stats?session_id={sid}&agent_name=my-agent")
+        assert resp.status_code == 200
+        call_kwargs = mock_svc.get_trace_stats.call_args
+        assert call_kwargs.kwargs["session_id"] == sid
+        assert call_kwargs.kwargs["agent_name"] == "my-agent"
+
+    @patch("app.api.traces.trace_service")
+    def test_list_spans(self, mock_svc: MagicMock) -> None:
+        """搜索 Span 列表。"""
+        spans = [_make_span_record(type="guardrail", name="pii_check", status="failed")]
+        mock_svc.list_spans = AsyncMock(return_value=(spans, 1))
+
+        client = TestClient(app)
+        resp = client.get("/api/v1/traces/spans?type=guardrail&status=failed")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert len(data["items"]) == 1
+        assert data["items"][0]["type"] == "guardrail"
+        assert data["total"] == 1
+
+    @patch("app.api.traces.trace_service")
+    def test_list_spans_duration_filter(self, mock_svc: MagicMock) -> None:
+        """按耗时搜索 Span。"""
+        mock_svc.list_spans = AsyncMock(return_value=([], 0))
+
+        client = TestClient(app)
+        resp = client.get("/api/v1/traces/spans?min_duration_ms=500")
+        assert resp.status_code == 200
+        call_kwargs = mock_svc.list_spans.call_args
+        assert call_kwargs.kwargs["min_duration_ms"] == 500
+
+    @patch("app.api.traces.trace_service")
+    def test_list_spans_name_search(self, mock_svc: MagicMock) -> None:
+        """按名称模糊搜索 Span。"""
+        mock_svc.list_spans = AsyncMock(return_value=([], 0))
+
+        client = TestClient(app)
+        resp = client.get("/api/v1/traces/spans?name=pii")
+        assert resp.status_code == 200
+        call_kwargs = mock_svc.list_spans.call_args
+        assert call_kwargs.kwargs["name"] == "pii"
+
+
+# ═══════════════════════════════════════════════════════════════════
+# duration_ms 字段测试
+# ═══════════════════════════════════════════════════════════════════
+
+
+class TestDurationMs:
+    """duration_ms 字段在响应中的正确性。"""
+
+    def test_trace_response_has_duration_ms(self) -> None:
+        """TraceResponse 含 duration_ms 字段。"""
+        from app.schemas.trace import TraceResponse
+
+        mock = _make_trace_record(duration_ms=250)
+        resp = TraceResponse.model_validate(mock)
+        assert resp.duration_ms == 250
+
+    def test_span_response_has_duration_ms(self) -> None:
+        """SpanResponse 含 duration_ms 字段。"""
+        from app.schemas.trace import SpanResponse
+
+        mock = _make_span_record(duration_ms=42)
+        resp = SpanResponse.model_validate(mock)
+        assert resp.duration_ms == 42
+
+    def test_trace_response_duration_ms_nullable(self) -> None:
+        """TraceResponse duration_ms 可为 None。"""
+        from app.schemas.trace import TraceResponse
+
+        mock = _make_trace_record(duration_ms=None)
+        resp = TraceResponse.model_validate(mock)
+        assert resp.duration_ms is None
+
+
+# ═══════════════════════════════════════════════════════════════════
+# Stats Schema 测试
+# ═══════════════════════════════════════════════════════════════════
+
+
+class TestStatsSchemas:
+    """统计响应 Schema 验证。"""
+
+    def test_trace_stats_response_defaults(self) -> None:
+        """TraceStatsResponse 默认值。"""
+        from app.schemas.trace import TraceStatsResponse
+
+        resp = TraceStatsResponse()
+        assert resp.total_traces == 0
+        assert resp.total_spans == 0
+        assert resp.avg_duration_ms is None
+        assert resp.total_tokens.total_tokens == 0
+        assert resp.guardrail_stats.trigger_rate == 0.0
+        assert resp.error_rate == 0.0
+
+    def test_trace_stats_response_full(self) -> None:
+        """TraceStatsResponse 完整数据。"""
+        from app.schemas.trace import TraceStatsResponse
+
+        resp = TraceStatsResponse(
+            total_traces=100,
+            total_spans=500,
+            avg_duration_ms=200.5,
+            total_tokens={"prompt_tokens": 1000, "completion_tokens": 500, "total_tokens": 1500},
+            span_type_counts={"agent": 100, "llm": 200, "tool": 100, "handoff": 50, "guardrail": 50},
+            guardrail_stats={"total": 50, "triggered": 5, "trigger_rate": 0.1},
+            error_rate=0.05,
+        )
+        assert resp.total_traces == 100
+        assert resp.span_type_counts.llm == 200
+        assert resp.guardrail_stats.triggered == 5
+
+    def test_span_list_response(self) -> None:
+        """SpanListResponse 结构。"""
+        from app.schemas.trace import SpanListResponse, SpanResponse
+
+        items = [SpanResponse.model_validate(_make_span_record()) for _ in range(2)]
+        resp = SpanListResponse(items=items, total=5)
+        assert len(resp.items) == 2
+        assert resp.total == 5
 
     @patch("app.api.traces.trace_service")
     def test_get_trace_detail_not_found(self, mock_svc: MagicMock) -> None:

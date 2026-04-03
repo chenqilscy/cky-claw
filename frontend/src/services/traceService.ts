@@ -10,6 +10,7 @@ export interface TraceItem {
   span_count: number;
   start_time: string;
   end_time: string | null;
+  duration_ms: number | null;
   metadata: Record<string, unknown>;
   created_at: string;
 }
@@ -23,6 +24,7 @@ export interface SpanItem {
   status: string;
   start_time: string;
   end_time: string | null;
+  duration_ms: number | null;
   input: Record<string, unknown> | null;
   output: Record<string, unknown> | null;
   metadata: Record<string, unknown>;
@@ -41,12 +43,61 @@ export interface TraceDetailResponse {
   spans: SpanItem[];
 }
 
+export interface SpanListResponse {
+  items: SpanItem[];
+  total: number;
+}
+
+export interface TokenUsageStats {
+  prompt_tokens: number;
+  completion_tokens: number;
+  total_tokens: number;
+}
+
+export interface SpanTypeCount {
+  agent: number;
+  llm: number;
+  tool: number;
+  handoff: number;
+  guardrail: number;
+}
+
+export interface GuardrailStats {
+  total: number;
+  triggered: number;
+  trigger_rate: number;
+}
+
+export interface TraceStatsResponse {
+  total_traces: number;
+  total_spans: number;
+  avg_duration_ms: number | null;
+  total_tokens: TokenUsageStats;
+  span_type_counts: SpanTypeCount;
+  guardrail_stats: GuardrailStats;
+  error_rate: number;
+}
+
 export interface TraceListParams {
   session_id?: string;
   agent_name?: string;
   workflow_name?: string;
+  status?: string;
   start_time?: string;
   end_time?: string;
+  min_duration_ms?: number;
+  max_duration_ms?: number;
+  has_guardrail_triggered?: boolean;
+  limit?: number;
+  offset?: number;
+}
+
+export interface SpanListParams {
+  trace_id?: string;
+  type?: string;
+  status?: string;
+  name?: string;
+  min_duration_ms?: number;
   limit?: number;
   offset?: number;
 }
@@ -57,4 +108,10 @@ export const traceService = {
 
   detail: (traceId: string) =>
     api.get<TraceDetailResponse>(`/traces/${traceId}`),
+
+  stats: (params?: Partial<TraceListParams>) =>
+    api.get<TraceStatsResponse>('/traces/stats', params as Record<string, string | number | undefined>),
+
+  listSpans: (params?: SpanListParams) =>
+    api.get<SpanListResponse>('/traces/spans', params as Record<string, string | number | undefined>),
 };

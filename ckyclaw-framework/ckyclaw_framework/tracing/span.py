@@ -46,3 +46,11 @@ class Span:
     metadata: dict[str, Any] = field(default_factory=dict)
     model: str | None = None
     token_usage: dict[str, int] | None = None
+
+    @property
+    def duration_ms(self) -> int | None:
+        """计算 Span 耗时（毫秒）。若 end_time 未设置则返回 None。"""
+        if self.end_time is None:
+            return None
+        delta = self.end_time - self.start_time
+        return int(delta.total_seconds() * 1000)

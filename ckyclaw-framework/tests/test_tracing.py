@@ -110,6 +110,25 @@ class TestSpanTrace:
         assert SpanType.HANDOFF.value == "handoff"
         assert SpanType.GUARDRAIL.value == "guardrail"
 
+    def test_span_duration_ms_none_when_no_end(self) -> None:
+        """end_time 未设置时 duration_ms 返回 None。"""
+        span = Span(trace_id="t1", type=SpanType.AGENT, name="test")
+        assert span.duration_ms is None
+
+    def test_span_duration_ms_computed(self) -> None:
+        """duration_ms 正确计算毫秒。"""
+        from datetime import timedelta
+
+        span = Span(trace_id="t1", type=SpanType.AGENT, name="test")
+        span.end_time = span.start_time + timedelta(milliseconds=250)
+        assert span.duration_ms == 250
+
+    def test_span_duration_ms_zero(self) -> None:
+        """start_time == end_time 时 duration_ms 为 0。"""
+        span = Span(trace_id="t1", type=SpanType.AGENT, name="test")
+        span.end_time = span.start_time
+        assert span.duration_ms == 0
+
 
 # ── ConsoleTraceProcessor 测试 ───────────────────────────────────
 

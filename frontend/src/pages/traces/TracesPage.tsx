@@ -12,16 +12,21 @@ import {
   Row,
   Col,
   Statistic,
+  Select,
+  Alert,
 } from 'antd';
 import {
   ApartmentOutlined,
   ClockCircleOutlined,
   SearchOutlined,
+  SafetyOutlined,
+  ThunderboltOutlined,
+  WarningOutlined,
 } from '@ant-design/icons';
 import { ProTable } from '@ant-design/pro-components';
 import type { ProColumns } from '@ant-design/pro-components';
 import { traceService } from '../../services/traceService';
-import type { TraceItem, SpanItem } from '../../services/traceService';
+import type { TraceItem, SpanItem, TraceStatsResponse } from '../../services/traceService';
 import type { DataNode } from 'antd/es/tree';
 
 const { Text } = Typography;
@@ -43,10 +48,12 @@ function buildSpanTree(spans: SpanItem[]): SpanTreeNode[] {
   const roots: SpanTreeNode[] = [];
 
   for (const span of spans) {
-    const duration = span.end_time
-      ? new Date(span.end_time).getTime() - new Date(span.start_time).getTime()
-      : null;
-    const durationText = duration !== null ? `${duration}ms` : '-';
+    const durationText = span.duration_ms !== null && span.duration_ms !== undefined
+      ? `${span.duration_ms}ms`
+      : '-';
+
+    const isGuardrailTriggered = span.type === 'guardrail' && span.status === 'failed';
+    const guardrailType = span.metadata?.guardrail_type as string | undefined;
 
     map.set(span.id, {
       key: span.id,
@@ -55,6 +62,11 @@ function buildSpanTree(spans: SpanItem[]): SpanTreeNode[] {
           <Tag color={SPAN_TYPE_COLORS[span.type] || 'default'} style={{ margin: 0 }}>
             {span.type}
           </Tag>
+          {guardrailType && (
+            <Tag color="volcano" style={{ margin: 0, fontSize: 11 }}>
+              {guardrailType}
+            </Tag>
+          )}
           <Text strong>{span.name}</Text>
           {span.model && <Text type="secondary">({span.model})</Text>}
           <Text type="secondary">
@@ -66,6 +78,11 @@ function buildSpanTree(spans: SpanItem[]): SpanTreeNode[] {
             </Text>
           )}
           <Tag color={span.status === 'completed' ? 'success' : 'error'}>{span.status}</Tag>
+          {isGuardrailTriggered && (
+            <Tag icon={<WarningOutlined />} color="error">
+              已拦截
+            </Tag>
+          )}
         </Space>
       ),
       span,
@@ -93,7 +110,9 @@ const TracesPage: React.FC = () => {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [agentFilter, setAgentFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
   const [pagination, setPagination] = useState({ current: 1, pageSize: 20 });
+  const [stats, setStats] = useState<TraceStatsResponse | null>(null);
 
   // Detail modal
   const [detailVisible, setDetailVisible] = useState(false);
@@ -101,6 +120,17 @@ const TracesPage: React.FC = () => {
   const [detailSpans, setDetailSpans] = useState<SpanItem[]>([]);
   const [detailLoading, setDetailLoading] = useState(false);
   const [selectedSpan, setSelectedSpan] = useState<SpanItem | null>(null);
+
+  const fetchStats = useCallback(async () => {
+    try {
+      const res = await traceService.stats(
+        agentFilter ? { agent_name: agentFilter } : undefined,
+      );
+      setStats(res);
+    } catch {
+      // 非关键数据，静默
+    }
+  }, [agentFilter]);
 
   const fetchList = useCallback(async () => {
     setLoading(true);
@@ -110,6 +140,7 @@ const TracesPage: React.FC = () => {
         offset: (pagination.current - 1) * pagination.pageSize,
       };
       if (agentFilter) params.agent_name = agentFilter;
+      if (statusFilter) params.status = statusFilter;
       const res = await traceService.list(params);
       setData(res.items);
       setTotal(res.total);
@@ -118,11 +149,12 @@ const TracesPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [pagination, agentFilter]);
+  }, [pagination, agentFilter, statusFilter]);
 
   useEffect(() => {
     fetchList();
-  }, [fetchList]);
+    fetchStats();
+  }, [fetchList, fetchStats]);
 
   const openDetail = async (traceId: string) => {
     setDetailVisible(true);
@@ -184,12 +216,13 @@ const TracesPage: React.FC = () => {
     },
     {
       title: '耗时',
+      dataIndex: 'duration_ms',
       width: 100,
-      render: (_, record) => {
-        if (!record.end_time) return '-';
-        const ms = new Date(record.end_time).getTime() - new Date(record.start_time).getTime();
-        return `${ms}ms`;
-      },
+      sorter: (a, b) => (a.duration_ms ?? 0) - (b.duration_ms ?? 0),
+      render: (_, record) =>
+        record.duration_ms !== null && record.duration_ms !== undefined
+          ? `${record.duration_ms}ms`
+          : '-',
     },
   ];
 
@@ -198,6 +231,60 @@ const TracesPage: React.FC = () => {
 
   return (
     <>
+      {stats && (
+        <Row gutter={16} style={{ marginBottom: 16 }}>
+          <Col span={4}>
+            <Card size="small">
+              <Statistic title="总 Trace 数" value={stats.total_traces} />
+            </Card>
+          </Col>
+          <Col span={4}>
+            <Card size="small">
+              <Statistic title="总 Span 数" value={stats.total_spans} />
+            </Card>
+          </Col>
+          <Col span={4}>
+            <Card size="small">
+              <Statistic
+                title="平均耗时"
+                value={stats.avg_duration_ms !== null ? stats.avg_duration_ms.toFixed(0) : '-'}
+                suffix="ms"
+                prefix={<ThunderboltOutlined />}
+              />
+            </Card>
+          </Col>
+          <Col span={4}>
+            <Card size="small">
+              <Statistic
+                title="总 Token"
+                value={stats.total_tokens.total_tokens}
+              />
+            </Card>
+          </Col>
+          <Col span={4}>
+            <Card size="small">
+              <Statistic
+                title="Guardrail 拦截"
+                value={stats.guardrail_stats.triggered}
+                suffix={`/ ${stats.guardrail_stats.total}`}
+                prefix={<SafetyOutlined />}
+                valueStyle={stats.guardrail_stats.triggered > 0 ? { color: '#cf1322' } : undefined}
+              />
+            </Card>
+          </Col>
+          <Col span={4}>
+            <Card size="small">
+              <Statistic
+                title="错误率"
+                value={(stats.error_rate * 100).toFixed(1)}
+                suffix="%"
+                valueStyle={stats.error_rate > 0.1 ? { color: '#cf1322' } : undefined}
+              />
+            </Card>
+          </Col>
+        </Row>
+      )}
+
       <Card
         title={
           <Space>
@@ -206,15 +293,31 @@ const TracesPage: React.FC = () => {
           </Space>
         }
         extra={
-          <Input
-            placeholder="按 Agent 筛选"
-            prefix={<SearchOutlined />}
-            value={agentFilter}
-            onChange={(e) => setAgentFilter(e.target.value)}
-            onPressEnter={() => setPagination((p) => ({ ...p, current: 1 }))}
-            allowClear
-            style={{ width: 200 }}
-          />
+          <Space>
+            <Select
+              placeholder="状态筛选"
+              value={statusFilter}
+              onChange={(v) => {
+                setStatusFilter(v);
+                setPagination((p) => ({ ...p, current: 1 }));
+              }}
+              allowClear
+              style={{ width: 120 }}
+              options={[
+                { label: '已完成', value: 'completed' },
+                { label: '失败', value: 'failed' },
+              ]}
+            />
+            <Input
+              placeholder="按 Agent 筛选"
+              prefix={<SearchOutlined />}
+              value={agentFilter}
+              onChange={(e) => setAgentFilter(e.target.value)}
+              onPressEnter={() => setPagination((p) => ({ ...p, current: 1 }))}
+              allowClear
+              style={{ width: 200 }}
+            />
+          </Space>
         }
       >
         <ProTable<TraceItem>
@@ -261,7 +364,13 @@ const TracesPage: React.FC = () => {
                 <Statistic title="Agent" value={detailTrace.agent_name || '-'} />
               </Col>
               <Col span={6}>
-                <Statistic title="Workflow" value={detailTrace.workflow_name} />
+                <Statistic
+                  title="耗时"
+                  value={detailTrace.duration_ms !== null && detailTrace.duration_ms !== undefined
+                    ? detailTrace.duration_ms
+                    : '-'}
+                  suffix={detailTrace.duration_ms !== null ? 'ms' : ''}
+                />
               </Col>
             </Row>
 
@@ -284,6 +393,16 @@ const TracesPage: React.FC = () => {
 
             {selectedSpan && (
               <Card title={`Span 详情: ${selectedSpan.name}`} size="small">
+                {selectedSpan.type === 'guardrail' && selectedSpan.status === 'failed' && (
+                  <Alert
+                    message="Guardrail 已拦截"
+                    description={selectedSpan.metadata?.message as string || '此 Guardrail 触发了拦截'}
+                    type="error"
+                    showIcon
+                    icon={<WarningOutlined />}
+                    style={{ marginBottom: 12 }}
+                  />
+                )}
                 <Descriptions column={2} size="small" bordered>
                   <Descriptions.Item label="ID">{selectedSpan.id}</Descriptions.Item>
                   <Descriptions.Item label="类型">
@@ -297,13 +416,13 @@ const TracesPage: React.FC = () => {
                     </Tag>
                   </Descriptions.Item>
                   <Descriptions.Item label="模型">{selectedSpan.model || '-'}</Descriptions.Item>
+                  <Descriptions.Item label="耗时">
+                    {selectedSpan.duration_ms !== null && selectedSpan.duration_ms !== undefined
+                      ? `${selectedSpan.duration_ms}ms`
+                      : '-'}
+                  </Descriptions.Item>
                   <Descriptions.Item label="开始时间">
                     {new Date(selectedSpan.start_time).toLocaleString('zh-CN')}
-                  </Descriptions.Item>
-                  <Descriptions.Item label="结束时间">
-                    {selectedSpan.end_time
-                      ? new Date(selectedSpan.end_time).toLocaleString('zh-CN')
-                      : '-'}
                   </Descriptions.Item>
                   {selectedSpan.token_usage && (
                     <>
@@ -313,6 +432,30 @@ const TracesPage: React.FC = () => {
                       <Descriptions.Item label="输出 Token">
                         {selectedSpan.token_usage.completion_tokens}
                       </Descriptions.Item>
+                    </>
+                  )}
+                  {selectedSpan.type === 'guardrail' && (
+                    <>
+                      <Descriptions.Item label="Guardrail 类型">
+                        <Tag color="volcano">
+                          {(selectedSpan.metadata?.guardrail_type as string) || '-'}
+                        </Tag>
+                      </Descriptions.Item>
+                      <Descriptions.Item label="触发">
+                        {selectedSpan.metadata?.triggered
+                          ? <Tag color="error">是</Tag>
+                          : <Tag color="success">否</Tag>}
+                      </Descriptions.Item>
+                      {selectedSpan.metadata?.message && (
+                        <Descriptions.Item label="消息" span={2}>
+                          {selectedSpan.metadata.message as string}
+                        </Descriptions.Item>
+                      )}
+                      {selectedSpan.metadata?.tool_name && (
+                        <Descriptions.Item label="关联工具">
+                          <Tag color="orange">{selectedSpan.metadata.tool_name as string}</Tag>
+                        </Descriptions.Item>
+                      )}
                     </>
                   )}
                   {selectedSpan.input && (

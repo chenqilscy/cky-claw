@@ -50,6 +50,7 @@ class PostgresTraceProcessor(TraceProcessor):
             "status": span.status.value if hasattr(span.status, "value") else str(span.status),
             "start_time": span.start_time,
             "end_time": span.end_time,
+            "duration_ms": span.duration_ms,
             "input_data": input_data,
             "output_data": output_data,
             "metadata_": span.metadata or {},
@@ -61,6 +62,10 @@ class PostgresTraceProcessor(TraceProcessor):
         if self._trace_data is not None:
             self._trace_data["end_time"] = trace.end_time
             self._trace_data["span_count"] = len(trace.spans)
+            # 计算 duration_ms
+            if trace.end_time and trace.start_time:
+                delta = trace.end_time - trace.start_time
+                self._trace_data["duration_ms"] = int(delta.total_seconds() * 1000)
             # 从第一个 agent span 提取 agent_name
             for span in trace.spans:
                 span_type = span.type.value if hasattr(span.type, "value") else str(span.type)
