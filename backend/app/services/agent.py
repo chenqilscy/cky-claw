@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.exceptions import ConflictError, NotFoundError
 from app.models.agent import AgentConfig
 from app.schemas.agent import AgentCreate, AgentUpdate
+from app.services.agent_version import _snapshot_from_agent, create_version
 
 
 def _escape_like(value: str) -> str:
@@ -78,11 +79,21 @@ async def create_agent(db: AsyncSession, data: AgentCreate) -> AgentConfig:
     )
     db.add(agent)
     try:
-        await db.commit()
+        await db.flush()
     except IntegrityError:
         await db.rollback()
         raise ConflictError(f"Agent 名称 '{data.name}' 已存在")
+
+    # 创建初始版本快照（v1），与 Agent 在同一事务内
+    await create_version(
+        db,
+        agent.id,
+        snapshot=_snapshot_from_agent(agent),
+        change_summary="初始创建",
+    )
+    await db.commit()
     await db.refresh(agent)
+
     return agent
 
 
@@ -90,7 +101,17 @@ async def update_agent(db: AsyncSession, name: str, data: AgentUpdate) -> AgentC
     """更新 Agent 配置（PATCH 语义）。"""
     agent = await get_agent_by_name(db, name)
 
+    # 更新前自动快照
     update_data = data.model_dump(exclude_unset=True)
+    if update_data:
+        changed_fields = ", ".join(update_data.keys())
+        await create_version(
+            db,
+            agent.id,
+            snapshot=_snapshot_from_agent(agent),
+            change_summary=f"更新字段: {changed_fields}",
+        )
+
     for field, value in update_data.items():
         if field == "guardrails" and value is not None:
             value = data.guardrails.model_dump()  # type: ignore[union-attr]

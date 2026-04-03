@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Button, message, Popconfirm, Input, Space, Tag } from 'antd';
-import { PlusOutlined, ReloadOutlined } from '@ant-design/icons';
+import { PlusOutlined, ReloadOutlined, HistoryOutlined } from '@ant-design/icons';
 import { ProTable } from '@ant-design/pro-components';
 import type { ProColumns } from '@ant-design/pro-components';
 import { useNavigate } from 'react-router-dom';
@@ -86,10 +86,11 @@ const AgentListPage: React.FC = () => {
     },
     {
       title: '操作',
-      width: 180,
+      width: 240,
       render: (_, record) => (
         <Space>
           <a onClick={() => navigate(`/agents/${record.name}/edit`)}>编辑</a>
+          <a onClick={() => navigate(`/agents/${record.id}/versions`)}><HistoryOutlined /> 版本</a>
           <Popconfirm
             title="确认删除该 Agent？"
             onConfirm={() => handleDelete(record.name)}

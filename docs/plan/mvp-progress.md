@@ -389,6 +389,21 @@
 - [x] 7.2.4 TypeScript 零错误
 - [x] 7.2.5 五轮代码审查（全部通过）
 
+### Phase 7.3：Agent 版本管理（P1）✅
+- [x] 7.3.1 数据模型 — `AgentConfigVersion` ORM + Alembic 迁移 `0013_create_agent_config_versions.py`（2 索引 + UniqueConstraint agent_config_id+version）
+- [x] 7.3.2 Pydantic Schema — `AgentVersionResponse`/`AgentVersionListResponse`/`AgentVersionDiffResponse`/`AgentRollbackRequest`
+- [x] 7.3.3 Service 层 — `_snapshot_from_agent`（完整配置快照提取）、`_next_version`（自增版本号）、`create_version`/`list_versions`/`get_version`/`rollback_to_version`/`get_agent_by_id`
+- [x] 7.3.4 API 端点 — `GET /agents/{id}/versions`（列表）、`GET /{id}/versions/{version}`（详情）、`POST /{id}/versions/{version}/rollback`（回滚）、`GET /{id}/versions/diff?v1=X&v2=Y`（对比）
+- [x] 7.3.5 自动快照 — `create_agent` 创建时 v1 快照（同一事务内）、`update_agent` 更新前快照（记录变更字段）
+- [x] 7.3.6 路由注册 — `agent_versions_router` 注册到 FastAPI app
+- [x] 7.3.7 后端测试 — 18 个测试（5 Schema + 11 API + 2 Service _snapshot_from_agent），全部通过
+- [x] 7.3.8 前端 Service — `agentVersionService.ts`（list/get/rollback/diff API）
+- [x] 7.3.9 前端 AgentVersionPage — 版本列表 ProTable + 快照详情 Modal + 版本对比 Modal（字段级高亮变更）+ 回滚操作
+- [x] 7.3.10 前端集成 — Agent 列表页增加「版本」操作入口 + `/agents/:agentId/versions` 路由
+- [x] 7.3.11 TypeScript 零错误
+- [x] 7.3.12 全量测试 — Framework 372 + Backend 382 = 754 全部通过
+- [x] 7.3.13 五轮代码审查（1 个问题修复：create_agent 事务隔离 — flush 替代首次 commit 确保 Agent+版本同事务提交）
+
 ---
 
 *最后更新：2025-07-22*

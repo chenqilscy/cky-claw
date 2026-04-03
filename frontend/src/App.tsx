@@ -4,6 +4,7 @@ import LoginPage from './pages/Login';
 import ChatPage from './pages/chat/ChatPage';
 import AgentListPage from './pages/agents/AgentListPage';
 import AgentEditPage from './pages/agents/AgentEditPage';
+import AgentVersionPage from './pages/agents/AgentVersionPage';
 import RunListPage from './pages/runs/RunListPage';
 import SupervisionPage from './pages/supervision/SupervisionPage';
 import ProviderListPage from './pages/providers/ProviderListPage';
@@ -40,6 +41,7 @@ const App: React.FC = () => {
         <Route path="agents" element={<AgentListPage />} />
         <Route path="agents/new" element={<AgentEditPage />} />
         <Route path="agents/:name/edit" element={<AgentEditPage />} />
+        <Route path="agents/:agentId/versions" element={<AgentVersionPage />} />
         <Route path="runs" element={<RunListPage />} />
         <Route path="supervision" element={<SupervisionPage />} />
         <Route path="providers" element={<ProviderListPage />} />
