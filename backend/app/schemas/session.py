@@ -28,6 +28,29 @@ class MessageItem(BaseModel):
     timestamp: datetime | None = None
 
 
+class SessionMessageItem(BaseModel):
+    """持久化的会话消息（比 MessageItem 更详细）。"""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    role: str
+    content: str
+    agent_name: str | None = None
+    tool_call_id: str | None = None
+    tool_calls: list[dict] | None = None
+    token_usage: dict | None = None
+    created_at: datetime
+
+
+class SessionMessagesResponse(BaseModel):
+    """会话消息列表响应。"""
+
+    session_id: str
+    messages: list[SessionMessageItem]
+    total: int
+
+
 class SessionResponse(BaseModel):
     """Session 详情响应。"""
 

@@ -604,6 +604,30 @@ async def _save_trace_from_processor(
 
 
 # ---------------------------------------------------------------------------
+# 会话消息查询
+# ---------------------------------------------------------------------------
+
+
+async def get_session_messages(
+    db: AsyncSession,
+    session_id: uuid.UUID,
+) -> list:
+    """获取会话的持久化消息列表。"""
+    from app.models.session_message import SessionMessage
+
+    # 确保 session 存在
+    await get_session(db, session_id)
+
+    stmt = (
+        select(SessionMessage)
+        .where(SessionMessage.session_id == str(session_id))
+        .order_by(SessionMessage.id)
+    )
+    rows = (await db.execute(stmt)).scalars().all()
+    return list(rows)
+
+
+# ---------------------------------------------------------------------------
 # Provider 解析辅助
 # ---------------------------------------------------------------------------
 
@@ -686,7 +710,6 @@ async def execute_run(
     from ckyclaw_framework.model.litellm_provider import LiteLLMProvider
     from ckyclaw_framework.runner.run_config import RunConfig as FrameworkRunConfig
     from ckyclaw_framework.runner.runner import Runner
-    from ckyclaw_framework.session.in_memory import InMemorySessionBackend
     from ckyclaw_framework.session.session import Session
 
     # 获取 session 记录
@@ -740,9 +763,10 @@ async def execute_run(
             agent_config, guardrail_rules=guardrail_rules, handoff_agents=handoff_agents, mcp_tools=all_tools,
         )
 
-        # 构建 Framework Session（使用 InMemory，消息随请求生命周期）
-        # TODO: 后续切换到 PostgresSessionBackend 实现跨请求持久化
-        session_backend = InMemorySessionBackend()
+        # 构建 Framework Session（持久化到 PostgreSQL）
+        from app.services.session_backend import SQLAlchemySessionBackend
+
+        session_backend = SQLAlchemySessionBackend(db)
         framework_session = Session(session_id=str(session_id), backend=session_backend)
 
         # 构建 RunConfig（含 Trace 持久化 Processor + Approval Handler）
@@ -824,7 +848,6 @@ async def execute_run_stream(
     from ckyclaw_framework.runner.result import StreamEventType
     from ckyclaw_framework.runner.run_config import RunConfig as FrameworkRunConfig
     from ckyclaw_framework.runner.runner import Runner
-    from ckyclaw_framework.session.in_memory import InMemorySessionBackend
     from ckyclaw_framework.session.session import Session
 
     # 获取 session 记录
@@ -888,7 +911,9 @@ async def execute_run_stream(
         agent_config, guardrail_rules=guardrail_rules, handoff_agents=handoff_agents, mcp_tools=all_tools,
     )
 
-    session_backend = InMemorySessionBackend()
+    from app.services.session_backend import SQLAlchemySessionBackend
+
+    session_backend = SQLAlchemySessionBackend(db)
     framework_session = Session(session_id=str(session_id), backend=session_backend)
 
     # 构建 RunConfig（含 Trace 持久化 Processor + Approval Handler）

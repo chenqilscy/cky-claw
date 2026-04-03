@@ -14,6 +14,8 @@ from app.schemas.session import (
     RunResponse,
     SessionCreate,
     SessionListResponse,
+    SessionMessageItem,
+    SessionMessagesResponse,
     SessionResponse,
 )
 from app.services import session as session_service
@@ -94,3 +96,30 @@ async def run_session(
         )
     else:
         return await session_service.execute_run(db, session_id, data)
+
+
+@router.get("/{session_id}/messages", response_model=SessionMessagesResponse)
+async def get_session_messages(
+    session_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+) -> SessionMessagesResponse:
+    """获取会话的持久化消息历史。"""
+    rows = await session_service.get_session_messages(db, session_id)
+    items = [
+        SessionMessageItem(
+            id=row.id,
+            role=row.role,
+            content=row.content or "",
+            agent_name=row.agent_name,
+            tool_call_id=row.tool_call_id,
+            tool_calls=row.tool_calls,
+            token_usage=row.token_usage,
+            created_at=row.created_at,
+        )
+        for row in rows
+    ]
+    return SessionMessagesResponse(
+        session_id=str(session_id),
+        messages=items,
+        total=len(items),
+    )

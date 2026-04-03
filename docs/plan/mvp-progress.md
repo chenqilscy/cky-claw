@@ -451,6 +451,16 @@
 - [x] 7.7.9 测试 — Framework 新增 6 个（LiteLLMProvider init），Backend 新增 21 个（ProviderTestResult/API/DefaultModels/AgentProviderNameSchema/ResolveProvider），全量 Framework 387 + Backend 399 = 786 通过
 - [x] 7.7.10 五轮代码审查（无问题）
 
+### Phase 7.8：Session 持久化 — SQLAlchemySessionBackend（P0）✅
+- [x] 7.8.1 数据模型 — Alembic 迁移 `0015_create_session_messages.py`：`session_messages` 表（BIGSERIAL PK, session_id, role, content, agent_name, tool_call_id, tool_calls JSONB, token_usage JSONB, metadata_ JSONB, created_at）+ 组合索引 `(session_id, id)`；`session_metadata` 表（session_id PK, message_count, total_tokens, last_agent, extra JSONB, created_at, updated_at）
+- [x] 7.8.2 ORM 模型 — `SessionMessage`（session_messages 表）+ `SessionMetadataRecord`（session_metadata 表），`backend/app/models/session_message.py`
+- [x] 7.8.3 `SQLAlchemySessionBackend` — 实现 Framework `SessionBackend` 接口（load/save/delete/list_sessions/load_metadata），使用 SQLAlchemy AsyncSession + flush（不 commit，由外层事务控制）
+- [x] 7.8.4 `execute_run` / `execute_run_stream` 接入 — 替换 `InMemorySessionBackend()` 为 `SQLAlchemySessionBackend(db)`，消息跨请求持久化
+- [x] 7.8.5 消息查询 API — `GET /api/v1/sessions/{session_id}/messages` 返回 `SessionMessagesResponse`（session_id, messages[], total）
+- [x] 7.8.6 Schema — `SessionMessageItem`（id, role, content, agent_name, tool_call_id, tool_calls, token_usage, created_at）+ `SessionMessagesResponse`
+- [x] 7.8.7 测试 — 20 个新测试（3 Schema + 2 Load + 3 Save + 1 Delete + 3 Metadata + 3 API + 4 ORM + 1 路由），全量 Framework 387 + Backend 419 = 806 通过
+- [x] 7.8.8 五轮代码审查（无问题）
+
 ---
 
 *最后更新：2025-07-22*
