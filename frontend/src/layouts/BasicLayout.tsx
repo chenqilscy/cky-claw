@@ -1,6 +1,7 @@
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { ProLayout } from '@ant-design/pro-components';
 import {
+  DashboardOutlined,
   MessageOutlined,
   RobotOutlined,
   UnorderedListOutlined,
@@ -15,6 +16,11 @@ import {
 
 const menuRoutes = {
   routes: [
+    {
+      path: '/dashboard',
+      name: '概览',
+      icon: <DashboardOutlined />,
+    },
     {
       path: '/chat',
       name: '对话',

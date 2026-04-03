@@ -478,6 +478,16 @@
 - [x] 7.10.6 类型安全优化 — 使用 `TraceListParams` 替代 Record 强制转型
 - [x] 7.10.7 五轮代码审查（第 1 轮发现类型转型问题并修复，第 2-5 轮全部通过）
 
+### Phase 7.11：前端 Dashboard 首页（P1）✅
+- [x] 7.11.1 创建 `DashboardPage.tsx` — 平台全局概览面板
+- [x] 7.11.2 统计卡片行 — Agent 数 / Session 数 / Trace 数 / Span 数 / 平均耗时 / 错误率（6 列）
+- [x] 7.11.3 Token 消耗按模型分布 — 汇总统计 + 分模型表格（复用 `tokenUsageService.summary`）
+- [x] 7.11.4 Guardrail 护栏状态 — 总检查 / 已拦截 / 拦截率 + Progress 进度条
+- [x] 7.11.5 Span 类型分布 — agent/llm/tool/handoff/guardrail 彩色 Progress 条
+- [x] 7.11.6 路由更新 — `/dashboard` 路由 + index redirect 从 `/chat` 改为 `/dashboard` + 侧边栏增加「概览」菜单
+- [x] 7.11.7 `Promise.allSettled` 并发 4 个 API，单个失败不影响全局
+- [x] 7.11.8 五轮代码审查（全部通过）
+
 ---
 
 *最后更新：2025-07-22*

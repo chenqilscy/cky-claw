@@ -15,6 +15,7 @@ import GuardrailRulesPage from './pages/guardrails/GuardrailRulesPage';
 import ApprovalQueuePage from './pages/approvals/ApprovalQueuePage';
 import MCPServerPage from './pages/mcp/MCPServerPage';
 import ToolGroupPage from './pages/tool-groups/ToolGroupPage';
+import DashboardPage from './pages/dashboard/DashboardPage';
 import useAuthStore from './stores/authStore';
 
 const RequireAuth: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -37,7 +38,8 @@ const App: React.FC = () => {
           </RequireAuth>
         }
       >
-        <Route index element={<Navigate to="/chat" replace />} />
+        <Route index element={<Navigate to="/dashboard" replace />} />
+        <Route path="dashboard" element={<DashboardPage />} />
         <Route path="chat" element={<ChatPage />} />
         <Route path="agents" element={<AgentListPage />} />
         <Route path="agents/new" element={<AgentEditPage />} />
