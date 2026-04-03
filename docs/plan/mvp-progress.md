@@ -332,6 +332,21 @@
 - [x] 6.8.14 Backend 测试 — 12 个新测试（Schema 4 + Service 2 + _resolve_tool_groups 6）
 - [x] 6.8.15 五轮代码审查（2 处未使用 import 移除）
 
+### Phase 6.9：端到端集成测试（P0）✅
+- [x] 6.9.1 Framework E2E — `test_e2e_phase69.py` 15 个测试：
+  - Agent-as-Tool 管线 6 个：Manager 调用子 Agent、子 Agent 自带工具、Agent-as-Tool + Handoff、审批控制、流式模式、Session 隔离
+  - ToolGroup 管线 4 个：ToolGroup 工具执行、多组工具合并、ToolRegistry 提供工具、ToolGroup + Guardrail 共存
+  - 综合管线 5 个：全能力协同（Guardrail+Agent-as-Tool+Handoff+ToolGroup+Approval+Tracing+Session）、Guardrail 拦截终止、流式综合管线、多 Agent-as-Tool 依次调用、Token 聚合
+- [x] 6.9.2 Backend E2E — `test_e2e_backend.py` 15 个测试：
+  - _build_agent_from_config 综合 3 个：三路工具合并、Guardrail+Handoff 同配、最小配置
+  - 三路工具解析 2 个：全源解析、部分源解析
+  - Handoff/Agent-as-Tool 交叉 2 个：同 Agent 双配、多目标不混淆
+  - 综合构建 2 个：全特性 Agent 构建、regex+keyword Guardrail 混合
+  - Token Usage 提取 3 个：正常提取、None trace、无 LLM span
+  - _find_parent_agent_name 3 个：正常查找、无父 span、父非 agent 类型
+- [x] 6.9.3 全量测试运行 — Framework 242 + Backend 346 = 588 全部通过
+- [x] 6.9.4 五轮代码审查（3 处未使用 import 移除）
+
 ---
 
 *最后更新：2025-07-22*
