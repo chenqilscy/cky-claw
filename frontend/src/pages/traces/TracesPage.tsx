@@ -28,6 +28,7 @@ import type { ProColumns } from '@ant-design/pro-components';
 import { traceService } from '../../services/traceService';
 import type { TraceItem, SpanItem, TraceStatsResponse } from '../../services/traceService';
 import type { DataNode } from 'antd/es/tree';
+import SpanWaterfall from './SpanWaterfall';
 
 const { Text } = Typography;
 
@@ -348,7 +349,7 @@ const TracesPage: React.FC = () => {
         open={detailVisible}
         onCancel={() => setDetailVisible(false)}
         footer={null}
-        width={960}
+        width={1100}
         loading={detailLoading}
       >
         {detailTrace && (
@@ -373,6 +374,14 @@ const TracesPage: React.FC = () => {
                 />
               </Col>
             </Row>
+
+            <Card title="Span Waterfall 时间轴" size="small" style={{ marginBottom: 16 }}>
+              <SpanWaterfall
+                spans={detailSpans}
+                onSpanClick={(span) => setSelectedSpan(span)}
+                selectedSpanId={selectedSpan?.id}
+              />
+            </Card>
 
             <Card title="Span 树" size="small" style={{ marginBottom: 16 }}>
               {spanTree.length > 0 ? (

@@ -375,6 +375,20 @@
 - [x] 7.1.9 全量测试 — Framework 330 + Backend 364 = 694 全部通过（排除需 API Key 的集成测试）
 - [x] 7.1.10 五轮代码审查（2 个问题修复：docstring 示例 ctx.trace → ctx.agent.name + on_run_end 签名文档更正）
 
+### Phase 7.2：任务执行可视化（P1）✅
+- [x] 7.2.1 `SpanWaterfall` 组件 — 纯 CSS Waterfall 时间轴（横向条形图）
+  - 颜色编码：agent=蓝、llm=绿、tool=橙、handoff=紫、guardrail=红
+  - 父子层级缩进、按 start_time 排序、duration 百分比定位
+  - Hover 高亮 + 点击联动 Span 详情面板
+  - Tooltip 显示类型/名称/耗时/模型/Token/状态
+  - 底部时间轴刻度（0% 25% 50% 75% 100%）
+  - Duration fallback（duration_ms → end_time-start_time → 1ms min）
+  - 空状态处理 + useMemo 缓存计算
+- [x] 7.2.2 TracesPage 集成 — Trace 详情 Modal 新增「Span Waterfall 时间轴」Card，Modal 宽度 960→1100
+- [x] 7.2.3 零新依赖 — 纯 Ant Design + CSS 实现，无 ECharts 等重型库
+- [x] 7.2.4 TypeScript 零错误
+- [x] 7.2.5 五轮代码审查（全部通过）
+
 ---
 
 *最后更新：2025-07-22*
