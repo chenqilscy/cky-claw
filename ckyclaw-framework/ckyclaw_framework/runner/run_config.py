@@ -76,3 +76,6 @@ class RunConfig:
 
     tool_guardrails: list[ToolGuardrail] = field(default_factory=list)
     """追加运行级工具护栏（追加到 Agent 级之后执行）"""
+
+    tool_timeout: float | None = None
+    """全局工具执行超时（秒）。当 FunctionTool 未设置自身 timeout 时生效。"""

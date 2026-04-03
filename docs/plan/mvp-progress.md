@@ -427,6 +427,18 @@
 - [x] 7.5.9 全量测试 — Framework 372 + Backend 399 = 771 全部通过
 - [x] 7.5.10 五轮代码审查（1 个问题修复：Card bodyStyle → styles.body 适配 Ant Design 5.x）
 
+### Phase 7.6：Runner 并行工具执行优化（P0）✅
+- [x] 7.6.1 RunConfig 新增 `tool_timeout: float | None`（全局工具执行超时，当 FunctionTool 无自身 timeout 时生效）
+- [x] 7.6.2 _execute_tool_calls 重构 — Handoff 检测 + 普通工具 asyncio.TaskGroup 并行执行
+- [x] 7.6.3 超时优先级 — FunctionTool.timeout > RunConfig.tool_timeout > 无限
+- [x] 7.6.4 结果顺序保证 — dict 收集结果后按原始 tool_call 顺序追加到 messages
+- [x] 7.6.5 单工具优化 — 单个工具直接 await，跳过 TaskGroup 开销
+- [x] 7.6.6 异常隔离 — _run_one 内完整 try/except，单工具失败不影响其他
+- [x] 7.6.7 Handoff 兼容 — 首个 Handoff 之前的普通工具并行执行，然后 Handoff 控制权转移
+- [x] 7.6.8 测试 — 新增 9 个测试（5 并行 + 4 超时），覆盖并行执行时间验证、消息顺序、异常隔离、Handoff 混合、超时优先级
+- [x] 7.6.9 全量测试 — Framework 381 + Backend 399 = 780 全部通过
+- [x] 7.6.10 五轮代码审查（无问题）
+
 ---
 
 *最后更新：2025-07-22*

@@ -320,36 +320,42 @@ async def _execute_tool_calls(
     approval_mode: ApprovalMode = ApprovalMode.FULL_AUTO,
     config: RunConfig | None = None,
 ) -> tuple[Agent, Handoff | None] | None:
-    """执行一组工具调用，将结果追加到 messages。返回 (目标 Agent, Handoff 配置) 或 None。
+    """执行一组工具调用（并行），将结果追加到 messages。返回 (目标 Agent, Handoff 配置) 或 None。
 
-    注意：若同一轮中 LLM 同时返回 Handoff 工具和普通工具，Handoff 之前的普通工具
-    会正常执行，但 Handoff 之后的工具将被跳过（控制权已转移）。
+    LLM 返回多个 tool_calls 时，普通工具使用 asyncio.TaskGroup 并行执行。若其中包含
+    Handoff 工具，Handoff 之前的普通工具并行执行完成后再处理 Handoff 控制权转移。
+
+    超时优先级：FunctionTool.timeout > RunConfig.tool_timeout > 无限。
     """
     # 合并 Agent 级 + RunConfig 级 tool guardrails
     _merged_tool_guardrails = agent.tool_guardrails + (config.tool_guardrails if config else [])
     _hooks = config.hooks if config and config.hooks else None
+    _tool_timeout = config.tool_timeout if config else None
 
-    for tc in tool_calls:
-        # 检查 Handoff
+    # ── 1. 找到首个 Handoff 调用，分割出需要并行执行的普通工具 ──
+    handoff_idx: int | None = None
+    handoff_info: tuple[ToolCall, Agent, Handoff | None] | None = None
+    for i, tc in enumerate(tool_calls):
         handoff_result = _find_handoff_target(agent, tc.name)
         if handoff_result is not None:
             target_agent, handoff_config = handoff_result
-            # Hooks: on_handoff
-            if _hooks and run_context:
-                await _invoke_hook(_hooks.on_handoff, "on_handoff", run_context, agent.name, target_agent.name)
-            # Handoff 工具"执行结果"是空的，控制权转移
-            messages.append(tool_result_to_message(tc.id, "", agent.name))
-            if tracing:
-                await tracing.handoff_span(agent.name, target_agent.name)
-            return (target_agent, handoff_config)
+            handoff_idx = i
+            handoff_info = (tc, target_agent, handoff_config)
+            break
 
-        # 查找普通工具
+    normal_tool_calls = tool_calls[:handoff_idx] if handoff_idx is not None else tool_calls
+
+    # ── 2. 单个工具执行（含 guardrails + tracing + approval + timeout）──
+    tool_results: dict[str, Message] = {}
+
+    async def _run_one(tc: ToolCall) -> None:
+        """执行单个工具调用，结果写入 tool_results[tc.id]。"""
         tool = _find_tool(agent, tc.name)
         if tool is None:
             error_msg = f"Tool '{tc.name}' not found in agent '{agent.name}'"
             logger.warning(error_msg)
-            messages.append(tool_result_to_message(tc.id, f"Error: {error_msg}", agent.name))
-            continue
+            tool_results[tc.id] = tool_result_to_message(tc.id, f"Error: {error_msg}", agent.name)
+            return
 
         # 解析参数
         try:
@@ -358,12 +364,10 @@ async def _execute_tool_calls(
             arguments = {}
 
         # Tool Guardrail (before): 执行前检测参数
-        before_blocked = False
         if _merged_tool_guardrails and run_context is not None:
             for tg in _merged_tool_guardrails:
                 if tg.before_fn is None:
                     continue
-                # Tracing: Guardrail Span
                 g_span = None
                 if tracing and tracing.active:
                     g_span = Span(
@@ -398,29 +402,34 @@ async def _execute_tool_calls(
 
                 if g_result.tripwire_triggered:
                     blocked_msg = f"Tool guardrail '{tg.name}' blocked: {g_result.message}"
-                    messages.append(tool_result_to_message(tc.id, f"Error: {blocked_msg}", agent.name))
-                    before_blocked = True
-                    break  # 短路：首个 before 拦截后跳过后续 guardrails 和工具执行
+                    tool_results[tc.id] = tool_result_to_message(tc.id, f"Error: {blocked_msg}", agent.name)
+                    return
 
-        if before_blocked:
-            continue
-
-        # 执行工具（带 Tracing + Approval 检查）
+        # 执行工具（带 Tracing + Approval + Timeout）
         tool_span = await tracing.start_tool_span(tc.name, arguments) if tracing else None
-        # Hooks: on_tool_start
         if _hooks and run_context:
             await _invoke_hook(_hooks.on_tool_start, "on_tool_start", run_context, tc.name, arguments)
         try:
-            # Approval: 在执行前检查审批
             if run_context is not None:
                 await _check_approval(run_context, approval_handler, approval_mode, tc.name, arguments)
-            result = await tool.execute(arguments)
-        except Exception as e:
-            error_result = f"Error: {e}"
-            messages.append(tool_result_to_message(tc.id, error_result, agent.name))
+            # 超时优先级: tool.timeout（工具内部已处理）> RunConfig.tool_timeout > 无限
+            if tool.timeout is None and _tool_timeout is not None:
+                result = await asyncio.wait_for(tool.execute(arguments), timeout=_tool_timeout)
+            else:
+                result = await tool.execute(arguments)
+        except asyncio.TimeoutError:
+            timeout_val = tool.timeout or _tool_timeout
+            error_result = f"Error: Tool '{tc.name}' timed out after {timeout_val}s."
+            tool_results[tc.id] = tool_result_to_message(tc.id, error_result, agent.name)
             if tool_span:
                 await tracing.end_span(tool_span, output=error_result, status=SpanStatus.FAILED)
-            continue
+            return
+        except Exception as e:
+            error_result = f"Error: {e}"
+            tool_results[tc.id] = tool_result_to_message(tc.id, error_result, agent.name)
+            if tool_span:
+                await tracing.end_span(tool_span, output=error_result, status=SpanStatus.FAILED)
+            return
 
         # Tool Guardrail (after): 执行后检测返回值
         if _merged_tool_guardrails and run_context is not None:
@@ -461,14 +470,37 @@ async def _execute_tool_calls(
 
                 if g_result.tripwire_triggered:
                     result = f"Error: Tool guardrail '{tg.name}' blocked result: {g_result.message}"
-                    break  # 短路：首个 after 拦截后替换结果
+                    break
 
         # Hooks: on_tool_end
         if _hooks and run_context:
             await _invoke_hook(_hooks.on_tool_end, "on_tool_end", run_context, tc.name, result)
-        messages.append(tool_result_to_message(tc.id, result, agent.name))
+        tool_results[tc.id] = tool_result_to_message(tc.id, result, agent.name)
         if tool_span:
             await tracing.end_span(tool_span, output=result)
+
+    # ── 3. 并行执行所有普通工具 ──────────────────────────────
+    if len(normal_tool_calls) == 1:
+        await _run_one(normal_tool_calls[0])
+    elif normal_tool_calls:
+        async with asyncio.TaskGroup() as tg:
+            for tc in normal_tool_calls:
+                tg.create_task(_run_one(tc))
+
+    # 按原始 tool_call 顺序追加结果到 messages
+    for tc in normal_tool_calls:
+        if tc.id in tool_results:
+            messages.append(tool_results[tc.id])
+
+    # ── 4. 处理 Handoff（如有）──────────────────────────────
+    if handoff_info:
+        tc, target_agent, handoff_config = handoff_info
+        if _hooks and run_context:
+            await _invoke_hook(_hooks.on_handoff, "on_handoff", run_context, agent.name, target_agent.name)
+        messages.append(tool_result_to_message(tc.id, "", agent.name))
+        if tracing:
+            await tracing.handoff_span(agent.name, target_agent.name)
+        return (target_agent, handoff_config)
 
     return None
 

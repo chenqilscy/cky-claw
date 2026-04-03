@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 from typing import Any, AsyncIterator
 from unittest.mock import AsyncMock
@@ -484,3 +485,263 @@ class TestRunnerConfigResolution:
             config=RunConfig(model_provider=SpyProvider()),
         )
         assert call_args["model"] == "gpt-4o-mini"
+
+
+# ── 并行工具执行 & 超时测试 ──────────────────────────────────
+
+
+class TestParallelToolExecution:
+    """验证多工具调用并行执行和 RunConfig.tool_timeout。"""
+
+    @pytest.mark.asyncio
+    async def test_multiple_tools_execute_in_parallel(self) -> None:
+        """多个工具应并行执行——总耗时应远小于串行之和。"""
+        import time
+
+        @function_tool()
+        async def slow_a() -> str:
+            """Slow A."""
+            await asyncio.sleep(0.2)
+            return "A done"
+
+        @function_tool()
+        async def slow_b() -> str:
+            """Slow B."""
+            await asyncio.sleep(0.2)
+            return "B done"
+
+        agent = Agent(name="bot", tools=[slow_a, slow_b])
+        provider = MockProvider([
+            ModelResponse(
+                tool_calls=[
+                    ToolCall(id="c1", name="slow_a", arguments="{}"),
+                    ToolCall(id="c2", name="slow_b", arguments="{}"),
+                ],
+            ),
+            ModelResponse(content="Both done."),
+        ])
+
+        start = time.monotonic()
+        result = await Runner.run(agent, "go", config=RunConfig(model_provider=provider))
+        elapsed = time.monotonic() - start
+
+        assert result.output == "Both done."
+        # 并行：0.2s 左右；串行需 0.4s+
+        assert elapsed < 0.35, f"Expected parallel execution, but took {elapsed:.2f}s"
+
+        # 两个 tool 结果都在消息中
+        tool_msgs = [m for m in result.messages if m.role == MessageRole.TOOL]
+        assert len(tool_msgs) == 2
+
+    @pytest.mark.asyncio
+    async def test_single_tool_no_taskgroup_overhead(self) -> None:
+        """单个工具调用不使用 TaskGroup，直接执行。"""
+        @function_tool()
+        def echo(text: str) -> str:
+            """Echo."""
+            return text
+
+        agent = Agent(name="bot", tools=[echo])
+        provider = MockProvider([
+            ModelResponse(
+                tool_calls=[ToolCall(id="c1", name="echo", arguments='{"text": "hello"}')],
+            ),
+            ModelResponse(content="echo: hello"),
+        ])
+
+        result = await Runner.run(agent, "go", config=RunConfig(model_provider=provider))
+        assert result.output == "echo: hello"
+
+    @pytest.mark.asyncio
+    async def test_parallel_with_one_error(self) -> None:
+        """并行执行中一个工具异常不影响其他工具。"""
+        @function_tool()
+        async def good_tool() -> str:
+            """Good."""
+            await asyncio.sleep(0.05)
+            return "ok"
+
+        @function_tool()
+        async def bad_tool() -> str:
+            """Bad."""
+            raise ValueError("boom")
+
+        agent = Agent(name="bot", tools=[good_tool, bad_tool])
+        provider = MockProvider([
+            ModelResponse(
+                tool_calls=[
+                    ToolCall(id="c1", name="good_tool", arguments="{}"),
+                    ToolCall(id="c2", name="bad_tool", arguments="{}"),
+                ],
+            ),
+            ModelResponse(content="Done with errors."),
+        ])
+
+        result = await Runner.run(agent, "go", config=RunConfig(model_provider=provider))
+        tool_msgs = [m for m in result.messages if m.role == MessageRole.TOOL]
+        assert len(tool_msgs) == 2
+        # good_tool 成功
+        good = next(m for m in tool_msgs if "ok" in m.content)
+        assert good is not None
+        # bad_tool 错误
+        bad = next(m for m in tool_msgs if "boom" in m.content)
+        assert bad is not None
+
+    @pytest.mark.asyncio
+    async def test_parallel_preserves_message_order(self) -> None:
+        """并行执行后结果按原始 tool_call 顺序追加到 messages。"""
+        @function_tool()
+        async def tool_first() -> str:
+            """First."""
+            await asyncio.sleep(0.15)  # 第一个完成更慢
+            return "FIRST"
+
+        @function_tool()
+        async def tool_second() -> str:
+            """Second."""
+            await asyncio.sleep(0.05)  # 第二个完成更快
+            return "SECOND"
+
+        agent = Agent(name="bot", tools=[tool_first, tool_second])
+        provider = MockProvider([
+            ModelResponse(
+                tool_calls=[
+                    ToolCall(id="c1", name="tool_first", arguments="{}"),
+                    ToolCall(id="c2", name="tool_second", arguments="{}"),
+                ],
+            ),
+            ModelResponse(content="ordered"),
+        ])
+
+        result = await Runner.run(agent, "go", config=RunConfig(model_provider=provider))
+        tool_msgs = [m for m in result.messages if m.role == MessageRole.TOOL]
+        assert len(tool_msgs) == 2
+        # 即使 tool_second 先完成，消息顺序仍是 first → second
+        assert tool_msgs[0].content == "FIRST"
+        assert tool_msgs[1].content == "SECOND"
+
+    @pytest.mark.asyncio
+    async def test_handoff_with_parallel_tools(self) -> None:
+        """Handoff 之前的普通工具并行执行，然后 Handoff 控制权转移。"""
+        @function_tool()
+        async def prepare() -> str:
+            """Prepare."""
+            return "prepared"
+
+        specialist = Agent(name="specialist")
+        agent = Agent(name="triage", tools=[prepare], handoffs=[specialist])
+
+        provider = MockProvider([
+            ModelResponse(
+                tool_calls=[
+                    ToolCall(id="c1", name="prepare", arguments="{}"),
+                    ToolCall(id="c2", name="transfer_to_specialist", arguments="{}"),
+                ],
+            ),
+            # specialist 执行回复
+            ModelResponse(content="Specialist here."),
+        ])
+
+        result = await Runner.run(agent, "go", config=RunConfig(model_provider=provider))
+        assert result.output == "Specialist here."
+        # prepare 工具结果和 handoff 空结果都在消息中
+        tool_msgs = [m for m in result.messages if m.role == MessageRole.TOOL]
+        assert len(tool_msgs) == 2
+        assert tool_msgs[0].content == "prepared"
+        assert tool_msgs[1].content == ""  # Handoff 空结果
+
+
+class TestToolTimeout:
+    """工具超时相关测试。"""
+
+    @pytest.mark.asyncio
+    async def test_tool_level_timeout(self) -> None:
+        """FunctionTool.timeout 优先，超时返回错误。"""
+        @function_tool(timeout=0.1)
+        async def slow_tool() -> str:
+            """Slow."""
+            await asyncio.sleep(5)
+            return "never"
+
+        agent = Agent(name="bot", tools=[slow_tool])
+        provider = MockProvider([
+            ModelResponse(
+                tool_calls=[ToolCall(id="c1", name="slow_tool", arguments="{}")],
+            ),
+            ModelResponse(content="timed out"),
+        ])
+
+        result = await Runner.run(agent, "go", config=RunConfig(model_provider=provider))
+        tool_msgs = [m for m in result.messages if m.role == MessageRole.TOOL]
+        assert "timed out" in tool_msgs[0].content.lower()
+
+    @pytest.mark.asyncio
+    async def test_config_tool_timeout_fallback(self) -> None:
+        """RunConfig.tool_timeout 作为全局回退：当工具无自身 timeout 时生效。"""
+        @function_tool()
+        async def slow_tool() -> str:
+            """Slow."""
+            await asyncio.sleep(5)
+            return "never"
+
+        agent = Agent(name="bot", tools=[slow_tool])
+        provider = MockProvider([
+            ModelResponse(
+                tool_calls=[ToolCall(id="c1", name="slow_tool", arguments="{}")],
+            ),
+            ModelResponse(content="caught timeout"),
+        ])
+
+        result = await Runner.run(
+            agent, "go",
+            config=RunConfig(model_provider=provider, tool_timeout=0.1),
+        )
+        tool_msgs = [m for m in result.messages if m.role == MessageRole.TOOL]
+        assert "timed out" in tool_msgs[0].content.lower()
+
+    @pytest.mark.asyncio
+    async def test_tool_timeout_priority_over_config(self) -> None:
+        """FunctionTool.timeout 优先于 RunConfig.tool_timeout。"""
+
+        # 工具有 5s 超时，RunConfig 有 0.05s — 工具有自身 timeout，用自身的
+        @function_tool(timeout=5.0)
+        async def fast_tool() -> str:
+            """Fast with long timeout."""
+            return "fast"
+
+        agent = Agent(name="bot", tools=[fast_tool])
+        provider = MockProvider([
+            ModelResponse(
+                tool_calls=[ToolCall(id="c1", name="fast_tool", arguments="{}")],
+            ),
+            ModelResponse(content="ok"),
+        ])
+
+        result = await Runner.run(
+            agent, "go",
+            config=RunConfig(model_provider=provider, tool_timeout=0.05),
+        )
+        # 工具使用自身 timeout=5s，不会超时
+        tool_msgs = [m for m in result.messages if m.role == MessageRole.TOOL]
+        assert tool_msgs[0].content == "fast"
+
+    @pytest.mark.asyncio
+    async def test_no_timeout_by_default(self) -> None:
+        """默认无超时——工具正常执行。"""
+        @function_tool()
+        async def normal_tool() -> str:
+            """Normal."""
+            await asyncio.sleep(0.05)
+            return "done"
+
+        agent = Agent(name="bot", tools=[normal_tool])
+        provider = MockProvider([
+            ModelResponse(
+                tool_calls=[ToolCall(id="c1", name="normal_tool", arguments="{}")],
+            ),
+            ModelResponse(content="ok"),
+        ])
+
+        result = await Runner.run(agent, "go", config=RunConfig(model_provider=provider))
+        tool_msgs = [m for m in result.messages if m.role == MessageRole.TOOL]
+        assert tool_msgs[0].content == "done"
