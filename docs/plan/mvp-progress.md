@@ -303,6 +303,18 @@
 - [x] 6.6.8 Backend 测试 — 11 个新测试（_resolve_mcp_tools 7 + _build_agent_from_config 4）
 - [x] 6.6.9 五轮代码审查（2 个问题修复：FunctionTool **kwargs bug + ImportError 优雅降级）
 
+### Phase 6.7：Agent 即工具 / Agent-as-Tool（P0）✅
+- [x] 6.7.1 数据模型 — Alembic 迁移 `0010_add_agent_tools.py`：`agent_tools ARRAY(String) NOT NULL DEFAULT '{}'`
+- [x] 6.7.2 ORM 模型 — `AgentConfig.agent_tools` 字段（`ARRAY(String)`）
+- [x] 6.7.3 Schema — `AgentCreate` / `AgentUpdate` / `AgentResponse` 增加 `agent_tools` 字段
+- [x] 6.7.4 Backend `_resolve_agent_tools()` — 递归解析 Agent-as-Tool 名称列表为 `FunctionTool`，含循环检测（`visited` 集合）+ 深度限制（`_MAX_AGENT_TOOL_DEPTH = 3`）
+- [x] 6.7.5 `execute_run` 集成 — 轻量 `sub_run_config`（共享 model_provider，无 trace/approval）+ 工具合并（mcp_tools + agent_tool_fns）
+- [x] 6.7.6 `execute_run_stream` 集成 — 同上模式 + 异常时清理 mcp_stack
+- [x] 6.7.7 Frontend TypeScript 接口 — `AgentConfig.agent_tools` / `AgentCreateInput.agent_tools`
+- [x] 6.7.8 Frontend Agent 编辑页 — Agent-as-Tool 多选表单字段（排除自身）
+- [x] 6.7.9 Backend 测试 — 12 个新测试（_resolve_agent_tools 7 + _build_agent_from_config 1 + Schema 4）
+- [x] 6.7.10 五轮代码审查（1 个问题修复：execute_run_stream model_override 缺失）
+
 ---
 
-*最后更新：2025-07-21*
+*最后更新：2025-07-22*

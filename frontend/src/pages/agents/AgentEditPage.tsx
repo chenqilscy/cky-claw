@@ -23,6 +23,7 @@ const AgentEditPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [guardrailOptions, setGuardrailOptions] = useState<{ label: string; value: string }[]>([]);
+  const [agentOptions, setAgentOptions] = useState<{ label: string; value: string }[]>([]);
 
   useEffect(() => {
     guardrailService.list({ enabled_only: true, limit: 200 })
@@ -34,7 +35,18 @@ const AgentEditPage: React.FC = () => {
         );
       })
       .catch(() => { /* ignore */ });
-  }, []);
+
+    // 加载可选的 Agent 列表（用于 Agent-as-Tool 选择）
+    agentService.list({ limit: 200 })
+      .then((res) => {
+        setAgentOptions(
+          res.data
+            .filter((a: AgentConfig) => a.name !== name) // 排除自身
+            .map((a: AgentConfig) => ({ label: `${a.name}${a.description ? ` — ${a.description}` : ''}`, value: a.name }))
+        );
+      })
+      .catch(() => { /* ignore */ });
+  }, [name]);
 
   useEffect(() => {
     if (isEdit && name) {
@@ -49,6 +61,7 @@ const AgentEditPage: React.FC = () => {
             approval_mode: agent.approval_mode,
             tool_groups: agent.tool_groups?.join(', ') || '',
             handoffs: agent.handoffs?.join(', ') || '',
+            agent_tools: agent.agent_tools || [],
             input_guardrails: agent.guardrails?.input || [],
           });
         })
@@ -72,6 +85,7 @@ const AgentEditPage: React.FC = () => {
         handoffs: (values.handoffs as string)
           ? (values.handoffs as string).split(',').map((s) => s.trim()).filter(Boolean)
           : [],
+        agent_tools: (values.agent_tools as string[]) || [],
         guardrails: {
           input: (values.input_guardrails as string[]) || [],
           output: [],
@@ -148,6 +162,15 @@ const AgentEditPage: React.FC = () => {
 
             <Form.Item name="handoffs" label="Handoff 目标（逗号分隔）">
               <Input placeholder="specialist-agent, reviewer-agent" />
+            </Form.Item>
+
+            <Form.Item name="agent_tools" label="Agent-as-Tool（子 Agent 作为工具）">
+              <Select
+                mode="multiple"
+                placeholder="选择要作为工具调用的子 Agent"
+                options={agentOptions}
+                allowClear
+              />
             </Form.Item>
 
             <Form.Item name="input_guardrails" label="Input Guardrails">

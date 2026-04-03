@@ -320,6 +320,88 @@ async def _resolve_handoff_agents(
     return handoff_list
 
 
+_MAX_AGENT_TOOL_DEPTH = 3
+"""Agent-as-Tool 递归构建最大深度，防止循环引用或无限递归。"""
+
+
+async def _resolve_agent_tools(
+    db: AsyncSession,
+    config: AgentConfig,
+    run_config: Any | None = None,
+    visited: set[str] | None = None,
+    depth: int = 0,
+) -> list[Any]:
+    """解析 AgentConfig.agent_tools 名称列表，将每个 Agent 包装为 FunctionTool。
+
+    - 使用 visited 集合检测循环引用
+    - 使用 depth 限制递归深度
+    - 缺失或禁用的目标 Agent 被安全跳过（warn）
+    """
+    if not config.agent_tools:
+        return []
+
+    if depth >= _MAX_AGENT_TOOL_DEPTH:
+        logger.warning(
+            "Agent-as-Tool 递归深度达到上限 %d，Agent '%s' 的 agent_tools 将被截断",
+            _MAX_AGENT_TOOL_DEPTH,
+            config.name,
+        )
+        return []
+
+    if visited is None:
+        visited = set()
+    visited = visited | {config.name}
+
+    # 批量加载目标 AgentConfig
+    target_names = [n for n in config.agent_tools if n not in visited]
+    if not target_names:
+        for name in config.agent_tools:
+            if name in visited:
+                logger.warning("检测到循环 Agent-as-Tool 引用：Agent '%s' → '%s'，已跳过", config.name, name)
+        return []
+
+    stmt = select(AgentConfig).where(
+        AgentConfig.name.in_(target_names),
+        AgentConfig.is_active == True,  # noqa: E712
+    )
+    target_configs = {c.name: c for c in (await db.execute(stmt)).scalars().all()}
+
+    from app.services.guardrail import get_guardrail_rules_by_names
+
+    tool_list: list[Any] = []
+    for name in config.agent_tools:
+        if name in visited and name not in target_names:
+            logger.warning("检测到循环 Agent-as-Tool 引用：Agent '%s' → '%s'，已跳过", config.name, name)
+            continue
+
+        target_config = target_configs.get(name)
+        if target_config is None:
+            logger.warning("Agent-as-Tool 目标 Agent '%s' 不存在或已禁用，已跳过", name)
+            continue
+
+        # 加载目标的 guardrail 规则
+        target_guardrail_names = (target_config.guardrails or {}).get("input", [])
+        target_guardrail_rules = await get_guardrail_rules_by_names(db, target_guardrail_names)
+
+        # 递归解析目标的 handoffs 和 agent_tools
+        sub_handoffs = await _resolve_handoff_agents(db, target_config, visited, depth + 1)
+        sub_agent_tools = await _resolve_agent_tools(db, target_config, run_config, visited, depth + 1)
+
+        # 构建目标 Agent
+        target_agent = _build_agent_from_config(
+            target_config,
+            guardrail_rules=target_guardrail_rules,
+            handoff_agents=sub_handoffs,
+            mcp_tools=sub_agent_tools,  # 子 Agent 自身的 agent_tools 作为其工具
+        )
+
+        # 将 Agent 包装为 FunctionTool
+        tool = target_agent.as_tool(config=run_config)
+        tool_list.append(tool)
+
+    return tool_list
+
+
 # ---------------------------------------------------------------------------
 # Token Usage 采集辅助
 # ---------------------------------------------------------------------------
@@ -448,9 +530,21 @@ async def execute_run(
     async with AsyncExitStack() as mcp_stack:
         mcp_tools = await _resolve_mcp_tools(db, agent_config, stack=mcp_stack)
 
+        # 解析 Agent-as-Tool（子 Agent 包装为 FunctionTool）
+        # 先创建子 Agent 的轻量 RunConfig（共享 model_provider，无 trace/approval）
+        sub_model_provider = LiteLLMProvider()
+        sub_run_config = FrameworkRunConfig(
+            model=request.config.model_override or agent_config.model,
+            model_provider=sub_model_provider,
+        )
+        agent_tool_fns = await _resolve_agent_tools(db, agent_config, run_config=sub_run_config)
+
+        # 合并所有工具
+        all_tools = mcp_tools + agent_tool_fns
+
         # 构建 Framework Agent
         agent = _build_agent_from_config(
-            agent_config, guardrail_rules=guardrail_rules, handoff_agents=handoff_agents, mcp_tools=mcp_tools,
+            agent_config, guardrail_rules=guardrail_rules, handoff_agents=handoff_agents, mcp_tools=all_tools,
         )
 
         # 构建 Framework Session（使用 InMemory，消息随请求生命周期）
@@ -572,8 +666,22 @@ async def execute_run_stream(
         await mcp_stack.__aexit__(None, None, None)
         raise
 
+    # 解析 Agent-as-Tool
+    sub_model_provider = LiteLLMProvider()
+    sub_run_config = FrameworkRunConfig(
+        model=request.config.model_override or agent_config.model,
+        model_provider=sub_model_provider,
+    )
+    try:
+        agent_tool_fns = await _resolve_agent_tools(db, agent_config, run_config=sub_run_config)
+    except Exception:
+        await mcp_stack.__aexit__(None, None, None)
+        raise
+
+    all_tools = mcp_tools + agent_tool_fns
+
     agent = _build_agent_from_config(
-        agent_config, guardrail_rules=guardrail_rules, handoff_agents=handoff_agents, mcp_tools=mcp_tools,
+        agent_config, guardrail_rules=guardrail_rules, handoff_agents=handoff_agents, mcp_tools=all_tools,
     )
 
     session_backend = InMemorySessionBackend()

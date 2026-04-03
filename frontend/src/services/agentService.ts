@@ -16,6 +16,7 @@ export interface AgentConfig {
   };
   approval_mode: string;
   mcp_servers: string[];
+  agent_tools: string[];
   skills: string[];
   metadata: Record<string, unknown>;
   is_active: boolean;
@@ -45,6 +46,7 @@ export interface AgentCreateInput {
   };
   approval_mode?: string;
   mcp_servers?: string[];
+  agent_tools?: string[];
   skills?: string[];
   metadata?: Record<string, unknown>;
 }
