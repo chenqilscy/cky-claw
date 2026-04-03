@@ -361,4 +361,20 @@
 
 ---
 
+## M7：高级能力
+
+### Phase 7.1：Runner Lifecycle Hooks（P1）✅
+- [x] 7.1.1 Framework `hooks.py` — `RunHooks` dataclass（10 个钩子字段：on_run_start/end、on_agent_start/end、on_llm_start/end、on_tool_start/end、on_handoff、on_error）
+- [x] 7.1.2 Framework `_invoke_hook()` — 安全异步调用辅助函数（异常捕获 + logger.exception，非阻塞语义）
+- [x] 7.1.3 `RunConfig.hooks` 字段 — 替换旧 4 个未使用回调（on_agent_start/end/on_tool_call/on_handoff）为统一 `hooks: RunHooks | None`
+- [x] 7.1.4 `Runner.run()` 嵌入 — 6 个触发点（run_start/end + agent_start/end + llm_start/end）+ 错误路径 on_error + 3 个退出路径 on_run_end
+- [x] 7.1.5 `Runner.run_streamed()` 嵌入 — 与 run() 对称的 6 个触发点 + 流式异常处理
+- [x] 7.1.6 `_execute_tool_calls()` 嵌入 — on_tool_start/end（每次工具调用前后）+ on_handoff（Handoff 检测时）
+- [x] 7.1.7 `__init__.py` 导出 — `RunHooks` 加入公共 API
+- [x] 7.1.8 Framework 测试 — `test_lifecycle_hooks.py` 11 个测试（_invoke_hook 基础 3 + 简单对话 hook 顺序 2 + 工具 hook 1 + Handoff hook 1 + 错误 hook 2 + 异常非阻塞 1 + 无 hook 兼容 1）
+- [x] 7.1.9 全量测试 — Framework 330 + Backend 364 = 694 全部通过（排除需 API Key 的集成测试）
+- [x] 7.1.10 五轮代码审查（2 个问题修复：docstring 示例 ctx.trace → ctx.agent.name + on_run_end 签名文档更正）
+
+---
+
 *最后更新：2025-07-22*

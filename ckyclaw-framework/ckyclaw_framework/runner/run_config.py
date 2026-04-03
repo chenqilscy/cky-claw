@@ -13,6 +13,7 @@ if TYPE_CHECKING:
     from ckyclaw_framework.guardrails.tool_guardrail import ToolGuardrail
     from ckyclaw_framework.model.provider import ModelProvider
     from ckyclaw_framework.model.settings import ModelSettings
+    from ckyclaw_framework.runner.hooks import RunHooks
     from ckyclaw_framework.session.history_trimmer import HistoryTrimStrategy
     from ckyclaw_framework.session.session import SessionBackend
     from ckyclaw_framework.tracing.processor import TraceProcessor
@@ -58,10 +59,8 @@ class RunConfig:
     on_max_turns_exceeded: Callable | None = None
     """超过 max_turns 时的回调"""
 
-    on_agent_start: Callable | None = None
-    on_agent_end: Callable | None = None
-    on_tool_call: Callable | None = None
-    on_handoff: Callable | None = None
+    hooks: RunHooks | None = None
+    """生命周期钩子。Runner 在各关键节点调用对应 Hook（非阻塞）。"""
 
     approval_mode: ApprovalMode | None = None
     """全局覆盖 Agent 的审批模式"""

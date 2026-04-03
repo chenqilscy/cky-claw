@@ -25,6 +25,7 @@ from ckyclaw_framework.model.litellm_provider import LiteLLMProvider
 from ckyclaw_framework.model.message import Message, MessageRole, TokenUsage
 from ckyclaw_framework.model.provider import ModelProvider, ModelResponse, ToolCall
 from ckyclaw_framework.model.settings import ModelSettings
+from ckyclaw_framework.runner.hooks import _invoke_hook
 from ckyclaw_framework.runner.result import RunResult, StreamEvent, StreamEventType
 from ckyclaw_framework.runner.run_config import RunConfig
 from ckyclaw_framework.runner.run_context import RunContext
@@ -326,12 +327,16 @@ async def _execute_tool_calls(
     """
     # 合并 Agent 级 + RunConfig 级 tool guardrails
     _merged_tool_guardrails = agent.tool_guardrails + (config.tool_guardrails if config else [])
+    _hooks = config.hooks if config and config.hooks else None
 
     for tc in tool_calls:
         # 检查 Handoff
         handoff_result = _find_handoff_target(agent, tc.name)
         if handoff_result is not None:
             target_agent, handoff_config = handoff_result
+            # Hooks: on_handoff
+            if _hooks and run_context:
+                await _invoke_hook(_hooks.on_handoff, "on_handoff", run_context, agent.name, target_agent.name)
             # Handoff 工具"执行结果"是空的，控制权转移
             messages.append(tool_result_to_message(tc.id, "", agent.name))
             if tracing:
@@ -402,6 +407,9 @@ async def _execute_tool_calls(
 
         # 执行工具（带 Tracing + Approval 检查）
         tool_span = await tracing.start_tool_span(tc.name, arguments) if tracing else None
+        # Hooks: on_tool_start
+        if _hooks and run_context:
+            await _invoke_hook(_hooks.on_tool_start, "on_tool_start", run_context, tc.name, arguments)
         try:
             # Approval: 在执行前检查审批
             if run_context is not None:
@@ -455,6 +463,9 @@ async def _execute_tool_calls(
                     result = f"Error: Tool guardrail '{tg.name}' blocked result: {g_result.message}"
                     break  # 短路：首个 after 拦截后替换结果
 
+        # Hooks: on_tool_end
+        if _hooks and run_context:
+            await _invoke_hook(_hooks.on_tool_end, "on_tool_end", run_context, tc.name, result)
         messages.append(tool_result_to_message(tc.id, result, agent.name))
         if tool_span:
             await tracing.end_span(tool_span, output=result)
@@ -657,6 +668,13 @@ class Runner:
                     await session.append(messages[history_offset:])
                 raise
 
+        # Hooks
+        hooks = config.hooks
+        # Hooks: on_run_start
+        if hooks:
+            _start_ctx = RunContext(agent=current_agent, config=config, context=context or {}, turn_count=0)
+            await _invoke_hook(hooks.on_run_start, "on_run_start", _start_ctx)
+
         while turn_count < max_turns:
             turn_count += 1
 
@@ -671,6 +689,10 @@ class Runner:
             # Tracing: Agent Span
             agent_span = await tracing.start_agent_span(current_agent.name) if tracing.active else None
 
+            # Hooks: on_agent_start
+            if hooks:
+                await _invoke_hook(hooks.on_agent_start, "on_agent_start", run_ctx, current_agent.name)
+
             # 准备 LLM 调用参数
             system_msg = _build_system_message(current_agent, run_ctx)
             llm_messages: list[Message] = []
@@ -684,6 +706,10 @@ class Runner:
 
             # Tracing: LLM Span
             llm_span = await tracing.start_llm_span(model_name, llm_messages) if tracing.active else None
+
+            # Hooks: on_llm_start
+            if hooks:
+                await _invoke_hook(hooks.on_llm_start, "on_llm_start", run_ctx, model_name, llm_messages)
 
             # 调用 LLM
             try:
@@ -700,11 +726,15 @@ class Runner:
                     await tracing.end_span(llm_span, output=str(e), status=SpanStatus.FAILED)
                 if agent_span:
                     await tracing.end_span(agent_span, status=SpanStatus.FAILED)
+                # Hooks: on_error + on_agent_end
+                if hooks:
+                    await _invoke_hook(hooks.on_error, "on_error", run_ctx, e)
+                    await _invoke_hook(hooks.on_agent_end, "on_agent_end", run_ctx, current_agent.name)
                 trace = await tracing.end_trace()
                 # Session: 异常时也保存已有消息
                 if session is not None:
                     await session.append(messages[history_offset:])
-                return RunResult(
+                _err_result = RunResult(
                     output=f"Error: LLM call failed: {e}",
                     messages=messages,
                     last_agent_name=current_agent.name,
@@ -712,12 +742,20 @@ class Runner:
                     turn_count=turn_count,
                     trace=trace,
                 )
+                # Hooks: on_run_end
+                if hooks:
+                    await _invoke_hook(hooks.on_run_end, "on_run_end", run_ctx, _err_result)
+                return _err_result
 
             _accumulate_usage(total_usage, response.token_usage)
 
             # Tracing: 结束 LLM Span
             if llm_span:
                 await tracing.end_span(llm_span, output=response.content, token_usage=response.token_usage)
+
+            # Hooks: on_llm_end
+            if hooks:
+                await _invoke_hook(hooks.on_llm_end, "on_llm_end", run_ctx, response)
 
             # 将 LLM 回复追加到历史
             assistant_msg = model_response_to_assistant_message(response, current_agent.name)
@@ -743,13 +781,16 @@ class Runner:
                             await session.append(messages[history_offset:])
                         raise
 
+                # Hooks: on_agent_end
+                if hooks:
+                    await _invoke_hook(hooks.on_agent_end, "on_agent_end", run_ctx, current_agent.name)
                 if agent_span:
                     await tracing.end_span(agent_span, output=response.content)
                 trace = await tracing.end_trace()
                 # Session: 保存新增消息
                 if session is not None:
                     await session.append(messages[history_offset:])
-                return RunResult(
+                _ok_result = RunResult(
                     output=response.content or "",
                     messages=messages,
                     last_agent_name=current_agent.name,
@@ -757,6 +798,10 @@ class Runner:
                     turn_count=turn_count,
                     trace=trace,
                 )
+                # Hooks: on_run_end
+                if hooks:
+                    await _invoke_hook(hooks.on_run_end, "on_run_end", run_ctx, _ok_result)
+                return _ok_result
 
             # 执行工具调用
             handoff_result = await _execute_tool_calls(
@@ -772,6 +817,9 @@ class Runner:
             if handoff_result is not None:
                 target_agent, handoff_config = handoff_result
                 logger.info("Handoff: %s → %s", current_agent.name, target_agent.name)
+                # Hooks: on_agent_end (handoff 旧 Agent)
+                if hooks:
+                    await _invoke_hook(hooks.on_agent_end, "on_agent_end", run_ctx, current_agent.name)
                 if agent_span:
                     await tracing.end_span(agent_span)
                 # 应用 InputFilter
@@ -797,7 +845,7 @@ class Runner:
         if session is not None:
             await session.append(messages[history_offset:])
 
-        return RunResult(
+        _max_result = RunResult(
             output=last_content,
             messages=messages,
             last_agent_name=current_agent.name,
@@ -805,6 +853,11 @@ class Runner:
             turn_count=turn_count,
             trace=trace,
         )
+        # Hooks: on_run_end
+        if hooks:
+            _max_ctx = RunContext(agent=current_agent, config=config, context=context or {}, turn_count=turn_count)
+            await _invoke_hook(hooks.on_run_end, "on_run_end", _max_ctx, _max_result)
+        return _max_result
 
     @staticmethod
     def run_sync(
@@ -893,6 +946,13 @@ class Runner:
                     await session.append(messages[history_offset:])
                 raise
 
+        # Hooks
+        hooks = config.hooks
+        # Hooks: on_run_start
+        if hooks:
+            _start_ctx = RunContext(agent=current_agent, config=config, context=context or {}, turn_count=0)
+            await _invoke_hook(hooks.on_run_start, "on_run_start", _start_ctx)
+
         while turn_count < max_turns:
             turn_count += 1
 
@@ -908,6 +968,10 @@ class Runner:
             # Tracing: Agent Span
             agent_span = await tracing.start_agent_span(current_agent.name) if tracing.active else None
 
+            # Hooks: on_agent_start
+            if hooks:
+                await _invoke_hook(hooks.on_agent_start, "on_agent_start", run_ctx, current_agent.name)
+
             system_msg = _build_system_message(current_agent, run_ctx)
             llm_messages: list[Message] = []
             if system_msg.content:
@@ -920,6 +984,10 @@ class Runner:
 
             # Tracing: LLM Span
             llm_span = await tracing.start_llm_span(model_name, llm_messages) if tracing.active else None
+
+            # Hooks: on_llm_start
+            if hooks:
+                await _invoke_hook(hooks.on_llm_start, "on_llm_start", run_ctx, model_name, llm_messages)
 
             # 流式调用 LLM
             try:
@@ -936,20 +1004,28 @@ class Runner:
                     await tracing.end_span(llm_span, output=str(e), status=SpanStatus.FAILED)
                 if agent_span:
                     await tracing.end_span(agent_span, status=SpanStatus.FAILED)
+                # Hooks: on_error + on_agent_end
+                if hooks:
+                    await _invoke_hook(hooks.on_error, "on_error", run_ctx, e)
+                    await _invoke_hook(hooks.on_agent_end, "on_agent_end", run_ctx, current_agent.name)
                 trace = await tracing.end_trace()
                 # Session: 异常时也保存已有消息
                 if session is not None:
                     await session.append(messages[history_offset:])
+                _err_result = RunResult(
+                    output=f"Error: LLM call failed: {e}",
+                    messages=messages,
+                    last_agent_name=current_agent.name,
+                    token_usage=total_usage,
+                    turn_count=turn_count,
+                    trace=trace,
+                )
+                # Hooks: on_run_end
+                if hooks:
+                    await _invoke_hook(hooks.on_run_end, "on_run_end", run_ctx, _err_result)
                 yield StreamEvent(
                     type=StreamEventType.RUN_COMPLETE,
-                    data=RunResult(
-                        output=f"Error: LLM call failed: {e}",
-                        messages=messages,
-                        last_agent_name=current_agent.name,
-                        token_usage=total_usage,
-                        turn_count=turn_count,
-                        trace=trace,
-                    ),
+                    data=_err_result,
                 )
                 return
 
@@ -988,6 +1064,10 @@ class Runner:
             assistant_msg = model_response_to_assistant_message(aggregated_response, current_agent.name)
             messages.append(assistant_msg)
 
+            # Hooks: on_llm_end
+            if hooks:
+                await _invoke_hook(hooks.on_llm_end, "on_llm_end", run_ctx, aggregated_response)
+
             if not aggregated_tool_calls:
                 # Output Guardrails: final_output 后检测（流式）
                 _merged_output_guardrails = current_agent.output_guardrails + config.output_guardrails
@@ -1012,23 +1092,30 @@ class Runner:
                 # Tracing: 结束 LLM + Agent Span
                 if llm_span:
                     await tracing.end_span(llm_span, output=full_content)
+                # Hooks: on_agent_end
+                if hooks:
+                    await _invoke_hook(hooks.on_agent_end, "on_agent_end", run_ctx, current_agent.name)
                 if agent_span:
                     await tracing.end_span(agent_span, output=full_content)
                 trace = await tracing.end_trace()
                 # Session: 保存新增消息
                 if session is not None:
                     await session.append(messages[history_offset:])
+                _ok_result = RunResult(
+                    output=full_content,
+                    messages=messages,
+                    last_agent_name=current_agent.name,
+                    token_usage=total_usage,
+                    turn_count=turn_count,
+                    trace=trace,
+                )
+                # Hooks: on_run_end
+                if hooks:
+                    await _invoke_hook(hooks.on_run_end, "on_run_end", run_ctx, _ok_result)
                 yield StreamEvent(type=StreamEventType.AGENT_END, agent_name=current_agent.name)
                 yield StreamEvent(
                     type=StreamEventType.RUN_COMPLETE,
-                    data=RunResult(
-                        output=full_content,
-                        messages=messages,
-                        last_agent_name=current_agent.name,
-                        token_usage=total_usage,
-                        turn_count=turn_count,
-                        trace=trace,
-                    ),
+                    data=_ok_result,
                 )
                 return
 
@@ -1067,6 +1154,9 @@ class Runner:
                     data={"from": current_agent.name, "to": target_agent.name},
                     agent_name=current_agent.name,
                 )
+                # Hooks: on_agent_end (handoff 旧 Agent)
+                if hooks:
+                    await _invoke_hook(hooks.on_agent_end, "on_agent_end", run_ctx, current_agent.name)
                 if agent_span:
                     await tracing.end_span(agent_span)
                 # 应用 InputFilter
@@ -1090,14 +1180,19 @@ class Runner:
         if session is not None:
             await session.append(messages[history_offset:])
 
+        _max_result = RunResult(
+            output=last_content,
+            messages=messages,
+            last_agent_name=current_agent.name,
+            token_usage=total_usage,
+            turn_count=turn_count,
+            trace=trace,
+        )
+        # Hooks: on_run_end
+        if hooks:
+            _max_ctx = RunContext(agent=current_agent, config=config, context=context or {}, turn_count=turn_count)
+            await _invoke_hook(hooks.on_run_end, "on_run_end", _max_ctx, _max_result)
         yield StreamEvent(
             type=StreamEventType.RUN_COMPLETE,
-            data=RunResult(
-                output=last_content,
-                messages=messages,
-                last_agent_name=current_agent.name,
-                token_usage=total_usage,
-                turn_count=turn_count,
-                trace=trace,
-            ),
+            data=_max_result,
         )
