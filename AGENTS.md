@@ -2,7 +2,54 @@
 
 ## 项目定位
 
-CkyClaw 是基于自研 **CkyClaw Framework** 构建的 AI Agent 管理与运行平台。CkyClaw Framework汲取了 Claude Code、OpenAI Codex CLI、OpenAI Agents SDK、DeerFlow 等业界领先方案的优秀设计，提供一套开放、可扩展的 Agent 运行时基础设施。CkyClaw 在此基础上构建企业级的 Agent 配置管理、多模式编排、执行可视化、人工监督、多渠道接入和 APM 监控等上层能力。
+CkyClaw 是基于自研 **CkyClaw Framework** 构建的 AI Agent 管理与运行平台。CkyClaw Framework 汲取了 Claude Code、OpenAI Codex CLI、OpenAI Agents SDK、DeerFlow 等业界领先方案的优秀设计，提供一套开放、可扩展的 Agent 运行时基础设施。CkyClaw 在此基础上构建企业级的 Agent 配置管理、多模式编排、执行可视化、人工监督、多渠道接入和 APM 监控等上层能力。
+
+## 项目现状（M0–M7 全部完成）
+
+截至 2026-04-03，**M0–M7 共 8 个里程碑、60+ Phase 全部完成**。
+
+### 关键指标
+
+| 指标 | 数值 |
+|------|------|
+| 测试总数 | **718**（Backend 401 + Framework 316 + Frontend 1） |
+| Alembic 迁移 | 15 个（0001–0015） |
+| API 端点 | 40+ |
+| 前端页面 | 17 个（React.lazy 懒加载） |
+| CI Job | 5 个（lint-python / lint-frontend / test-python / test-frontend / build） |
+| TypeScript 错误 | 0 |
+
+### 已完成能力矩阵
+
+| 能力 | 状态 | 说明 |
+|------|:----:|------|
+| Agent CRUD + 版本管理 | ✅ | 完整 CRUD + 自动快照 + 对比 + 回滚 |
+| Runner Agent Loop | ✅ | run / run_sync / run_streamed + max_turns + parallel tool execution (TaskGroup) |
+| Handoff 编排 | ✅ | 多级递归解析 + InputFilter + 循环检测 + ReactFlow 可视化编排器 |
+| Agent-as-Tool | ✅ | 递归解析 + 深度限制 + 独立上下文 |
+| Guardrails 三级护栏 | ✅ | Input / Output / Tool × Regex / Keyword / LLM（PromptInjection + ContentSafety + Custom） |
+| Approval 审批 | ✅ | suggest / auto-edit / full-auto + HttpApprovalHandler + DB 持久化 + 审批队列 UI |
+| Tracing 链路追踪 | ✅ | 自动 Agent/LLM/Tool/Handoff/Guardrail Span + PostgresTraceProcessor + SpanWaterfall 可视化 |
+| Session 持久化 | ✅ | SQLAlchemySessionBackend + 消息查询 API |
+| MCP 集成 | ✅ | stdio / sse / http 三种传输 + 命名空间隔离 + 连接测试 + 工具预览 |
+| Tool Groups | ✅ | ToolGroup + ToolRegistry + 三路工具合并 |
+| Multi-Provider | ✅ | 10+ 厂商适配 + Fernet 加密 + 连通性测试 + Agent 级 Provider 绑定 |
+| Token 审计 | ✅ | 自动采集 + 多维统计（Agent/Model/User） |
+| Lifecycle Hooks | ✅ | 10 个 Hook 触发点 + 非阻塞异步语义 |
+| Dashboard 首页 | ✅ | 6 项统计 + Token 分布 + Guardrail 状态 + Span 类型分布 |
+| 用户认证 | ✅ | JWT + bcrypt + Admin/User 角色 |
+| Docker 部署 | ✅ | Docker Compose + 自动迁移 + 健康检查 |
+| GitHub Actions CI | ✅ | 5 Job 全激活 |
+
+### 未完成 / 延期项
+
+以下功能在 MVP 范围内标记为"后续迭代"：
+
+- WebSocket 审批通道（实时推送审批请求到前端）
+- 可观测性基础设施（OTel + Jaeger + Prometheus + Grafana）
+- auto-edit 审批模式真实语义（当前等同 FULL_AUTO）
+
+完整的待办事项、PRD 差距分析和演进规划见 `docs/todo.md`。
 
 ## 代理身份
 
@@ -50,12 +97,42 @@ Windows 环境无需设置代理。
 
 ```
 cky-claw/
-├── ckyclaw-framework/   # CkyClaw Framework — Python Agent 运行时库
-├── backend/             # CkyClaw Backend — FastAPI 后端服务
-├── frontend/            # CkyClaw Frontend — React Web 前端
-├── docs/                # 产品与技术文档
-├── .github/             # GitHub Actions CI + 编辑器指令
-└── docker-compose.yml   # 开发环境基础设施
+├── ckyclaw-framework/           # CkyClaw Framework — Python Agent 运行时库
+│   ├── ckyclaw_framework/
+│   │   ├── agent/               # Agent 定义（Agent dataclass + as_tool）
+│   │   ├── runner/              # Runner 执行引擎（Agent Loop + Hooks + RunConfig）
+│   │   ├── model/               # Model Provider 抽象（LiteLLMProvider）
+│   │   ├── tools/               # 工具系统（FunctionTool + ToolGroup + ToolRegistry）
+│   │   ├── handoff/             # Handoff 移交机制
+│   │   ├── guardrails/          # 护栏（Regex/Keyword/LLM × Input/Output/Tool）
+│   │   ├── approval/            # 审批模式（suggest/auto-edit/full-auto）
+│   │   ├── mcp/                 # MCP 客户端（stdio/sse/http）
+│   │   ├── session/             # Session 会话管理（InMemory/Postgres）
+│   │   └── tracing/             # Tracing 链路追踪（Trace/Span/Processor）
+│   └── tests/                   # 316 个测试
+├── backend/                     # CkyClaw Backend — FastAPI 后端服务
+│   ├── app/
+│   │   ├── api/                 # 40+ REST API 端点
+│   │   ├── models/              # SQLAlchemy ORM（15 张表）
+│   │   ├── schemas/             # Pydantic v2 Schema
+│   │   ├── services/            # 业务逻辑层
+│   │   └── core/                # 基础设施（config/auth/crypto/database）
+│   ├── alembic/versions/        # 15 个 Alembic 迁移
+│   └── tests/                   # 401 个测试
+├── frontend/                    # CkyClaw Frontend — React Web 前端
+│   └── src/
+│       ├── pages/               # 17 个页面（React.lazy 懒加载）
+│       ├── services/            # API 服务层
+│       ├── stores/              # Zustand 状态管理
+│       ├── components/          # 公共组件（ErrorBoundary 等）
+│       └── layouts/             # 布局组件
+├── docs/                        # 产品与技术文档
+│   ├── spec/                    # PRD + 设计文档
+│   └── plan/                    # 进度追踪
+├── .github/                     # GitHub Actions CI（5 Job）+ 编辑器指令
+├── docker-compose.yml           # Docker Compose 部署（PG + Redis + Backend + Frontend）
+├── .env.example                 # 环境变量模板
+└── README.md                    # 项目说明 + 部署指南
 ```
 
 > 详细的目录结构说明见 [docs/project-structure.md](docs/project-structure.md)
