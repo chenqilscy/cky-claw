@@ -58,6 +58,8 @@ cky-claw/
 └── docker-compose.yml   # 开发环境基础设施
 ```
 
+> 详细的目录结构说明见 [docs/project-structure.md](docs/project-structure.md)
+
 ## Python 编码规范
 
 ### 版本与工具
