@@ -488,6 +488,13 @@
 - [x] 7.11.7 `Promise.allSettled` 并发 4 个 API，单个失败不影响全局
 - [x] 7.11.8 五轮代码审查（全部通过）
 
+### Phase 7.12：前端全局优化（P1）✅
+- [x] 7.12.1 ErrorBoundary 错误边界 — class component 捕获渲染错误，显示友好错误页面 + 返回首页按钮
+- [x] 7.12.2 路由懒加载 — 所有页面使用 `React.lazy()` + `Suspense`，Vite 自动 code-splitting
+- [x] 7.12.3 Loading fallback — `PageLoading` 组件（Spin + 居中布局）
+- [x] 7.12.4 404 页面 — `NotFoundPage` + `<Route path="*">` 通配符路由
+- [x] 7.12.5 五轮代码审查（全部通过）
+
 ---
 
 *最后更新：2025-07-22*
