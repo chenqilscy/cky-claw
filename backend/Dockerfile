@@ -22,4 +22,7 @@ COPY backend/ /app/backend/
 
 EXPOSE 8000
 
-CMD ["uv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+COPY backend/entrypoint.sh /app/backend/entrypoint.sh
+RUN chmod +x /app/backend/entrypoint.sh
+
+CMD ["/app/backend/entrypoint.sh"]

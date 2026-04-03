@@ -495,6 +495,14 @@
 - [x] 7.12.4 404 页面 — `NotFoundPage` + `<Route path="*">` 通配符路由
 - [x] 7.12.5 五轮代码审查（全部通过）
 
+### Phase 7.13：部署与文档完善（P1）✅
+- [x] 7.13.1 `.env.example` — 所有环境变量注释说明（数据库/Redis/JWT/CORS/调试模式）
+- [x] 7.13.2 `backend/entrypoint.sh` — 启动前自动执行 `alembic upgrade head` + `set -e` 安全退出
+- [x] 7.13.3 `docker-compose.yml` 增强 — 添加 `CKYCLAW_SECRET_KEY` 环境变量 + 后端 Python 健康检查 + 前端依赖后端健康
+- [x] 7.13.4 `backend/Dockerfile` 更新 — 使用 entrypoint.sh 替代直接 CMD
+- [x] 7.13.5 `README.md` 全面更新 — Docker 一键部署 / 本地开发 / 环境变量表格 / 数据库迁移 / 测试命令 / 功能列表
+- [x] 7.13.6 五轮代码审查（第 2 轮修复 curl → Python 健康检查，其余全部通过）
+
 ---
 
 *最后更新：2025-07-22*

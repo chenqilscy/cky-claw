@@ -47,12 +47,19 @@ services:
     environment:
       CKYCLAW_DATABASE_URL: postgresql+asyncpg://ckyclaw:${POSTGRES_PASSWORD:-ckyclaw_dev}@db:5432/ckyclaw
       CKYCLAW_REDIS_URL: redis://redis:6379/0
-      CKYCLAW_DEBUG: "true"
+      CKYCLAW_SECRET_KEY: ${CKYCLAW_SECRET_KEY:-dev-secret-key-change-in-production}
+      CKYCLAW_DEBUG: ${CKYCLAW_DEBUG:-true}
     depends_on:
       db:
         condition: service_healthy
       redis:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   frontend:
     build:
@@ -63,7 +70,8 @@ services:
     ports:
       - "3000:3000"
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
 
 volumes:
   pgdata:
