@@ -17,6 +17,7 @@ from ckyclaw_framework.runner.run_config import RunConfig
 from ckyclaw_framework.runner.runner import Runner
 from ckyclaw_framework.session.in_memory import InMemorySessionBackend
 from ckyclaw_framework.session.session import Session, SessionMetadata
+from ckyclaw_framework.session.history_trimmer import HistoryTrimConfig, HistoryTrimStrategy, HistoryTrimmer
 from ckyclaw_framework.tools.function_tool import function_tool
 
 
@@ -394,3 +395,388 @@ class TestRunnerWithSession:
         stored = await backend.load("s1")
         assert stored is not None
         assert len(stored) == 2
+
+
+# ── HistoryTrimmer 单元测试 ─────────────────────────────────────
+
+
+def _make_msgs(n: int, *, prefix: str = "msg", with_system: bool = False) -> list[Message]:
+    """生成 n 条 user/assistant 交替消息。可在最前面插入 system 消息。"""
+    msgs: list[Message] = []
+    if with_system:
+        msgs.append(Message(role=MessageRole.SYSTEM, content="System prompt"))
+    for i in range(n):
+        role = MessageRole.USER if i % 2 == 0 else MessageRole.ASSISTANT
+        msgs.append(Message(role=role, content=f"{prefix}-{i}"))
+    return msgs
+
+
+class TestHistoryTrimmerSlidingWindow:
+    def test_no_trim_when_under_limit(self) -> None:
+        """消息数未超限时不裁剪。"""
+        msgs = _make_msgs(4)
+        config = HistoryTrimConfig(strategy=HistoryTrimStrategy.SLIDING_WINDOW, max_history_messages=10)
+        result = HistoryTrimmer.trim(msgs, config)
+        assert len(result) == 4
+
+    def test_trim_to_max_messages(self) -> None:
+        """超限时保留最后 N 条。"""
+        msgs = _make_msgs(10)
+        config = HistoryTrimConfig(strategy=HistoryTrimStrategy.SLIDING_WINDOW, max_history_messages=4)
+        result = HistoryTrimmer.trim(msgs, config)
+        assert len(result) == 4
+        assert result[0].content == "msg-6"
+        assert result[-1].content == "msg-9"
+
+    def test_system_messages_preserved(self) -> None:
+        """keep_system_messages=True 时 system 消息占用配额但始终保留。"""
+        msgs = _make_msgs(10, with_system=True)  # 1 system + 10 content = 11 total
+        config = HistoryTrimConfig(
+            strategy=HistoryTrimStrategy.SLIDING_WINDOW,
+            max_history_messages=4,
+            keep_system_messages=True,
+        )
+        result = HistoryTrimmer.trim(msgs, config)
+        # system(1) + last 3 non-system = 4
+        assert len(result) == 4
+        assert result[0].role == MessageRole.SYSTEM
+        assert result[1].content == "msg-7"
+
+    def test_system_messages_not_preserved(self) -> None:
+        """keep_system_messages=False 时 system 消息也参与裁剪。"""
+        msgs = _make_msgs(10, with_system=True)
+        config = HistoryTrimConfig(
+            strategy=HistoryTrimStrategy.SLIDING_WINDOW,
+            max_history_messages=3,
+            keep_system_messages=False,
+        )
+        result = HistoryTrimmer.trim(msgs, config)
+        assert len(result) == 3
+        assert all(m.role != MessageRole.SYSTEM for m in result)
+
+    def test_empty_messages(self) -> None:
+        """空列表返回空列表。"""
+        config = HistoryTrimConfig(strategy=HistoryTrimStrategy.SLIDING_WINDOW, max_history_messages=5)
+        assert HistoryTrimmer.trim([], config) == []
+
+    def test_max_one_message(self) -> None:
+        """max_history_messages=1 只保留最后一条。"""
+        msgs = _make_msgs(5)
+        config = HistoryTrimConfig(strategy=HistoryTrimStrategy.SLIDING_WINDOW, max_history_messages=1)
+        result = HistoryTrimmer.trim(msgs, config)
+        assert len(result) == 1
+        assert result[0].content == "msg-4"
+
+
+class TestHistoryTrimmerTokenBudget:
+    def test_no_trim_when_under_budget(self) -> None:
+        """Token 未超预算时不裁剪。"""
+        msgs = [Message(role=MessageRole.USER, content="hi")]
+        config = HistoryTrimConfig(strategy=HistoryTrimStrategy.TOKEN_BUDGET, max_history_tokens=1000)
+        result = HistoryTrimmer.trim(msgs, config)
+        assert len(result) == 1
+
+    def test_trim_oldest_first(self) -> None:
+        """超预算时从最老的消息开始丢弃。"""
+        # 每条消息约 content_len/3 tokens
+        msgs = [
+            Message(role=MessageRole.USER, content="a" * 300),     # ~100 tokens
+            Message(role=MessageRole.ASSISTANT, content="b" * 300),  # ~100 tokens
+            Message(role=MessageRole.USER, content="c" * 300),     # ~100 tokens
+            Message(role=MessageRole.ASSISTANT, content="d" * 300),  # ~100 tokens
+        ]
+        config = HistoryTrimConfig(
+            strategy=HistoryTrimStrategy.TOKEN_BUDGET,
+            max_history_tokens=250,  # 只能放 ~2.5 条
+        )
+        result = HistoryTrimmer.trim(msgs, config)
+        # 从最新向前累加：d(100) + c(100) = 200 ≤ 250, + b(100) = 300 > 250
+        assert len(result) == 2
+        assert result[0].content == "c" * 300
+        assert result[1].content == "d" * 300
+
+    def test_system_messages_preserved_in_token_budget(self) -> None:
+        """TOKEN_BUDGET 策略也保留 system 消息。"""
+        msgs = [
+            Message(role=MessageRole.SYSTEM, content="System prompt"),
+            Message(role=MessageRole.USER, content="a" * 300),
+            Message(role=MessageRole.ASSISTANT, content="b" * 300),
+            Message(role=MessageRole.USER, content="c" * 300),
+        ]
+        config = HistoryTrimConfig(
+            strategy=HistoryTrimStrategy.TOKEN_BUDGET,
+            max_history_tokens=150,
+            keep_system_messages=True,
+        )
+        result = HistoryTrimmer.trim(msgs, config)
+        assert result[0].role == MessageRole.SYSTEM
+        assert result[-1].content == "c" * 300
+
+    def test_token_budget_with_token_usage(self) -> None:
+        """有 token_usage 时优先使用精确值。"""
+        msgs = [
+            Message(role=MessageRole.USER, content="short", token_usage=TokenUsage(50, 0, 50)),
+            Message(role=MessageRole.ASSISTANT, content="medium", token_usage=TokenUsage(0, 100, 100)),
+            Message(role=MessageRole.USER, content="long", token_usage=TokenUsage(80, 0, 80)),
+        ]
+        config = HistoryTrimConfig(
+            strategy=HistoryTrimStrategy.TOKEN_BUDGET,
+            max_history_tokens=190,  # long(80) + medium(100) = 180 ≤ 190, + short(50) = 230 > 190
+        )
+        result = HistoryTrimmer.trim(msgs, config)
+        assert len(result) == 2
+        assert result[0].content == "medium"
+        assert result[1].content == "long"
+
+    def test_max_messages_hard_cap(self) -> None:
+        """TOKEN_BUDGET 策略中 max_history_messages 作为硬上限。"""
+        # 所有消息都很短，Token 不会超预算
+        msgs = _make_msgs(20)
+        config = HistoryTrimConfig(
+            strategy=HistoryTrimStrategy.TOKEN_BUDGET,
+            max_history_tokens=999999,
+            max_history_messages=5,
+        )
+        result = HistoryTrimmer.trim(msgs, config)
+        assert len(result) == 5
+
+    def test_empty_messages_token_budget(self) -> None:
+        """空列表 TOKEN_BUDGET 返回空。"""
+        config = HistoryTrimConfig(strategy=HistoryTrimStrategy.TOKEN_BUDGET, max_history_tokens=100)
+        assert HistoryTrimmer.trim([], config) == []
+
+
+class TestHistoryTrimmerSummaryPrefix:
+    def test_summary_prefix_falls_back_to_token_budget(self) -> None:
+        """SUMMARY_PREFIX 降级为 TOKEN_BUDGET。"""
+        msgs = [
+            Message(role=MessageRole.USER, content="a" * 300),
+            Message(role=MessageRole.ASSISTANT, content="b" * 300),
+            Message(role=MessageRole.USER, content="c" * 300),
+        ]
+        config = HistoryTrimConfig(
+            strategy=HistoryTrimStrategy.SUMMARY_PREFIX,
+            max_history_tokens=150,
+        )
+        result = HistoryTrimmer.trim(msgs, config)
+        # 与 TOKEN_BUDGET 行为一致
+        assert len(result) == 1
+        assert result[0].content == "c" * 300
+
+
+# ── Session.trim() 测试 ─────────────────────────────────────────
+
+
+class TestSessionTrim:
+    @pytest.mark.asyncio
+    async def test_trim_returns_trimmed_history(self) -> None:
+        """Session.trim() 返回裁剪后的历史列表。"""
+        backend = InMemorySessionBackend()
+        session = Session(session_id="s1", backend=backend)
+
+        # 保存 10 条消息
+        for i in range(10):
+            role = MessageRole.USER if i % 2 == 0 else MessageRole.ASSISTANT
+            await session.append([Message(role=role, content=f"m-{i}")])
+
+        config = HistoryTrimConfig(strategy=HistoryTrimStrategy.SLIDING_WINDOW, max_history_messages=3)
+        trimmed = await session.trim(config)
+
+        assert len(trimmed) == 3
+        assert trimmed[0].content == "m-7"
+        assert trimmed[-1].content == "m-9"
+
+    @pytest.mark.asyncio
+    async def test_trim_does_not_modify_backend(self) -> None:
+        """Session.trim() 不修改后端存储中的数据。"""
+        backend = InMemorySessionBackend()
+        session = Session(session_id="s1", backend=backend)
+
+        for i in range(6):
+            await session.append([Message(role=MessageRole.USER, content=f"m-{i}")])
+
+        config = HistoryTrimConfig(strategy=HistoryTrimStrategy.SLIDING_WINDOW, max_history_messages=2)
+        await session.trim(config)
+
+        # 后端数据不变
+        full = await backend.load("s1")
+        assert full is not None
+        assert len(full) == 6
+
+    @pytest.mark.asyncio
+    async def test_trim_empty_history(self) -> None:
+        """空历史 trim 返回空列表。"""
+        backend = InMemorySessionBackend()
+        session = Session(session_id="s1", backend=backend)
+
+        config = HistoryTrimConfig(strategy=HistoryTrimStrategy.SLIDING_WINDOW, max_history_messages=5)
+        trimmed = await session.trim(config)
+        assert trimmed == []
+
+    @pytest.mark.asyncio
+    async def test_trim_without_backend(self) -> None:
+        """无 backend 的 Session.trim() 返回空列表。"""
+        session = Session(session_id="s1")
+        config = HistoryTrimConfig(strategy=HistoryTrimStrategy.SLIDING_WINDOW, max_history_messages=5)
+        trimmed = await session.trim(config)
+        assert trimmed == []
+
+
+# ── Runner + Session 自动裁剪集成测试 ───────────────────────────
+
+
+class TestRunnerWithAutoTrim:
+    @pytest.mark.asyncio
+    async def test_auto_trim_sliding_window(self) -> None:
+        """Runner 在加载 Session 历史后自动裁剪（SLIDING_WINDOW）。"""
+        backend = InMemorySessionBackend()
+
+        # 预填充 20 条历史消息
+        for i in range(20):
+            role = MessageRole.USER if i % 2 == 0 else MessageRole.ASSISTANT
+            await backend.save("s1", [Message(role=role, content=f"old-{i}")])
+
+        session = Session(session_id="s1", backend=backend)
+        agent = Agent(name="bot")
+        provider = MockProvider([ModelResponse(content="Ok")])
+
+        result = await Runner.run(
+            agent, "new question",
+            session=session,
+            config=RunConfig(
+                model_provider=provider,
+                max_history_messages=4,
+                history_trim_strategy=HistoryTrimStrategy.SLIDING_WINDOW,
+            ),
+        )
+
+        assert result.output == "Ok"
+
+        # 验证 LLM 收到的消息：system(可能) + trimmed_history(4) + new_user(1)
+        llm_messages = provider.call_messages[0]
+        non_system = [m for m in llm_messages if m.role != MessageRole.SYSTEM]
+        assert len(non_system) == 5  # 4 history + 1 new
+        # 最老的裁剪后消息是 old-16
+        assert non_system[0].content == "old-16"
+
+    @pytest.mark.asyncio
+    async def test_auto_trim_token_budget(self) -> None:
+        """Runner 在加载 Session 历史后自动裁剪（TOKEN_BUDGET）。"""
+        backend = InMemorySessionBackend()
+
+        # 保存几条大消息
+        await backend.save("s1", [
+            Message(role=MessageRole.USER, content="a" * 300),      # ~100 tokens
+            Message(role=MessageRole.ASSISTANT, content="b" * 300),  # ~100 tokens
+            Message(role=MessageRole.USER, content="c" * 300),      # ~100 tokens
+            Message(role=MessageRole.ASSISTANT, content="d" * 300),  # ~100 tokens
+        ])
+
+        session = Session(session_id="s1", backend=backend)
+        agent = Agent(name="bot")
+        provider = MockProvider([ModelResponse(content="Ok")])
+
+        result = await Runner.run(
+            agent, "question",
+            session=session,
+            config=RunConfig(
+                model_provider=provider,
+                max_history_tokens=250,
+                history_trim_strategy=HistoryTrimStrategy.TOKEN_BUDGET,
+            ),
+        )
+
+        assert result.output == "Ok"
+
+        # 验证裁剪后 LLM 收到的历史消息减少了
+        llm_messages = provider.call_messages[0]
+        non_system = [m for m in llm_messages if m.role != MessageRole.SYSTEM]
+        # c(100) + d(100) = 200 ≤ 250，a+b 被裁掉
+        assert len(non_system) == 3  # 2 history + 1 new
+        assert non_system[0].content == "c" * 300
+
+    @pytest.mark.asyncio
+    async def test_no_trim_without_config(self) -> None:
+        """不设置 max_history_tokens/messages 时不裁剪。"""
+        backend = InMemorySessionBackend()
+
+        for i in range(10):
+            role = MessageRole.USER if i % 2 == 0 else MessageRole.ASSISTANT
+            await backend.save("s1", [Message(role=role, content=f"old-{i}")])
+
+        session = Session(session_id="s1", backend=backend)
+        agent = Agent(name="bot")
+        provider = MockProvider([ModelResponse(content="Ok")])
+
+        await Runner.run(
+            agent, "new",
+            session=session,
+            config=RunConfig(model_provider=provider),
+        )
+
+        # 验证 LLM 收到了全部历史
+        llm_messages = provider.call_messages[0]
+        non_system = [m for m in llm_messages if m.role != MessageRole.SYSTEM]
+        assert len(non_system) == 11  # 10 history + 1 new
+
+    @pytest.mark.asyncio
+    async def test_auto_trim_streamed(self) -> None:
+        """流式模式也触发自动裁剪。"""
+        backend = InMemorySessionBackend()
+
+        for i in range(10):
+            role = MessageRole.USER if i % 2 == 0 else MessageRole.ASSISTANT
+            await backend.save("s1", [Message(role=role, content=f"old-{i}")])
+
+        session = Session(session_id="s1", backend=backend)
+        agent = Agent(name="bot")
+        provider = MockProvider([ModelResponse(content="Stream Ok")])
+
+        events = []
+        async for event in Runner.run_streamed(
+            agent, "new",
+            session=session,
+            config=RunConfig(
+                model_provider=provider,
+                max_history_messages=3,
+                history_trim_strategy=HistoryTrimStrategy.SLIDING_WINDOW,
+            ),
+        ):
+            events.append(event)
+
+        complete = [e for e in events if e.type == StreamEventType.RUN_COMPLETE]
+        assert len(complete) == 1
+        assert complete[0].data.output == "Stream Ok"
+
+        # 验证 LLM 收到裁剪后的历史
+        llm_messages = provider.call_messages[0]
+        non_system = [m for m in llm_messages if m.role != MessageRole.SYSTEM]
+        assert len(non_system) == 4  # 3 history + 1 new
+
+    @pytest.mark.asyncio
+    async def test_session_still_saves_all_new_messages(self) -> None:
+        """自动裁剪只影响 LLM 上下文，新消息仍全部保存到 Session。"""
+        backend = InMemorySessionBackend()
+
+        # 预填充 5 条
+        for i in range(5):
+            await backend.save("s1", [Message(role=MessageRole.USER, content=f"old-{i}")])
+
+        session = Session(session_id="s1", backend=backend)
+        agent = Agent(name="bot")
+        provider = MockProvider([ModelResponse(content="Reply")])
+
+        await Runner.run(
+            agent, "new question",
+            session=session,
+            config=RunConfig(
+                model_provider=provider,
+                max_history_messages=2,
+                history_trim_strategy=HistoryTrimStrategy.SLIDING_WINDOW,
+            ),
+        )
+
+        # Session 后端应保存全部历史（5 old + 1 new_user + 1 assistant）= 7
+        stored = await backend.load("s1")
+        assert stored is not None
+        assert len(stored) == 7

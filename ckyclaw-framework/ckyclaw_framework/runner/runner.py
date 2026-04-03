@@ -28,6 +28,7 @@ from ckyclaw_framework.model.settings import ModelSettings
 from ckyclaw_framework.runner.result import RunResult, StreamEvent, StreamEventType
 from ckyclaw_framework.runner.run_config import RunConfig
 from ckyclaw_framework.runner.run_context import RunContext
+from ckyclaw_framework.session.history_trimmer import HistoryTrimConfig, HistoryTrimStrategy, HistoryTrimmer
 from ckyclaw_framework.session.session import Session
 from ckyclaw_framework.tools.function_tool import FunctionTool
 from ckyclaw_framework.tracing.processor import TraceProcessor
@@ -38,6 +39,17 @@ logger = logging.getLogger(__name__)
 
 # Handoff 工具名前缀约定
 _HANDOFF_TOOL_PREFIX = "transfer_to_"
+
+
+def _build_trim_config(config: RunConfig) -> HistoryTrimConfig | None:
+    """从 RunConfig 构建 HistoryTrimConfig。任何 trim 字段非空即启用裁剪。"""
+    if config.max_history_tokens is None and config.max_history_messages is None:
+        return None
+    return HistoryTrimConfig(
+        strategy=config.history_trim_strategy or HistoryTrimStrategy.TOKEN_BUDGET,
+        max_history_tokens=config.max_history_tokens or 8000,
+        max_history_messages=config.max_history_messages or 100,
+    )
 
 
 def _build_system_message(agent: Agent, run_context: RunContext) -> Message:
@@ -611,6 +623,10 @@ class Runner:
         if session is not None:
             history = await session.get_history()
             if history:
+                # 自动裁剪历史以适配 Context Window
+                trim_config = _build_trim_config(config)
+                if trim_config is not None:
+                    history = HistoryTrimmer.trim(history, trim_config)
                 messages = history + messages
                 history_offset = len(history)
 
@@ -843,6 +859,10 @@ class Runner:
         if session is not None:
             history = await session.get_history()
             if history:
+                # 自动裁剪历史以适配 Context Window
+                trim_config = _build_trim_config(config)
+                if trim_config is not None:
+                    history = HistoryTrimmer.trim(history, trim_config)
                 messages = history + messages
                 history_offset = len(history)
 

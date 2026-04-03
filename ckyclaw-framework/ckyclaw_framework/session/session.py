@@ -10,6 +10,7 @@ from uuid import uuid4
 
 if TYPE_CHECKING:
     from ckyclaw_framework.model.message import Message
+    from ckyclaw_framework.session.history_trimmer import HistoryTrimConfig
 
 
 @dataclass
@@ -72,6 +73,19 @@ class Session:
         """追加消息。"""
         if self.backend is not None:
             await self.backend.save(self.session_id, messages)
+
+    async def trim(self, config: HistoryTrimConfig) -> list[Message]:
+        """按策略裁剪历史，返回裁剪后的消息列表。
+
+        注意：此方法不修改后端存储中的数据。
+        调用方（Runner）使用裁剪后的列表构建 LLM 上下文。
+        """
+        from ckyclaw_framework.session.history_trimmer import HistoryTrimmer
+
+        history = await self.get_history()
+        if not history:
+            return []
+        return HistoryTrimmer.trim(history, config)
 
     async def clear(self) -> None:
         """清空历史。"""

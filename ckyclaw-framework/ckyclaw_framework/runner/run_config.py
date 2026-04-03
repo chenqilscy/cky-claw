@@ -13,6 +13,7 @@ if TYPE_CHECKING:
     from ckyclaw_framework.guardrails.tool_guardrail import ToolGuardrail
     from ckyclaw_framework.model.provider import ModelProvider
     from ckyclaw_framework.model.settings import ModelSettings
+    from ckyclaw_framework.session.history_trimmer import HistoryTrimStrategy
     from ckyclaw_framework.session.session import SessionBackend
     from ckyclaw_framework.tracing.processor import TraceProcessor
 
@@ -44,6 +45,15 @@ class RunConfig:
 
     session_backend: SessionBackend | None = None
     """Session 存储后端"""
+
+    max_history_tokens: int | None = None
+    """Context Window 历史 Token 预算。设置后自动裁剪 Session 历史。"""
+
+    max_history_messages: int | None = None
+    """历史消息条数上限。设置后自动裁剪 Session 历史。"""
+
+    history_trim_strategy: HistoryTrimStrategy | None = None
+    """历史裁剪策略。默认 TOKEN_BUDGET。"""
 
     on_max_turns_exceeded: Callable | None = None
     """超过 max_turns 时的回调"""
