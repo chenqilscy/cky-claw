@@ -8,6 +8,9 @@ from typing import TYPE_CHECKING, Callable
 if TYPE_CHECKING:
     from ckyclaw_framework.approval.handler import ApprovalHandler
     from ckyclaw_framework.approval.mode import ApprovalMode
+    from ckyclaw_framework.guardrails.input_guardrail import InputGuardrail
+    from ckyclaw_framework.guardrails.output_guardrail import OutputGuardrail
+    from ckyclaw_framework.guardrails.tool_guardrail import ToolGuardrail
     from ckyclaw_framework.model.provider import ModelProvider
     from ckyclaw_framework.model.settings import ModelSettings
     from ckyclaw_framework.session.session import SessionBackend
@@ -55,3 +58,12 @@ class RunConfig:
 
     approval_handler: ApprovalHandler | None = None
     """审批处理器实例。suggest/auto-edit 模式下必须提供。"""
+
+    input_guardrails: list[InputGuardrail] = field(default_factory=list)
+    """追加运行级输入护栏（追加到 Agent 级之后执行）"""
+
+    output_guardrails: list[OutputGuardrail] = field(default_factory=list)
+    """追加运行级输出护栏（追加到 Agent 级之后执行）"""
+
+    tool_guardrails: list[ToolGuardrail] = field(default_factory=list)
+    """追加运行级工具护栏（追加到 Agent 级之后执行）"""

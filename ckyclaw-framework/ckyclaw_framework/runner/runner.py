@@ -305,12 +305,16 @@ async def _execute_tool_calls(
     run_context: RunContext | None = None,
     approval_handler: ApprovalHandler | None = None,
     approval_mode: ApprovalMode = ApprovalMode.FULL_AUTO,
+    config: RunConfig | None = None,
 ) -> tuple[Agent, Handoff | None] | None:
     """执行一组工具调用，将结果追加到 messages。返回 (目标 Agent, Handoff 配置) 或 None。
 
     注意：若同一轮中 LLM 同时返回 Handoff 工具和普通工具，Handoff 之前的普通工具
     会正常执行，但 Handoff 之后的工具将被跳过（控制权已转移）。
     """
+    # 合并 Agent 级 + RunConfig 级 tool guardrails
+    _merged_tool_guardrails = agent.tool_guardrails + (config.tool_guardrails if config else [])
+
     for tc in tool_calls:
         # 检查 Handoff
         handoff_result = _find_handoff_target(agent, tc.name)
@@ -338,8 +342,8 @@ async def _execute_tool_calls(
 
         # Tool Guardrail (before): 执行前检测参数
         before_blocked = False
-        if agent.tool_guardrails and run_context is not None:
-            for tg in agent.tool_guardrails:
+        if _merged_tool_guardrails and run_context is not None:
+            for tg in _merged_tool_guardrails:
                 if tg.before_fn is None:
                     continue
                 # Tracing: Guardrail Span
@@ -399,8 +403,8 @@ async def _execute_tool_calls(
             continue
 
         # Tool Guardrail (after): 执行后检测返回值
-        if agent.tool_guardrails and run_context is not None:
-            for tg in agent.tool_guardrails:
+        if _merged_tool_guardrails and run_context is not None:
+            for tg in _merged_tool_guardrails:
                 if tg.after_fn is None:
                     continue
                 g_span = None
@@ -611,7 +615,8 @@ class Runner:
                 history_offset = len(history)
 
         # Input Guardrails: 首次执行前检测用户输入
-        if current_agent.input_guardrails:
+        _merged_input_guardrails = current_agent.input_guardrails + config.input_guardrails
+        if _merged_input_guardrails:
             user_text = ""
             for msg in reversed(messages):
                 if msg.role == MessageRole.USER and msg.content:
@@ -625,7 +630,7 @@ class Runner:
             )
             try:
                 await _execute_input_guardrails(
-                    current_agent.input_guardrails,
+                    _merged_input_guardrails,
                     guardrail_ctx,
                     user_text,
                     tracing=tracing if tracing.active else None,
@@ -705,10 +710,11 @@ class Runner:
             # 无工具调用 → 最终输出
             if not response.tool_calls:
                 # Output Guardrails: final_output 后检测
-                if current_agent.output_guardrails:
+                _merged_output_guardrails = current_agent.output_guardrails + config.output_guardrails
+                if _merged_output_guardrails:
                     try:
                         await _execute_output_guardrails(
-                            current_agent.output_guardrails,
+                            _merged_output_guardrails,
                             run_ctx,
                             response.content or "",
                             tracing=tracing if tracing.active else None,
@@ -743,6 +749,7 @@ class Runner:
                 run_context=run_ctx,
                 approval_handler=approval_handler,
                 approval_mode=approval_mode,
+                config=config,
             )
 
             # Handoff: 切换 Agent，不增加 turn_count
@@ -840,7 +847,8 @@ class Runner:
                 history_offset = len(history)
 
         # Input Guardrails: 首次执行前检测用户输入
-        if current_agent.input_guardrails:
+        _merged_input_guardrails = current_agent.input_guardrails + config.input_guardrails
+        if _merged_input_guardrails:
             user_text = ""
             for msg in reversed(messages):
                 if msg.role == MessageRole.USER and msg.content:
@@ -854,7 +862,7 @@ class Runner:
             )
             try:
                 await _execute_input_guardrails(
-                    current_agent.input_guardrails,
+                    _merged_input_guardrails,
                     guardrail_ctx,
                     user_text,
                     tracing=tracing if tracing.active else None,
@@ -962,10 +970,11 @@ class Runner:
 
             if not aggregated_tool_calls:
                 # Output Guardrails: final_output 后检测（流式）
-                if current_agent.output_guardrails:
+                _merged_output_guardrails = current_agent.output_guardrails + config.output_guardrails
+                if _merged_output_guardrails:
                     try:
                         await _execute_output_guardrails(
-                            current_agent.output_guardrails,
+                            _merged_output_guardrails,
                             run_ctx,
                             full_content,
                             tracing=tracing if tracing.active else None,
@@ -1021,6 +1030,7 @@ class Runner:
                 run_context=run_ctx,
                 approval_handler=approval_handler,
                 approval_mode=approval_mode,
+                config=config,
             )
 
             for tc in aggregated_tool_calls:
