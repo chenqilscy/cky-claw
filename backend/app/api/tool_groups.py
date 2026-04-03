@@ -1,0 +1,69 @@
+"""Tool Group 管理 API 路由。"""
+
+from __future__ import annotations
+
+from fastapi import APIRouter, Depends
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.database import get_db
+from app.schemas.tool_group import (
+    ToolGroupCreate,
+    ToolGroupListResponse,
+    ToolGroupResponse,
+    ToolGroupUpdate,
+)
+from app.services import tool_group as tg_service
+
+router = APIRouter(prefix="/api/v1/tool-groups", tags=["tool-groups"])
+
+
+@router.get("", response_model=ToolGroupListResponse)
+async def list_tool_groups(
+    db: AsyncSession = Depends(get_db),
+) -> ToolGroupListResponse:
+    """获取工具组列表。"""
+    groups, total = await tg_service.list_tool_groups(db)
+    return ToolGroupListResponse(
+        data=[ToolGroupResponse.model_validate(g) for g in groups],
+        total=total,
+    )
+
+
+@router.get("/{name}", response_model=ToolGroupResponse)
+async def get_tool_group(
+    name: str,
+    db: AsyncSession = Depends(get_db),
+) -> ToolGroupResponse:
+    """获取工具组详情。"""
+    tg = await tg_service.get_tool_group_by_name(db, name)
+    return ToolGroupResponse.model_validate(tg)
+
+
+@router.post("", response_model=ToolGroupResponse, status_code=201)
+async def create_tool_group(
+    data: ToolGroupCreate,
+    db: AsyncSession = Depends(get_db),
+) -> ToolGroupResponse:
+    """创建工具组。"""
+    tg = await tg_service.create_tool_group(db, data)
+    return ToolGroupResponse.model_validate(tg)
+
+
+@router.put("/{name}", response_model=ToolGroupResponse)
+async def update_tool_group(
+    name: str,
+    data: ToolGroupUpdate,
+    db: AsyncSession = Depends(get_db),
+) -> ToolGroupResponse:
+    """更新工具组。"""
+    tg = await tg_service.update_tool_group(db, name, data)
+    return ToolGroupResponse.model_validate(tg)
+
+
+@router.delete("/{name}", status_code=204)
+async def delete_tool_group(
+    name: str,
+    db: AsyncSession = Depends(get_db),
+) -> None:
+    """删除工具组。"""
+    await tg_service.delete_tool_group(db, name)

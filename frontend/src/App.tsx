@@ -12,6 +12,7 @@ import TracesPage from './pages/traces/TracesPage';
 import GuardrailRulesPage from './pages/guardrails/GuardrailRulesPage';
 import ApprovalQueuePage from './pages/approvals/ApprovalQueuePage';
 import MCPServerPage from './pages/mcp/MCPServerPage';
+import ToolGroupPage from './pages/tool-groups/ToolGroupPage';
 import useAuthStore from './stores/authStore';
 
 const RequireAuth: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -48,6 +49,7 @@ const App: React.FC = () => {
         <Route path="guardrails" element={<GuardrailRulesPage />} />
         <Route path="approvals" element={<ApprovalQueuePage />} />
         <Route path="mcp-servers" element={<MCPServerPage />} />
+        <Route path="tool-groups" element={<ToolGroupPage />} />
       </Route>
     </Routes>
   );

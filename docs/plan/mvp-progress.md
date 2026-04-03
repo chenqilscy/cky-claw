@@ -315,6 +315,23 @@
 - [x] 6.7.9 Backend 测试 — 12 个新测试（_resolve_agent_tools 7 + _build_agent_from_config 1 + Schema 4）
 - [x] 6.7.10 五轮代码审查（1 个问题修复：execute_run_stream model_override 缺失）
 
+### Phase 6.8：Tool Groups 工具组管理（P0）✅
+- [x] 6.8.1 Framework `ToolGroup` dataclass — name/tools/description，register/get_tool/tool_names 方法
+- [x] 6.8.2 Framework `ToolRegistry` — 全局工具注册表单例，register_group/get_group/list_groups/get_tool/remove_group/clear
+- [x] 6.8.3 数据模型 — Alembic 迁移 `0011_create_tool_group_configs.py`：name/description/tools(JSONB)/source/is_enabled
+- [x] 6.8.4 ORM 模型 — `ToolGroupConfig` 完整字段定义
+- [x] 6.8.5 Schema — `ToolGroupCreate` / `ToolGroupUpdate` / `ToolGroupResponse` / `ToolDefinition` / `ToolGroupListResponse`
+- [x] 6.8.6 Service — `list_tool_groups` / `get_tool_group_by_name` / `create_tool_group` / `update_tool_group` / `delete_tool_group`
+- [x] 6.8.7 API Endpoints — `GET/POST /tool-groups`、`GET/PUT/DELETE /tool-groups/{name}`
+- [x] 6.8.8 Runtime `_resolve_tool_groups()` — 从 DB 加载工具组，构建 FunctionTool（fn=None），三路合并（mcp + agent_tools + tg_tools）
+- [x] 6.8.9 Frontend `toolGroupService.ts` — list/get/create/update/delete
+- [x] 6.8.10 Frontend `ToolGroupPage.tsx` — 工具组管理页（ProTable + 创建/编辑/删除 Modal）
+- [x] 6.8.11 Frontend Agent 编辑页升级 — tool_groups 从逗号分隔文本改为多选 Select（从 API 加载选项）
+- [x] 6.8.12 Frontend 导航菜单 — 新增"工具组"入口
+- [x] 6.8.13 Framework 测试 — 14 个新测试（ToolGroup 6 + ToolRegistry 8）
+- [x] 6.8.14 Backend 测试 — 12 个新测试（Schema 4 + Service 2 + _resolve_tool_groups 6）
+- [x] 6.8.15 五轮代码审查（2 处未使用 import 移除）
+
 ---
 
 *最后更新：2025-07-22*

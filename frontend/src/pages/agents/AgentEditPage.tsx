@@ -6,6 +6,7 @@ import { agentService } from '../../services/agentService';
 import type { AgentConfig, AgentCreateInput, AgentUpdateInput } from '../../services/agentService';
 import { guardrailService } from '../../services/guardrailService';
 import type { GuardrailRuleItem } from '../../services/guardrailService';
+import { toolGroupService } from '../../services/toolGroupService';
 
 const { TextArea } = Input;
 
@@ -24,6 +25,7 @@ const AgentEditPage: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [guardrailOptions, setGuardrailOptions] = useState<{ label: string; value: string }[]>([]);
   const [agentOptions, setAgentOptions] = useState<{ label: string; value: string }[]>([]);
+  const [toolGroupOptions, setToolGroupOptions] = useState<{ label: string; value: string }[]>([]);
 
   useEffect(() => {
     guardrailService.list({ enabled_only: true, limit: 200 })
@@ -32,6 +34,17 @@ const AgentEditPage: React.FC = () => {
           res.items
             .filter((r: GuardrailRuleItem) => r.type === 'input')
             .map((r: GuardrailRuleItem) => ({ label: `${r.name} (${r.mode})`, value: r.name }))
+        );
+      })
+      .catch(() => { /* ignore */ });
+
+    // 加载可选的工具组列表
+    toolGroupService.list()
+      .then((res) => {
+        setToolGroupOptions(
+          res.data
+            .filter((g) => g.is_enabled)
+            .map((g) => ({ label: `${g.name}${g.description ? ` — ${g.description}` : ''}`, value: g.name }))
         );
       })
       .catch(() => { /* ignore */ });
@@ -59,7 +72,7 @@ const AgentEditPage: React.FC = () => {
             instructions: agent.instructions,
             model: agent.model,
             approval_mode: agent.approval_mode,
-            tool_groups: agent.tool_groups?.join(', ') || '',
+            tool_groups: agent.tool_groups || [],
             handoffs: agent.handoffs?.join(', ') || '',
             agent_tools: agent.agent_tools || [],
             input_guardrails: agent.guardrails?.input || [],
@@ -79,9 +92,7 @@ const AgentEditPage: React.FC = () => {
         instructions: (values.instructions as string) || '',
         model: (values.model as string) || 'openai/glm-4-flash',
         approval_mode: (values.approval_mode as string) || 'suggest',
-        tool_groups: (values.tool_groups as string)
-          ? (values.tool_groups as string).split(',').map((s) => s.trim()).filter(Boolean)
-          : [],
+        tool_groups: (values.tool_groups as string[]) || [],
         handoffs: (values.handoffs as string)
           ? (values.handoffs as string).split(',').map((s) => s.trim()).filter(Boolean)
           : [],
@@ -156,8 +167,13 @@ const AgentEditPage: React.FC = () => {
               <Select options={APPROVAL_MODES} />
             </Form.Item>
 
-            <Form.Item name="tool_groups" label="工具组（逗号分隔）">
-              <Input placeholder="web_search, code_executor" />
+            <Form.Item name="tool_groups" label="工具组">
+              <Select
+                mode="multiple"
+                placeholder="选择要关联的工具组"
+                options={toolGroupOptions}
+                allowClear
+              />
             </Form.Item>
 
             <Form.Item name="handoffs" label="Handoff 目标（逗号分隔）">

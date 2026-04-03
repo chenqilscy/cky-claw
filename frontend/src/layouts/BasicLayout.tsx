@@ -10,6 +10,7 @@ import {
   SafetyCertificateOutlined,
   AuditOutlined,
   ApiOutlined,
+  ToolOutlined,
 } from '@ant-design/icons';
 
 const menuRoutes = {
@@ -58,6 +59,11 @@ const menuRoutes = {
       path: '/mcp-servers',
       name: 'MCP Server',
       icon: <ApiOutlined />,
+    },
+    {
+      path: '/tool-groups',
+      name: '工具组',
+      icon: <ToolOutlined />,
     },
   ],
 };

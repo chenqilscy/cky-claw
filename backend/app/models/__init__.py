@@ -7,6 +7,7 @@ from app.models.mcp_server import MCPServerConfig
 from app.models.provider import ProviderConfig
 from app.models.session import SessionRecord
 from app.models.token_usage import TokenUsageLog
+from app.models.tool_group import ToolGroupConfig
 from app.models.trace import SpanRecord, TraceRecord
 from app.models.user import User
 
@@ -19,6 +20,7 @@ __all__ = [
     "SessionRecord",
     "SpanRecord",
     "TokenUsageLog",
+    "ToolGroupConfig",
     "TraceRecord",
     "User",
 ]

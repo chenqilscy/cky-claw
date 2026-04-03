@@ -179,6 +179,60 @@ async def _resolve_mcp_tools(
     return all_tools
 
 
+async def _resolve_tool_groups(
+    db: AsyncSession,
+    config: AgentConfig,
+) -> list[Any]:
+    """从 AgentConfig.tool_groups 名称列表加载工具组配置，返回 FunctionTool 列表。
+
+    每个工具组包含若干工具定义（name/description/parameters_schema），
+    每个定义被包装为一个 FunctionTool（fn=None，执行时返回未实现提示）。
+    """
+    if not config.tool_groups:
+        return []
+
+    from app.models.tool_group import ToolGroupConfig
+    from ckyclaw_framework.tools.function_tool import FunctionTool
+
+    stmt = select(ToolGroupConfig).where(
+        ToolGroupConfig.name.in_(config.tool_groups),
+        ToolGroupConfig.is_enabled == True,  # noqa: E712
+    )
+    tg_configs = {c.name: c for c in (await db.execute(stmt)).scalars().all()}
+
+    # 检查缺失的工具组
+    for name in config.tool_groups:
+        if name not in tg_configs:
+            logger.warning("工具组 '%s' 不存在或已禁用，Agent '%s' 无法加载其工具", name, config.name)
+
+    tools: list[Any] = []
+    for name in config.tool_groups:
+        tg = tg_configs.get(name)
+        if tg is None:
+            continue
+        for tool_def in tg.tools or []:
+            if not isinstance(tool_def, dict):
+                continue
+            tool_name = tool_def.get("name")
+            if not tool_name:
+                continue
+            ft = FunctionTool(
+                name=tool_name,
+                description=tool_def.get("description", ""),
+                parameters_schema=tool_def.get("parameters_schema", {"type": "object", "properties": {}}),
+                group=name,
+            )
+            tools.append(ft)
+
+    logger.info(
+        "Agent '%s' 从 %d 个工具组加载了 %d 个工具",
+        config.name,
+        len(tg_configs),
+        len(tools),
+    )
+    return tools
+
+
 def _build_agent_from_config(
     config: AgentConfig,
     guardrail_rules: list | None = None,
@@ -539,8 +593,11 @@ async def execute_run(
         )
         agent_tool_fns = await _resolve_agent_tools(db, agent_config, run_config=sub_run_config)
 
+        # 加载工具组中的工具
+        tg_tools = await _resolve_tool_groups(db, agent_config)
+
         # 合并所有工具
-        all_tools = mcp_tools + agent_tool_fns
+        all_tools = mcp_tools + agent_tool_fns + tg_tools
 
         # 构建 Framework Agent
         agent = _build_agent_from_config(
@@ -678,7 +735,14 @@ async def execute_run_stream(
         await mcp_stack.__aexit__(None, None, None)
         raise
 
-    all_tools = mcp_tools + agent_tool_fns
+    # 加载工具组中的工具
+    try:
+        tg_tools = await _resolve_tool_groups(db, agent_config)
+    except Exception:
+        await mcp_stack.__aexit__(None, None, None)
+        raise
+
+    all_tools = mcp_tools + agent_tool_fns + tg_tools
 
     agent = _build_agent_from_config(
         agent_config, guardrail_rules=guardrail_rules, handoff_agents=handoff_agents, mcp_tools=all_tools,
