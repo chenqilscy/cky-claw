@@ -461,6 +461,14 @@
 - [x] 7.8.7 测试 — 20 个新测试（3 Schema + 2 Load + 3 Save + 1 Delete + 3 Metadata + 3 API + 4 ORM + 1 路由），全量 Framework 387 + Backend 419 = 806 通过
 - [x] 7.8.8 五轮代码审查（无问题）
 
+### Phase 7.9：Output Guardrail 输出护栏端到端接入（P1）✅
+- [x] 7.9.1 Backend `execute_run` — 捕获 `InputGuardrailTripwireError` 和 `OutputGuardrailTripwireError`，返回 `RunResponse(status="guardrail_blocked")` 而非 500
+- [x] 7.9.2 Backend `execute_run_stream` — 区分 SSE error code：`INPUT_GUARDRAIL_TRIGGERED` / `OUTPUT_GUARDRAIL_TRIGGERED` / `RUN_FAILED`
+- [x] 7.9.3 Frontend `AgentEditPage` — 新增 Output Guardrails + Tool Guardrails 多选选择器，分类加载/保存/回填三类护栏
+- [x] 7.9.4 Frontend `ChatWindow` — 护栏拦截错误使用 `message.warning` 区分显示
+- [x] 7.9.5 后端测试 — 8 个新测试（2 execute_run 拦截 + 3 execute_run_stream SSE 错误码 + 2 _build_agent LLM output/tool + 1 RunResponse status），全量 Framework 387 + Backend 427 = 814 通过
+- [x] 7.9.6 五轮代码审查（全部通过）
+
 ---
 
 *最后更新：2025-07-22*

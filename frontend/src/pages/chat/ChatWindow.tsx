@@ -111,8 +111,14 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
               )
             );
           } else if (event.type === 'error') {
-            const errMsg = (event.data as { message?: string }).message || '执行出错';
-            message.error(errMsg);
+            const data = event.data as { code?: string; message?: string };
+            const code = data.code || '';
+            const errMsg = data.message || '执行出错';
+            if (code === 'INPUT_GUARDRAIL_TRIGGERED' || code === 'OUTPUT_GUARDRAIL_TRIGGERED') {
+              message.warning(errMsg);
+            } else {
+              message.error(errMsg);
+            }
           }
         },
         () => {

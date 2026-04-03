@@ -25,6 +25,8 @@ const AgentEditPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [guardrailOptions, setGuardrailOptions] = useState<{ label: string; value: string }[]>([]);
+  const [outputGuardrailOptions, setOutputGuardrailOptions] = useState<{ label: string; value: string }[]>([]);
+  const [toolGuardrailOptions, setToolGuardrailOptions] = useState<{ label: string; value: string }[]>([]);
   const [agentOptions, setAgentOptions] = useState<{ label: string; value: string }[]>([]);
   const [toolGroupOptions, setToolGroupOptions] = useState<{ label: string; value: string }[]>([]);
   const [providerOptions, setProviderOptions] = useState<{ label: string; value: string }[]>([]);
@@ -35,6 +37,16 @@ const AgentEditPage: React.FC = () => {
         setGuardrailOptions(
           res.items
             .filter((r: GuardrailRuleItem) => r.type === 'input')
+            .map((r: GuardrailRuleItem) => ({ label: `${r.name} (${r.mode})`, value: r.name }))
+        );
+        setOutputGuardrailOptions(
+          res.items
+            .filter((r: GuardrailRuleItem) => r.type === 'output')
+            .map((r: GuardrailRuleItem) => ({ label: `${r.name} (${r.mode})`, value: r.name }))
+        );
+        setToolGuardrailOptions(
+          res.items
+            .filter((r: GuardrailRuleItem) => r.type === 'tool')
             .map((r: GuardrailRuleItem) => ({ label: `${r.name} (${r.mode})`, value: r.name }))
         );
       })
@@ -88,6 +100,8 @@ const AgentEditPage: React.FC = () => {
             handoffs: agent.handoffs?.join(', ') || '',
             agent_tools: agent.agent_tools || [],
             input_guardrails: agent.guardrails?.input || [],
+            output_guardrails: agent.guardrails?.output || [],
+            tool_guardrails: agent.guardrails?.tool || [],
           });
         })
         .catch(() => message.error('加载 Agent 失败'))
@@ -112,8 +126,8 @@ const AgentEditPage: React.FC = () => {
         agent_tools: (values.agent_tools as string[]) || [],
         guardrails: {
           input: (values.input_guardrails as string[]) || [],
-          output: [],
-          tool: [],
+          output: (values.output_guardrails as string[]) || [],
+          tool: (values.tool_guardrails as string[]) || [],
         },
       };
 
@@ -215,6 +229,24 @@ const AgentEditPage: React.FC = () => {
                 mode="multiple"
                 placeholder="选择要启用的输入安全护栏"
                 options={guardrailOptions}
+                allowClear
+              />
+            </Form.Item>
+
+            <Form.Item name="output_guardrails" label="Output Guardrails">
+              <Select
+                mode="multiple"
+                placeholder="选择要启用的输出安全护栏"
+                options={outputGuardrailOptions}
+                allowClear
+              />
+            </Form.Item>
+
+            <Form.Item name="tool_guardrails" label="Tool Guardrails">
+              <Select
+                mode="multiple"
+                placeholder="选择要启用的工具调用护栏"
+                options={toolGuardrailOptions}
                 allowClear
               />
             </Form.Item>

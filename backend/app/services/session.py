@@ -796,13 +796,41 @@ async def execute_run(
         # 执行
         start_time = time.monotonic()
 
-        result = await Runner.run(
-            agent=agent,
-            input=request.input,
-            session=framework_session,
-            config=framework_config,
-            max_turns=request.config.max_turns,
+        from ckyclaw_framework.guardrails.result import (
+            InputGuardrailTripwireError,
+            OutputGuardrailTripwireError,
         )
+
+        try:
+            result = await Runner.run(
+                agent=agent,
+                input=request.input,
+                session=framework_session,
+                config=framework_config,
+                max_turns=request.config.max_turns,
+            )
+        except InputGuardrailTripwireError as exc:
+            duration_ms = int((time.monotonic() - start_time) * 1000)
+            return RunResponse(
+                run_id=run_id,
+                status="guardrail_blocked",
+                output=f"[Input Guardrail] {exc.guardrail_name}: {exc.message}",
+                token_usage=TokenUsageResponse(),
+                duration_ms=duration_ms,
+                turn_count=0,
+                last_agent_name=agent_config.name,
+            )
+        except OutputGuardrailTripwireError as exc:
+            duration_ms = int((time.monotonic() - start_time) * 1000)
+            return RunResponse(
+                run_id=run_id,
+                status="guardrail_blocked",
+                output=f"[Output Guardrail] {exc.guardrail_name}: {exc.message}",
+                token_usage=TokenUsageResponse(),
+                duration_ms=duration_ms,
+                turn_count=0,
+                last_agent_name=agent_config.name,
+            )
 
         duration_ms = int((time.monotonic() - start_time) * 1000)
 
@@ -989,8 +1017,23 @@ async def execute_run_stream(
             yield _sse_event(event_name, payload)
 
     except Exception as exc:
-        logger.exception("Run 执行异常: session_id=%s", session_id)
-        yield _sse_event("error", {"code": "RUN_FAILED", "message": str(exc)})
+        from ckyclaw_framework.guardrails.result import (
+            InputGuardrailTripwireError,
+            OutputGuardrailTripwireError,
+        )
+
+        if isinstance(exc, InputGuardrailTripwireError):
+            code = "INPUT_GUARDRAIL_TRIGGERED"
+            msg = f"[Input Guardrail] {exc.guardrail_name}: {exc.message}"
+        elif isinstance(exc, OutputGuardrailTripwireError):
+            code = "OUTPUT_GUARDRAIL_TRIGGERED"
+            msg = f"[Output Guardrail] {exc.guardrail_name}: {exc.message}"
+        else:
+            code = "RUN_FAILED"
+            msg = str(exc)
+
+        logger.exception("Run 执行异常: session_id=%s, code=%s", session_id, code)
+        yield _sse_event("error", {"code": code, "message": msg})
     finally:
         # 关闭 MCP 连接
         await mcp_stack.__aexit__(None, None, None)
