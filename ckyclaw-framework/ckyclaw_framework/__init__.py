@@ -61,6 +61,11 @@ from ckyclaw_framework.memory.memory import MemoryBackend, MemoryEntry, MemoryTy
 from ckyclaw_framework.memory.in_memory import InMemoryMemoryBackend
 from ckyclaw_framework.memory.retriever import MemoryRetriever
 
+# === Skills ===
+from ckyclaw_framework.skills.skill import Skill, SkillCategory
+from ckyclaw_framework.skills.registry import SkillNotFoundError, SkillRegistry
+from ckyclaw_framework.skills.injector import SkillInjector
+
 # === Model ===
 from ckyclaw_framework.model.provider import ModelProvider, ToolCall, ToolCallChunk
 from ckyclaw_framework.model.settings import ModelSettings
@@ -148,6 +153,12 @@ __all__ = [
     "MemoryBackend",
     "InMemoryMemoryBackend",
     "MemoryRetriever",
+    # Skills
+    "Skill",
+    "SkillCategory",
+    "SkillRegistry",
+    "SkillNotFoundError",
+    "SkillInjector",
     # Model
     "ModelProvider",
     "ModelSettings",

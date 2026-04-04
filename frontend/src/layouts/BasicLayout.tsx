@@ -13,6 +13,7 @@ import {
   ApiOutlined,
   ToolOutlined,
   BulbOutlined,
+  BookOutlined,
 } from '@ant-design/icons';
 
 const menuRoutes = {
@@ -76,6 +77,11 @@ const menuRoutes = {
       path: '/memories',
       name: '记忆管理',
       icon: <BulbOutlined />,
+    },
+    {
+      path: '/skills',
+      name: '技能管理',
+      icon: <BookOutlined />,
     },
   ],
 };
