@@ -133,7 +133,7 @@ class TestMCPServerSchemas:
         assert resp.auth_config is None
 
     def test_list_response(self) -> None:
-        resp = MCPServerListResponse(items=[], total=0)
+        resp = MCPServerListResponse(data=[], total=0)
         assert resp.total == 0
 
     def test_valid_transport_types(self) -> None:
@@ -217,7 +217,7 @@ class TestMCPServerAPI:
         assert resp.status_code == 200
         body = resp.json()
         assert body["total"] == 0
-        assert body["items"] == []
+        assert body["data"] == []
 
     @patch("app.api.mcp_servers.mcp_service")
     def test_list_with_data(self, mock_svc: MagicMock, client: TestClient) -> None:

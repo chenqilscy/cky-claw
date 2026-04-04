@@ -19,6 +19,8 @@ import {
   TeamOutlined,
   FileSearchOutlined,
   CrownOutlined,
+  LinkOutlined,
+  StarOutlined,
 } from '@ant-design/icons';
 
 const menuRoutes = {
@@ -112,6 +114,16 @@ const menuRoutes = {
       path: '/roles',
       name: '角色权限',
       icon: <CrownOutlined />,
+    },
+    {
+      path: '/im-channels',
+      name: 'IM 渠道',
+      icon: <LinkOutlined />,
+    },
+    {
+      path: '/evaluations',
+      name: 'Agent 评估',
+      icon: <StarOutlined />,
     },
   ],
 };

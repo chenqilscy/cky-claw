@@ -37,9 +37,9 @@ class TestAuditLogSchemas:
         assert resp.resource_type == "agents"
 
     def test_list_response(self) -> None:
-        resp = AuditLogListResponse(items=[], total=0)
+        resp = AuditLogListResponse(data=[], total=0)
         assert resp.total == 0
-        assert resp.items == []
+        assert resp.data == []
 
     def test_query_defaults(self) -> None:
         q = AuditLogQuery()
@@ -154,7 +154,7 @@ class TestAuditLogAPI:
                 db=AsyncMock(),
             )
         assert result.total == 0
-        assert result.items == []
+        assert result.data == []
 
     @pytest.mark.asyncio
     async def test_get_audit_log_found(self) -> None:

@@ -28,6 +28,8 @@ const WorkflowEditorPage = lazy(() => import('./pages/workflows/WorkflowEditorPa
 const TeamPage = lazy(() => import('./pages/teams/TeamPage'));
 const AuditLogPage = lazy(() => import('./pages/audit-logs/AuditLogPage'));
 const RolePage = lazy(() => import('./pages/roles/RolePage'));
+const IMChannelPage = lazy(() => import('./pages/im-channels/IMChannelPage'));
+const EvaluationPage = lazy(() => import('./pages/evaluations/EvaluationPage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 
 const PageLoading = () => (
@@ -83,6 +85,8 @@ const App: React.FC = () => {
           <Route path="teams" element={<TeamPage />} />
           <Route path="audit-logs" element={<AuditLogPage />} />
           <Route path="roles" element={<RolePage />} />
+          <Route path="im-channels" element={<IMChannelPage />} />
+          <Route path="evaluations" element={<EvaluationPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>

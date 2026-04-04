@@ -96,7 +96,7 @@ class TestSkillSchemas:
         assert resp.metadata == {"k": "v"}
 
     def test_list_response(self) -> None:
-        lr = SkillListResponse(items=[], total=0)
+        lr = SkillListResponse(data=[], total=0)
         assert lr.total == 0
 
     def test_category_enum(self) -> None:
@@ -166,7 +166,7 @@ class TestSkillAPI:
         assert resp.status_code == 200
         body = resp.json()
         assert body["total"] == 1
-        assert len(body["items"]) == 1
+        assert len(body["data"]) == 1
 
     @patch("app.api.skills.skill_service")
     @patch("app.api.skills.get_db")

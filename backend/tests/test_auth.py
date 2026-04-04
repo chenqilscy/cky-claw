@@ -28,6 +28,7 @@ def _make_user(**overrides) -> MagicMock:
         "email": "test@example.com",
         "hashed_password": "$2b$12$fake_hashed_password",
         "role": "user",
+        "role_id": None,
         "is_active": True,
         "created_at": now,
         "updated_at": now,

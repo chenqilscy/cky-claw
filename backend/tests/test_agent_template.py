@@ -76,7 +76,7 @@ class TestAgentTemplateSchemas:
         assert resp.is_builtin is True
 
     def test_list_response(self) -> None:
-        lr = AgentTemplateListResponse(items=[], total=0)
+        lr = AgentTemplateListResponse(data=[], total=0)
         assert lr.total == 0
 
 

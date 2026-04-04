@@ -138,7 +138,7 @@ class TestMemoryAPI:
         assert resp.status_code == 200
         data = resp.json()
         assert data["total"] == 1
-        assert len(data["items"]) == 1
+        assert len(data["data"]) == 1
 
     @patch("app.api.memories.memory_service.get_memory", new_callable=AsyncMock)
     @patch("app.api.memories.get_db")

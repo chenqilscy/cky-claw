@@ -65,7 +65,7 @@ class TestTeamSchemas:
         assert resp.member_agent_ids == ["a1"]
 
     def test_list_response(self) -> None:
-        resp = TeamConfigListResponse(items=[], total=0)
+        resp = TeamConfigListResponse(data=[], total=0)
         assert resp.total == 0
 
 
@@ -211,7 +211,7 @@ class TestTeamAPI:
             assert resp.status_code == 200
             body = resp.json()
             assert body["total"] == 0
-            assert body["items"] == []
+            assert body["data"] == []
 
     def test_get_team(self, client: TestClient) -> None:
         tid = uuid.uuid4()

@@ -88,9 +88,9 @@ class TestApprovalSchemas:
 
         mock = _make_approval_request()
         resp = ApprovalResponse.model_validate(mock, from_attributes=True)
-        lr = ApprovalListResponse(items=[resp], total=1)
+        lr = ApprovalListResponse(data=[resp], total=1)
         assert lr.total == 1
-        assert len(lr.items) == 1
+        assert len(lr.data) == 1
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -108,7 +108,7 @@ class TestApprovalAPI:
         assert resp.status_code == 200
         data = resp.json()
         assert data["total"] == 0
-        assert data["items"] == []
+        assert data["data"] == []
 
     @patch("app.api.approvals.approval_service")
     def test_list_with_data(self, mock_svc: MagicMock) -> None:
@@ -118,7 +118,7 @@ class TestApprovalAPI:
         assert resp.status_code == 200
         data = resp.json()
         assert data["total"] == 1
-        assert data["items"][0]["agent_name"] == "test-agent"
+        assert data["data"][0]["agent_name"] == "test-agent"
 
     @patch("app.api.approvals.approval_service")
     def test_list_with_status_filter(self, mock_svc: MagicMock) -> None:

@@ -89,8 +89,8 @@ class TestGuardrailSchemas:
         from app.schemas.guardrail import GuardrailRuleListResponse, GuardrailRuleResponse
 
         items = [GuardrailRuleResponse.model_validate(_make_guardrail_rule(name=f"rule-{i}")) for i in range(3)]
-        resp = GuardrailRuleListResponse(items=items, total=10)
-        assert len(resp.items) == 3
+        resp = GuardrailRuleListResponse(data=items, total=10)
+        assert len(resp.data) == 3
         assert resp.total == 10
 
 
@@ -128,7 +128,7 @@ class TestGuardrailAPI:
         resp = client.get("/api/v1/guardrails")
         assert resp.status_code == 200
         data = resp.json()
-        assert data["items"] == []
+        assert data["data"] == []
         assert data["total"] == 0
 
     @patch("app.api.guardrails.guardrail_service")
@@ -141,7 +141,7 @@ class TestGuardrailAPI:
         resp = client.get("/api/v1/guardrails")
         assert resp.status_code == 200
         data = resp.json()
-        assert len(data["items"]) == 3
+        assert len(data["data"]) == 3
 
     @patch("app.api.guardrails.guardrail_service")
     def test_list_rules_with_filters(self, mock_svc: MagicMock) -> None:
@@ -392,7 +392,7 @@ class TestLLMModeAPI:
         resp = client.get("/api/v1/guardrails?mode=llm")
         assert resp.status_code == 200
         data = resp.json()
-        assert len(data["items"]) == 2
+        assert len(data["data"]) == 2
 
 
 # ═══════════════════════════════════════════════════════════════════

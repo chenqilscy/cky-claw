@@ -113,7 +113,7 @@ class TestWorkflowSchemas:
         now = datetime.now(timezone.utc)
         wid = uuid.uuid4()
         resp = WorkflowListResponse(
-            items=[
+            data=[
                 WorkflowResponse(
                     id=wid, name="wf1", description="", steps=[], edges=[],
                     input_schema={}, output_keys=[], timeout=None,

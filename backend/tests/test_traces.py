@@ -105,8 +105,8 @@ class TestTraceSchemas:
         from app.schemas.trace import TraceListResponse, TraceResponse
 
         items = [TraceResponse.model_validate(_make_trace_record()) for _ in range(3)]
-        resp = TraceListResponse(items=items, total=10)
-        assert len(resp.items) == 3
+        resp = TraceListResponse(data=items, total=10)
+        assert len(resp.data) == 3
         assert resp.total == 10
 
     def test_trace_detail_response(self) -> None:
@@ -136,7 +136,7 @@ class TestTraceAPI:
         resp = client.get("/api/v1/traces")
         assert resp.status_code == 200
         data = resp.json()
-        assert data["items"] == []
+        assert data["data"] == []
         assert data["total"] == 0
 
     @patch("app.api.traces.trace_service")
@@ -149,7 +149,7 @@ class TestTraceAPI:
         resp = client.get("/api/v1/traces")
         assert resp.status_code == 200
         data = resp.json()
-        assert len(data["items"]) == 3
+        assert len(data["data"]) == 3
         assert data["total"] == 3
 
     @patch("app.api.traces.trace_service")
@@ -312,8 +312,8 @@ class TestTraceAPIEnhanced:
         resp = client.get("/api/v1/traces/spans?type=guardrail&status=failed")
         assert resp.status_code == 200
         data = resp.json()
-        assert len(data["items"]) == 1
-        assert data["items"][0]["type"] == "guardrail"
+        assert len(data["data"]) == 1
+        assert data["data"][0]["type"] == "guardrail"
         assert data["total"] == 1
 
     @patch("app.api.traces.trace_service")
@@ -414,8 +414,8 @@ class TestStatsSchemas:
         from app.schemas.trace import SpanListResponse, SpanResponse
 
         items = [SpanResponse.model_validate(_make_span_record()) for _ in range(2)]
-        resp = SpanListResponse(items=items, total=5)
-        assert len(resp.items) == 2
+        resp = SpanListResponse(data=items, total=5)
+        assert len(resp.data) == 2
         assert resp.total == 5
 
     @patch("app.api.traces.trace_service")

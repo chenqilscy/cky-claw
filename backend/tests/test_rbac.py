@@ -254,7 +254,7 @@ class TestRoleAPI:
             assert resp.status_code == 200
             body = resp.json()
             assert body["total"] == 1
-            assert len(body["items"]) == 1
+            assert len(body["data"]) == 1
         finally:
             app.dependency_overrides.clear()
 
