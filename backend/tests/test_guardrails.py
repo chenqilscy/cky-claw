@@ -28,6 +28,7 @@ def _make_guardrail_rule(**overrides: Any) -> MagicMock:
         "type": "input",
         "mode": "regex",
         "config": {"patterns": [r"DROP\s+TABLE"], "message": "SQL 注入检测"},
+        "conditions": {},
         "is_enabled": True,
         "created_at": now,
         "updated_at": now,

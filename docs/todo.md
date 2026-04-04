@@ -191,6 +191,13 @@
 | Phase 3 — Frontend 可视化管理 | ✅ | ReactFlow DAG 可视化 + Tabs 预览 + WorkflowGraphView 组件 |
 | Phase 4 — ReactFlow DAG 编辑器 | ✅ | WorkflowEditorPage 拖拽编排画布 + 节点属性 Drawer + 保存/验证 |
 
+
+## 七、其它
+
+### `Settings`
+`config.py`中`Settings`类，相关中间件的配置信息，采用硬编码的方式。需要改为从配置文件中读取
+
+
 ---
 
 *文档版本：v1.4.0*

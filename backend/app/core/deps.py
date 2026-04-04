@@ -107,3 +107,13 @@ def require_permission(resource: str, action: str) -> Callable:
         )
 
     return _check
+
+
+async def get_org_id(
+    user: User = Depends(get_current_user),
+) -> uuid.UUID | None:
+    """从当前用户提取 org_id，用于租户隔离过滤。
+
+    返回 None 表示用户未绑定组织（或 admin 全局模式）。
+    """
+    return user.org_id

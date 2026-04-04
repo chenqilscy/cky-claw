@@ -33,6 +33,9 @@ class ToolGuardrail:
     """工具执行后检测函数。接收 (RunContext, tool_name, result)，返回 GuardrailResult。
     tripwire 触发时替换 ToolResult 为错误消息。"""
 
+    condition: Callable[["RunContext"], bool] | None = None
+    """运行时条件函数。返回 True 时启用，False 时跳过。None 表示始终启用。"""
+
     def __post_init__(self) -> None:
         if not self.name:
             # 尝试从 before_fn 或 after_fn 取名

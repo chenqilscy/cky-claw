@@ -84,6 +84,9 @@ const ToolGroupPage: React.FC = () => {
       name: record.name,
       description: record.description,
       tools_json: JSON.stringify(record.tools, null, 2),
+      conditions_json: Object.keys(record.conditions || {}).length > 0
+        ? JSON.stringify(record.conditions, null, 2)
+        : '',
       is_enabled: record.is_enabled,
     });
     setModalVisible(true);
@@ -109,6 +112,17 @@ const ToolGroupPage: React.FC = () => {
           tools,
           is_enabled: values.is_enabled,
         };
+        if (values.conditions_json && values.conditions_json.trim()) {
+          try {
+            updateData.conditions = JSON.parse(values.conditions_json);
+          } catch {
+            message.error('条件配置 JSON 格式无效');
+            setSubmitting(false);
+            return;
+          }
+        } else {
+          updateData.conditions = {};
+        }
         await toolGroupService.update(editingGroup.name, updateData);
         message.success('更新成功');
       } else {
@@ -117,6 +131,15 @@ const ToolGroupPage: React.FC = () => {
           description: values.description,
           tools,
         };
+        if (values.conditions_json && values.conditions_json.trim()) {
+          try {
+            createData.conditions = JSON.parse(values.conditions_json);
+          } catch {
+            message.error('条件配置 JSON 格式无效');
+            setSubmitting(false);
+            return;
+          }
+        }
         await toolGroupService.create(createData);
         message.success('创建成功');
       }
@@ -290,6 +313,27 @@ const ToolGroupPage: React.FC = () => {
               <Switch />
             </Form.Item>
           )}
+
+          <Form.Item
+            name="conditions_json"
+            label="条件启用配置（JSON）"
+            extra="留空表示始终启用。示例：{&quot;env&quot;: &quot;production&quot;}"
+            rules={[
+              {
+                validator: (_, value) => {
+                  if (!value || !value.trim()) return Promise.resolve();
+                  try {
+                    JSON.parse(value);
+                    return Promise.resolve();
+                  } catch {
+                    return Promise.reject(new Error('JSON 格式无效'));
+                  }
+                },
+              },
+            ]}
+          >
+            <TextArea rows={3} placeholder='{"env": "production"}' />
+          </Form.Item>
         </Form>
       </Modal>
     </>

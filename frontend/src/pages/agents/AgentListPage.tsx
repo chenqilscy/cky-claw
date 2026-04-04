@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { Button, message, Popconfirm, Input, Space, Tag } from 'antd';
-import { PlusOutlined, ReloadOutlined, HistoryOutlined, ApartmentOutlined } from '@ant-design/icons';
+import { Button, message, Popconfirm, Input, Space, Tag, Upload } from 'antd';
+import { PlusOutlined, ReloadOutlined, HistoryOutlined, ApartmentOutlined, DownloadOutlined, UploadOutlined } from '@ant-design/icons';
 import { ProTable } from '@ant-design/pro-components';
 import type { ProColumns } from '@ant-design/pro-components';
 import { useNavigate } from 'react-router-dom';
 import type { AgentConfig } from '../../services/agentService';
+import { agentService } from '../../services/agentService';
 import { useAgentList, useDeleteAgent } from '../../hooks/useAgentQueries';
 
 const AgentListPage: React.FC = () => {
@@ -28,6 +29,25 @@ const AgentListPage: React.FC = () => {
       message.success('删除成功');
     } catch {
       message.error('删除失败');
+    }
+  };
+
+  const handleExport = async (name: string) => {
+    try {
+      await agentService.exportAgent(name, 'yaml');
+      message.success('导出成功');
+    } catch {
+      message.error('导出失败');
+    }
+  };
+
+  const handleImport = async (file: File) => {
+    try {
+      await agentService.importAgent(file);
+      message.success('导入成功');
+      void fetchAgents();
+    } catch (e) {
+      message.error(e instanceof Error ? e.message : '导入失败');
     }
   };
 
@@ -70,11 +90,12 @@ const AgentListPage: React.FC = () => {
     },
     {
       title: '操作',
-      width: 240,
+      width: 280,
       render: (_, record) => (
         <Space>
           <a onClick={() => navigate(`/agents/${record.name}/edit`)}>编辑</a>
           <a onClick={() => navigate(`/agents/${record.id}/versions`)}><HistoryOutlined /> 版本</a>
+          <a onClick={() => void handleExport(record.name)}><DownloadOutlined /> 导出</a>
           <Popconfirm
             title="确认删除该 Agent？"
             onConfirm={() => handleDelete(record.name)}
@@ -121,6 +142,17 @@ const AgentListPage: React.FC = () => {
           >
             Handoff 编排
           </Button>,
+          <Upload
+            key="import"
+            accept=".yaml,.yml,.json"
+            showUploadList={false}
+            beforeUpload={(file) => {
+              void handleImport(file);
+              return false;
+            }}
+          >
+            <Button icon={<UploadOutlined />}>导入</Button>
+          </Upload>,
           <Button
             key="create"
             type="primary"

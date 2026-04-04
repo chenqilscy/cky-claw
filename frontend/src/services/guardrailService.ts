@@ -7,6 +7,7 @@ export interface GuardrailRuleItem {
   type: string;
   mode: string;
   config: Record<string, unknown>;
+  conditions: Record<string, unknown>;
   is_enabled: boolean;
   created_at: string;
   updated_at: string;
@@ -23,6 +24,7 @@ export interface GuardrailRuleCreateParams {
   type: string;
   mode: string;
   config: Record<string, unknown>;
+  conditions?: Record<string, unknown>;
 }
 
 export interface GuardrailRuleUpdateParams {
@@ -30,6 +32,7 @@ export interface GuardrailRuleUpdateParams {
   type?: string;
   mode?: string;
   config?: Record<string, unknown>;
+  conditions?: Record<string, unknown>;
   is_enabled?: boolean;
 }
 

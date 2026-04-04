@@ -18,6 +18,7 @@ class GuardrailRuleCreate(BaseModel):
     type: str = Field(default="input", description="护栏类型: input / output / tool")
     mode: str = Field(default="regex", description="检测模式: regex / keyword / llm")
     config: dict[str, Any] = Field(default_factory=dict, description="模式配置")
+    conditions: dict[str, Any] = Field(default_factory=dict, description="条件启用配置")
 
     @field_validator("type")
     @classmethod
@@ -50,6 +51,7 @@ class GuardrailRuleUpdate(BaseModel):
     type: str | None = None
     mode: str | None = None
     config: dict[str, Any] | None = None
+    conditions: dict[str, Any] | None = None
     is_enabled: bool | None = None
 
     @field_validator("type")
@@ -82,6 +84,7 @@ class GuardrailRuleResponse(BaseModel):
     type: str
     mode: str
     config: dict[str, Any]
+    conditions: dict[str, Any]
     is_enabled: bool
     created_at: datetime
     updated_at: datetime

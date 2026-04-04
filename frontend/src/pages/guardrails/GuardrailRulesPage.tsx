@@ -112,6 +112,9 @@ const GuardrailRulesPage: React.FC = () => {
       llm_model: record.mode === 'llm' ? (config.model as string) || '' : '',
       llm_threshold: record.mode === 'llm' ? (config.threshold as number) ?? 0.8 : 0.8,
       llm_prompt_template: record.mode === 'llm' ? (config.prompt_template as string) || '' : '',
+      conditions_json: Object.keys(record.conditions || {}).length > 0
+        ? JSON.stringify(record.conditions, null, 2)
+        : '',
     });
     setModalVisible(true);
   };
@@ -144,12 +147,24 @@ const GuardrailRulesPage: React.FC = () => {
         config.message = values.message;
       }
 
+      let conditions: Record<string, unknown> = {};
+      if (values.conditions_json && values.conditions_json.trim()) {
+        try {
+          conditions = JSON.parse(values.conditions_json);
+        } catch {
+          message.error('条件配置 JSON 格式无效');
+          setSubmitting(false);
+          return;
+        }
+      }
+
       if (editingRule) {
         const updateData: GuardrailRuleUpdateParams = {
           description: values.description,
           type: values.type,
           mode: values.mode,
           config,
+          conditions,
         };
         await guardrailService.update(editingRule.id, updateData);
         message.success('更新成功');
@@ -159,6 +174,7 @@ const GuardrailRulesPage: React.FC = () => {
           type: values.type,
           mode: values.mode,
           config,
+          conditions,
           description: values.description,
         };
         await guardrailService.create(createData);
@@ -407,6 +423,27 @@ const GuardrailRulesPage: React.FC = () => {
 
           <Form.Item name="message" label="拦截提示消息">
             <Input placeholder="当规则触发时返回的提示信息" />
+          </Form.Item>
+
+          <Form.Item
+            name="conditions_json"
+            label="条件启用配置（JSON）"
+            extra="留空表示始终启用。示例：{&quot;env&quot;: &quot;production&quot;, &quot;tags&quot;: [&quot;critical&quot;]}"
+            rules={[
+              {
+                validator: (_, value) => {
+                  if (!value || !value.trim()) return Promise.resolve();
+                  try {
+                    JSON.parse(value);
+                    return Promise.resolve();
+                  } catch {
+                    return Promise.reject(new Error('JSON 格式无效'));
+                  }
+                },
+              },
+            ]}
+          >
+            <TextArea rows={3} placeholder='{"env": "production"}' />
           </Form.Item>
         </Form>
       </Modal>

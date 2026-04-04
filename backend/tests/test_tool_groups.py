@@ -50,6 +50,7 @@ class TestToolGroupSchemas:
             name="web-search",
             description="Search",
             tools=[{"name": "s", "description": "d", "parameters_schema": {}}],
+            conditions={},
             source="custom",
             is_enabled=True,
             created_at=datetime.now(timezone.utc),

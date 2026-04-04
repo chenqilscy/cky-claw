@@ -11,6 +11,7 @@ export interface ToolGroupResponse {
   name: string;
   description: string;
   tools: ToolDefinition[];
+  conditions: Record<string, unknown>;
   source: string;
   is_enabled: boolean;
   created_at: string;
@@ -26,11 +27,13 @@ export interface ToolGroupCreateRequest {
   name: string;
   description?: string;
   tools?: ToolDefinition[];
+  conditions?: Record<string, unknown>;
 }
 
 export interface ToolGroupUpdateRequest {
   description?: string;
   tools?: ToolDefinition[];
+  conditions?: Record<string, unknown>;
   is_enabled?: boolean;
 }
 

@@ -159,14 +159,16 @@ class TestTeamService:
 
         mock_db = AsyncMock()
         mock_record = MagicMock()
+        mock_record.is_deleted = False
+        mock_record.deleted_at = None
         mock_result = MagicMock()
         mock_result.scalar_one_or_none.return_value = mock_record
         mock_db.execute = AsyncMock(return_value=mock_result)
-        mock_db.delete = AsyncMock()
         mock_db.commit = AsyncMock()
 
         await delete_team(mock_db, uuid.uuid4())
-        mock_db.delete.assert_called_once_with(mock_record)
+        assert mock_record.is_deleted is True
+        assert mock_record.deleted_at is not None
         mock_db.commit.assert_called_once()
 
 

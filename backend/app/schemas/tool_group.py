@@ -29,6 +29,7 @@ class ToolGroupCreate(BaseModel):
     name: str = Field(..., min_length=3, max_length=64, description="工具组唯一标识")
     description: str = Field(default="", description="工具组描述")
     tools: list[ToolDefinition] = Field(default_factory=list, description="工具定义列表")
+    conditions: dict[str, Any] = Field(default_factory=dict, description="条件启用配置")
 
     @field_validator("name")
     @classmethod
@@ -43,6 +44,7 @@ class ToolGroupUpdate(BaseModel):
 
     description: str | None = None
     tools: list[ToolDefinition] | None = None
+    conditions: dict[str, Any] | None = None
     is_enabled: bool | None = None
 
 
@@ -55,6 +57,7 @@ class ToolGroupResponse(BaseModel):
     name: str
     description: str
     tools: list[dict[str, Any]]
+    conditions: dict[str, Any]
     source: str
     is_enabled: bool
     created_at: datetime
