@@ -60,7 +60,7 @@ async def get_organization(
     """获取单个组织。"""
     record = await svc.get_organization(db, org_id)
     if record is None:
-        raise HTTPException(404, "organization not found")
+        raise HTTPException(status_code=404, detail="组织不存在")
     return OrganizationResponse.model_validate(record)
 
 
@@ -85,4 +85,4 @@ async def delete_organization(
     """删除组织。"""
     ok = await svc.delete_organization(db, org_id)
     if not ok:
-        raise HTTPException(404, "organization not found")
+        raise HTTPException(status_code=404, detail="组织不存在")

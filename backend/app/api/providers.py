@@ -107,7 +107,7 @@ async def delete_provider(
 ) -> dict[str, str]:
     """删除 Provider。"""
     await provider_service.delete_provider(db, provider_id)
-    return {"message": "Provider deleted"}
+    return {"message": "Provider 已删除"}
 
 
 @router.put("/{provider_id}/toggle", response_model=ProviderResponse)

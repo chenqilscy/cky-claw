@@ -70,7 +70,7 @@ async def get_channel(
     """获取单个 IM 渠道。"""
     channel = await svc.get_channel(db, channel_id)
     if channel is None:
-        raise HTTPException(404, "IM channel not found")
+        raise HTTPException(status_code=404, detail="IM 渠道不存在")
     return IMChannelResponse.model_validate(channel)
 
 
@@ -84,7 +84,7 @@ async def update_channel(
     """更新 IM 渠道。"""
     channel = await svc.update_channel(db, channel_id, data)
     if channel is None:
-        raise HTTPException(404, "IM channel not found")
+        raise HTTPException(status_code=404, detail="IM 渠道不存在")
     return IMChannelResponse.model_validate(channel)
 
 
@@ -97,7 +97,7 @@ async def delete_channel(
     """删除 IM 渠道。"""
     ok = await svc.delete_channel(db, channel_id)
     if not ok:
-        raise HTTPException(404, "IM channel not found")
+        raise HTTPException(status_code=404, detail="IM 渠道不存在")
 
 
 # ── Webhook 接收 ──────────────────────────────────
@@ -115,9 +115,9 @@ async def receive_webhook(
     """
     channel = await svc.get_channel(db, channel_id)
     if channel is None:
-        raise HTTPException(404, "channel not found")
+        raise HTTPException(status_code=404, detail="IM 渠道不存在")
     if not channel.is_enabled:
-        raise HTTPException(403, "channel is disabled")
+        raise HTTPException(status_code=403, detail="IM 渠道已禁用")
 
     body = await request.body()
 
@@ -125,15 +125,15 @@ async def receive_webhook(
     if channel.webhook_secret:
         signature = request.headers.get("X-Signature", "") or request.headers.get("x-hub-signature-256", "")
         if not signature:
-            raise HTTPException(401, "missing signature header")
+            raise HTTPException(status_code=401, detail="缺少签名头")
         if not svc.verify_webhook_signature(channel.webhook_secret, body, signature):
-            raise HTTPException(401, "invalid signature")
+            raise HTTPException(status_code=401, detail="签名验证失败")
 
     # 解析消息体
     try:
         payload = await request.json()
     except Exception:
-        raise HTTPException(400, "invalid JSON payload")
+        raise HTTPException(status_code=400, detail="无效的 JSON 请求体")
 
     # 路由到绑定的 Agent
     result = await svc.route_message(

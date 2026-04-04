@@ -125,11 +125,11 @@ async def route_message(
     """
     channel = await db.get(IMChannel, channel_id)
     if channel is None:
-        return {"status": "error", "message": "channel not found"}
+        return {"status": "error", "message": "IM 渠道不存在"}
     if not channel.is_enabled:
-        return {"status": "error", "message": "channel is disabled"}
+        return {"status": "error", "message": "IM 渠道已禁用"}
     if channel.agent_id is None:
-        return {"status": "error", "message": "no agent bound to this channel"}
+        return {"status": "error", "message": "该渠道未绑定 Agent"}
 
     logger.info(
         "IM message routed: channel=%s agent=%s sender=%s",

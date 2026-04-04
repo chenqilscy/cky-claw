@@ -179,7 +179,7 @@ class TestSessionAPI:
             app.dependency_overrides.clear()
 
         assert resp.status_code == 200
-        assert resp.json()["message"] == "Session deleted"
+        assert resp.json()["message"] == "Session 已删除"
 
     @patch("app.api.sessions.session_service")
     def test_run_non_stream(self, mock_svc: MagicMock, client: TestClient) -> None:

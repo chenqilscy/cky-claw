@@ -5,10 +5,10 @@ from __future__ import annotations
 import uuid
 from datetime import datetime, timezone
 
-from fastapi import HTTPException
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.exceptions import NotFoundError
 from app.models.provider_model import ProviderModel
 from app.schemas.provider_model import ProviderModelCreate, ProviderModelUpdate
 
@@ -68,7 +68,7 @@ async def get_model(
     result = await db.execute(stmt)
     model = result.scalar_one_or_none()
     if model is None:
-        raise HTTPException(status_code=404, detail="Model not found")
+        raise NotFoundError(f"模型 '{model_id}' 不存在")
     return model
 
 

@@ -82,4 +82,4 @@ async def delete_provider_model(
 ) -> dict[str, str]:
     """删除 Provider Model。"""
     await pm_service.delete_model(db, model_id)
-    return {"message": "Model deleted"}
+    return {"message": "模型已删除"}

@@ -1,6 +1,6 @@
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { ProLayout } from '@ant-design/pro-components';
-import { Button, Tooltip } from 'antd';
+import { Button, Grid, Tooltip } from 'antd';
 import {
   DashboardOutlined,
   MessageOutlined,
@@ -154,6 +154,8 @@ const BasicLayout: React.FC = () => {
   const location = useLocation();
   const themeMode = useThemeStore((s: { mode: 'light' | 'dark' }) => s.mode);
   const toggleTheme = useThemeStore((s: { toggle: () => void }) => s.toggle);
+  const screens = Grid.useBreakpoint();
+  const isMobile = !screens.md;
 
   return (
     <ProLayout
@@ -161,6 +163,8 @@ const BasicLayout: React.FC = () => {
       logo={false}
       layout="mix"
       fixSiderbar
+      collapsed={isMobile ? true : undefined}
+      breakpoint="md"
       route={menuRoutes}
       location={{ pathname: location.pathname }}
       menuItemRender={(item, dom) => (

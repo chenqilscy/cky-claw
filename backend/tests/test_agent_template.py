@@ -192,7 +192,7 @@ class TestAgentTemplateAPI:
 class TestAgentTemplateService:
     def test_builtin_templates_count(self) -> None:
         from app.services.agent_template import BUILTIN_TEMPLATES
-        assert len(BUILTIN_TEMPLATES) == 10
+        assert len(BUILTIN_TEMPLATES) == 14
 
     def test_builtin_templates_names(self) -> None:
         from app.services.agent_template import BUILTIN_TEMPLATES
@@ -200,6 +200,12 @@ class TestAgentTemplateService:
         expected = {
             "triage", "faq-bot", "researcher", "data-analyst", "report-writer",
             "code-assistant", "translator", "customer-service", "summarizer", "coordinator",
+        }
+        expected = {
+            "triage", "faq-bot", "researcher", "data-analyst", "report-writer",
+            "code-assistant", "translator", "customer-service", "summarizer", "coordinator",
+            # 垂直 Agent
+            "code-reviewer", "devops-assistant", "bi-analyst", "complaint-handler",
         }
         assert names == expected
 

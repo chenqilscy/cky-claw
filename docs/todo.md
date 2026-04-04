@@ -56,7 +56,7 @@
 | 26 | ~~**限流配置**~~ | §2.13 | P2 | 低 | ✅ 已完成（Redis 滑动窗口 RPM/TPM 限流器 + RateLimitExceeded 429） |
 | 27 | **灾备策略** | 附录 B v2.0.4 | P3 | 中 | RTO<4h / RPO<1h、PostgreSQL/Redis/对象存储备份方案 |
 | 28 | ~~**内置 Agent 模板**~~ | 附录 B v2.0.5 | P2 | 低 | ✅ 已完成（10 个预设模板 + 模板市场 UI + CRUD API + Seed + 18 测试） |
-| 29 | **垂直 Agent** | 定位守卫 P2 | P2 | 高 | 代码审查、DevOps、客服、数据分析等垂直领域 Agent |
+| 29 | ~~**垂直 Agent**~~ | 定位守卫 P2 | P2 | 高 | ✅ 已完成（新增 4 个垂直模板：code-reviewer / devops-assistant / bi-analyst / complaint-handler，种子在 BUILTIN_TEMPLATES） |
 | 30 | ~~**声明式配置（YAML/TOML）**~~ | §3.4 | P3 | 低 | ✅ 已完成（Agent 导出/导入 API + YAML/JSON 双格式 + 前端服务 + 16 测试） |
 
 ---
@@ -68,9 +68,9 @@
 | # | 优化项 | 优先级 | 说明 |
 |---|--------|:------:|------|
 | O1 | ~~TanStack Query 数据层~~ | P2 | ✅ 已完成（useAgentQueries + useWorkflowQueries hooks + AgentListPage/WorkflowPage 重构） |
-| O2 | Zustand 全局状态扩充 | P3 | 仅 authStore 使用 Zustand；Agent 列表、Session 等可受益于全局状态 |
-| O3 | ECharts 图表 | P3 | Dashboard 当前用 Ant Design Progress 条；ECharts 饼图/折线图可提升数据表达 |
-| O4 | 响应式布局 | P3 | 当前无移动端适配 |
+| ~~O2~~ | ~~Zustand 全局状态扩充~~ | P3 | ✅ 已完成（agentStore + sessionStore：列表缓存、分页、stale-while-revalidate、invalidate 接口） |
+| ~~O3~~ | ~~ECharts 图表~~ | P3 | ✅ 已完成（Dashboard Guardrail 拦截率改为 ECharts Gauge + Span 类型分布改为 ECharts 饼图） |
+| ~~O4~~ | ~~响应式布局~~ | P3 | ✅ 已完成（BasicLayout 添加 Grid.useBreakpoint + ProLayout breakpoint="md" 移动端折叠侧边栏） |
 | O5 | ~~暗色模式~~ | P3 | ✅ 已完成（themeStore + ConfigProvider 主题切换） |
 | O6 | ~~前端测试覆盖~~ | P1 | ✅ 已完成（64 个 Vitest 测试：API/AgentService/AuthStore/SkillService/TemplateService/WorkflowService/TeamService/AuditLogService/RoleService） |
 | O7 | ~~对话页体验优化~~ | P1 | ✅ 已完成（MarkdownRenderer + Prism 代码高亮 + 复制按钮 + React.memo 优化） |
@@ -83,7 +83,7 @@
 | O9 | ~~API 分页标准化~~ | P2 | ✅ 已完成（36 文件统一 data/total/limit/offset 格式 + PaginatedResponse 泛型基类） |
 | O10 | ~~软删除统一~~ | P3 | ✅ 已完成（SoftDeleteMixin + 15 模型/服务 + Migration 0030 + 30 测试） |
 | O11 | ~~操作审计日志~~ | P1 | ✅ 已完成（AuditLog Model + Middleware + API + Frontend UI + Migration 0022 + 21 测试） |
-| O12 | 错误信息国际化 | P3 | 当前错误消息只有英文 |
+| ~~O12~~ | ~~错误信息国际化~~ | P3 | ✅ 已完成（im_channels/organizations/agents/providers/evaluations 等全部英文错误消息改为中文） |
 
 ### 3.3 Framework 优化
 
@@ -176,9 +176,9 @@
 |------|------|------|
 | ~~Redis 未使用~~ | ✅ 已解决：WebSocket 审批通道使用 Redis pub/sub | ~~资源浪费~~ |
 | ~~前端测试极少~~ | ✅ 已解决：47 个 Vitest 测试 | ~~无法保证 UI 回归~~ |
-| mypy 未集成 CI | CI 已添加 mypy 步骤（注释态）；基线：Framework 33 错误 / Backend 206 错误，主要为 `type-arg` 泛型缺失 | 类型安全漏网 |
+| mypy 未集成 CI | ✅ 已解决：Framework 0/81 + Backend 0/138 全部 0 错误，CI mypy 步骤已激活 | 已修复 |
 | 部分 test 排除 | CI 排除 smoke/performance/e2e/mcp 测试 | 需定期手动运行验证 |
-| Alembic 自动生成 | 迁移均手写；未配置 autogenerate 对比 | 模型/迁移不一致风险 |
+| Alembic 自动生成 | ✅ 已解决：`alembic/env.py` 已配置 `target_metadata = Base.metadata` + 全模型导入，`alembic revision --autogenerate -m "描述"` 直接可用 | 已修复 |
 
 ## 六、工作流引擎
 

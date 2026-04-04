@@ -263,7 +263,7 @@ class TestAgentAPI:
             app.dependency_overrides.clear()
 
         assert resp.status_code == 200
-        assert resp.json()["message"] == "Agent deleted"
+        assert resp.json()["message"] == "Agent 已删除"
 
     @patch("app.api.agents.agent_service")
     def test_delete_agent_not_found(self, mock_svc: MagicMock, client: TestClient) -> None:

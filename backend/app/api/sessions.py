@@ -75,7 +75,7 @@ async def delete_session(
 ) -> dict[str, str]:
     """删除 Session。"""
     await session_service.delete_session(db, session_id)
-    return {"message": "Session deleted"}
+    return {"message": "Session 已删除"}
 
 
 @router.post("/{session_id}/run", response_model=None, dependencies=[Depends(require_permission("sessions", "execute"))])

@@ -77,7 +77,7 @@ async def delete_agent(
 ) -> dict[str, str]:
     """删除 Agent（软删除）。"""
     await agent_service.delete_agent(db, name)
-    return {"message": "Agent deleted"}
+    return {"message": "Agent 已删除"}
 
 
 # ── 导出/导入 ──────────────────────────────────────────

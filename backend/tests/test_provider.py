@@ -373,7 +373,7 @@ class TestProviderAPI:
             _clear_overrides()
 
         assert resp.status_code == 200
-        assert resp.json()["message"] == "Provider deleted"
+        assert resp.json()["message"] == "Provider 已删除"
 
     @patch("app.api.providers.provider_service")
     def test_delete_provider_not_found(self, mock_svc: MagicMock, client: TestClient) -> None:

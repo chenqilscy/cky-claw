@@ -4,7 +4,6 @@ import {
   Col,
   Row,
   Statistic,
-  Progress,
   Table,
   Tag,
   Space,
@@ -12,6 +11,7 @@ import {
   Spin,
   message,
 } from 'antd';
+import ReactECharts from 'echarts-for-react';
 import {
   RobotOutlined,
   MessageOutlined,
@@ -31,12 +31,12 @@ import type { TokenUsageByModelItem } from '../../services/tokenUsageService';
 
 const { Title, Text } = Typography;
 
-const SPAN_TYPE_COLORS: Record<string, string> = {
-  agent: 'blue',
-  llm: 'green',
-  tool: 'orange',
-  handoff: 'purple',
-  guardrail: 'red',
+const SPAN_TYPE_COLOR_VALUES: Record<string, string> = {
+  agent: '#1677ff',
+  llm: '#52c41a',
+  tool: '#fa8c16',
+  handoff: '#722ed1',
+  guardrail: '#f5222d',
 };
 
 const DashboardPage: React.FC = () => {
@@ -274,10 +274,35 @@ const DashboardPage: React.FC = () => {
                         />
                       </Col>
                     </Row>
-                    <Progress
-                      percent={Number((traceStats.guardrail_stats.trigger_rate * 100).toFixed(1))}
-                      status={traceStats.guardrail_stats.trigger_rate > 0.2 ? 'exception' : 'normal'}
-                      format={(p) => `${p}% 拦截`}
+                    <ReactECharts
+                      style={{ height: 100 }}
+                      option={{
+                        series: [{
+                          type: 'gauge',
+                          startAngle: 200,
+                          endAngle: -20,
+                          min: 0,
+                          max: 100,
+                          radius: '90%',
+                          progress: { show: true, width: 10 },
+                          axisLine: { lineStyle: { width: 10 } },
+                          axisTick: { show: false },
+                          splitLine: { show: false },
+                          axisLabel: { show: false },
+                          pointer: { show: false },
+                          detail: {
+                            valueAnimation: true,
+                            fontSize: 16,
+                            formatter: '{value}%',
+                            offsetCenter: [0, '10%'],
+                            color: traceStats.guardrail_stats.trigger_rate > 0.2 ? '#cf1322' : '#52c41a',
+                          },
+                          data: [{ value: Number((traceStats.guardrail_stats.trigger_rate * 100).toFixed(1)) }],
+                          itemStyle: {
+                            color: traceStats.guardrail_stats.trigger_rate > 0.2 ? '#cf1322' : '#52c41a',
+                          },
+                        }],
+                      }}
                     />
                   </>
                 ) : (
@@ -288,21 +313,26 @@ const DashboardPage: React.FC = () => {
               {/* Span Type Distribution */}
               <Card title="Span 类型分布" size="small">
                 {spanTypeCounts && totalSpansByType > 0 ? (
-                  <Space direction="vertical" size={8} style={{ width: '100%' }}>
-                    {Object.entries(spanTypeCounts).map(([type, count]) => (
-                      <div key={type} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <Tag color={SPAN_TYPE_COLORS[type] || 'default'} style={{ width: 70, textAlign: 'center' }}>
-                          {type}
-                        </Tag>
-                        <Progress
-                          percent={Number(((count / totalSpansByType) * 100).toFixed(1))}
-                          size="small"
-                          style={{ flex: 1, marginBottom: 0 }}
-                          format={() => `${count}`}
-                        />
-                      </div>
-                    ))}
-                  </Space>
+                  <ReactECharts
+                    style={{ height: 180 }}
+                    option={{
+                      tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
+                      legend: { orient: 'vertical', right: 0, top: 'center', textStyle: { fontSize: 12 } },
+                      series: [{
+                        type: 'pie',
+                        radius: ['40%', '70%'],
+                        center: ['35%', '50%'],
+                        avoidLabelOverlap: false,
+                        label: { show: false },
+                        emphasis: { label: { show: true, fontSize: 12 } },
+                        data: Object.entries(spanTypeCounts).map(([type, count]) => ({
+                          name: type,
+                          value: count,
+                          itemStyle: { color: SPAN_TYPE_COLOR_VALUES[type] ?? '#8c8c8c' },
+                        })),
+                      }],
+                    }}
+                  />
                 ) : (
                   <Text type="secondary">暂无数据</Text>
                 )}

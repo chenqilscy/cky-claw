@@ -67,7 +67,7 @@ async def get_evaluation(
     """获取单个评估。"""
     record = await svc.get_evaluation(db, eval_id)
     if record is None:
-        raise HTTPException(404, "evaluation not found")
+        raise HTTPException(status_code=404, detail="评估记录不存在")
     return RunEvaluationResponse.model_validate(record)
 
 
