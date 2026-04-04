@@ -201,6 +201,9 @@ class TestRoleService:
 class TestRoleAPI:
     def test_list_roles_requires_admin(self, client: TestClient) -> None:
         """普通 user 不能访问角色列表。"""
+        from app.core.deps import get_current_user
+
+        app.dependency_overrides.pop(get_current_user, None)
         user = _make_user(role="user")
         token = create_access_token(data={"sub": str(user.id), "role": "user"})
 
@@ -225,6 +228,9 @@ class TestRoleAPI:
 
     def test_list_roles_success(self, client: TestClient) -> None:
         """Admin 可以列出角色。"""
+        from app.core.deps import get_current_user
+
+        app.dependency_overrides.pop(get_current_user, None)
         user = _make_user()
         token = _admin_token(user.id)
         mock_role = _make_role()
@@ -294,6 +300,9 @@ class TestRoleAPI:
 
     def test_delete_role_requires_admin(self, client: TestClient) -> None:
         """User 不能删除角色。"""
+        from app.core.deps import get_current_user
+
+        app.dependency_overrides.pop(get_current_user, None)
         user = _make_user(role="user")
         token = create_access_token(data={"sub": str(user.id), "role": "user"})
 

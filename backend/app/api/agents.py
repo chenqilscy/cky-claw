@@ -11,6 +11,7 @@ from fastapi.responses import Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
+from app.core.deps import require_permission
 from app.core.tenant import check_quota, get_org_id
 from app.schemas.agent import AgentCreate, AgentListResponse, AgentResponse, AgentUpdate
 from app.services import agent as agent_service
@@ -18,7 +19,7 @@ from app.services import agent as agent_service
 router = APIRouter(prefix="/api/v1/agents", tags=["agents"])
 
 
-@router.get("", response_model=AgentListResponse)
+@router.get("", response_model=AgentListResponse, dependencies=[Depends(require_permission("agents", "read"))])
 async def list_agents(
     search: str | None = Query(None, description="按名称/描述模糊搜索"),
     limit: int = Query(20, ge=1, le=100, description="分页大小"),
@@ -36,7 +37,7 @@ async def list_agents(
     )
 
 
-@router.post("", response_model=AgentResponse, status_code=201)
+@router.post("", response_model=AgentResponse, status_code=201, dependencies=[Depends(require_permission("agents", "write"))])
 async def create_agent(
     data: AgentCreate,
     db: AsyncSession = Depends(get_db),
@@ -48,7 +49,7 @@ async def create_agent(
     return AgentResponse.model_validate(agent)
 
 
-@router.get("/{name}", response_model=AgentResponse)
+@router.get("/{name}", response_model=AgentResponse, dependencies=[Depends(require_permission("agents", "read"))])
 async def get_agent(
     name: str,
     db: AsyncSession = Depends(get_db),
@@ -58,7 +59,7 @@ async def get_agent(
     return AgentResponse.model_validate(agent)
 
 
-@router.put("/{name}", response_model=AgentResponse)
+@router.put("/{name}", response_model=AgentResponse, dependencies=[Depends(require_permission("agents", "write"))])
 async def update_agent(
     name: str,
     data: AgentUpdate,
@@ -69,7 +70,7 @@ async def update_agent(
     return AgentResponse.model_validate(agent)
 
 
-@router.delete("/{name}")
+@router.delete("/{name}", dependencies=[Depends(require_permission("agents", "delete"))])
 async def delete_agent(
     name: str,
     db: AsyncSession = Depends(get_db),
@@ -89,7 +90,7 @@ _EXPORT_FIELDS = [
 ]
 
 
-@router.get("/{name}/export")
+@router.get("/{name}/export", dependencies=[Depends(require_permission("agents", "read"))])
 async def export_agent(
     name: str,
     format: str = Query("yaml", description="导出格式：yaml / json"),
@@ -116,7 +117,7 @@ async def export_agent(
         )
 
 
-@router.post("/import", response_model=AgentResponse, status_code=201)
+@router.post("/import", response_model=AgentResponse, status_code=201, dependencies=[Depends(require_permission("agents", "write"))])
 async def import_agent(
     file: UploadFile,
     db: AsyncSession = Depends(get_db),

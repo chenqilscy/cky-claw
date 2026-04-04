@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
+from app.core.deps import require_permission
 from app.core.tenant import check_quota, get_org_id
 from app.schemas.skill import (
     SkillCreate,
@@ -21,7 +22,7 @@ from app.services import skill as skill_service
 router = APIRouter(prefix="/api/v1/skills", tags=["skills"])
 
 
-@router.post("", response_model=SkillResponse, status_code=201)
+@router.post("", response_model=SkillResponse, status_code=201, dependencies=[Depends(require_permission("skills", "write"))])
 async def create_skill(
     data: SkillCreate,
     db: AsyncSession = Depends(get_db),
@@ -33,7 +34,7 @@ async def create_skill(
     return SkillResponse.model_validate(record)
 
 
-@router.get("", response_model=SkillListResponse)
+@router.get("", response_model=SkillListResponse, dependencies=[Depends(require_permission("skills", "read"))])
 async def list_skills(
     category: str | None = Query(None, description="按分类筛选"),
     tag: str | None = Query(None, description="按标签筛选"),
@@ -54,7 +55,7 @@ async def list_skills(
     )
 
 
-@router.get("/for-agent/{agent_name}", response_model=list[SkillResponse])
+@router.get("/for-agent/{agent_name}", response_model=list[SkillResponse], dependencies=[Depends(require_permission("skills", "read"))])
 async def find_skills_for_agent(
     agent_name: str,
     db: AsyncSession = Depends(get_db),
@@ -64,7 +65,7 @@ async def find_skills_for_agent(
     return [SkillResponse.model_validate(r) for r in rows]
 
 
-@router.get("/{skill_id}", response_model=SkillResponse)
+@router.get("/{skill_id}", response_model=SkillResponse, dependencies=[Depends(require_permission("skills", "read"))])
 async def get_skill(
     skill_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
@@ -74,7 +75,7 @@ async def get_skill(
     return SkillResponse.model_validate(record)
 
 
-@router.put("/{skill_id}", response_model=SkillResponse)
+@router.put("/{skill_id}", response_model=SkillResponse, dependencies=[Depends(require_permission("skills", "write"))])
 async def update_skill(
     skill_id: uuid.UUID,
     data: SkillUpdate,
@@ -85,7 +86,7 @@ async def update_skill(
     return SkillResponse.model_validate(record)
 
 
-@router.delete("/{skill_id}", status_code=204)
+@router.delete("/{skill_id}", status_code=204, dependencies=[Depends(require_permission("skills", "delete"))])
 async def delete_skill(
     skill_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
@@ -94,7 +95,7 @@ async def delete_skill(
     await skill_service.delete_skill(db, skill_id)
 
 
-@router.post("/search", response_model=list[SkillResponse])
+@router.post("/search", response_model=list[SkillResponse], dependencies=[Depends(require_permission("skills", "read"))])
 async def search_skills(
     data: SkillSearchRequest,
     db: AsyncSession = Depends(get_db),

@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
+from app.core.deps import require_permission
 from app.core.tenant import check_quota, get_org_id
 from app.schemas.memory import (
     MemoryCreate,
@@ -23,7 +24,7 @@ from app.services import memory as memory_service
 router = APIRouter(prefix="/api/v1/memories", tags=["memories"])
 
 
-@router.post("", response_model=MemoryResponse, status_code=201)
+@router.post("", response_model=MemoryResponse, status_code=201, dependencies=[Depends(require_permission("memories", "write"))])
 async def create_memory(
     data: MemoryCreate,
     db: AsyncSession = Depends(get_db),
@@ -35,7 +36,7 @@ async def create_memory(
     return MemoryResponse.model_validate(record)
 
 
-@router.get("", response_model=MemoryListResponse)
+@router.get("", response_model=MemoryListResponse, dependencies=[Depends(require_permission("memories", "read"))])
 async def list_memories(
     user_id: str | None = Query(None, description="按用户筛选"),
     type: str | None = Query(None, alias="type", description="按类型筛选"),
@@ -63,7 +64,7 @@ async def list_memories(
     )
 
 
-@router.get("/{entry_id}", response_model=MemoryResponse)
+@router.get("/{entry_id}", response_model=MemoryResponse, dependencies=[Depends(require_permission("memories", "read"))])
 async def get_memory(
     entry_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
@@ -73,7 +74,7 @@ async def get_memory(
     return MemoryResponse.model_validate(record)
 
 
-@router.put("/{entry_id}", response_model=MemoryResponse)
+@router.put("/{entry_id}", response_model=MemoryResponse, dependencies=[Depends(require_permission("memories", "write"))])
 async def update_memory(
     entry_id: uuid.UUID,
     data: MemoryUpdate,
@@ -84,7 +85,7 @@ async def update_memory(
     return MemoryResponse.model_validate(record)
 
 
-@router.delete("/user/{user_id}")
+@router.delete("/user/{user_id}", dependencies=[Depends(require_permission("memories", "delete"))])
 async def delete_user_memories(
     user_id: str,
     db: AsyncSession = Depends(get_db),
@@ -94,7 +95,7 @@ async def delete_user_memories(
     return {"deleted": count}
 
 
-@router.delete("/{entry_id}", status_code=204)
+@router.delete("/{entry_id}", status_code=204, dependencies=[Depends(require_permission("memories", "delete"))])
 async def delete_memory(
     entry_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
@@ -103,7 +104,7 @@ async def delete_memory(
     await memory_service.delete_memory(db, entry_id)
 
 
-@router.post("/search", response_model=list[MemoryResponse])
+@router.post("/search", response_model=list[MemoryResponse], dependencies=[Depends(require_permission("memories", "read"))])
 async def search_memories(
     data: MemorySearchRequest,
     db: AsyncSession = Depends(get_db),
@@ -113,7 +114,7 @@ async def search_memories(
     return [MemoryResponse.model_validate(r) for r in rows]
 
 
-@router.post("/decay", response_model=MemoryDecayResponse)
+@router.post("/decay", response_model=MemoryDecayResponse, dependencies=[Depends(require_permission("memories", "execute"))])
 async def decay_memories(
     data: MemoryDecayRequest,
     db: AsyncSession = Depends(get_db),

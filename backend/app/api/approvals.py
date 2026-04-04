@@ -7,14 +7,14 @@ import uuid
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.deps import get_db
+from app.core.deps import get_db, require_permission
 from app.schemas.approval import ApprovalListResponse, ApprovalResolveRequest, ApprovalResponse
 from app.services import approval as approval_service
 
 router = APIRouter(prefix="/api/v1/approvals", tags=["approvals"])
 
 
-@router.get("", response_model=ApprovalListResponse)
+@router.get("", response_model=ApprovalListResponse, dependencies=[Depends(require_permission("approvals", "read"))])
 async def list_approvals(
     status: str | None = Query(None, description="按状态过滤: pending/approved/rejected/timeout"),
     agent_name: str | None = Query(None, description="按 Agent 名称过滤"),
@@ -40,7 +40,7 @@ async def list_approvals(
     )
 
 
-@router.get("/{approval_id}", response_model=ApprovalResponse)
+@router.get("/{approval_id}", response_model=ApprovalResponse, dependencies=[Depends(require_permission("approvals", "read"))])
 async def get_approval(
     approval_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
@@ -50,7 +50,7 @@ async def get_approval(
     return ApprovalResponse.model_validate(record)
 
 
-@router.post("/{approval_id}/resolve", response_model=ApprovalResponse)
+@router.post("/{approval_id}/resolve", response_model=ApprovalResponse, dependencies=[Depends(require_permission("approvals", "execute"))])
 async def resolve_approval(
     approval_id: uuid.UUID,
     body: ApprovalResolveRequest,

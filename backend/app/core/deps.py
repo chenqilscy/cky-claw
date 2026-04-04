@@ -11,7 +11,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth import decode_access_token
-from app.core.database import get_db
+from app.core.database import get_db as get_db  # noqa: PLC0414 — explicit re-export
 from app.models.user import User
 
 security = HTTPBearer()
@@ -64,7 +64,7 @@ async def require_admin(user: User = Depends(get_current_user)) -> User:
     return user
 
 
-def require_permission(resource: str, action: str) -> Callable:
+def require_permission(resource: str, action: str) -> Callable[..., object]:
     """工厂函数：生成权限检查依赖。
 
     若用户绑定了 Role 且 Role 含有 permissions JSONB，则检查 JSONB；

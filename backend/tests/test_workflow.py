@@ -173,10 +173,17 @@ class TestWorkflowValidation:
 
 
 def _make_app() -> TestClient:
+    from app.core.deps import get_current_user
     from app.core.tenant import get_org_id
     from app.main import create_app
 
     test_app = create_app()
+    mock_user = MagicMock()
+    mock_user.id = uuid.uuid4()
+    mock_user.role = "admin"
+    mock_user.role_id = None
+    mock_user.org_id = None
+    test_app.dependency_overrides[get_current_user] = lambda: mock_user
     test_app.dependency_overrides[get_org_id] = lambda: None
     return TestClient(test_app)
 

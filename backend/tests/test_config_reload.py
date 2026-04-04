@@ -312,6 +312,7 @@ def _make_app():
     mock_user = MagicMock()
     mock_user.id = uuid.uuid4()
     mock_user.role = "admin"
+    mock_user.role_id = None
     mock_user.org_id = None
     test_app.dependency_overrides[get_current_user] = lambda: mock_user
     test_app.dependency_overrides[get_org_id] = lambda: None

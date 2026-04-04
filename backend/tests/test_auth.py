@@ -192,6 +192,9 @@ class TestAuthAPI:
 
     def test_me_unauthenticated(self, client: TestClient) -> None:
         """无 Token 访问 /me 返回 401。"""
+        from app.core.deps import get_current_user
+
+        app.dependency_overrides.pop(get_current_user, None)
         resp = client.get("/api/v1/auth/me")
         assert resp.status_code == 401
 

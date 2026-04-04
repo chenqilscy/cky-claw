@@ -8,13 +8,14 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
+from app.core.deps import require_permission
 from app.schemas.audit_log import AuditLogListResponse, AuditLogResponse
 from app.services import audit_log as audit_log_service
 
 router = APIRouter(prefix="/api/v1/audit-logs", tags=["audit-logs"])
 
 
-@router.get("", response_model=AuditLogListResponse)
+@router.get("", response_model=AuditLogListResponse, dependencies=[Depends(require_permission("audit_logs", "read"))])
 async def list_audit_logs(
     limit: int = Query(20, ge=1, le=100, description="分页大小"),
     offset: int = Query(0, ge=0, description="分页偏移"),
@@ -42,7 +43,7 @@ async def list_audit_logs(
     )
 
 
-@router.get("/{log_id}", response_model=AuditLogResponse)
+@router.get("/{log_id}", response_model=AuditLogResponse, dependencies=[Depends(require_permission("audit_logs", "read"))])
 async def get_audit_log(
     log_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),

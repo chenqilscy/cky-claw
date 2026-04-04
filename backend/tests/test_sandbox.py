@@ -61,6 +61,9 @@ class TestSandboxSchemas:
 
 class TestSandboxAPI:
     def test_execute_requires_auth(self, client: TestClient) -> None:
+        from app.core.deps import get_current_user
+
+        app.dependency_overrides.pop(get_current_user, None)
         resp = client.post("/api/v1/sandbox/execute", json={"code": "print(1)"})
         assert resp.status_code == 401
 

@@ -335,7 +335,7 @@ class TestAgentApiTenantIsolation:
     def test_create_agent_checks_quota(self, mock_quota: AsyncMock, mock_svc: MagicMock, client: TestClient):
         """create_agent 应调用 check_quota。"""
         org_id = uuid.uuid4()
-        user = _make_user(org_id=org_id)
+        user = _make_user(org_id=org_id, role="admin")
         _override_deps(user)
 
         now = datetime.now(timezone.utc)

@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
+from app.core.deps import require_permission
 from app.core.tenant import check_quota, get_org_id
 from app.schemas.tool_group import (
     ToolGroupCreate,
@@ -20,7 +21,7 @@ from app.services import tool_group as tg_service
 router = APIRouter(prefix="/api/v1/tool-groups", tags=["tool-groups"])
 
 
-@router.get("", response_model=ToolGroupListResponse)
+@router.get("", response_model=ToolGroupListResponse, dependencies=[Depends(require_permission("tool_groups", "read"))])
 async def list_tool_groups(
     db: AsyncSession = Depends(get_db),
     org_id: uuid.UUID | None = Depends(get_org_id),
@@ -33,7 +34,7 @@ async def list_tool_groups(
     )
 
 
-@router.get("/{name}", response_model=ToolGroupResponse)
+@router.get("/{name}", response_model=ToolGroupResponse, dependencies=[Depends(require_permission("tool_groups", "read"))])
 async def get_tool_group(
     name: str,
     db: AsyncSession = Depends(get_db),
@@ -43,7 +44,7 @@ async def get_tool_group(
     return ToolGroupResponse.model_validate(tg)
 
 
-@router.post("", response_model=ToolGroupResponse, status_code=201)
+@router.post("", response_model=ToolGroupResponse, status_code=201, dependencies=[Depends(require_permission("tool_groups", "write"))])
 async def create_tool_group(
     data: ToolGroupCreate,
     db: AsyncSession = Depends(get_db),
@@ -55,7 +56,7 @@ async def create_tool_group(
     return ToolGroupResponse.model_validate(tg)
 
 
-@router.put("/{name}", response_model=ToolGroupResponse)
+@router.put("/{name}", response_model=ToolGroupResponse, dependencies=[Depends(require_permission("tool_groups", "write"))])
 async def update_tool_group(
     name: str,
     data: ToolGroupUpdate,
@@ -66,7 +67,7 @@ async def update_tool_group(
     return ToolGroupResponse.model_validate(tg)
 
 
-@router.delete("/{name}", status_code=204)
+@router.delete("/{name}", status_code=204, dependencies=[Depends(require_permission("tool_groups", "delete"))])
 async def delete_tool_group(
     name: str,
     db: AsyncSession = Depends(get_db),

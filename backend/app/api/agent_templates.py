@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
+from app.core.deps import require_permission
 from app.schemas.agent_template import (
     AgentTemplateCreate,
     AgentTemplateListResponse,
@@ -20,7 +21,7 @@ from app.services import agent_template as template_service
 router = APIRouter(prefix="/api/v1/agent-templates", tags=["agent-templates"])
 
 
-@router.post("", response_model=AgentTemplateResponse, status_code=201)
+@router.post("", response_model=AgentTemplateResponse, status_code=201, dependencies=[Depends(require_permission("templates", "write"))])
 async def create_template(
     data: AgentTemplateCreate,
     db: AsyncSession = Depends(get_db),
@@ -30,7 +31,7 @@ async def create_template(
     return AgentTemplateResponse.model_validate(record)
 
 
-@router.get("", response_model=AgentTemplateListResponse)
+@router.get("", response_model=AgentTemplateListResponse, dependencies=[Depends(require_permission("templates", "read"))])
 async def list_templates(
     category: str | None = Query(None, description="按分类筛选"),
     is_builtin: bool | None = Query(None, description="是否内置"),
@@ -50,7 +51,7 @@ async def list_templates(
     )
 
 
-@router.get("/{template_id}", response_model=AgentTemplateResponse)
+@router.get("/{template_id}", response_model=AgentTemplateResponse, dependencies=[Depends(require_permission("templates", "read"))])
 async def get_template(
     template_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
@@ -60,7 +61,7 @@ async def get_template(
     return AgentTemplateResponse.model_validate(record)
 
 
-@router.put("/{template_id}", response_model=AgentTemplateResponse)
+@router.put("/{template_id}", response_model=AgentTemplateResponse, dependencies=[Depends(require_permission("templates", "write"))])
 async def update_template(
     template_id: uuid.UUID,
     data: AgentTemplateUpdate,
@@ -74,7 +75,7 @@ async def update_template(
     return AgentTemplateResponse.model_validate(record)
 
 
-@router.delete("/{template_id}", status_code=204)
+@router.delete("/{template_id}", status_code=204, dependencies=[Depends(require_permission("templates", "delete"))])
 async def delete_template(
     template_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
@@ -86,7 +87,7 @@ async def delete_template(
         raise HTTPException(status_code=403, detail=str(e))
 
 
-@router.post("/seed", response_model=dict)
+@router.post("/seed", response_model=dict, dependencies=[Depends(require_permission("templates", "write"))])
 async def seed_builtin_templates(
     db: AsyncSession = Depends(get_db),
 ) -> dict:

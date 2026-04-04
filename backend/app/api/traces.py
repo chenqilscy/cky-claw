@@ -8,7 +8,7 @@ from datetime import datetime
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.deps import get_db
+from app.core.deps import get_db, require_permission
 from app.schemas.trace import (
     SpanListResponse,
     SpanResponse,
@@ -22,7 +22,7 @@ from app.services import trace as trace_service
 router = APIRouter(prefix="/api/v1/traces", tags=["traces"])
 
 
-@router.get("/stats", response_model=TraceStatsResponse)
+@router.get("/stats", response_model=TraceStatsResponse, dependencies=[Depends(require_permission("traces", "read"))])
 async def get_trace_stats(
     session_id: uuid.UUID | None = Query(None, description="按 Session 筛选"),
     agent_name: str | None = Query(None, description="按 Agent 筛选"),
@@ -41,7 +41,7 @@ async def get_trace_stats(
     return TraceStatsResponse(**stats)
 
 
-@router.get("/spans", response_model=SpanListResponse)
+@router.get("/spans", response_model=SpanListResponse, dependencies=[Depends(require_permission("traces", "read"))])
 async def list_spans(
     trace_id: str | None = Query(None, description="按 Trace 筛选"),
     type: str | None = Query(None, description="Span 类型: agent/llm/tool/handoff/guardrail"),
@@ -67,7 +67,7 @@ async def list_spans(
     return SpanListResponse(data=items, total=total, limit=limit, offset=offset)
 
 
-@router.get("", response_model=TraceListResponse)
+@router.get("", response_model=TraceListResponse, dependencies=[Depends(require_permission("traces", "read"))])
 async def list_traces(
     session_id: uuid.UUID | None = Query(None, description="按 Session 筛选"),
     agent_name: str | None = Query(None, description="按 Agent 筛选"),
@@ -101,7 +101,7 @@ async def list_traces(
     return TraceListResponse(data=items, total=total, limit=limit, offset=offset)
 
 
-@router.get("/{trace_id}", response_model=TraceDetailResponse)
+@router.get("/{trace_id}", response_model=TraceDetailResponse, dependencies=[Depends(require_permission("traces", "read"))])
 async def get_trace_detail(
     trace_id: str,
     db: AsyncSession = Depends(get_db),

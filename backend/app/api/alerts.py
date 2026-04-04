@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.core.deps import get_current_user
+from app.core.deps import get_current_user, require_permission
 from app.core.tenant import get_org_id
 from app.schemas.alert import (
     AlertEventListResponse,
@@ -30,7 +30,7 @@ router = APIRouter(prefix="/api/v1/alert-rules", tags=["alerts"])
 # ---------------------------------------------------------------------------
 
 
-@router.get("", response_model=AlertRuleListResponse)
+@router.get("", response_model=AlertRuleListResponse, dependencies=[Depends(require_permission("agents", "read"))])
 async def list_rules(
     limit: int = Query(20, ge=1, le=100),
     offset: int = Query(0, ge=0),
@@ -49,7 +49,7 @@ async def list_rules(
     return AlertRuleListResponse(data=[AlertRuleResponse.model_validate(r) for r in rules], total=total)
 
 
-@router.post("", response_model=AlertRuleResponse, status_code=201)
+@router.post("", response_model=AlertRuleResponse, status_code=201, dependencies=[Depends(require_permission("agents", "write"))])
 async def create_rule(
     data: AlertRuleCreate,
     db: AsyncSession = Depends(get_db),
@@ -61,7 +61,7 @@ async def create_rule(
     return AlertRuleResponse.model_validate(rule)
 
 
-@router.get("/{rule_id}", response_model=AlertRuleResponse)
+@router.get("/{rule_id}", response_model=AlertRuleResponse, dependencies=[Depends(require_permission("agents", "read"))])
 async def get_rule(
     rule_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
@@ -75,7 +75,7 @@ async def get_rule(
     return AlertRuleResponse.model_validate(rule)
 
 
-@router.put("/{rule_id}", response_model=AlertRuleResponse)
+@router.put("/{rule_id}", response_model=AlertRuleResponse, dependencies=[Depends(require_permission("agents", "write"))])
 async def update_rule(
     rule_id: uuid.UUID,
     data: AlertRuleUpdate,
@@ -91,7 +91,7 @@ async def update_rule(
     return AlertRuleResponse.model_validate(rule)
 
 
-@router.delete("/{rule_id}", status_code=204)
+@router.delete("/{rule_id}", status_code=204, dependencies=[Depends(require_permission("agents", "delete"))])
 async def delete_rule(
     rule_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
@@ -110,7 +110,7 @@ async def delete_rule(
 # ---------------------------------------------------------------------------
 
 
-@router.get("/{rule_id}/events", response_model=AlertEventListResponse)
+@router.get("/{rule_id}/events", response_model=AlertEventListResponse, dependencies=[Depends(require_permission("agents", "read"))])
 async def list_rule_events(
     rule_id: uuid.UUID,
     limit: int = Query(20, ge=1, le=100),
@@ -130,7 +130,7 @@ async def list_rule_events(
     )
 
 
-@router.post("/{rule_id}/check", response_model=AlertRuleCheckResponse, status_code=200)
+@router.post("/{rule_id}/check", response_model=AlertRuleCheckResponse, status_code=200, dependencies=[Depends(require_permission("agents", "execute"))])
 async def check_rule(
     rule_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),

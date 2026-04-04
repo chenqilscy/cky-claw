@@ -35,6 +35,16 @@
 #           uv run ruff check .
 #           uv run ruff format --check .
 
+#       - name: Type Check Framework
+#         working-directory: ckyclaw-framework
+#         run: |
+#           uv run mypy ckyclaw_framework/ --ignore-missing-imports
+
+#       - name: Type Check Backend
+#         working-directory: backend
+#         run: |
+#           uv run mypy app/ --ignore-missing-imports
+
 #   lint-frontend:
 #     name: Frontend Lint & Type Check
 #     runs-on: ubuntu-latest

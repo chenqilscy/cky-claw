@@ -9,6 +9,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
+from app.core.deps import require_permission
 from app.schemas.token_usage import (
     SummaryGroupBy,
     TokenUsageListResponse,
@@ -20,7 +21,7 @@ from app.services import token_usage as token_usage_service
 router = APIRouter(prefix="/api/v1/token-usage", tags=["token-usage"])
 
 
-@router.get("", response_model=TokenUsageListResponse)
+@router.get("", response_model=TokenUsageListResponse, dependencies=[Depends(require_permission("token_usage", "read"))])
 async def list_token_usage(
     agent_name: str | None = Query(None, description="按 Agent 筛选"),
     session_id: uuid.UUID | None = Query(None, description="按会话 ID 筛选"),
@@ -52,7 +53,7 @@ async def list_token_usage(
     )
 
 
-@router.get("/summary", response_model=TokenUsageSummaryResponse)
+@router.get("/summary", response_model=TokenUsageSummaryResponse, dependencies=[Depends(require_permission("token_usage", "read"))])
 async def get_token_usage_summary(
     agent_name: str | None = Query(None, description="按 Agent 筛选"),
     user_id: uuid.UUID | None = Query(None, description="按用户 ID 筛选"),

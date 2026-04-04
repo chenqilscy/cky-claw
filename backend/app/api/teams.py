@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
+from app.core.deps import require_permission
 from app.core.tenant import check_quota, get_org_id
 from app.schemas.team import (
     TeamConfigCreate,
@@ -20,7 +21,7 @@ from app.services import team as team_service
 router = APIRouter(prefix="/api/v1/teams", tags=["teams"])
 
 
-@router.post("", response_model=TeamConfigResponse, status_code=201)
+@router.post("", response_model=TeamConfigResponse, status_code=201, dependencies=[Depends(require_permission("teams", "write"))])
 async def create_team(
     data: TeamConfigCreate,
     db: AsyncSession = Depends(get_db),
@@ -32,7 +33,7 @@ async def create_team(
     return TeamConfigResponse.model_validate(record)
 
 
-@router.get("", response_model=TeamConfigListResponse)
+@router.get("", response_model=TeamConfigListResponse, dependencies=[Depends(require_permission("teams", "read"))])
 async def list_teams(
     limit: int = Query(20, ge=1, le=100, description="分页大小"),
     offset: int = Query(0, ge=0, description="分页偏移"),
@@ -50,7 +51,7 @@ async def list_teams(
     )
 
 
-@router.get("/{team_id}", response_model=TeamConfigResponse)
+@router.get("/{team_id}", response_model=TeamConfigResponse, dependencies=[Depends(require_permission("teams", "read"))])
 async def get_team(
     team_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
@@ -60,7 +61,7 @@ async def get_team(
     return TeamConfigResponse.model_validate(record)
 
 
-@router.put("/{team_id}", response_model=TeamConfigResponse)
+@router.put("/{team_id}", response_model=TeamConfigResponse, dependencies=[Depends(require_permission("teams", "write"))])
 async def update_team(
     team_id: uuid.UUID,
     data: TeamConfigUpdate,
@@ -71,7 +72,7 @@ async def update_team(
     return TeamConfigResponse.model_validate(record)
 
 
-@router.delete("/{team_id}", status_code=204)
+@router.delete("/{team_id}", status_code=204, dependencies=[Depends(require_permission("teams", "delete"))])
 async def delete_team(
     team_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),

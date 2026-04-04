@@ -9,6 +9,7 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
+from app.core.deps import require_permission
 from app.core.tenant import check_quota, get_org_id
 from app.schemas.session import (
     RunRequest,
@@ -24,7 +25,7 @@ from app.services import session as session_service
 router = APIRouter(prefix="/api/v1/sessions", tags=["sessions"])
 
 
-@router.post("", response_model=SessionResponse, status_code=201)
+@router.post("", response_model=SessionResponse, status_code=201, dependencies=[Depends(require_permission("sessions", "write"))])
 async def create_session(
     data: SessionCreate,
     db: AsyncSession = Depends(get_db),
@@ -36,7 +37,7 @@ async def create_session(
     return SessionResponse.model_validate(session)
 
 
-@router.get("", response_model=SessionListResponse)
+@router.get("", response_model=SessionListResponse, dependencies=[Depends(require_permission("sessions", "read"))])
 async def list_sessions(
     agent_name: str | None = Query(None, description="按 Agent 筛选"),
     status: str | None = Query(None, description="按状态筛选"),
@@ -57,7 +58,7 @@ async def list_sessions(
     )
 
 
-@router.get("/{session_id}", response_model=SessionResponse)
+@router.get("/{session_id}", response_model=SessionResponse, dependencies=[Depends(require_permission("sessions", "read"))])
 async def get_session(
     session_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
@@ -67,7 +68,7 @@ async def get_session(
     return SessionResponse.model_validate(session)
 
 
-@router.delete("/{session_id}")
+@router.delete("/{session_id}", dependencies=[Depends(require_permission("sessions", "delete"))])
 async def delete_session(
     session_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
@@ -77,7 +78,7 @@ async def delete_session(
     return {"message": "Session deleted"}
 
 
-@router.post("/{session_id}/run", response_model=None)
+@router.post("/{session_id}/run", response_model=None, dependencies=[Depends(require_permission("sessions", "execute"))])
 async def run_session(
     session_id: uuid.UUID,
     data: RunRequest,
@@ -102,7 +103,7 @@ async def run_session(
         return await session_service.execute_run(db, session_id, data)
 
 
-@router.get("/{session_id}/messages", response_model=SessionMessagesResponse)
+@router.get("/{session_id}/messages", response_model=SessionMessagesResponse, dependencies=[Depends(require_permission("sessions", "read"))])
 async def get_session_messages(
     session_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
