@@ -16,10 +16,6 @@ pipeline {
         // pip/uv 缓存挂载卷，加速重复构建
         PIP_CACHE       = '/tmp/pip-cache'
         PNPM_STORE      = '/tmp/pnpm-store'
-        // 外网代理（fn.cky 服务器通过此代理访问 GitHub）
-        HTTP_PROXY      = 'http://192.168.10.20:7890'
-        HTTPS_PROXY     = 'http://192.168.10.20:7890'
-        NO_PROXY        = 'localhost,127.0.0.1,fn.cky,192.168.10.0/24,192.168.20.0/24'
     }
 
     stages {
@@ -27,9 +23,6 @@ pipeline {
         stage('Checkout') {
             agent any
             steps {
-                // 配置 git 使用 HTTP 代理
-                sh 'git config --global http.proxy http://192.168.10.20:7890'
-                sh 'git config --global https.proxy http://192.168.10.20:7890'
                 checkout scm
                 stash name: 'source', includes: '**'
             }
