@@ -71,6 +71,7 @@ class Agent:
         tool_name: str | None = None,
         tool_description: str | None = None,
         config: RunConfig | None = None,
+        condition: Callable[[RunContext], bool] | None = None,
     ) -> FunctionTool:
         """将此 Agent 包装为 Tool，供 Manager Agent 调用。
 
@@ -81,6 +82,7 @@ class Agent:
             tool_name: 工具名称（默认 agent.name）
             tool_description: 工具描述（默认 agent.description）
             config: 子 Agent 运行配置（默认 None，使用默认 RunConfig）
+            condition: 条件启用函数。返回 False 时工具不暴露给 LLM。
 
         Returns:
             FunctionTool 实例
@@ -119,6 +121,7 @@ class Agent:
                 },
                 "required": ["input"],
             },
+            condition=condition,
         )
 
     @classmethod

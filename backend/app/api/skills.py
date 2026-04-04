@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
+from app.core.tenant import check_quota, get_org_id
 from app.schemas.skill import (
     SkillCreate,
     SkillListResponse,
@@ -24,8 +25,10 @@ router = APIRouter(prefix="/api/v1/skills", tags=["skills"])
 async def create_skill(
     data: SkillCreate,
     db: AsyncSession = Depends(get_db),
+    org_id: uuid.UUID | None = Depends(get_org_id),
 ) -> SkillResponse:
     """创建技能知识包。"""
+    await check_quota(db, org_id, "max_skills")
     record = await skill_service.create_skill(db, data)
     return SkillResponse.model_validate(record)
 
@@ -37,10 +40,11 @@ async def list_skills(
     limit: int = Query(20, ge=1, le=100, description="分页大小"),
     offset: int = Query(0, ge=0, description="分页偏移"),
     db: AsyncSession = Depends(get_db),
+    org_id: uuid.UUID | None = Depends(get_org_id),
 ) -> SkillListResponse:
     """查询技能列表。"""
     rows, total = await skill_service.list_skills(
-        db, category=category, tag=tag, limit=limit, offset=offset
+        db, category=category, tag=tag, limit=limit, offset=offset, org_id=org_id
     )
     return SkillListResponse(
         data=[SkillResponse.model_validate(r) for r in rows],

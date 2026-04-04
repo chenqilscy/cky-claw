@@ -28,6 +28,7 @@ const TemplatePage = lazy(() => import('./pages/templates/TemplatePage'));
 const WorkflowPage = lazy(() => import('./pages/workflows/WorkflowPage'));
 const WorkflowEditorPage = lazy(() => import('./pages/workflows/WorkflowEditorPage'));
 const TeamPage = lazy(() => import('./pages/teams/TeamPage'));
+const TeamFlowPage = lazy(() => import('./pages/teams/TeamFlowPage'));
 const AuditLogPage = lazy(() => import('./pages/audit-logs/AuditLogPage'));
 const RolePage = lazy(() => import('./pages/roles/RolePage'));
 const IMChannelPage = lazy(() => import('./pages/im-channels/IMChannelPage'));
@@ -94,6 +95,7 @@ const App: React.FC = () => {
           <Route path="workflows" element={<WorkflowPage />} />
           <Route path="workflow-editor" element={<WorkflowEditorPage />} />
           <Route path="teams" element={<TeamPage />} />
+          <Route path="teams/flow" element={<TeamFlowPage />} />
           <Route path="audit-logs" element={<AuditLogPage />} />
           <Route path="roles" element={<RolePage />} />
           <Route path="im-channels" element={<IMChannelPage />} />

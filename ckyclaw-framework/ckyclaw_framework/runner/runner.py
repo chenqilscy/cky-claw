@@ -135,10 +135,16 @@ async def _build_system_message(agent: Agent, run_context: RunContext) -> Messag
     return Message(role=MessageRole.SYSTEM, content=text)
 
 
-def _build_tool_schemas(agent: Agent) -> list[dict[str, Any]]:
-    """从 Agent 的 tools + handoffs 构建 OpenAI tool schemas。"""
+def _build_tool_schemas(agent: Agent, run_ctx: RunContext | None = None) -> list[dict[str, Any]]:
+    """从 Agent 的 tools + handoffs 构建 OpenAI tool schemas。
+
+    condition 字段不为 None 时，仅在 condition(run_ctx) 返回 True 时包含该工具。
+    """
     schemas: list[dict[str, Any]] = []
     for tool in agent.tools:
+        if tool.condition is not None and run_ctx is not None:
+            if not tool.condition(run_ctx):
+                continue
         schemas.append(tool.to_openai_schema())
     # Handoff 生成特殊工具
     for target in agent.handoffs:
@@ -976,7 +982,7 @@ class Runner:
             if system_msg.content:
                 llm_messages.append(system_msg)
             llm_messages.extend(messages)
-            tool_schemas = _build_tool_schemas(current_agent)
+            tool_schemas = _build_tool_schemas(current_agent, run_ctx)
 
             model_name = _resolve_model(current_agent, config)
             settings = _resolve_settings(current_agent, config)
@@ -1279,7 +1285,7 @@ class Runner:
             if system_msg.content:
                 llm_messages.append(system_msg)
             llm_messages.extend(messages)
-            tool_schemas = _build_tool_schemas(current_agent)
+            tool_schemas = _build_tool_schemas(current_agent, run_ctx)
 
             model_name = _resolve_model(current_agent, config)
             settings = _resolve_settings(current_agent, config)

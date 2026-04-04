@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
+from app.core.tenant import check_quota, get_org_id
 from app.schemas.team import (
     TeamConfigCreate,
     TeamConfigListResponse,
@@ -23,8 +24,10 @@ router = APIRouter(prefix="/api/v1/teams", tags=["teams"])
 async def create_team(
     data: TeamConfigCreate,
     db: AsyncSession = Depends(get_db),
+    org_id: uuid.UUID | None = Depends(get_org_id),
 ) -> TeamConfigResponse:
     """创建团队配置。"""
+    await check_quota(db, org_id, "max_teams")
     record = await team_service.create_team(db, data)
     return TeamConfigResponse.model_validate(record)
 
@@ -35,9 +38,10 @@ async def list_teams(
     offset: int = Query(0, ge=0, description="分页偏移"),
     search: str | None = Query(None, max_length=64, description="名称搜索"),
     db: AsyncSession = Depends(get_db),
+    org_id: uuid.UUID | None = Depends(get_org_id),
 ) -> TeamConfigListResponse:
     """查询团队配置列表。"""
-    rows, total = await team_service.list_teams(db, limit=limit, offset=offset, search=search)
+    rows, total = await team_service.list_teams(db, limit=limit, offset=offset, search=search, org_id=org_id)
     return TeamConfigListResponse(
         data=[TeamConfigResponse.model_validate(r) for r in rows],
         total=total,

@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.deps import require_admin
+from app.core.tenant import check_quota, get_org_id
 from app.schemas.im_channel import (
     IMChannelCreate,
     IMChannelListResponse,
@@ -31,10 +32,11 @@ async def list_channels(
     offset: int = 0,
     db: AsyncSession = Depends(get_db),
     _: dict = Depends(require_admin),
+    org_id: uuid.UUID | None = Depends(get_org_id),
 ) -> IMChannelListResponse:
     """查询 IM 渠道列表。"""
     items, total = await svc.list_channels(
-        db, channel_type=channel_type, is_enabled=is_enabled, limit=limit, offset=offset
+        db, channel_type=channel_type, is_enabled=is_enabled, limit=limit, offset=offset, org_id=org_id
     )
     return IMChannelListResponse(
         data=[IMChannelResponse.model_validate(i) for i in items],
@@ -49,8 +51,10 @@ async def create_channel(
     data: IMChannelCreate,
     db: AsyncSession = Depends(get_db),
     _: dict = Depends(require_admin),
+    org_id: uuid.UUID | None = Depends(get_org_id),
 ) -> IMChannelResponse:
     """创建 IM 渠道。"""
+    await check_quota(db, org_id, "max_im_channels")
     channel = await svc.create_channel(db, data)
     return IMChannelResponse.model_validate(channel)
 

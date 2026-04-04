@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
+from app.core.tenant import check_quota, get_org_id
 from app.schemas.memory import (
     MemoryCreate,
     MemoryDecayRequest,
@@ -26,8 +27,10 @@ router = APIRouter(prefix="/api/v1/memories", tags=["memories"])
 async def create_memory(
     data: MemoryCreate,
     db: AsyncSession = Depends(get_db),
+    org_id: uuid.UUID | None = Depends(get_org_id),
 ) -> MemoryResponse:
     """创建记忆条目。"""
+    await check_quota(db, org_id, "max_memories")
     record = await memory_service.create_memory(db, data)
     return MemoryResponse.model_validate(record)
 
@@ -40,6 +43,7 @@ async def list_memories(
     limit: int = Query(20, ge=1, le=100, description="分页大小"),
     offset: int = Query(0, ge=0, description="分页偏移"),
     db: AsyncSession = Depends(get_db),
+    org_id: uuid.UUID | None = Depends(get_org_id),
 ) -> MemoryListResponse:
     """查询记忆列表。"""
     rows, total = await memory_service.list_memories(
@@ -49,6 +53,7 @@ async def list_memories(
         agent_name=agent_name,
         limit=limit,
         offset=offset,
+        org_id=org_id,
     )
     return MemoryListResponse(
         data=[MemoryResponse.model_validate(r) for r in rows],

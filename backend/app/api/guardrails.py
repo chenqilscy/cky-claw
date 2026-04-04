@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.deps import get_db
+from app.core.tenant import check_quota, get_org_id
 from app.schemas.guardrail import (
     GuardrailRuleCreate,
     GuardrailRuleListResponse,
@@ -23,8 +24,10 @@ router = APIRouter(prefix="/api/v1/guardrails", tags=["guardrails"])
 async def create_guardrail_rule(
     body: GuardrailRuleCreate,
     db: AsyncSession = Depends(get_db),
+    org_id: uuid.UUID | None = Depends(get_org_id),
 ) -> GuardrailRuleResponse:
     """创建 Guardrail 规则。"""
+    await check_quota(db, org_id, "max_guardrails")
     rule = await guardrail_service.create_guardrail_rule(
         db,
         name=body.name,
@@ -45,6 +48,7 @@ async def list_guardrail_rules(
     limit: int = Query(50, ge=1, le=200, description="每页数量"),
     offset: int = Query(0, ge=0, description="偏移量"),
     db: AsyncSession = Depends(get_db),
+    org_id: uuid.UUID | None = Depends(get_org_id),
 ) -> GuardrailRuleListResponse:
     """获取 Guardrail 规则列表。"""
     rules, total = await guardrail_service.list_guardrail_rules(
@@ -54,6 +58,7 @@ async def list_guardrail_rules(
         enabled_only=enabled_only,
         limit=limit,
         offset=offset,
+        org_id=org_id,
     )
     items = [GuardrailRuleResponse.model_validate(r) for r in rules]
     return GuardrailRuleListResponse(data=items, total=total, limit=limit, offset=offset)

@@ -14,6 +14,7 @@ from app.core.middleware import RequestIDMiddleware
 from app.core.audit_middleware import AuditLogMiddleware
 from app.core.otel import setup_otel, instrument_fastapi
 from app.api.agents import router as agents_router
+from app.api.alerts import router as alerts_router
 from app.api.apm import router as apm_router
 from app.api.agent_templates import router as agent_templates_router
 from app.api.agent_versions import router as agent_versions_router
@@ -61,7 +62,17 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         logging.getLogger(__name__).warning("Seed 内置工具组失败，跳过", exc_info=True)
 
     await start_subscriber()
+
+    # 启动定时任务调度器
+    from app.services.scheduler_engine import start_scheduler
+    start_scheduler()
+
     yield
+
+    # 停止调度器
+    from app.services.scheduler_engine import stop_scheduler
+    stop_scheduler()
+
     await stop_subscriber()
     await close_redis()
 
@@ -99,6 +110,7 @@ def create_app() -> FastAPI:
     app.include_router(auth_router)
     app.include_router(audit_logs_router)
     app.include_router(agents_router)
+    app.include_router(alerts_router)
     app.include_router(apm_router)
     app.include_router(agent_templates_router)
     app.include_router(agent_versions_router)

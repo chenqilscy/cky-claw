@@ -173,9 +173,12 @@ class TestWorkflowValidation:
 
 
 def _make_app() -> TestClient:
+    from app.core.tenant import get_org_id
     from app.main import create_app
 
-    return TestClient(create_app())
+    test_app = create_app()
+    test_app.dependency_overrides[get_org_id] = lambda: None
+    return TestClient(test_app)
 
 
 class TestWorkflowAPI:

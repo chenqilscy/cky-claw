@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
+from app.core.tenant import check_quota, get_org_id
 from app.schemas.workflow import (
     WorkflowCreate,
     WorkflowListResponse,
@@ -24,8 +25,10 @@ router = APIRouter(prefix="/api/v1/workflows", tags=["workflows"])
 async def create_workflow(
     data: WorkflowCreate,
     db: AsyncSession = Depends(get_db),
+    org_id: uuid.UUID | None = Depends(get_org_id),
 ) -> WorkflowResponse:
     """创建工作流定义。"""
+    await check_quota(db, org_id, "max_workflows")
     record = await workflow_service.create_workflow(db, data)
     return WorkflowResponse.model_validate(record)
 
@@ -35,9 +38,10 @@ async def list_workflows(
     limit: int = Query(20, ge=1, le=100, description="分页大小"),
     offset: int = Query(0, ge=0, description="分页偏移"),
     db: AsyncSession = Depends(get_db),
+    org_id: uuid.UUID | None = Depends(get_org_id),
 ) -> WorkflowListResponse:
     """查询工作流列表。"""
-    rows, total = await workflow_service.list_workflows(db, limit=limit, offset=offset)
+    rows, total = await workflow_service.list_workflows(db, limit=limit, offset=offset, org_id=org_id)
     return WorkflowListResponse(
         data=[WorkflowResponse.model_validate(r) for r in rows],
         total=total,

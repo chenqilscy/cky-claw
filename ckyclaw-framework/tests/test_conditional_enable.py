@@ -158,3 +158,142 @@ class TestToolGuardrailCondition:
         """默认 condition 为 None。"""
         g = ToolGuardrail(name="default")
         assert g.condition is None
+
+
+# ---------------------------------------------------------------------------
+# FunctionTool condition
+# ---------------------------------------------------------------------------
+
+from ckyclaw_framework.tools.function_tool import FunctionTool
+from ckyclaw_framework.runner.runner import _build_tool_schemas
+
+
+class TestFunctionToolCondition:
+    """FunctionTool condition 字段测试。"""
+
+    def test_condition_default_none(self):
+        """默认 condition 为 None（始终启用）。"""
+        tool = FunctionTool(name="always-on", description="desc")
+        assert tool.condition is None
+
+    def test_condition_field_accepts_callable(self):
+        """condition 接受 Callable。"""
+        tool = FunctionTool(
+            name="cond-tool",
+            description="desc",
+            condition=lambda ctx: ctx.context.get("enable_tool", False),
+        )
+        assert tool.condition is not None
+
+    def test_condition_true_includes_in_schemas(self):
+        """condition 返回 True 时工具包含在 schemas 中。"""
+        tool = FunctionTool(
+            name="included",
+            description="desc",
+            condition=lambda ctx: True,
+        )
+        agent = Agent(name="test", tools=[tool])
+        ctx = _make_context()
+        schemas = _build_tool_schemas(agent, ctx)
+        names = [s["function"]["name"] for s in schemas]
+        assert "included" in names
+
+    def test_condition_false_excludes_from_schemas(self):
+        """condition 返回 False 时工具排除在 schemas 外。"""
+        tool = FunctionTool(
+            name="excluded",
+            description="desc",
+            condition=lambda ctx: False,
+        )
+        agent = Agent(name="test", tools=[tool])
+        ctx = _make_context()
+        schemas = _build_tool_schemas(agent, ctx)
+        names = [s["function"]["name"] for s in schemas]
+        assert "excluded" not in names
+
+    def test_no_condition_always_included(self):
+        """无 condition 时始终包含。"""
+        tool = FunctionTool(name="always", description="desc")
+        agent = Agent(name="test", tools=[tool])
+        ctx = _make_context()
+        schemas = _build_tool_schemas(agent, ctx)
+        assert len(schemas) == 1
+
+    def test_condition_based_on_context(self):
+        """condition 可根据 RunContext.context 动态决定。"""
+        tool = FunctionTool(
+            name="dynamic",
+            description="desc",
+            condition=lambda ctx: ctx.context.get("premium", False),
+        )
+        agent = Agent(name="test", tools=[tool])
+
+        ctx_disabled = _make_context(premium=False)
+        assert len(_build_tool_schemas(agent, ctx_disabled)) == 0
+
+        ctx_enabled = _make_context(premium=True)
+        assert len(_build_tool_schemas(agent, ctx_enabled)) == 1
+
+    def test_mixed_tools_condition(self):
+        """混合有无 condition 的工具。"""
+        tool_always = FunctionTool(name="always", description="always on")
+        tool_cond_on = FunctionTool(name="cond-on", description="on", condition=lambda ctx: True)
+        tool_cond_off = FunctionTool(name="cond-off", description="off", condition=lambda ctx: False)
+
+        agent = Agent(name="test", tools=[tool_always, tool_cond_on, tool_cond_off])
+        ctx = _make_context()
+        schemas = _build_tool_schemas(agent, ctx)
+        names = [s["function"]["name"] for s in schemas]
+        assert "always" in names
+        assert "cond-on" in names
+        assert "cond-off" not in names
+
+    def test_build_tool_schemas_without_context(self):
+        """run_ctx 为 None 时，所有工具均包含（向后兼容）。"""
+        tool = FunctionTool(name="cond", description="desc", condition=lambda ctx: False)
+        agent = Agent(name="test", tools=[tool])
+        schemas = _build_tool_schemas(agent, None)
+        assert len(schemas) == 1  # condition 不检查
+
+
+# ---------------------------------------------------------------------------
+# Agent-as-Tool condition
+# ---------------------------------------------------------------------------
+
+
+class TestAgentAsToolCondition:
+    """Agent.as_tool() condition 参数测试。"""
+
+    def test_as_tool_no_condition(self):
+        """默认无 condition。"""
+        agent = Agent(name="sub", description="sub agent")
+        tool = agent.as_tool()
+        assert tool.condition is None
+
+    def test_as_tool_with_condition(self):
+        """as_tool 传入 condition。"""
+        agent = Agent(name="sub", description="sub agent")
+        cond = lambda ctx: ctx.context.get("use_sub", False)
+        tool = agent.as_tool(condition=cond)
+        assert tool.condition is cond
+
+    def test_as_tool_condition_filters_in_schemas(self):
+        """as_tool condition 在 _build_tool_schemas 中生效。"""
+        sub_agent = Agent(name="sub", description="helper")
+        tool = sub_agent.as_tool(condition=lambda ctx: False)
+
+        manager = Agent(name="manager", tools=[tool])
+        ctx = _make_context()
+        schemas = _build_tool_schemas(manager, ctx)
+        assert len(schemas) == 0
+
+    def test_as_tool_condition_true_includes(self):
+        """as_tool condition 返回 True 时工具可用。"""
+        sub_agent = Agent(name="sub", description="helper")
+        tool = sub_agent.as_tool(condition=lambda ctx: True)
+
+        manager = Agent(name="manager", tools=[tool])
+        ctx = _make_context()
+        schemas = _build_tool_schemas(manager, ctx)
+        assert len(schemas) == 1
+        assert schemas[0]["function"]["name"] == "sub"

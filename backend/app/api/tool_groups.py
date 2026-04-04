@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+import uuid
+
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
+from app.core.tenant import check_quota, get_org_id
 from app.schemas.tool_group import (
     ToolGroupCreate,
     ToolGroupListResponse,
@@ -20,9 +23,10 @@ router = APIRouter(prefix="/api/v1/tool-groups", tags=["tool-groups"])
 @router.get("", response_model=ToolGroupListResponse)
 async def list_tool_groups(
     db: AsyncSession = Depends(get_db),
+    org_id: uuid.UUID | None = Depends(get_org_id),
 ) -> ToolGroupListResponse:
     """获取工具组列表。"""
-    groups, total = await tg_service.list_tool_groups(db)
+    groups, total = await tg_service.list_tool_groups(db, org_id=org_id)
     return ToolGroupListResponse(
         data=[ToolGroupResponse.model_validate(g) for g in groups],
         total=total,
@@ -43,8 +47,10 @@ async def get_tool_group(
 async def create_tool_group(
     data: ToolGroupCreate,
     db: AsyncSession = Depends(get_db),
+    org_id: uuid.UUID | None = Depends(get_org_id),
 ) -> ToolGroupResponse:
     """创建工具组。"""
+    await check_quota(db, org_id, "max_tool_groups")
     tg = await tg_service.create_tool_group(db, data)
     return ToolGroupResponse.model_validate(tg)
 

@@ -67,3 +67,33 @@ class ScheduledTaskListResponse(BaseModel):
 
     data: list[ScheduledTaskResponse]
     total: int
+
+
+# ---------------------------------------------------------------------------
+# 执行历史
+# ---------------------------------------------------------------------------
+
+
+class ScheduledRunResponse(BaseModel):
+    """定时任务执行记录响应。"""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    task_id: uuid.UUID
+    status: str
+    started_at: datetime | None
+    finished_at: datetime | None
+    duration_ms: float | None
+    output: str | None
+    error: str | None
+    trace_id: uuid.UUID | None
+    triggered_by: str
+    created_at: datetime
+
+
+class ScheduledRunListResponse(BaseModel):
+    """执行历史列表响应。"""
+
+    data: list[ScheduledRunResponse]
+    total: int

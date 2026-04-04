@@ -7,7 +7,10 @@ import inspect
 import json
 import logging
 from dataclasses import dataclass, field
-from typing import Any, Callable, get_args, get_origin, get_type_hints
+from typing import TYPE_CHECKING, Any, Callable, get_args, get_origin, get_type_hints
+
+if TYPE_CHECKING:
+    from ckyclaw_framework.runner.run_context import RunContext
 
 logger = logging.getLogger(__name__)
 
@@ -117,6 +120,9 @@ class FunctionTool:
     approval_required: bool = False
     """是否需要审批"""
 
+    condition: Callable[[RunContext], bool] | None = None
+    """条件启用函数。返回 False 时工具不会暴露给 LLM。None 表示始终启用。"""
+
     def to_openai_schema(self) -> dict[str, Any]:
         """转为 OpenAI function calling 格式。"""
         return {
@@ -187,6 +193,7 @@ def function_tool(
     group: str | None = None,
     timeout: float | None = None,
     approval_required: bool = False,
+    condition: Callable[[RunContext], bool] | None = None,
 ) -> Callable[..., Any]:
     """装饰器：将 Python 函数注册为 Function Tool。自动生成 JSON Schema。"""
 
@@ -203,6 +210,7 @@ def function_tool(
             group=group,
             timeout=timeout,
             approval_required=approval_required,
+            condition=condition,
         )
 
     return decorator

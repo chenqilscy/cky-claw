@@ -154,3 +154,229 @@ class TestReloadAPI:
         client = TestClient(app)
         resp = client.post("/api/v1/config/reload")
         assert resp.status_code in (401, 403)
+
+
+# ═══════════════════════════════════════════════════════════════════
+# ConfigChangeLog 模型 + Schema + 服务测试
+# ═══════════════════════════════════════════════════════════════════
+
+import uuid
+from datetime import datetime, timezone
+from unittest.mock import AsyncMock
+
+from app.models.config_change_log import ConfigChangeLog
+from app.schemas.config_change_log import (
+    ConfigChangeLogCreate,
+    ConfigChangeLogListResponse,
+    ConfigChangeLogResponse,
+    RollbackPreviewResponse,
+)
+
+
+class TestConfigChangeLogModel:
+    """ConfigChangeLog ORM 模型测试。"""
+
+    def test_tablename(self) -> None:
+        assert ConfigChangeLog.__tablename__ == "config_change_logs"
+
+    def test_create_instance(self) -> None:
+        log = ConfigChangeLog(
+            config_key="agent.triage.instructions",
+            entity_type="agent",
+            entity_id="abc-123",
+            old_value={"instructions": "old"},
+            new_value={"instructions": "new"},
+            change_source="api",
+        )
+        assert log.config_key == "agent.triage.instructions"
+        assert log.entity_type == "agent"
+        assert log.rollback_ref is None
+
+
+class TestConfigChangeLogSchema:
+    """ConfigChangeLog Schema 测试。"""
+
+    def test_create_schema(self) -> None:
+        data = ConfigChangeLogCreate(
+            config_key="agent.x.model",
+            entity_type="agent",
+            entity_id="id-1",
+            old_value={"model": "gpt-4"},
+            new_value={"model": "gpt-4o"},
+        )
+        assert data.change_source == "api"
+        assert data.description == ""
+
+    def test_response_from_attributes(self) -> None:
+        now = datetime.now(timezone.utc)
+        mock = MagicMock()
+        mock.id = uuid.uuid4()
+        mock.config_key = "agent.test"
+        mock.entity_type = "agent"
+        mock.entity_id = "e-1"
+        mock.old_value = None
+        mock.new_value = {"a": 1}
+        mock.changed_by = None
+        mock.change_source = "api"
+        mock.rollback_ref = None
+        mock.description = ""
+        mock.org_id = None
+        mock.created_at = now
+        resp = ConfigChangeLogResponse.model_validate(mock, from_attributes=True)
+        assert resp.config_key == "agent.test"
+
+    def test_list_response(self) -> None:
+        resp = ConfigChangeLogListResponse(data=[], total=0)
+        assert resp.total == 0
+
+    def test_rollback_preview(self) -> None:
+        preview = RollbackPreviewResponse(
+            change_id=uuid.uuid4(),
+            config_key="agent.x",
+            entity_type="agent",
+            entity_id="id-1",
+            current_value={"v": 2},
+            rollback_to_value={"v": 1},
+        )
+        assert preview.current_value == {"v": 2}
+
+
+class TestConfigChangeService:
+    """配置变更审计服务测试。"""
+
+    @pytest.mark.asyncio
+    async def test_record_change(self) -> None:
+        from app.services.config_change import record_change
+
+        db = AsyncMock()
+
+        async def _refresh(obj: object) -> None:
+            pass
+
+        db.refresh = _refresh
+
+        data = ConfigChangeLogCreate(
+            config_key="agent.test.instructions",
+            entity_type="agent",
+            entity_id="agent-1",
+            old_value={"instructions": "old"},
+            new_value={"instructions": "new"},
+        )
+        log = await record_change(db, data, changed_by=uuid.uuid4())
+        assert log.config_key == "agent.test.instructions"
+        assert log.change_source == "api"
+        db.add.assert_called_once()
+        db.commit.assert_awaited_once()
+
+    @pytest.mark.asyncio
+    async def test_rollback_change(self) -> None:
+        from app.services.config_change import rollback_change
+
+        db = AsyncMock()
+
+        async def _refresh(obj: object) -> None:
+            pass
+
+        db.refresh = _refresh
+
+        change = ConfigChangeLog(
+            config_key="agent.x.model",
+            entity_type="agent",
+            entity_id="e-1",
+            old_value={"model": "gpt-4"},
+            new_value={"model": "gpt-4o"},
+            change_source="api",
+        )
+        change.id = uuid.uuid4()
+
+        rollback_log = await rollback_change(db, change)
+        assert rollback_log.change_source == "rollback"
+        assert rollback_log.rollback_ref == change.id
+        assert rollback_log.old_value == {"model": "gpt-4o"}  # 互换
+        assert rollback_log.new_value == {"model": "gpt-4"}
+
+
+# ═══════════════════════════════════════════════════════════════════
+# ConfigChangeLog API 测试
+# ═══════════════════════════════════════════════════════════════════
+
+from httpx import ASGITransport, AsyncClient
+
+from app.core.database import get_db as get_db_original
+from app.core.tenant import get_org_id
+from app.main import create_app
+
+
+def _make_app():
+    test_app = create_app()
+    mock_user = MagicMock()
+    mock_user.id = uuid.uuid4()
+    mock_user.role = "admin"
+    mock_user.org_id = None
+    test_app.dependency_overrides[get_current_user] = lambda: mock_user
+    test_app.dependency_overrides[get_org_id] = lambda: None
+    return test_app
+
+
+class TestChangeLogAPI:
+    """配置变更日志 API 测试。"""
+
+    @pytest.mark.asyncio
+    async def test_list_change_logs_empty(self) -> None:
+        test_app = _make_app()
+        mock_db = AsyncMock()
+        test_app.dependency_overrides[get_db_original] = lambda: mock_db
+
+        from unittest.mock import patch
+        with patch("app.services.config_change.list_change_logs", return_value=([], 0)):
+            async with AsyncClient(transport=ASGITransport(app=test_app), base_url="http://test") as ac:
+                resp = await ac.get("/api/v1/config/change-logs")
+                assert resp.status_code == 200
+                assert resp.json()["total"] == 0
+
+    @pytest.mark.asyncio
+    async def test_get_change_log_not_found(self) -> None:
+        test_app = _make_app()
+        mock_db = AsyncMock()
+        test_app.dependency_overrides[get_db_original] = lambda: mock_db
+
+        from unittest.mock import patch
+        with patch("app.services.config_change.get_change_log", return_value=None):
+            async with AsyncClient(transport=ASGITransport(app=test_app), base_url="http://test") as ac:
+                resp = await ac.get(f"/api/v1/config/change-logs/{uuid.uuid4()}")
+                assert resp.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_preview_rollback(self) -> None:
+        test_app = _make_app()
+        mock_db = AsyncMock()
+        test_app.dependency_overrides[get_db_original] = lambda: mock_db
+
+        change = MagicMock()
+        change.id = uuid.uuid4()
+        change.config_key = "agent.x"
+        change.entity_type = "agent"
+        change.entity_id = "e-1"
+        change.old_value = {"v": 1}
+        change.new_value = {"v": 2}
+
+        from unittest.mock import patch
+        with patch("app.services.config_change.get_change_log", return_value=change):
+            async with AsyncClient(transport=ASGITransport(app=test_app), base_url="http://test") as ac:
+                resp = await ac.get(f"/api/v1/config/preview-rollback/{change.id}")
+                assert resp.status_code == 200
+                data = resp.json()
+                assert data["rollback_to_value"] == {"v": 1}
+                assert data["current_value"] == {"v": 2}
+
+    @pytest.mark.asyncio
+    async def test_rollback_not_found(self) -> None:
+        test_app = _make_app()
+        mock_db = AsyncMock()
+        test_app.dependency_overrides[get_db_original] = lambda: mock_db
+
+        from unittest.mock import patch
+        with patch("app.services.config_change.get_change_log", return_value=None):
+            async with AsyncClient(transport=ASGITransport(app=test_app), base_url="http://test") as ac:
+                resp = await ac.post(f"/api/v1/config/rollback/{uuid.uuid4()}")
+                assert resp.status_code == 404

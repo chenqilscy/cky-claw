@@ -34,8 +34,8 @@
 | 9 | ~~**Dynamic Instructions**~~ | §2.1 | P2 | 低 | ✅ 已完成（InstructionsType 支持 str/sync/async callable + 6 测试） |
 | 10 | ~~**Handoff input_type**~~ | §2.3 | P2 | 低 | ✅ 已完成（Handoff.input_type Pydantic Schema + 5 测试） |
 | 11 | ~~**ToolSearchTool 延迟加载**~~ | §2.6 | P2 | 中 | ✅ 已完成（ToolSearchTool 元工具 + keyword 匹配 + threshold 阈值机制） |
-| 12 | **条件启用** | §2.6 | P3 | 低 | Agent-as-Tool / Function Tool 基于 RunContext 动态启用/禁用 |
-| 13 | **Hosted Tool 内置工具** | §2.6 | P2 | 中 | Web Search、Code Interpreter 等平台内置工具 |
+| 12 | **条件启用** | §2.6 | P3 | 低 | ⏳ Guardrail condition 已实现（Framework 16 测试 + Migration 0028），Agent-as-Tool / FunctionTool 条件启用待补齐 |
+| 13 | ~~**Hosted Tool 内置工具**~~ | §2.6 | P2 | 中 | ✅ 已完成（10 个工具函数 + 5 组 ToolGroup + 种子数据 + Framework 29 测试 + Backend 7 测试） |
 | 14 | ~~**Session 历史裁剪**~~ | §2.9 | P1 | 中 | ✅ 已完成（HistoryTrimmer 滑动窗口 + Token 预算集成） |
 | 15 | ~~**Guardrail 并行模式**~~ | §2.10 | P2 | 中 | ✅ 已完成（RunConfig.guardrail_parallel + asyncio.TaskGroup 并行执行 Input/Output 护栏） |
 
@@ -44,12 +44,12 @@
 | # | 功能 | PRD 章节 | 优先级 | 复杂度 | 说明 |
 |---|------|----------|:------:|:------:|------|
 | 16 | ~~**IM 渠道接入**~~ | §7 | P1 | 高 | ✅ 已完成（IMChannel ORM + CRUD API + Webhook 端点 + HMAC 签名验证 + 消息路由 + Migration 0025） |
-| 17 | **定时/批量任务** | 附录 A | P2 | 中 | ScheduledRun（Cron 表达式）+ BatchRun（多输入并行）|
+| 17 | **定时/批量任务** | 附录 A | P2 | 中 | ⏳ CRUD 已完成（ORM + API + Frontend + Migration 0029），缺执行引擎/历史/批量 |
 | 18 | **完整 RBAC** | §13.3 | P1 | 高 | Organization / Team / Role 层级 + 资源级细粒度授权 |
-| 19 | **多租户** | §3.3 | P1 | 高 | 数据隔离、配额管理、组织级配置 |
-| 20 | **APM 仪表盘** | §9 | P2 | 高 | 指标聚合、告警规则、成本分析、Grafana 集成 |
+| 19 | **多租户** | §3.3 | P1 | 高 | ⏳ Organization CRUD 已完成（ORM + API + Frontend + Migration 0027），缺数据隔离中间件/配额管理 |
+| 20 | **APM 仪表盘** | §9 | P2 | 高 | ⏳ 核心仪表盘已完成（聚合服务 + ECharts 可视化 + 19 测试），缺告警规则/异常检测/Grafana 集成 |
 | 21 | ~~**Agent 评估与质量度量**~~ | 附录 B v2.0.4 | P2 | 中 | ✅ 已完成（RunEvaluation 7 维评分 + RunFeedback 用户反馈 + AgentQualitySummary 汇总 + API 8 端点 + Migration 0026） |
-| 22 | **配置热更新** | 附录 B v2.0.5 | P3 | 中 | ConfigChangeLog + 审计 + 回滚（6 类可热更新项）|
+| 22 | **配置热更新** | 附录 B v2.0.5 | P3 | 中 | ⏳ 缓存清除 API 已实现（TTL 内存缓存 + invalidate），缺 ConfigChangeLog/审计/回滚 |
 | 23 | **Agent 国际化** | 附录 B v2.0.5 | P3 | 低 | 多语言 Instructions / UI / 描述 |
 | 24 | ~~**模型列表管理**~~ | §2.13 | P2 | 低 | ✅ 已完成（ProviderModel ORM + CRUD API 5 端点 + Migration 0024） |
 | 25 | ~~**成本计算**~~ | §2.13 | P2 | 低 | ✅ 已完成（TokenUsage 3 列成本字段 + 汇总聚合 + Migration 0024） |
@@ -57,7 +57,7 @@
 | 27 | **灾备策略** | 附录 B v2.0.4 | P3 | 中 | RTO<4h / RPO<1h、PostgreSQL/Redis/对象存储备份方案 |
 | 28 | ~~**内置 Agent 模板**~~ | 附录 B v2.0.5 | P2 | 低 | ✅ 已完成（10 个预设模板 + 模板市场 UI + CRUD API + Seed + 18 测试） |
 | 29 | **垂直 Agent** | 定位守卫 P2 | P2 | 高 | 代码审查、DevOps、客服、数据分析等垂直领域 Agent |
-| 30 | **声明式配置（YAML/TOML）** | §3.4 | P3 | 低 | Agent 配置除 API/DB 外，支持 YAML/TOML 文件导入导出 |
+| 30 | ~~**声明式配置（YAML/TOML）**~~ | §3.4 | P3 | 低 | ✅ 已完成（Agent 导出/导入 API + YAML/JSON 双格式 + 前端服务 + 16 测试） |
 
 ---
 
@@ -71,7 +71,7 @@
 | O2 | Zustand 全局状态扩充 | P3 | 仅 authStore 使用 Zustand；Agent 列表、Session 等可受益于全局状态 |
 | O3 | ECharts 图表 | P3 | Dashboard 当前用 Ant Design Progress 条；ECharts 饼图/折线图可提升数据表达 |
 | O4 | 响应式布局 | P3 | 当前无移动端适配 |
-| O5 | 暗色模式 | P3 | Ant Design 5 支持 ConfigProvider theme 切换 |
+| O5 | ~~暗色模式~~ | P3 | ✅ 已完成（themeStore + ConfigProvider 主题切换） |
 | O6 | ~~前端测试覆盖~~ | P1 | ✅ 已完成（64 个 Vitest 测试：API/AgentService/AuthStore/SkillService/TemplateService/WorkflowService/TeamService/AuditLogService/RoleService） |
 | O7 | ~~对话页体验优化~~ | P1 | ✅ 已完成（MarkdownRenderer + Prism 代码高亮 + 复制按钮 + React.memo 优化） |
 
@@ -81,7 +81,7 @@
 |---|--------|:------:|------|
 | O8 | ~~Redis 实际使用~~ | P2 | ✅ 已完成（WebSocket 审批通道 Redis pub/sub + 连接池管理） |
 | O9 | ~~API 分页标准化~~ | P2 | ✅ 已完成（36 文件统一 data/total/limit/offset 格式 + PaginatedResponse 泛型基类） |
-| O10 | 软删除统一 | P3 | 仅 Agent 有软删除；其他实体（Session/Provider/MCP 等）为硬删除 |
+| O10 | ~~软删除统一~~ | P3 | ✅ 已完成（SoftDeleteMixin + 15 模型/服务 + Migration 0030 + 30 测试） |
 | O11 | ~~操作审计日志~~ | P1 | ✅ 已完成（AuditLog Model + Middleware + API + Frontend UI + Migration 0022 + 21 测试） |
 | O12 | 错误信息国际化 | P3 | 当前错误消息只有英文 |
 
@@ -91,8 +91,8 @@
 |---|--------|:------:|------|
 | O13 | ~~Guardrail 并行 + 阻塞双模式~~ | P2 | ✅ 已完成（guardrail_parallel 配置 + asyncio.TaskGroup 并行执行） |
 | O14 | ~~Runner 重试机制~~ | P2 | ✅ 已完成（RunConfig.max_retries + retry_delay + 指数退避 + run/run_streamed 双路径 + 6 测试） |
-| O15 | 多 TraceProcessor | P3 | 当前每次 run 只注入 1 个 PostgresTraceProcessor；支持链式多 Processor |
-| O16 | Tool 并发限流 | P3 | 多工具并行时无全局并发限制；可配置最大并发工具数 |
+| O15 | ~~多 TraceProcessor~~ | P3 | ✅ 已完成（RunConfig.trace_processors: list + 链式调用 + Postgres/OTel/Console 三实现） |
+| O16 | ~~Tool 并发限流~~ | P3 | ✅ 已完成（RunConfig.max_tool_concurrency + asyncio.Semaphore + 9 测试） |
 
 ---
 
@@ -141,7 +141,7 @@
 | 功能 | 对应编号 | 状态 | 关键交付物 |
 |------|:--------:|:----:|----------|
 | 完整 RBAC | #18 | ✅ | Role ORM + RBAC Service + require_permission 依赖 + API 端点 + 前端 RolePage + Migration 0023 + 29 测试 |
-| 多租户 | #19 | ❌ | Organization / Team 隔离 + 配额管理 |
+| 多租户 | #19 | ⏳ | Organization CRUD ✅ | 缺数据隔离中间件/配额管理 |
 | ~~操作审计~~ | O11 | ✅ | AuditLog + AuditMiddleware + API + UI（已在 v2.3 提前完成） |
 | IM 渠道接入 | #16 | ✅ | IMChannel CRUD + Webhook + HMAC 验签 + 消息路由 + Migration 0025 |
 
@@ -153,7 +153,7 @@
 |------|:--------:|-----------|
 | OTel + Jaeger | #2 | ✅ | OTelTraceProcessor + FastAPI 中间件 + Jaeger docker-compose profile |
 | Prometheus + Grafana | #2 | ✅ | Prometheus docker-compose profile + scrape 配置 |
-| APM 仪表盘 | #20 | 告警规则 + 成本分析 + 异常检测 |
+| APM 仪表盘 | #20 | ⏳ 核心仪表盘 ✅（聚合 API + ECharts 前端）| 缺告警规则/异常检测 |
 | Agent 评估 | #21 | ✅ | RunEvaluation 7 维 + RunFeedback + AgentQualitySummary + 8 API + Migration 0026 |
 
 ### v2.6 — 高级特性
@@ -194,12 +194,14 @@
 
 ## 七、其它
 
-### `Settings`
-`config.py`中`Settings`类，相关中间件的配置信息，采用硬编码的方式。需要改为从配置文件中读取
+### ~~`Settings`~~
+~~`config.py`中`Settings`类，相关中间件的配置信息，采用硬编码的方式。需要改为从配置文件中读取~~
+
+✅ 已解决：Settings 使用 Pydantic v2 BaseSettings，全部通过 `CKYCLAW_` 前缀环境变量配置，无硬编码
 
 
 ---
 
-*文档版本：v1.4.0*
-*生成日期：2026-04-05*
+*文档版本：v1.5.0*
+*生成日期：2026-04-04*
 *基于：PRD v2.0.9 / mvp-progress.md M0–M7 + v2.1~v2.5 增量实现*

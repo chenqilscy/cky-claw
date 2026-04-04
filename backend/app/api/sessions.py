@@ -9,6 +9,7 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
+from app.core.tenant import check_quota, get_org_id
 from app.schemas.session import (
     RunRequest,
     RunResponse,
@@ -27,8 +28,10 @@ router = APIRouter(prefix="/api/v1/sessions", tags=["sessions"])
 async def create_session(
     data: SessionCreate,
     db: AsyncSession = Depends(get_db),
+    org_id: uuid.UUID | None = Depends(get_org_id),
 ) -> SessionResponse:
     """创建 Session。"""
+    await check_quota(db, org_id, "max_sessions")
     session = await session_service.create_session(db, data)
     return SessionResponse.model_validate(session)
 
@@ -40,10 +43,11 @@ async def list_sessions(
     limit: int = Query(20, ge=1, le=100, description="分页大小"),
     offset: int = Query(0, ge=0, description="偏移量"),
     db: AsyncSession = Depends(get_db),
+    org_id: uuid.UUID | None = Depends(get_org_id),
 ) -> SessionListResponse:
     """获取 Session 列表。"""
     sessions, total = await session_service.list_sessions(
-        db, agent_name=agent_name, status=status, limit=limit, offset=offset
+        db, agent_name=agent_name, status=status, limit=limit, offset=offset, org_id=org_id
     )
     return SessionListResponse(
         data=[SessionResponse.model_validate(s) for s in sessions],

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import uuid
 
 import yaml
 from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile
@@ -10,6 +11,7 @@ from fastapi.responses import Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
+from app.core.tenant import check_quota, get_org_id
 from app.schemas.agent import AgentCreate, AgentListResponse, AgentResponse, AgentUpdate
 from app.services import agent as agent_service
 
@@ -22,9 +24,10 @@ async def list_agents(
     limit: int = Query(20, ge=1, le=100, description="分页大小"),
     offset: int = Query(0, ge=0, description="偏移量"),
     db: AsyncSession = Depends(get_db),
+    org_id: uuid.UUID | None = Depends(get_org_id),
 ) -> AgentListResponse:
     """获取 Agent 列表。"""
-    agents, total = await agent_service.list_agents(db, search=search, limit=limit, offset=offset)
+    agents, total = await agent_service.list_agents(db, search=search, limit=limit, offset=offset, org_id=org_id)
     return AgentListResponse(
         data=[AgentResponse.model_validate(a) for a in agents],
         total=total,
@@ -37,8 +40,10 @@ async def list_agents(
 async def create_agent(
     data: AgentCreate,
     db: AsyncSession = Depends(get_db),
+    org_id: uuid.UUID | None = Depends(get_org_id),
 ) -> AgentResponse:
     """创建 Agent。"""
+    await check_quota(db, org_id, "max_agents")
     agent = await agent_service.create_agent(db, data)
     return AgentResponse.model_validate(agent)
 

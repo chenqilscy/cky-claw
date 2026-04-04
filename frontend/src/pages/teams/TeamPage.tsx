@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Card, Button, Space, Modal, Form, Input, Select, Tag, message,
   Popconfirm, Empty, Table, Typography, Tooltip,
 } from 'antd';
 import {
   PlusOutlined, ReloadOutlined, DeleteOutlined, EditOutlined,
-  TeamOutlined,
+  TeamOutlined, ApartmentOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import type { TeamConfig, TeamConfigCreate } from '../../services/teamService';
@@ -27,6 +28,7 @@ const protocolColor: Record<string, string> = {
 };
 
 const TeamPage: React.FC = () => {
+  const navigate = useNavigate();
   const [teams, setTeams] = useState<TeamConfig[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -161,6 +163,9 @@ const TeamPage: React.FC = () => {
       key: 'actions',
       render: (_: unknown, record: TeamConfig) => (
         <Space size="small">
+          <Tooltip title="查看拓扑">
+            <Button type="text" icon={<ApartmentOutlined />} onClick={() => navigate(`/teams/flow?id=${record.id}`)} />
+          </Tooltip>
           <Tooltip title="编辑">
             <Button type="text" icon={<EditOutlined />} onClick={() => handleEdit(record)} />
           </Tooltip>
