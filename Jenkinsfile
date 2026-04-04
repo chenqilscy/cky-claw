@@ -1,14 +1,13 @@
 // CkyClaw Jenkins Pipeline
+// 使用 --volumes-from jenkins 共享 Jenkins 容器的工作空间
 // docker run 通过 /var/run/docker.sock 在宿主机执行
-// -v 挂载必须使用宿主机路径（HOST_WS），而非 Jenkins 容器内路径
 
 pipeline {
     agent any
 
     environment {
         IMAGE_TAG = "${env.BUILD_NUMBER}"
-        // 宿主机上 Jenkins workspace 的实际路径
-        HOST_WS = '/@appdata/1Panel/1panel/apps/jenkins/jenkins/data/workspace/cky-claw'
+        WS = '/var/jenkins_home/workspace/cky-claw'
     }
 
     stages {
@@ -16,9 +15,8 @@ pipeline {
             parallel {
                 stage('Framework Lint') {
                     steps {
-                        sh '''docker run --rm -v ${HOST_WS}:/app -w /app python:3.12-slim bash -c '
+                        sh '''docker run --rm --volumes-from jenkins -w ${WS}/ckyclaw-framework python:3.12-slim bash -c '
                             pip install -q uv 2>/dev/null
-                            cd ckyclaw-framework
                             uv sync --extra dev 2>/dev/null
                             uv run ruff check .
                             uv run ruff format --check .
@@ -27,9 +25,8 @@ pipeline {
                 }
                 stage('Backend Lint') {
                     steps {
-                        sh '''docker run --rm -v ${HOST_WS}:/app -w /app python:3.12-slim bash -c '
+                        sh '''docker run --rm --volumes-from jenkins -w ${WS}/backend python:3.12-slim bash -c '
                             pip install -q uv 2>/dev/null
-                            cd backend
                             uv sync --extra dev 2>/dev/null
                             uv run ruff check .
                             uv run ruff format --check .
@@ -38,9 +35,8 @@ pipeline {
                 }
                 stage('Frontend Lint') {
                     steps {
-                        sh '''docker run --rm -v ${HOST_WS}:/app -w /app node:20-alpine sh -c '
+                        sh '''docker run --rm --volumes-from jenkins -w ${WS}/frontend node:20-alpine sh -c '
                             corepack enable && corepack prepare pnpm@latest --activate
-                            cd frontend
                             pnpm install --frozen-lockfile
                             pnpm lint
                             npx tsc --noEmit
@@ -54,9 +50,8 @@ pipeline {
             parallel {
                 stage('Framework Test') {
                     steps {
-                        sh '''docker run --rm -v ${HOST_WS}:/app -w /app python:3.12-slim bash -c '
+                        sh '''docker run --rm --volumes-from jenkins -w ${WS}/ckyclaw-framework python:3.12-slim bash -c '
                             pip install -q uv 2>/dev/null
-                            cd ckyclaw-framework
                             uv sync --extra dev 2>/dev/null
                             uv run pytest tests/ \
                                 --ignore=tests/test_integration.py \
@@ -69,9 +64,8 @@ pipeline {
                 }
                 stage('Backend Test') {
                     steps {
-                        sh '''docker run --rm --network host -v ${HOST_WS}:/app -w /app python:3.12-slim bash -c '
+                        sh '''docker run --rm --network host --volumes-from jenkins -w ${WS}/backend python:3.12-slim bash -c '
                             pip install -q uv 2>/dev/null
-                            cd backend
                             uv sync --extra dev 2>/dev/null
                             CKYCLAW_DATABASE_URL=postgresql+asyncpg://admin:Admin888@127.0.0.1:15432/ckyclaw \
                             uv run pytest tests/ \
@@ -85,9 +79,8 @@ pipeline {
                 }
                 stage('Frontend Test') {
                     steps {
-                        sh '''docker run --rm -v ${HOST_WS}:/app -w /app node:20-alpine sh -c '
+                        sh '''docker run --rm --volumes-from jenkins -w ${WS}/frontend node:20-alpine sh -c '
                             corepack enable && corepack prepare pnpm@latest --activate
-                            cd frontend
                             pnpm install --frozen-lockfile
                             pnpm test -- --run
                         ' '''
@@ -98,9 +91,8 @@ pipeline {
 
         stage('Frontend Build') {
             steps {
-                sh '''docker run --rm -v ${HOST_WS}:/app -w /app node:20-alpine sh -c '
+                sh '''docker run --rm --volumes-from jenkins -w ${WS}/frontend node:20-alpine sh -c '
                     corepack enable && corepack prepare pnpm@latest --activate
-                    cd frontend
                     pnpm install --frozen-lockfile
                     pnpm build
                 ' '''
@@ -111,9 +103,9 @@ pipeline {
             steps {
                 sh """
                     docker build -t ckyclaw-backend:\${IMAGE_TAG} -t ckyclaw-backend:latest \
-                        -f \${HOST_WS}/backend/Dockerfile \${HOST_WS}
+                        -f \${WS}/backend/Dockerfile \${WS}
                     docker build -t ckyclaw-frontend:\${IMAGE_TAG} -t ckyclaw-frontend:latest \
-                        -f \${HOST_WS}/frontend/Dockerfile \${HOST_WS}/frontend/
+                        -f \${WS}/frontend/Dockerfile \${WS}/frontend/
                 """
             }
         }
