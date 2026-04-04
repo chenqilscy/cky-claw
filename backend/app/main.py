@@ -27,6 +27,7 @@ from app.api.mcp_servers import router as mcp_servers_router
 from app.api.memories import router as memories_router
 from app.api.skills import router as skills_router
 from app.api.tool_groups import router as tool_groups_router
+from app.api.workflows import router as workflows_router
 from app.api.ws import router as ws_router
 
 
@@ -83,6 +84,7 @@ def create_app() -> FastAPI:
     app.include_router(memories_router)
     app.include_router(skills_router)
     app.include_router(tool_groups_router)
+    app.include_router(workflows_router)
     app.include_router(ws_router)
 
     return app

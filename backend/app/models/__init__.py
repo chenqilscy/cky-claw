@@ -10,6 +10,7 @@ from app.models.memory import MemoryEntryRecord
 from app.models.provider import ProviderConfig
 from app.models.skill import SkillRecord
 from app.models.session import SessionRecord
+from app.models.workflow import WorkflowDefinition
 from app.models.token_usage import TokenUsageLog
 from app.models.tool_group import ToolGroupConfig
 from app.models.trace import SpanRecord, TraceRecord
@@ -31,4 +32,5 @@ __all__ = [
     "ToolGroupConfig",
     "TraceRecord",
     "User",
+    "WorkflowDefinition",
 ]

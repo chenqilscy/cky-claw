@@ -23,6 +23,7 @@ const ToolGroupPage = lazy(() => import('./pages/tool-groups/ToolGroupPage'));
 const MemoryPage = lazy(() => import('./pages/memories/MemoryPage'));
 const SkillPage = lazy(() => import('./pages/skills/SkillPage'));
 const TemplatePage = lazy(() => import('./pages/templates/TemplatePage'));
+const WorkflowPage = lazy(() => import('./pages/workflows/WorkflowPage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 
 const PageLoading = () => (
@@ -73,6 +74,7 @@ const App: React.FC = () => {
           <Route path="memories" element={<MemoryPage />} />
           <Route path="skills" element={<SkillPage />} />
           <Route path="templates" element={<TemplatePage />} />
+          <Route path="workflows" element={<WorkflowPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>

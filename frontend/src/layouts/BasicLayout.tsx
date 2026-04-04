@@ -15,6 +15,7 @@ import {
   BulbOutlined,
   BookOutlined,
   AppstoreOutlined,
+  BranchesOutlined,
 } from '@ant-design/icons';
 
 const menuRoutes = {
@@ -88,6 +89,11 @@ const menuRoutes = {
       path: '/templates',
       name: '模板市场',
       icon: <AppstoreOutlined />,
+    },
+    {
+      path: '/workflows',
+      name: '工作流',
+      icon: <BranchesOutlined />,
     },
   ],
 };
