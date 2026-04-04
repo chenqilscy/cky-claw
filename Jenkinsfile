@@ -1,39 +1,23 @@
 // CkyClaw Jenkins Pipeline
-// 前置：Jenkins 容器挂载 /var/run/docker.sock
-// 注意：docker run 通过 socket 在宿主机执行，-v 必须用宿主机路径
+// docker run 通过 /var/run/docker.sock 在宿主机执行
+// -v 挂载必须使用宿主机路径（HOST_WS），而非 Jenkins 容器内路径
 
 pipeline {
     agent any
 
     environment {
         IMAGE_TAG = "${env.BUILD_NUMBER}"
-        // Jenkins 容器内 workspace 路径 → 宿主机实际路径映射
-        // 容器内: /var/jenkins_home → 宿主机: /@appdata/1Panel/1panel/apps/jenkins/jenkins/data
+        // 宿主机上 Jenkins workspace 的实际路径
         HOST_WS = '/@appdata/1Panel/1panel/apps/jenkins/jenkins/data/workspace/cky-claw'
     }
 
     stages {
-        // ── 0. 调试：检查 workspace ──
-        stage('Debug') {
-            steps {
-                sh 'echo "PWD=$PWD"'
-                sh 'echo "HOST_WS=$HOST_WS"'
-                sh 'ls -la'
-                sh 'ls -la frontend/ || echo "NO frontend/"'
-                sh 'ls -la backend/ || echo "NO backend/"'
-                sh 'ls -la ckyclaw-framework/ || echo "NO ckyclaw-framework/"'
-                // 也检查宿主机路径
-                sh 'docker run --rm -v ${HOST_WS}:/mnt -w /mnt alpine ls -la || echo "Host path mount failed"'
-            }
-        }
-
-        // ── 1. 并行 Lint ──
         stage('Lint') {
             parallel {
                 stage('Framework Lint') {
                     steps {
-                        sh '''docker run --rm -v ${HOST_WS}:/app -w /app python:3.12-slim sh -c '
-                            pip install -q uv ruff 2>/dev/null
+                        sh '''docker run --rm -v ${HOST_WS}:/app -w /app python:3.12-slim bash -c '
+                            pip install -q uv 2>/dev/null
                             cd ckyclaw-framework
                             uv sync --extra dev 2>/dev/null
                             uv run ruff check .
@@ -43,8 +27,8 @@ pipeline {
                 }
                 stage('Backend Lint') {
                     steps {
-                        sh '''docker run --rm -v ${HOST_WS}:/app -w /app python:3.12-slim sh -c '
-                            pip install -q uv ruff 2>/dev/null
+                        sh '''docker run --rm -v ${HOST_WS}:/app -w /app python:3.12-slim bash -c '
+                            pip install -q uv 2>/dev/null
                             cd backend
                             uv sync --extra dev 2>/dev/null
                             uv run ruff check .
@@ -66,12 +50,11 @@ pipeline {
             }
         }
 
-        // ── 2. 并行测试 ──
         stage('Test') {
             parallel {
                 stage('Framework Test') {
                     steps {
-                        sh '''docker run --rm -v ${HOST_WS}:/app -w /app python:3.12-slim sh -c '
+                        sh '''docker run --rm -v ${HOST_WS}:/app -w /app python:3.12-slim bash -c '
                             pip install -q uv 2>/dev/null
                             cd ckyclaw-framework
                             uv sync --extra dev 2>/dev/null
@@ -86,8 +69,7 @@ pipeline {
                 }
                 stage('Backend Test') {
                     steps {
-                        // --network host 连接宿主机 PostgreSQL (15432)
-                        sh '''docker run --rm --network host -v ${HOST_WS}:/app -w /app python:3.12-slim sh -c '
+                        sh '''docker run --rm --network host -v ${HOST_WS}:/app -w /app python:3.12-slim bash -c '
                             pip install -q uv 2>/dev/null
                             cd backend
                             uv sync --extra dev 2>/dev/null
@@ -114,7 +96,6 @@ pipeline {
             }
         }
 
-        // ── 3. 前端构建 ──
         stage('Frontend Build') {
             steps {
                 sh '''docker run --rm -v ${HOST_WS}:/app -w /app node:20-alpine sh -c '
@@ -126,15 +107,13 @@ pipeline {
             }
         }
 
-        // ── 4. Docker 镜像构建 ──
         stage('Docker Build') {
             steps {
-                // docker build 在宿主机执行，-f 路径用 HOST_WS
                 sh """
                     docker build -t ckyclaw-backend:\${IMAGE_TAG} -t ckyclaw-backend:latest \
-                        -f backend/Dockerfile \${HOST_WS}
+                        -f \${HOST_WS}/backend/Dockerfile \${HOST_WS}
                     docker build -t ckyclaw-frontend:\${IMAGE_TAG} -t ckyclaw-frontend:latest \
-                        -f frontend/Dockerfile \${HOST_WS}/frontend/
+                        -f \${HOST_WS}/frontend/Dockerfile \${HOST_WS}/frontend/
                 """
             }
         }
