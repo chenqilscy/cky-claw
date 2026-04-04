@@ -5,6 +5,7 @@ from app.models.agent_version import AgentConfigVersion
 from app.models.approval import ApprovalRequest
 from app.models.guardrail import GuardrailRule
 from app.models.mcp_server import MCPServerConfig
+from app.models.memory import MemoryEntryRecord
 from app.models.provider import ProviderConfig
 from app.models.session import SessionRecord
 from app.models.token_usage import TokenUsageLog
@@ -18,6 +19,7 @@ __all__ = [
     "ApprovalRequest",
     "GuardrailRule",
     "MCPServerConfig",
+    "MemoryEntryRecord",
     "ProviderConfig",
     "SessionRecord",
     "SpanRecord",

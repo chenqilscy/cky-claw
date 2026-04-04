@@ -20,6 +20,7 @@ const GuardrailRulesPage = lazy(() => import('./pages/guardrails/GuardrailRulesP
 const ApprovalQueuePage = lazy(() => import('./pages/approvals/ApprovalQueuePage'));
 const MCPServerPage = lazy(() => import('./pages/mcp/MCPServerPage'));
 const ToolGroupPage = lazy(() => import('./pages/tool-groups/ToolGroupPage'));
+const MemoryPage = lazy(() => import('./pages/memories/MemoryPage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 
 const PageLoading = () => (
@@ -67,6 +68,7 @@ const App: React.FC = () => {
           <Route path="approvals" element={<ApprovalQueuePage />} />
           <Route path="mcp-servers" element={<MCPServerPage />} />
           <Route path="tool-groups" element={<ToolGroupPage />} />
+          <Route path="memories" element={<MemoryPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>

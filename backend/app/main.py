@@ -23,6 +23,7 @@ from app.api.token_usage import router as token_usage_router
 from app.api.traces import router as traces_router
 from app.api.guardrails import router as guardrails_router
 from app.api.mcp_servers import router as mcp_servers_router
+from app.api.memories import router as memories_router
 from app.api.tool_groups import router as tool_groups_router
 from app.api.ws import router as ws_router
 
@@ -76,6 +77,7 @@ def create_app() -> FastAPI:
     app.include_router(traces_router)
     app.include_router(guardrails_router)
     app.include_router(mcp_servers_router)
+    app.include_router(memories_router)
     app.include_router(tool_groups_router)
     app.include_router(ws_router)
 

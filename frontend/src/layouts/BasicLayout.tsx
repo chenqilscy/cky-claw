@@ -12,6 +12,7 @@ import {
   AuditOutlined,
   ApiOutlined,
   ToolOutlined,
+  BulbOutlined,
 } from '@ant-design/icons';
 
 const menuRoutes = {
@@ -70,6 +71,11 @@ const menuRoutes = {
       path: '/tool-groups',
       name: '工具组',
       icon: <ToolOutlined />,
+    },
+    {
+      path: '/memories',
+      name: '记忆管理',
+      icon: <BulbOutlined />,
     },
   ],
 };

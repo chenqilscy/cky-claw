@@ -1,0 +1,140 @@
+"""Memory — 跨会话长期记忆核心类型与抽象后端。"""
+
+from __future__ import annotations
+
+from abc import ABC, abstractmethod
+from dataclasses import dataclass, field
+from datetime import datetime, timezone
+from enum import Enum
+from typing import Any
+from uuid import uuid4
+
+
+class MemoryType(str, Enum):
+    """记忆条目类型。"""
+
+    USER_PROFILE = "user_profile"
+    """用户档案 — 偏好、习惯、技术栈、身份信息。"""
+
+    HISTORY_SUMMARY = "history_summary"
+    """历史摘要 — 长对话自动生成的压缩摘要。"""
+
+    STRUCTURED_FACT = "structured_fact"
+    """结构化事实 — Agent 执行中积累的事实数据。"""
+
+
+@dataclass
+class MemoryEntry:
+    """记忆条目。"""
+
+    id: str = field(default_factory=lambda: str(uuid4()))
+    """条目唯一标识。"""
+
+    type: MemoryType = MemoryType.STRUCTURED_FACT
+    """条目类型。"""
+
+    content: str = ""
+    """记忆内容文本。"""
+
+    confidence: float = 1.0
+    """置信度分数（0.0 ~ 1.0）。越高表示越可靠。"""
+
+    user_id: str = ""
+    """所属用户标识。"""
+
+    agent_name: str | None = None
+    """产生此记忆的 Agent 名称。"""
+
+    source_session_id: str | None = None
+    """来源会话 ID。"""
+
+    metadata: dict[str, Any] = field(default_factory=dict)
+    """附加元数据。"""
+
+    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    """创建时间。"""
+
+    updated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    """最后更新时间。"""
+
+
+class MemoryBackend(ABC):
+    """记忆存储后端抽象。
+
+    所有方法都以 user_id 为必需参数，强制用户隔离。
+    """
+
+    @abstractmethod
+    async def store(self, user_id: str, entry: MemoryEntry) -> None:
+        """存储或更新一条记忆条目。
+
+        若 entry.id 已存在，执行更新（upsert 语义）。
+        """
+        ...
+
+    @abstractmethod
+    async def search(
+        self, user_id: str, query: str, *, limit: int = 10
+    ) -> list[MemoryEntry]:
+        """按关键词搜索用户的记忆条目。
+
+        Args:
+            user_id: 用户标识。
+            query: 搜索关键词。
+            limit: 返回条目上限。
+
+        Returns:
+            按相关性排序的记忆条目列表。
+        """
+        ...
+
+    @abstractmethod
+    async def list_entries(
+        self,
+        user_id: str,
+        *,
+        memory_type: MemoryType | None = None,
+        agent_name: str | None = None,
+    ) -> list[MemoryEntry]:
+        """列出用户的记忆条目。
+
+        Args:
+            user_id: 用户标识。
+            memory_type: 按类型过滤。
+            agent_name: 按 Agent 名称过滤。
+        """
+        ...
+
+    @abstractmethod
+    async def get(self, entry_id: str) -> MemoryEntry | None:
+        """获取单条记忆条目。"""
+        ...
+
+    @abstractmethod
+    async def delete(self, entry_id: str) -> None:
+        """删除一条记忆条目。"""
+        ...
+
+    @abstractmethod
+    async def delete_by_user(self, user_id: str) -> int:
+        """删除指定用户的全部记忆。
+
+        Returns:
+            删除的条目数量。
+        """
+        ...
+
+    @abstractmethod
+    async def decay(self, before: datetime, rate: float) -> int:
+        """对 updated_at < before 的条目降低 confidence。
+
+        新 confidence = max(0.0, old_confidence - rate)。
+
+        Args:
+            before: 时间阈值，仅影响此时间之前的条目。
+            rate: 衰减量（如 0.01 表示降低 0.01）。
+
+        Returns:
+            受影响的条目数量。
+        """
+        ...

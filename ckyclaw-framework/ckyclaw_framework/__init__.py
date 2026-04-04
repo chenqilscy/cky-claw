@@ -56,6 +56,11 @@ from ckyclaw_framework.workflow.config import WorkflowRunConfig
 from ckyclaw_framework.workflow.validator import WorkflowValidationError, topological_sort, validate_workflow, validate_workflow_strict
 from ckyclaw_framework.workflow.evaluator import UnsafeExpressionError, evaluate
 
+# === Memory ===
+from ckyclaw_framework.memory.memory import MemoryBackend, MemoryEntry, MemoryType
+from ckyclaw_framework.memory.in_memory import InMemoryMemoryBackend
+from ckyclaw_framework.memory.retriever import MemoryRetriever
+
 # === Model ===
 from ckyclaw_framework.model.provider import ModelProvider, ToolCall, ToolCallChunk
 from ckyclaw_framework.model.settings import ModelSettings
@@ -137,6 +142,12 @@ __all__ = [
     "validate_workflow_strict",
     "UnsafeExpressionError",
     "evaluate",
+    # Memory
+    "MemoryType",
+    "MemoryEntry",
+    "MemoryBackend",
+    "InMemoryMemoryBackend",
+    "MemoryRetriever",
     # Model
     "ModelProvider",
     "ModelSettings",
