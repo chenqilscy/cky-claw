@@ -80,6 +80,9 @@ class RunConfig:
     tool_timeout: float | None = None
     """全局工具执行超时（秒）。当 FunctionTool 未设置自身 timeout 时生效。"""
 
+    max_tool_concurrency: int | None = None
+    """工具并行执行的最大并发数。None 表示无限制。设置后使用 Semaphore 限流。"""
+
     guardrail_parallel: bool = False
     """是否启用 Guardrail 并行执行模式。True 时所有 Guardrail 并发执行，False 时串行短路。"""
 

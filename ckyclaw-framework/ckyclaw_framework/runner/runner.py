@@ -244,6 +244,15 @@ async def _execute_input_guardrails(
         return
 
     for guardrail in guardrails:
+        # 条件启用：检查 condition
+        if guardrail.condition is not None:
+            try:
+                if not guardrail.condition(run_context):
+                    logger.debug("Input guardrail '%s' skipped by condition", guardrail.name)
+                    continue
+            except Exception:
+                logger.warning("Input guardrail '%s' condition raised exception, treating as enabled", guardrail.name)
+
         # Tracing: Guardrail Span
         guardrail_span = None
         if tracing and tracing.active:
@@ -299,6 +308,21 @@ async def _execute_input_guardrails_parallel(
     tracing: _TracingCtx | None = None,
 ) -> None:
     """并行执行 Input Guardrails，收集所有结果后报告首个触发项。"""
+    # 条件过滤（异常时当作启用）
+    active: list[InputGuardrail] = []
+    for g in guardrails:
+        if g.condition is None:
+            active.append(g)
+        else:
+            try:
+                if g.condition(run_context):
+                    active.append(g)
+            except Exception:
+                logger.warning("Input guardrail '%s' condition raised exception, treating as enabled", g.name)
+                active.append(g)
+    if not active:
+        return
+
     results: list[tuple[InputGuardrail, GuardrailResult | Exception]] = []
 
     async def _run_one(g: InputGuardrail) -> tuple[InputGuardrail, GuardrailResult | Exception]:
@@ -309,7 +333,7 @@ async def _execute_input_guardrails_parallel(
             return (g, e)
 
     async with asyncio.TaskGroup() as tg:
-        tasks = [tg.create_task(_run_one(g)) for g in guardrails]
+        tasks = [tg.create_task(_run_one(g)) for g in active]
 
     results = [t.result() for t in tasks]
 
@@ -345,6 +369,15 @@ async def _execute_output_guardrails(
         return
 
     for guardrail in guardrails:
+        # 条件启用：检查 condition
+        if guardrail.condition is not None:
+            try:
+                if not guardrail.condition(run_context):
+                    logger.debug("Output guardrail '%s' skipped by condition", guardrail.name)
+                    continue
+            except Exception:
+                logger.warning("Output guardrail '%s' condition raised exception, treating as enabled", guardrail.name)
+
         # Tracing: Guardrail Span
         guardrail_span = None
         if tracing and tracing.active:
@@ -400,6 +433,21 @@ async def _execute_output_guardrails_parallel(
     tracing: _TracingCtx | None = None,
 ) -> None:
     """并行执行 Output Guardrails，收集所有结果后报告首个触发项。"""
+    # 条件过滤（异常时当作启用）
+    active: list[OutputGuardrail] = []
+    for g in guardrails:
+        if g.condition is None:
+            active.append(g)
+        else:
+            try:
+                if g.condition(run_context):
+                    active.append(g)
+            except Exception:
+                logger.warning("Output guardrail '%s' condition raised exception, treating as enabled", g.name)
+                active.append(g)
+    if not active:
+        return
+
     async def _run_one(g: OutputGuardrail) -> tuple[OutputGuardrail, GuardrailResult | Exception]:
         try:
             r = await g.guardrail_function(run_context, output_text)
@@ -408,7 +456,7 @@ async def _execute_output_guardrails_parallel(
             return (g, e)
 
     async with asyncio.TaskGroup() as tg:
-        tasks = [tg.create_task(_run_one(g)) for g in guardrails]
+        tasks = [tg.create_task(_run_one(g)) for g in active]
 
     results = [t.result() for t in tasks]
 
@@ -511,6 +559,7 @@ async def _execute_tool_calls(
     _merged_tool_guardrails = agent.tool_guardrails + (config.tool_guardrails if config else [])
     _hooks = config.hooks if config and config.hooks else None
     _tool_timeout = config.tool_timeout if config else None
+    _max_concurrency = config.max_tool_concurrency if config else None
 
     # ── 1. 找到首个 Handoff 调用，分割出需要并行执行的普通工具 ──
     handoff_idx: int | None = None
@@ -662,13 +711,25 @@ async def _execute_tool_calls(
         if tool_span:
             await tracing.end_span(tool_span, output=result)
 
-    # ── 3. 并行执行所有普通工具 ──────────────────────────────
+    # ── 3. 并行执行所有普通工具（支持并发限流）──────────────────────────────
     if len(normal_tool_calls) == 1:
         await _run_one(normal_tool_calls[0])
     elif normal_tool_calls:
-        async with asyncio.TaskGroup() as tg:
-            for tc in normal_tool_calls:
-                tg.create_task(_run_one(tc))
+        if _max_concurrency is not None and _max_concurrency > 0:
+            _semaphore = asyncio.Semaphore(_max_concurrency)
+
+            async def _run_one_limited(tc: ToolCall) -> None:
+                """使用 Semaphore 限流的工具执行包装。"""
+                async with _semaphore:
+                    await _run_one(tc)
+
+            async with asyncio.TaskGroup() as tg:
+                for tc in normal_tool_calls:
+                    tg.create_task(_run_one_limited(tc))
+        else:
+            async with asyncio.TaskGroup() as tg:
+                for tc in normal_tool_calls:
+                    tg.create_task(_run_one(tc))
 
     # 按原始 tool_call 顺序追加结果到 messages
     for tc in normal_tool_calls:
