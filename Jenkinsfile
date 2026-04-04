@@ -13,6 +13,20 @@ pipeline {
     }
 
     stages {
+        // ── 0. 调试：检查 workspace ──
+        stage('Debug') {
+            steps {
+                sh 'echo "PWD=$PWD"'
+                sh 'echo "HOST_WS=$HOST_WS"'
+                sh 'ls -la'
+                sh 'ls -la frontend/ || echo "NO frontend/"'
+                sh 'ls -la backend/ || echo "NO backend/"'
+                sh 'ls -la ckyclaw-framework/ || echo "NO ckyclaw-framework/"'
+                // 也检查宿主机路径
+                sh 'docker run --rm -v ${HOST_WS}:/mnt -w /mnt alpine ls -la || echo "Host path mount failed"'
+            }
+        }
+
         // ── 1. 并行 Lint ──
         stage('Lint') {
             parallel {
