@@ -24,8 +24,10 @@ const MemoryPage = lazy(() => import('./pages/memories/MemoryPage'));
 const SkillPage = lazy(() => import('./pages/skills/SkillPage'));
 const TemplatePage = lazy(() => import('./pages/templates/TemplatePage'));
 const WorkflowPage = lazy(() => import('./pages/workflows/WorkflowPage'));
+const WorkflowEditorPage = lazy(() => import('./pages/workflows/WorkflowEditorPage'));
 const TeamPage = lazy(() => import('./pages/teams/TeamPage'));
 const AuditLogPage = lazy(() => import('./pages/audit-logs/AuditLogPage'));
+const RolePage = lazy(() => import('./pages/roles/RolePage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 
 const PageLoading = () => (
@@ -77,8 +79,10 @@ const App: React.FC = () => {
           <Route path="skills" element={<SkillPage />} />
           <Route path="templates" element={<TemplatePage />} />
           <Route path="workflows" element={<WorkflowPage />} />
+          <Route path="workflow-editor" element={<WorkflowEditorPage />} />
           <Route path="teams" element={<TeamPage />} />
           <Route path="audit-logs" element={<AuditLogPage />} />
+          <Route path="roles" element={<RolePage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>

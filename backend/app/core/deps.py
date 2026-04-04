@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import uuid
+from collections.abc import Callable
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -61,3 +62,48 @@ async def require_admin(user: User = Depends(get_current_user)) -> User:
             detail={"code": "FORBIDDEN", "message": "需要管理员权限"},
         )
     return user
+
+
+def require_permission(resource: str, action: str) -> Callable:
+    """工厂函数：生成权限检查依赖。
+
+    若用户绑定了 Role 且 Role 含有 permissions JSONB，则检查 JSONB；
+    否则回退到 user.role 字段（admin 具有全部权限，user 具有 read 权限）。
+    """
+
+    async def _check(
+        user: User = Depends(get_current_user),
+        db: AsyncSession = Depends(get_db),
+    ) -> User:
+        # 优先检查 role_id 绑定的 Role permissions
+        if user.role_id is not None:
+            from app.models.role import Role
+
+            stmt = select(Role).where(Role.id == user.role_id)
+            role = (await db.execute(stmt)).scalar_one_or_none()
+            if role is not None:
+                actions = role.permissions.get(resource, [])
+                if action in actions:
+                    return user
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail={
+                        "code": "FORBIDDEN",
+                        "message": f"角色 '{role.name}' 缺少 {resource}.{action} 权限",
+                    },
+                )
+
+        # 回退：兼容旧 role 字段
+        if user.role == "admin":
+            return user
+        if action == "read":
+            return user
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={
+                "code": "FORBIDDEN",
+                "message": f"当前角色缺少 {resource}.{action} 权限",
+            },
+        )
+
+    return _check

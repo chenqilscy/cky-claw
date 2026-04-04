@@ -20,6 +20,8 @@ from app.api.audit_logs import router as audit_logs_router
 from app.api.auth import router as auth_router
 from app.api.health import router as health_router
 from app.api.providers import router as providers_router
+from app.api.roles import router as roles_router
+from app.api.sandbox import router as sandbox_router
 from app.api.sessions import router as sessions_router
 from app.api.supervision import router as supervision_router
 from app.api.token_usage import router as token_usage_router
@@ -80,6 +82,8 @@ def create_app() -> FastAPI:
     app.include_router(agent_versions_router)
     app.include_router(approvals_router)
     app.include_router(providers_router)
+    app.include_router(roles_router)
+    app.include_router(sandbox_router)
     app.include_router(sessions_router)
     app.include_router(supervision_router)
     app.include_router(token_usage_router)

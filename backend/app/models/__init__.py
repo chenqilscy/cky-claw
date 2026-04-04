@@ -9,6 +9,7 @@ from app.models.guardrail import GuardrailRule
 from app.models.mcp_server import MCPServerConfig
 from app.models.memory import MemoryEntryRecord
 from app.models.provider import ProviderConfig
+from app.models.role import Role
 from app.models.skill import SkillRecord
 from app.models.session import SessionRecord
 from app.models.workflow import WorkflowDefinition
@@ -27,6 +28,7 @@ __all__ = [
     "MCPServerConfig",
     "MemoryEntryRecord",
     "ProviderConfig",
+    "Role",
     "SkillRecord",
     "SessionRecord",
     "SpanRecord",

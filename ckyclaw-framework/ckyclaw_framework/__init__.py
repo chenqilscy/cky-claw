@@ -71,6 +71,11 @@ from ckyclaw_framework.team.protocol import TeamProtocol
 from ckyclaw_framework.team.team import Team, TeamConfig
 from ckyclaw_framework.team.team_runner import TeamResult, TeamRunner
 
+# === Sandbox ===
+from ckyclaw_framework.sandbox.config import SandboxConfig
+from ckyclaw_framework.sandbox.executor import SandboxExecutor, SandboxResult
+from ckyclaw_framework.sandbox.local_sandbox import LocalSandbox
+
 # === Model ===
 from ckyclaw_framework.model.provider import ModelProvider, ToolCall, ToolCallChunk
 from ckyclaw_framework.model.settings import ModelSettings
@@ -180,6 +185,11 @@ __all__ = [
     "TeamProtocol",
     "TeamResult",
     "TeamRunner",
+    # Sandbox
+    "SandboxConfig",
+    "SandboxExecutor",
+    "SandboxResult",
+    "LocalSandbox",
 ]
 
 __version__ = "0.1.0"

@@ -1,47 +1,31 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Button, message, Popconfirm, Input, Space, Tag } from 'antd';
 import { PlusOutlined, ReloadOutlined, HistoryOutlined, ApartmentOutlined } from '@ant-design/icons';
 import { ProTable } from '@ant-design/pro-components';
 import type { ProColumns } from '@ant-design/pro-components';
 import { useNavigate } from 'react-router-dom';
-import { agentService } from '../../services/agentService';
 import type { AgentConfig } from '../../services/agentService';
+import { useAgentList, useDeleteAgent } from '../../hooks/useAgentQueries';
 
 const AgentListPage: React.FC = () => {
   const navigate = useNavigate();
-  const [data, setData] = useState<AgentConfig[]>([]);
-  const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
   const [pagination, setPagination] = useState({ current: 1, pageSize: 20 });
 
-  const fetchAgents = useCallback(async () => {
-    setLoading(true);
-    try {
-      const offset = (pagination.current - 1) * pagination.pageSize;
-      const res = await agentService.list({
-        search: search || undefined,
-        limit: pagination.pageSize,
-        offset,
-      });
-      setData(res.data);
-      setTotal(res.total);
-    } catch {
-      message.error('获取 Agent 列表失败');
-    } finally {
-      setLoading(false);
-    }
-  }, [pagination, search]);
+  const { data: listData, isLoading: loading, refetch: fetchAgents } = useAgentList({
+    search: search || undefined,
+    limit: pagination.pageSize,
+    offset: (pagination.current - 1) * pagination.pageSize,
+  });
+  const data = listData?.data ?? [];
+  const total = listData?.total ?? 0;
 
-  useEffect(() => {
-    fetchAgents();
-  }, [fetchAgents]);
+  const deleteMutation = useDeleteAgent();
 
   const handleDelete = async (name: string) => {
     try {
-      await agentService.delete(name);
+      await deleteMutation.mutateAsync(name);
       message.success('删除成功');
-      fetchAgents();
     } catch {
       message.error('删除失败');
     }
@@ -128,7 +112,7 @@ const AgentListPage: React.FC = () => {
           <Button
             key="reload"
             icon={<ReloadOutlined />}
-            onClick={fetchAgents}
+            onClick={() => void fetchAgents()}
           />,
           <Button
             key="handoff"

@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Card, Button, Space, Modal, Form, Input, Tag, message, Popconfirm, Empty, Typography, Table, Badge, Tooltip, Tabs } from 'antd';
-import { PlusOutlined, ReloadOutlined, DeleteOutlined, EditOutlined, EyeOutlined, CheckCircleOutlined, BranchesOutlined, NodeIndexOutlined } from '@ant-design/icons';
+import { PlusOutlined, ReloadOutlined, DeleteOutlined, EditOutlined, EyeOutlined, CheckCircleOutlined, BranchesOutlined, NodeIndexOutlined, PartitionOutlined } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
 import type { ColumnsType } from 'antd/es/table';
 import type { WorkflowItem, StepSchema, EdgeSchema, WorkflowCreateParams } from '../../services/workflowService';
-import { workflowService } from '../../services/workflowService';
+import { useWorkflowList, useCreateWorkflow, useUpdateWorkflow, useDeleteWorkflow, useValidateWorkflow } from '../../hooks/useWorkflowQueries';
 import WorkflowGraphView from './WorkflowGraphView';
 
 const { TextArea } = Input;
@@ -24,9 +25,7 @@ const stepTypeColor: Record<string, string> = {
 };
 
 const WorkflowPage: React.FC = () => {
-  const [workflows, setWorkflows] = useState<WorkflowItem[]>([]);
-  const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
   const [createOpen, setCreateOpen] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [editRecord, setEditRecord] = useState<WorkflowItem | null>(null);
@@ -35,20 +34,17 @@ const WorkflowPage: React.FC = () => {
   const [pageSize, setPageSize] = useState(20);
   const [form] = Form.useForm();
 
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      const res = await workflowService.list({ limit: pageSize, offset: (page - 1) * pageSize });
-      setWorkflows(res.items);
-      setTotal(res.total);
-    } catch {
-      message.error('加载工作流列表失败');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { data: listData, isLoading: loading, refetch: fetchData } = useWorkflowList({
+    limit: pageSize,
+    offset: (page - 1) * pageSize,
+  });
+  const workflows = listData?.items ?? [];
+  const total = listData?.total ?? 0;
 
-  useEffect(() => { fetchData(); }, [page, pageSize]);
+  const createMutation = useCreateWorkflow();
+  const updateMutation = useUpdateWorkflow();
+  const deleteMutation = useDeleteWorkflow();
+  const validateMutation = useValidateWorkflow();
 
   const handleCreate = () => {
     setEditRecord(null);
@@ -77,9 +73,8 @@ const WorkflowPage: React.FC = () => {
 
   const handleDelete = async (id: string) => {
     try {
-      await workflowService.delete(id);
+      await deleteMutation.mutateAsync(id);
       message.success('已删除');
-      fetchData();
     } catch {
       message.error('删除失败');
     }
@@ -98,7 +93,7 @@ const WorkflowPage: React.FC = () => {
         output_keys: values.output_keys ? values.output_keys.split(',').map((s: string) => s.trim()).filter(Boolean) : undefined,
         timeout: values.timeout ? Number(values.timeout) : undefined,
       };
-      const res = await workflowService.validate(params);
+      const res = await validateMutation.mutateAsync(params);
       if (res.valid) {
         message.success('验证通过');
       } else {
@@ -130,14 +125,13 @@ const WorkflowPage: React.FC = () => {
         timeout: values.timeout ? Number(values.timeout) : undefined,
       };
       if (editRecord) {
-        await workflowService.update(editRecord.id, params);
+        await updateMutation.mutateAsync({ id: editRecord.id, data: params });
         message.success('更新成功');
       } else {
-        await workflowService.create(params);
+        await createMutation.mutateAsync(params);
         message.success('创建成功');
       }
       setCreateOpen(false);
-      fetchData();
     } catch {
       message.error('操作失败，请检查输入');
     }
@@ -213,6 +207,9 @@ const WorkflowPage: React.FC = () => {
           <Tooltip title="编辑">
             <Button type="link" size="small" icon={<EditOutlined />} onClick={() => handleEdit(record)} />
           </Tooltip>
+          <Tooltip title="可视化编辑">
+            <Button type="link" size="small" icon={<PartitionOutlined />} onClick={() => navigate(`/workflow-editor?id=${record.id}`)} />
+          </Tooltip>
           <Popconfirm title="确认删除此工作流？" onConfirm={() => handleDelete(record.id)} okText="删除" cancelText="取消">
             <Tooltip title="删除">
               <Button type="link" danger size="small" icon={<DeleteOutlined />} />
@@ -240,8 +237,9 @@ const WorkflowPage: React.FC = () => {
         title={<Space><BranchesOutlined />工作流管理</Space>}
         extra={
           <Space>
-            <Button icon={<ReloadOutlined />} onClick={fetchData}>刷新</Button>
+            <Button icon={<ReloadOutlined />} onClick={() => void fetchData()}>刷新</Button>
             <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>新建工作流</Button>
+            <Button icon={<PartitionOutlined />} onClick={() => navigate('/workflow-editor')}>可视化编排</Button>
           </Space>
         }
       >

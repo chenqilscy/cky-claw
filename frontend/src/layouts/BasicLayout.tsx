@@ -18,6 +18,7 @@ import {
   BranchesOutlined,
   TeamOutlined,
   FileSearchOutlined,
+  CrownOutlined,
 } from '@ant-design/icons';
 
 const menuRoutes = {
@@ -106,6 +107,11 @@ const menuRoutes = {
       path: '/audit-logs',
       name: '审计日志',
       icon: <FileSearchOutlined />,
+    },
+    {
+      path: '/roles',
+      name: '角色权限',
+      icon: <CrownOutlined />,
     },
   ],
 };
