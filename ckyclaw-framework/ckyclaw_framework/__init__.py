@@ -66,6 +66,11 @@ from ckyclaw_framework.skills.skill import Skill, SkillCategory
 from ckyclaw_framework.skills.registry import SkillNotFoundError, SkillRegistry
 from ckyclaw_framework.skills.injector import SkillInjector
 
+# === Team ===
+from ckyclaw_framework.team.protocol import TeamProtocol
+from ckyclaw_framework.team.team import Team, TeamConfig
+from ckyclaw_framework.team.team_runner import TeamResult, TeamRunner
+
 # === Model ===
 from ckyclaw_framework.model.provider import ModelProvider, ToolCall, ToolCallChunk
 from ckyclaw_framework.model.settings import ModelSettings
@@ -168,6 +173,12 @@ __all__ = [
     "ToolCall",
     "ToolCallChunk",
     "LiteLLMProvider",
+    # Team
+    "Team",
+    "TeamConfig",
+    "TeamProtocol",
+    "TeamResult",
+    "TeamRunner",
 ]
 
 __version__ = "0.1.0"
