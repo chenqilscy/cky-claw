@@ -4,6 +4,7 @@ from app.models.agent import AgentConfig
 from app.models.agent_template import AgentTemplate
 from app.models.agent_version import AgentConfigVersion
 from app.models.approval import ApprovalRequest
+from app.models.audit_log import AuditLog
 from app.models.guardrail import GuardrailRule
 from app.models.mcp_server import MCPServerConfig
 from app.models.memory import MemoryEntryRecord
@@ -21,6 +22,7 @@ __all__ = [
     "AgentConfigVersion",
     "AgentTemplate",
     "ApprovalRequest",
+    "AuditLog",
     "GuardrailRule",
     "MCPServerConfig",
     "MemoryEntryRecord",

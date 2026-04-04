@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Card, Button, Space, Modal, Form, Input, Tag, message, Popconfirm, Empty, Typography, Table, Badge, Tooltip } from 'antd';
-import { PlusOutlined, ReloadOutlined, DeleteOutlined, EditOutlined, EyeOutlined, CheckCircleOutlined, BranchesOutlined } from '@ant-design/icons';
+import { Card, Button, Space, Modal, Form, Input, Tag, message, Popconfirm, Empty, Typography, Table, Badge, Tooltip, Tabs } from 'antd';
+import { PlusOutlined, ReloadOutlined, DeleteOutlined, EditOutlined, EyeOutlined, CheckCircleOutlined, BranchesOutlined, NodeIndexOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import type { WorkflowItem, StepSchema, EdgeSchema, WorkflowCreateParams } from '../../services/workflowService';
 import { workflowService } from '../../services/workflowService';
+import WorkflowGraphView from './WorkflowGraphView';
 
 const { TextArea } = Input;
 const { Text } = Typography;
@@ -307,39 +308,58 @@ const WorkflowPage: React.FC = () => {
         footer={<Button onClick={() => setPreviewOpen(false)}>关闭</Button>}
       >
         {previewRecord && (
-          <Space direction="vertical" style={{ width: '100%' }} size="middle">
-            <Card size="small" title="基本信息">
-              <p><Text strong>名称：</Text>{previewRecord.name}</p>
-              <p><Text strong>描述：</Text>{previewRecord.description ?? '无'}</p>
-              <p><Text strong>超时：</Text>{previewRecord.timeout ?? '无'} 秒</p>
-              {previewRecord.output_keys && previewRecord.output_keys.length > 0 && (
-                <p><Text strong>输出键：</Text>{previewRecord.output_keys.map(k => <Tag key={k}>{k}</Tag>)}</p>
-              )}
-              {previewRecord.guardrail_names && previewRecord.guardrail_names.length > 0 && (
-                <p><Text strong>护栏：</Text>{previewRecord.guardrail_names.map(g => <Tag key={g} color="red">{g}</Tag>)}</p>
-              )}
-            </Card>
-            <Card size="small" title={`步骤 (${previewRecord.steps.length})`}>
-              <Table
-                rowKey="id"
-                columns={stepColumns}
-                dataSource={previewRecord.steps}
-                pagination={false}
-                size="small"
-              />
-            </Card>
-            <Card size="small" title={`边 (${previewRecord.edges.length})`}>
-              {previewRecord.edges.length > 0 ? (
+          <Tabs defaultActiveKey="graph" items={[
+            {
+              key: 'graph',
+              label: <span><NodeIndexOutlined /> 流程图</span>,
+              children: (
+                <WorkflowGraphView steps={previewRecord.steps} edges={previewRecord.edges} />
+              ),
+            },
+            {
+              key: 'info',
+              label: '基本信息',
+              children: (
+                <Card size="small">
+                  <p><Text strong>名称：</Text>{previewRecord.name}</p>
+                  <p><Text strong>描述：</Text>{previewRecord.description ?? '无'}</p>
+                  <p><Text strong>超时：</Text>{previewRecord.timeout ?? '无'} 秒</p>
+                  {previewRecord.output_keys && previewRecord.output_keys.length > 0 && (
+                    <p><Text strong>输出键：</Text>{previewRecord.output_keys.map(k => <Tag key={k}>{k}</Tag>)}</p>
+                  )}
+                  {previewRecord.guardrail_names && previewRecord.guardrail_names.length > 0 && (
+                    <p><Text strong>护栏：</Text>{previewRecord.guardrail_names.map(g => <Tag key={g} color="red">{g}</Tag>)}</p>
+                  )}
+                </Card>
+              ),
+            },
+            {
+              key: 'steps',
+              label: `步骤 (${previewRecord.steps.length})`,
+              children: (
+                <Table
+                  rowKey="id"
+                  columns={stepColumns}
+                  dataSource={previewRecord.steps}
+                  pagination={false}
+                  size="small"
+                />
+              ),
+            },
+            {
+              key: 'edges',
+              label: `边 (${previewRecord.edges.length})`,
+              children: previewRecord.edges.length > 0 ? (
                 <Space wrap>
                   {previewRecord.edges.map((e, i) => (
-                    <Tag key={i} color="cyan">{e.source_step_id} → {e.target_step_id}</Tag>
+                    <Tag key={i} color="cyan">{e.source_step_id} → {e.target_step_id}{e.condition ? ` [${e.condition}]` : ''}</Tag>
                   ))}
                 </Space>
               ) : (
                 <Text type="secondary">无边定义</Text>
-              )}
-            </Card>
-          </Space>
+              ),
+            },
+          ]} />
         )}
       </Modal>
     </div>

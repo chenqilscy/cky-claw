@@ -79,3 +79,9 @@ class RunConfig:
 
     tool_timeout: float | None = None
     """全局工具执行超时（秒）。当 FunctionTool 未设置自身 timeout 时生效。"""
+
+    max_retries: int = 0
+    """LLM API 调用失败时的最大重试次数（0 表示不重试）。"""
+
+    retry_delay: float = 1.0
+    """重试间隔基数（秒）。实际延迟 = retry_delay * 2^(attempt-1)（指数退避）。"""

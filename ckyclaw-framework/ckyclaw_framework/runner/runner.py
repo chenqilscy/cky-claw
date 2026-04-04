@@ -106,10 +106,21 @@ def _build_trim_config(config: RunConfig) -> HistoryTrimConfig | None:
     )
 
 
-def _build_system_message(agent: Agent, run_context: RunContext) -> Message:
-    """构建 system 消息，注入 Agent instructions。"""
+async def _build_system_message(agent: Agent, run_context: RunContext) -> Message:
+    """构建 system 消息，注入 Agent instructions。
+
+    支持三种 instructions 类型：
+    - str: 静态文本
+    - Callable[[RunContext], str]: 同步动态指令
+    - Callable[[RunContext], Awaitable[str]]: 异步动态指令
+    """
     if callable(agent.instructions):
-        text = agent.instructions(run_context)
+        result = agent.instructions(run_context)
+        # 检测 async callable 返回的 Awaitable
+        if asyncio.iscoroutine(result) or asyncio.isfuture(result):
+            text = await result
+        else:
+            text = result  # type: ignore[assignment]
     else:
         text = agent.instructions or ""
     # output_type: 注入 JSON Schema 描述到 system prompt 作为 fallback 指引
@@ -134,15 +145,23 @@ def _build_tool_schemas(agent: Agent) -> list[dict[str, Any]]:
         if isinstance(target, Handoff):
             tool_name = target.resolved_tool_name
             description = target.resolved_tool_description
+            # Handoff input_type: 将 Pydantic schema 转换为工具参数
+            if target.input_type is not None and hasattr(target.input_type, "model_json_schema"):
+                parameters = target.input_type.model_json_schema()
+                # 确保 parameters 有 type: object
+                parameters.setdefault("type", "object")
+            else:
+                parameters = {"type": "object", "properties": {}}
         else:
             tool_name = f"{_HANDOFF_TOOL_PREFIX}{target.name}"
             description = f"Transfer conversation to {target.name}: {target.description}"
+            parameters = {"type": "object", "properties": {}}
         schemas.append({
             "type": "function",
             "function": {
                 "name": tool_name,
                 "description": description,
-                "parameters": {"type": "object", "properties": {}},
+                "parameters": parameters,
             },
         })
     return schemas
@@ -788,7 +807,7 @@ class Runner:
                 await _invoke_hook(hooks.on_agent_start, "on_agent_start", run_ctx, current_agent.name)
 
             # 准备 LLM 调用参数
-            system_msg = _build_system_message(current_agent, run_ctx)
+            system_msg = await _build_system_message(current_agent, run_ctx)
             llm_messages: list[Message] = []
             if system_msg.content:
                 llm_messages.append(system_msg)
@@ -806,32 +825,49 @@ class Runner:
             if hooks:
                 await _invoke_hook(hooks.on_llm_start, "on_llm_start", run_ctx, model_name, llm_messages)
 
-            # 调用 LLM
-            try:
-                response: ModelResponse = await provider.chat(
-                    model=model_name,
-                    messages=llm_messages,
-                    settings=settings,
-                    tools=tool_schemas or None,
-                    stream=False,
-                    response_format=response_format,
-                )  # type: ignore[assignment]
-            except Exception as e:
-                logger.exception("LLM call failed for agent '%s'", current_agent.name)
+            # 调用 LLM（含重试逻辑）
+            _max_retries = config.max_retries
+            _retry_delay = config.retry_delay
+            _last_error: Exception | None = None
+            for _attempt in range(_max_retries + 1):
+                try:
+                    response: ModelResponse = await provider.chat(
+                        model=model_name,
+                        messages=llm_messages,
+                        settings=settings,
+                        tools=tool_schemas or None,
+                        stream=False,
+                        response_format=response_format,
+                    )  # type: ignore[assignment]
+                    _last_error = None
+                    break
+                except Exception as e:
+                    _last_error = e
+                    if _attempt < _max_retries:
+                        delay = _retry_delay * (2 ** _attempt)
+                        logger.warning(
+                            "LLM call failed for agent '%s' (attempt %d/%d), retrying in %.1fs: %s",
+                            current_agent.name, _attempt + 1, _max_retries + 1, delay, e,
+                        )
+                        await asyncio.sleep(delay)
+                    else:
+                        logger.exception("LLM call failed for agent '%s' after %d attempts", current_agent.name, _max_retries + 1)
+
+            if _last_error is not None:
                 if llm_span:
-                    await tracing.end_span(llm_span, output=str(e), status=SpanStatus.FAILED)
+                    await tracing.end_span(llm_span, output=str(_last_error), status=SpanStatus.FAILED)
                 if agent_span:
                     await tracing.end_span(agent_span, status=SpanStatus.FAILED)
                 # Hooks: on_error + on_agent_end
                 if hooks:
-                    await _invoke_hook(hooks.on_error, "on_error", run_ctx, e)
+                    await _invoke_hook(hooks.on_error, "on_error", run_ctx, _last_error)
                     await _invoke_hook(hooks.on_agent_end, "on_agent_end", run_ctx, current_agent.name)
                 trace = await tracing.end_trace()
                 # Session: 异常时也保存已有消息
                 if session is not None:
                     await session.append(messages[history_offset:])
                 _err_result = RunResult(
-                    output=f"Error: LLM call failed: {e}",
+                    output=f"Error: LLM call failed: {_last_error}",
                     messages=messages,
                     last_agent_name=current_agent.name,
                     token_usage=total_usage,
@@ -1072,7 +1108,7 @@ class Runner:
             if hooks:
                 await _invoke_hook(hooks.on_agent_start, "on_agent_start", run_ctx, current_agent.name)
 
-            system_msg = _build_system_message(current_agent, run_ctx)
+            system_msg = await _build_system_message(current_agent, run_ctx)
             llm_messages: list[Message] = []
             if system_msg.content:
                 llm_messages.append(system_msg)
@@ -1090,32 +1126,50 @@ class Runner:
             if hooks:
                 await _invoke_hook(hooks.on_llm_start, "on_llm_start", run_ctx, model_name, llm_messages)
 
-            # 流式调用 LLM
-            try:
-                stream = await provider.chat(
-                    model=model_name,
-                    messages=llm_messages,
-                    settings=settings,
-                    tools=tool_schemas or None,
-                    stream=True,
-                    response_format=response_format,
-                )
-            except Exception as e:
-                logger.exception("LLM stream call failed for agent '%s'", current_agent.name)
+            # 流式调用 LLM（含重试逻辑）
+            _max_retries_s = config.max_retries
+            _retry_delay_s = config.retry_delay
+            _last_error_s: Exception | None = None
+            stream = None
+            for _attempt_s in range(_max_retries_s + 1):
+                try:
+                    stream = await provider.chat(
+                        model=model_name,
+                        messages=llm_messages,
+                        settings=settings,
+                        tools=tool_schemas or None,
+                        stream=True,
+                        response_format=response_format,
+                    )
+                    _last_error_s = None
+                    break
+                except Exception as e:
+                    _last_error_s = e
+                    if _attempt_s < _max_retries_s:
+                        delay = _retry_delay_s * (2 ** _attempt_s)
+                        logger.warning(
+                            "LLM stream call failed for agent '%s' (attempt %d/%d), retrying in %.1fs: %s",
+                            current_agent.name, _attempt_s + 1, _max_retries_s + 1, delay, e,
+                        )
+                        await asyncio.sleep(delay)
+                    else:
+                        logger.exception("LLM stream call failed for agent '%s' after %d attempts", current_agent.name, _max_retries_s + 1)
+
+            if _last_error_s is not None:
                 if llm_span:
-                    await tracing.end_span(llm_span, output=str(e), status=SpanStatus.FAILED)
+                    await tracing.end_span(llm_span, output=str(_last_error_s), status=SpanStatus.FAILED)
                 if agent_span:
                     await tracing.end_span(agent_span, status=SpanStatus.FAILED)
                 # Hooks: on_error + on_agent_end
                 if hooks:
-                    await _invoke_hook(hooks.on_error, "on_error", run_ctx, e)
+                    await _invoke_hook(hooks.on_error, "on_error", run_ctx, _last_error_s)
                     await _invoke_hook(hooks.on_agent_end, "on_agent_end", run_ctx, current_agent.name)
                 trace = await tracing.end_trace()
                 # Session: 异常时也保存已有消息
                 if session is not None:
                     await session.append(messages[history_offset:])
                 _err_result = RunResult(
-                    output=f"Error: LLM call failed: {e}",
+                    output=f"Error: LLM call failed: {_last_error_s}",
                     messages=messages,
                     last_agent_name=current_agent.name,
                     token_usage=total_usage,

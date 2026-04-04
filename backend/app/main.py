@@ -11,10 +11,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.core.exceptions import register_exception_handlers
 from app.core.middleware import RequestIDMiddleware
+from app.core.audit_middleware import AuditLogMiddleware
 from app.api.agents import router as agents_router
 from app.api.agent_templates import router as agent_templates_router
 from app.api.agent_versions import router as agent_versions_router
 from app.api.approvals import router as approvals_router
+from app.api.audit_logs import router as audit_logs_router
 from app.api.auth import router as auth_router
 from app.api.health import router as health_router
 from app.api.providers import router as providers_router
@@ -28,6 +30,7 @@ from app.api.memories import router as memories_router
 from app.api.skills import router as skills_router
 from app.api.tool_groups import router as tool_groups_router
 from app.api.workflows import router as workflows_router
+from app.api.teams import router as teams_router
 from app.api.ws import router as ws_router
 
 
@@ -63,6 +66,7 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
     app.add_middleware(RequestIDMiddleware)
+    app.add_middleware(AuditLogMiddleware)
 
     # 全局异常处理
     register_exception_handlers(app)
@@ -70,6 +74,7 @@ def create_app() -> FastAPI:
     # 路由
     app.include_router(health_router)
     app.include_router(auth_router)
+    app.include_router(audit_logs_router)
     app.include_router(agents_router)
     app.include_router(agent_templates_router)
     app.include_router(agent_versions_router)
@@ -85,6 +90,7 @@ def create_app() -> FastAPI:
     app.include_router(skills_router)
     app.include_router(tool_groups_router)
     app.include_router(workflows_router)
+    app.include_router(teams_router)
     app.include_router(ws_router)
 
     return app

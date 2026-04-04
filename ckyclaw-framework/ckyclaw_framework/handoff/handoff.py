@@ -42,6 +42,10 @@ class Handoff:
     input_filter: InputFilter | None = None
     """消息历史过滤器：Handoff 时过滤传递给目标 Agent 的消息历史"""
 
+    input_type: type | None = None
+    """Handoff 输入类型（Pydantic BaseModel 子类）。
+    设置后 LLM 在 Handoff 时必须提供符合此 schema 的结构化参数（如 reason、priority）。"""
+
     @property
     def resolved_tool_name(self) -> str:
         """实际暴露的工具名称。"""

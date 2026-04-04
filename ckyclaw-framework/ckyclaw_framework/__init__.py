@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 # === Core ===
-from ckyclaw_framework.agent.agent import Agent
+from ckyclaw_framework.agent.agent import Agent, InstructionsType
 from ckyclaw_framework.runner.runner import Runner
 from ckyclaw_framework.runner.run_config import RunConfig
 from ckyclaw_framework.runner.run_context import RunContext
@@ -80,6 +80,7 @@ from ckyclaw_framework.model.litellm_provider import LiteLLMProvider
 __all__ = [
     # Core
     "Agent",
+    "InstructionsType",
     "Runner",
     "RunConfig",
     "RunContext",

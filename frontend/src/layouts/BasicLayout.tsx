@@ -16,6 +16,8 @@ import {
   BookOutlined,
   AppstoreOutlined,
   BranchesOutlined,
+  TeamOutlined,
+  FileSearchOutlined,
 } from '@ant-design/icons';
 
 const menuRoutes = {
@@ -94,6 +96,16 @@ const menuRoutes = {
       path: '/workflows',
       name: '工作流',
       icon: <BranchesOutlined />,
+    },
+    {
+      path: '/teams',
+      name: '团队管理',
+      icon: <TeamOutlined />,
+    },
+    {
+      path: '/audit-logs',
+      name: '审计日志',
+      icon: <FileSearchOutlined />,
     },
   ],
 };
