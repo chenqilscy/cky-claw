@@ -17,6 +17,7 @@ class SpanType(str, Enum):
     TOOL = "tool"
     HANDOFF = "handoff"
     GUARDRAIL = "guardrail"
+    WORKFLOW_STEP = "workflow_step"
 
 
 class SpanStatus(str, Enum):

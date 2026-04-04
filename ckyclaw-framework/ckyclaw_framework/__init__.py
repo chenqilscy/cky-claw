@@ -44,6 +44,18 @@ from ckyclaw_framework.tracing.span import Span, SpanType, SpanStatus
 from ckyclaw_framework.tracing.processor import TraceProcessor
 from ckyclaw_framework.tracing.console_processor import ConsoleTraceProcessor
 
+# === Workflow ===
+from ckyclaw_framework.workflow.engine import AgentNotFoundError, AgentResolver, WorkflowEngine
+from ckyclaw_framework.workflow.workflow import Edge, Workflow
+from ckyclaw_framework.workflow.step import (
+    AgentStep, BranchCondition, ConditionalStep, LoopStep,
+    ParallelStep, RetryConfig, Step, StepIO, StepStatus, StepType,
+)
+from ckyclaw_framework.workflow.result import StepResult, WorkflowResult, WorkflowStatus
+from ckyclaw_framework.workflow.config import WorkflowRunConfig
+from ckyclaw_framework.workflow.validator import WorkflowValidationError, topological_sort, validate_workflow, validate_workflow_strict
+from ckyclaw_framework.workflow.evaluator import UnsafeExpressionError, evaluate
+
 # === Model ===
 from ckyclaw_framework.model.provider import ModelProvider, ToolCall, ToolCallChunk
 from ckyclaw_framework.model.settings import ModelSettings
@@ -99,6 +111,32 @@ __all__ = [
     "SpanStatus",
     "TraceProcessor",
     "ConsoleTraceProcessor",
+    # Workflow
+    "WorkflowEngine",
+    "AgentNotFoundError",
+    "AgentResolver",
+    "Workflow",
+    "Edge",
+    "Step",
+    "StepType",
+    "StepStatus",
+    "StepIO",
+    "RetryConfig",
+    "AgentStep",
+    "ConditionalStep",
+    "BranchCondition",
+    "ParallelStep",
+    "LoopStep",
+    "WorkflowResult",
+    "WorkflowStatus",
+    "StepResult",
+    "WorkflowRunConfig",
+    "WorkflowValidationError",
+    "topological_sort",
+    "validate_workflow",
+    "validate_workflow_strict",
+    "UnsafeExpressionError",
+    "evaluate",
     # Model
     "ModelProvider",
     "ModelSettings",
