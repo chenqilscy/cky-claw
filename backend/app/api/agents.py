@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, Query
+import json
+
+import yaml
+from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile
+from fastapi.responses import Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
@@ -68,3 +72,72 @@ async def delete_agent(
     """删除 Agent（软删除）。"""
     await agent_service.delete_agent(db, name)
     return {"message": "Agent deleted"}
+
+
+# ── 导出/导入 ──────────────────────────────────────────
+
+_EXPORT_FIELDS = [
+    "name", "description", "instructions", "model", "provider_name",
+    "model_settings", "tool_groups", "handoffs", "guardrails",
+    "approval_mode", "mcp_servers", "agent_tools", "skills",
+    "output_type", "metadata",
+]
+
+
+@router.get("/{name}/export")
+async def export_agent(
+    name: str,
+    format: str = Query("yaml", description="导出格式：yaml / json"),
+    db: AsyncSession = Depends(get_db),
+) -> Response:
+    """导出 Agent 配置为 YAML 或 JSON。"""
+    agent = await agent_service.get_agent_by_name(db, name)
+    agent_data = AgentResponse.model_validate(agent)
+    export_dict = {k: v for k, v in agent_data.model_dump().items() if k in _EXPORT_FIELDS}
+
+    if format == "json":
+        content = json.dumps(export_dict, ensure_ascii=False, indent=2, default=str)
+        return Response(
+            content=content,
+            media_type="application/json",
+            headers={"Content-Disposition": f'attachment; filename="{name}.json"'},
+        )
+    else:
+        content = yaml.dump(export_dict, allow_unicode=True, default_flow_style=False, sort_keys=False)
+        return Response(
+            content=content,
+            media_type="application/x-yaml",
+            headers={"Content-Disposition": f'attachment; filename="{name}.yaml"'},
+        )
+
+
+@router.post("/import", response_model=AgentResponse, status_code=201)
+async def import_agent(
+    file: UploadFile,
+    db: AsyncSession = Depends(get_db),
+) -> AgentResponse:
+    """从 YAML/JSON 文件导入创建 Agent。"""
+    raw = await file.read()
+    try:
+        text = raw.decode("utf-8")
+    except UnicodeDecodeError as exc:
+        raise HTTPException(status_code=400, detail=f"文件编码必须为 UTF-8: {exc}") from exc
+
+    filename = file.filename or ""
+    try:
+        if filename.endswith((".yaml", ".yml")):
+            data_dict = yaml.safe_load(text)
+        else:
+            data_dict = json.loads(text)
+    except (yaml.YAMLError, json.JSONDecodeError) as exc:
+        raise HTTPException(status_code=400, detail=f"配置文件解析失败: {exc}") from exc
+
+    if not isinstance(data_dict, dict):
+        raise HTTPException(status_code=400, detail="配置文件内容必须为 JSON/YAML 对象")
+
+    try:
+        agent_create = AgentCreate(**data_dict)
+    except Exception as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    agent = await agent_service.create_agent(db, agent_create)
+    return AgentResponse.model_validate(agent)

@@ -1,4 +1,4 @@
-import { api } from './api';
+import { api, getToken, API_BASE } from './api';
 
 export interface AgentConfig {
   id: string;
@@ -72,4 +72,36 @@ export const agentService = {
 
   delete: (name: string) =>
     api.delete<undefined>(`/agents/${encodeURIComponent(name)}`),
+
+  exportAgent: async (name: string, format: 'yaml' | 'json' = 'yaml'): Promise<void> => {
+    const token = getToken();
+    const resp = await fetch(
+      `${API_BASE}/agents/${encodeURIComponent(name)}/export?format=${format}`,
+      { headers: token ? { Authorization: `Bearer ${token}` } : {} },
+    );
+    if (!resp.ok) throw new Error(`导出失败: ${resp.status}`);
+    const blob = await resp.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${name}.${format}`;
+    a.click();
+    URL.revokeObjectURL(url);
+  },
+
+  importAgent: async (file: File): Promise<AgentConfig> => {
+    const token = getToken();
+    const form = new FormData();
+    form.append('file', file);
+    const resp = await fetch(`${API_BASE}/agents/import`, {
+      method: 'POST',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: form,
+    });
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({}));
+      throw new Error(err.detail || `导入失败: ${resp.status}`);
+    }
+    return resp.json();
+  },
 };
