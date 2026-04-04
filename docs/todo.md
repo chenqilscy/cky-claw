@@ -29,7 +29,7 @@
 | 4 | ~~**Memory 记忆系统**~~ | §2.12 | P1 | 高 | ✅ 已完成（Framework 4 文件 + Backend 6 文件 + Frontend 4 文件 + 44 测试） |
 | 5 | ~~**Agent Team 协作协议**~~ | §2.5.5 | P1 | 高 | ✅ Framework 全栈完成（Sequential/Parallel/Coordinator + Backend CRUD + Frontend UI + Migration 0021 + 43 测试） |
 | 6 | ~~**Skill 技能系统**~~ | §2.7 | P2 | 中 | ✅ 已完成（Framework 4 文件 + Backend 6 文件 + Frontend 4 文件 + 40 测试） |
-| 7 | **Sandbox 沙箱隔离** | §3.2 | P2 | 高 | Docker/K8s 隔离代码执行环境、CPU/内存/网络资源限制 |
+| 7 | ~~**Sandbox 沙箱隔离**~~ | §3.2 | P2 | 高 | ✅ 已完成（Framework: SandboxConfig + SandboxExecutor + LocalSandbox + Backend API + 25 测试） |
 | 8 | ~~**output_type 结构化输出**~~ | §2.1 | P1 | 中 | ✅ 已完成（Agent.output_type + Runner JSON 解析 + 前端 JSON Schema 编辑器） |
 | 9 | ~~**Dynamic Instructions**~~ | §2.1 | P2 | 低 | ✅ 已完成（InstructionsType 支持 str/sync/async callable + 6 测试） |
 | 10 | ~~**Handoff input_type**~~ | §2.3 | P2 | 低 | ✅ 已完成（Handoff.input_type Pydantic Schema + 5 测试） |
@@ -67,12 +67,12 @@
 
 | # | 优化项 | 优先级 | 说明 |
 |---|--------|:------:|------|
-| O1 | TanStack Query 数据层 | P2 | 当前使用原生 fetch + useEffect；引入 TanStack Query 获得缓存/去重/重试/乐观更新 |
+| O1 | ~~TanStack Query 数据层~~ | P2 | ✅ 已完成（useAgentQueries + useWorkflowQueries hooks + AgentListPage/WorkflowPage 重构） |
 | O2 | Zustand 全局状态扩充 | P3 | 仅 authStore 使用 Zustand；Agent 列表、Session 等可受益于全局状态 |
 | O3 | ECharts 图表 | P3 | Dashboard 当前用 Ant Design Progress 条；ECharts 饼图/折线图可提升数据表达 |
 | O4 | 响应式布局 | P3 | 当前无移动端适配 |
 | O5 | 暗色模式 | P3 | Ant Design 5 支持 ConfigProvider theme 切换 |
-| O6 | ~~前端测试覆盖~~ | P1 | ✅ 已完成（58 个 Vitest 测试：API/AgentService/AuthStore/SkillService/TemplateService/WorkflowService/TeamService/AuditLogService） |
+| O6 | ~~前端测试覆盖~~ | P1 | ✅ 已完成（64 个 Vitest 测试：API/AgentService/AuthStore/SkillService/TemplateService/WorkflowService/TeamService/AuditLogService/RoleService） |
 | O7 | ~~对话页体验优化~~ | P1 | ✅ 已完成（MarkdownRenderer + Prism 代码高亮 + 复制按钮 + React.memo 优化） |
 
 ### 3.2 后端优化
@@ -138,12 +138,12 @@
 
 **目标**：多租户和权限体系。
 
-| 功能 | 对应编号 | 关键交付物 |
-|------|:--------:|-----------|
-| 完整 RBAC | #18 | Role / Permission 模型 + 资源级授权中间件 |
-| 多租户 | #19 | Organization / Team 隔离 + 配额管理 |
-| ~~操作审计~~ | O11 | ✅ AuditLog + AuditMiddleware + API + UI（已在 v2.3 提前完成） |
-| IM 渠道接入 | #16 | 企业微信/钉钉 Webhook + 消息路由 |
+| 功能 | 对应编号 | 状态 | 关键交付物 |
+|------|:--------:|:----:|----------|
+| 完整 RBAC | #18 | ✅ | Role ORM + RBAC Service + require_permission 依赖 + API 端点 + 前端 RolePage + Migration 0023 + 29 测试 |
+| 多租户 | #19 | ❌ | Organization / Team 隔离 + 配额管理 |
+| ~~操作审计~~ | O11 | ✅ | AuditLog + AuditMiddleware + API + UI（已在 v2.3 提前完成） |
+| IM 渠道接入 | #16 | ❌ | 企业微信/钉钉 Webhook + 消息路由 |
 
 ### v2.5 — 可观测性 & APM
 
@@ -189,10 +189,10 @@
 | Phase 1 — Framework DAG 引擎 | ✅ | 5 步骤类型 + 安全表达式求值 + DAG 验证 + 并行执行 + 64 测试 |
 | Phase 2 — Backend 持久化 | ✅ | ORM + Alembic 0020 + CRUD Service + 6 端点 + 验证 API + 管理 UI + 24 测试 |
 | Phase 3 — Frontend 可视化管理 | ✅ | ReactFlow DAG 可视化 + Tabs 预览 + WorkflowGraphView 组件 |
-| Phase 4 — ReactFlow DAG 编辑器 | ❌ | 拖拽式可视化 DAG 编排画布 |
+| Phase 4 — ReactFlow DAG 编辑器 | ✅ | WorkflowEditorPage 拖拽编排画布 + 节点属性 Drawer + 保存/验证 |
 
 ---
 
-*文档版本：v1.2.0*
+*文档版本：v1.3.0*
 *生成日期：2026-04-04*
-*基于：PRD v2.0.9 / mvp-progress.md M0–M7 + v2.1~v2.3 增量实现*
+*基于：PRD v2.0.9 / mvp-progress.md M0–M7 + v2.1~v2.4 增量实现*
