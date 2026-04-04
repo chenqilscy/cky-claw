@@ -9,10 +9,10 @@ from sqlalchemy import Boolean, DateTime, String, Text, text
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.core.database import Base
+from app.core.database import Base, SoftDeleteMixin
 
 
-class MCPServerConfig(Base):
+class MCPServerConfig(SoftDeleteMixin, Base):
     """MCP Server 配置表 — 对应 Data Model 的 MCPConfig。"""
 
     __tablename__ = "mcp_server_configs"

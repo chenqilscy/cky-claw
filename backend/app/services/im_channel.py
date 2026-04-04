@@ -6,6 +6,7 @@ import hashlib
 import hmac
 import logging
 import uuid
+from datetime import datetime, timezone
 from typing import Any
 
 from sqlalchemy import func, select
@@ -24,18 +25,20 @@ async def list_channels(
     is_enabled: bool | None = None,
     limit: int = 20,
     offset: int = 0,
+    org_id: uuid.UUID | None = None,
 ) -> tuple[list[IMChannel], int]:
     """查询 IM 渠道列表。"""
-    q = select(IMChannel)
-    count_q = select(func.count()).select_from(IMChannel)
+    q = select(IMChannel).where(IMChannel.is_deleted == False)  # noqa: E712
+
+    if org_id is not None:
+        q = q.where(IMChannel.org_id == org_id)
 
     if channel_type is not None:
         q = q.where(IMChannel.channel_type == channel_type)
-        count_q = count_q.where(IMChannel.channel_type == channel_type)
     if is_enabled is not None:
         q = q.where(IMChannel.is_enabled == is_enabled)
-        count_q = count_q.where(IMChannel.is_enabled == is_enabled)
 
+    count_q = select(func.count()).select_from(q.subquery())
     total = (await db.execute(count_q)).scalar() or 0
     result = await db.execute(q.order_by(IMChannel.created_at.desc()).offset(offset).limit(limit))
     return list(result.scalars().all()), total
@@ -61,12 +64,15 @@ async def create_channel(db: AsyncSession, data: IMChannelCreate) -> IMChannel:
 
 async def get_channel(db: AsyncSession, channel_id: uuid.UUID) -> IMChannel | None:
     """获取单个 IM 渠道。"""
-    return await db.get(IMChannel, channel_id)
+    stmt = select(IMChannel).where(
+        IMChannel.id == channel_id, IMChannel.is_deleted == False  # noqa: E712
+    )
+    return (await db.execute(stmt)).scalar_one_or_none()
 
 
 async def update_channel(db: AsyncSession, channel_id: uuid.UUID, data: IMChannelUpdate) -> IMChannel | None:
     """更新 IM 渠道。"""
-    channel = await db.get(IMChannel, channel_id)
+    channel = await get_channel(db, channel_id)
     if channel is None:
         return None
     for field, value in data.model_dump(exclude_unset=True).items():
@@ -77,11 +83,12 @@ async def update_channel(db: AsyncSession, channel_id: uuid.UUID, data: IMChanne
 
 
 async def delete_channel(db: AsyncSession, channel_id: uuid.UUID) -> bool:
-    """删除 IM 渠道。"""
-    channel = await db.get(IMChannel, channel_id)
+    """软删除 IM 渠道。"""
+    channel = await get_channel(db, channel_id)
     if channel is None:
         return False
-    await db.delete(channel)
+    channel.is_deleted = True
+    channel.deleted_at = datetime.now(timezone.utc)
     await db.commit()
     return True
 

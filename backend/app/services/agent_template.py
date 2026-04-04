@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import uuid
+from datetime import datetime, timezone
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -243,7 +244,9 @@ async def create_template(db: AsyncSession, data: AgentTemplateCreate) -> AgentT
 
 async def get_template(db: AsyncSession, template_id: uuid.UUID) -> AgentTemplate:
     """获取单个模板。"""
-    stmt = select(AgentTemplate).where(AgentTemplate.id == template_id)
+    stmt = select(AgentTemplate).where(
+        AgentTemplate.id == template_id, AgentTemplate.is_deleted == False  # noqa: E712
+    )
     record = (await db.execute(stmt)).scalar_one_or_none()
     if record is None:
         raise NotFoundError(f"模板 '{template_id}' 不存在")
@@ -268,7 +271,7 @@ async def list_templates(
     offset: int = 0,
 ) -> tuple[list[AgentTemplate], int]:
     """获取模板列表（分页 + 过滤）。"""
-    base = select(AgentTemplate)
+    base = select(AgentTemplate).where(AgentTemplate.is_deleted == False)  # noqa: E712
     if category:
         base = base.where(AgentTemplate.category == category)
     if is_builtin is not None:
@@ -307,11 +310,12 @@ async def update_template(
 
 
 async def delete_template(db: AsyncSession, template_id: uuid.UUID) -> None:
-    """删除模板（内置模板不可删除）。"""
+    """软删除模板（内置模板不可删除）。"""
     record = await get_template(db, template_id)
     if record.is_builtin:
         raise ValueError("内置模板不可删除")
-    await db.delete(record)
+    record.is_deleted = True
+    record.deleted_at = datetime.now(timezone.utc)
     await db.commit()
 
 

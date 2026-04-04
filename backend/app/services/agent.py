@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import uuid
 from datetime import datetime, timezone
 
 from sqlalchemy import func, select
@@ -26,9 +27,14 @@ async def list_agents(
     is_active: bool = True,
     limit: int = 20,
     offset: int = 0,
+    org_id: uuid.UUID | None = None,
 ) -> tuple[list[AgentConfig], int]:
     """获取 Agent 列表（分页 + 可选模糊搜索）。"""
-    base = select(AgentConfig).where(AgentConfig.is_active == is_active)
+    base = select(AgentConfig).where(
+        AgentConfig.is_active == is_active, AgentConfig.is_deleted == False  # noqa: E712
+    )
+    if org_id is not None:
+        base = base.where(AgentConfig.org_id == org_id)
     if search:
         pattern = f"%{_escape_like(search)}%"
         base = base.where(
@@ -48,7 +54,9 @@ async def list_agents(
 
 async def get_agent_by_name(db: AsyncSession, name: str) -> AgentConfig:
     """按 name 获取 Agent，不存在则 404。"""
-    stmt = select(AgentConfig).where(AgentConfig.name == name, AgentConfig.is_active == True)  # noqa: E712
+    stmt = select(AgentConfig).where(
+        AgentConfig.name == name, AgentConfig.is_active == True, AgentConfig.is_deleted == False  # noqa: E712
+    )
     agent = (await db.execute(stmt)).scalar_one_or_none()
     if agent is None:
         raise NotFoundError(f"Agent '{name}' 不存在")
@@ -127,8 +135,10 @@ async def update_agent(db: AsyncSession, name: str, data: AgentUpdate) -> AgentC
 
 
 async def delete_agent(db: AsyncSession, name: str) -> None:
-    """软删除 Agent（is_active = False）。"""
+    """软删除 Agent（is_active = False + is_deleted = True）。"""
     agent = await get_agent_by_name(db, name)
     agent.is_active = False
+    agent.is_deleted = True
+    agent.deleted_at = datetime.now(timezone.utc)
     agent.updated_at = datetime.now(timezone.utc)
     await db.commit()

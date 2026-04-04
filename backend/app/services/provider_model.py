@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import uuid
+from datetime import datetime, timezone
 
 from fastapi import HTTPException
 from sqlalchemy import func, select
@@ -19,7 +20,9 @@ async def list_models(
     is_enabled: bool | None = None,
 ) -> tuple[list[ProviderModel], int]:
     """获取 Provider 下的模型列表。"""
-    base = select(ProviderModel).where(ProviderModel.provider_id == provider_id)
+    base = select(ProviderModel).where(
+        ProviderModel.provider_id == provider_id, ProviderModel.is_deleted == False  # noqa: E712
+    )
     if is_enabled is not None:
         base = base.where(ProviderModel.is_enabled == is_enabled)
 
@@ -59,7 +62,9 @@ async def get_model(
     model_id: uuid.UUID,
 ) -> ProviderModel:
     """获取模型配置。"""
-    stmt = select(ProviderModel).where(ProviderModel.id == model_id)
+    stmt = select(ProviderModel).where(
+        ProviderModel.id == model_id, ProviderModel.is_deleted == False  # noqa: E712
+    )
     result = await db.execute(stmt)
     model = result.scalar_one_or_none()
     if model is None:
@@ -86,9 +91,10 @@ async def delete_model(
     db: AsyncSession,
     model_id: uuid.UUID,
 ) -> None:
-    """删除模型配置。"""
+    """软删除模型配置。"""
     model = await get_model(db, model_id)
-    await db.delete(model)
+    model.is_deleted = True
+    model.deleted_at = datetime.now(timezone.utc)
     await db.commit()
 
 

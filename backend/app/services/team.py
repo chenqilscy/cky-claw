@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import uuid
+from datetime import datetime, timezone
 
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
@@ -44,7 +45,9 @@ async def create_team(db: AsyncSession, data: TeamConfigCreate) -> TeamConfig:
 
 async def get_team(db: AsyncSession, team_id: uuid.UUID) -> TeamConfig:
     """获取单个团队配置。"""
-    stmt = select(TeamConfig).where(TeamConfig.id == team_id)
+    stmt = select(TeamConfig).where(
+        TeamConfig.id == team_id, TeamConfig.is_deleted == False  # noqa: E712
+    )
     record = (await db.execute(stmt)).scalar_one_or_none()
     if record is None:
         raise NotFoundError(f"团队 '{team_id}' 不存在")
@@ -57,16 +60,19 @@ async def list_teams(
     limit: int = 20,
     offset: int = 0,
     search: str | None = None,
+    org_id: uuid.UUID | None = None,
 ) -> tuple[list[TeamConfig], int]:
     """查询团队配置列表（分页+搜索）。"""
-    base_stmt = select(TeamConfig)
-    count_stmt = select(func.count()).select_from(TeamConfig)
+    base_stmt = select(TeamConfig).where(TeamConfig.is_deleted == False)  # noqa: E712
+
+    if org_id is not None:
+        base_stmt = base_stmt.where(TeamConfig.org_id == org_id)
 
     if search:
         pattern = f"%{search}%"
         base_stmt = base_stmt.where(TeamConfig.name.ilike(pattern))
-        count_stmt = count_stmt.where(TeamConfig.name.ilike(pattern))
 
+    count_stmt = select(func.count()).select_from(base_stmt.subquery())
     total = (await db.execute(count_stmt)).scalar() or 0
     stmt = base_stmt.order_by(TeamConfig.created_at.desc()).limit(limit).offset(offset)
     rows = (await db.execute(stmt)).scalars().all()
@@ -97,7 +103,8 @@ async def update_team(db: AsyncSession, team_id: uuid.UUID, data: TeamConfigUpda
 
 
 async def delete_team(db: AsyncSession, team_id: uuid.UUID) -> None:
-    """删除团队配置。"""
+    """软删除团队配置。"""
     record = await get_team(db, team_id)
-    await db.delete(record)
+    record.is_deleted = True
+    record.deleted_at = datetime.now(timezone.utc)
     await db.commit()

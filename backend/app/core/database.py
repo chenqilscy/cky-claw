@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+from datetime import datetime
+
+from sqlalchemy import Boolean, DateTime
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
-from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 from app.core.config import settings
 
@@ -25,6 +28,17 @@ class Base(DeclarativeBase):
     """SQLAlchemy 声明式基类。"""
 
     pass
+
+
+class SoftDeleteMixin:
+    """软删除 Mixin，提供 is_deleted 和 deleted_at 字段。"""
+
+    is_deleted: Mapped[bool] = mapped_column(
+        Boolean, default=False, server_default="false", nullable=False, index=True
+    )
+    deleted_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), default=None, nullable=True
+    )
 
 
 async def get_db() -> AsyncSession:  # type: ignore[misc]

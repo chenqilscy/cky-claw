@@ -46,7 +46,9 @@ async def create_session(db: AsyncSession, data: SessionCreate) -> SessionRecord
 
 async def get_session(db: AsyncSession, session_id: uuid.UUID) -> SessionRecord:
     """获取 Session 详情。"""
-    stmt = select(SessionRecord).where(SessionRecord.id == session_id)
+    stmt = select(SessionRecord).where(
+        SessionRecord.id == session_id, SessionRecord.is_deleted == False  # noqa: E712
+    )
     session = (await db.execute(stmt)).scalar_one_or_none()
     if session is None:
         raise NotFoundError(f"Session '{session_id}' 不存在")
@@ -60,9 +62,12 @@ async def list_sessions(
     status: str | None = None,
     limit: int = 20,
     offset: int = 0,
+    org_id: uuid.UUID | None = None,
 ) -> tuple[list[SessionRecord], int]:
     """获取 Session 列表（分页）。"""
-    base = select(SessionRecord)
+    base = select(SessionRecord).where(SessionRecord.is_deleted == False)  # noqa: E712
+    if org_id is not None:
+        base = base.where(SessionRecord.org_id == org_id)
     if agent_name:
         base = base.where(SessionRecord.agent_name == agent_name)
     if status:
@@ -77,9 +82,10 @@ async def list_sessions(
 
 
 async def delete_session(db: AsyncSession, session_id: uuid.UUID) -> None:
-    """删除 Session。"""
+    """软删除 Session。"""
     session = await get_session(db, session_id)
-    await db.delete(session)
+    session.is_deleted = True
+    session.deleted_at = datetime.now(timezone.utc)
     await db.commit()
 
 

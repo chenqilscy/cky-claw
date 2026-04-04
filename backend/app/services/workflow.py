@@ -47,7 +47,9 @@ async def create_workflow(db: AsyncSession, data: WorkflowCreate) -> WorkflowDef
 
 async def get_workflow(db: AsyncSession, workflow_id: uuid.UUID) -> WorkflowDefinition:
     """获取单个工作流。"""
-    stmt = select(WorkflowDefinition).where(WorkflowDefinition.id == workflow_id)
+    stmt = select(WorkflowDefinition).where(
+        WorkflowDefinition.id == workflow_id, WorkflowDefinition.is_deleted == False  # noqa: E712
+    )
     record = (await db.execute(stmt)).scalar_one_or_none()
     if record is None:
         raise NotFoundError(f"工作流 '{workflow_id}' 不存在")
@@ -68,9 +70,12 @@ async def list_workflows(
     *,
     limit: int = 20,
     offset: int = 0,
+    org_id: uuid.UUID | None = None,
 ) -> tuple[list[WorkflowDefinition], int]:
     """获取工作流列表（分页）。"""
-    base = select(WorkflowDefinition)
+    base = select(WorkflowDefinition).where(WorkflowDefinition.is_deleted == False)  # noqa: E712
+    if org_id is not None:
+        base = base.where(WorkflowDefinition.org_id == org_id)
 
     count_stmt = select(func.count()).select_from(base.subquery())
     total = (await db.execute(count_stmt)).scalar_one()
@@ -106,9 +111,10 @@ async def update_workflow(
 
 
 async def delete_workflow(db: AsyncSession, workflow_id: uuid.UUID) -> None:
-    """删除工作流。"""
+    """软删除工作流。"""
     record = await get_workflow(db, workflow_id)
-    await db.delete(record)
+    record.is_deleted = True
+    record.deleted_at = datetime.now(timezone.utc)
     await db.commit()
 
 

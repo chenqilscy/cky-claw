@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import uuid
+from datetime import datetime, timezone
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -74,7 +75,9 @@ async def create_mcp_server(db: AsyncSession, data: MCPServerCreate) -> MCPServe
 
 async def get_mcp_server(db: AsyncSession, server_id: uuid.UUID) -> MCPServerConfig:
     """获取 MCP Server 配置。"""
-    stmt = select(MCPServerConfig).where(MCPServerConfig.id == server_id)
+    stmt = select(MCPServerConfig).where(
+        MCPServerConfig.id == server_id, MCPServerConfig.is_deleted == False  # noqa: E712
+    )
     record = (await db.execute(stmt)).scalar_one_or_none()
     if record is None:
         raise NotFoundError(f"MCP Server '{server_id}' 不存在")
@@ -96,7 +99,7 @@ async def list_mcp_servers(
     offset: int = 0,
 ) -> tuple[list[MCPServerConfig], int]:
     """获取 MCP Server 列表（分页 + 过滤）。"""
-    base = select(MCPServerConfig)
+    base = select(MCPServerConfig).where(MCPServerConfig.is_deleted == False)  # noqa: E712
     if transport_type:
         base = base.where(MCPServerConfig.transport_type == transport_type)
     if is_enabled is not None:
@@ -133,9 +136,10 @@ async def update_mcp_server(
 
 
 async def delete_mcp_server(db: AsyncSession, server_id: uuid.UUID) -> None:
-    """删除 MCP Server 配置。"""
+    """软删除 MCP Server 配置。"""
     record = await get_mcp_server(db, server_id)
-    await db.delete(record)
+    record.is_deleted = True
+    record.deleted_at = datetime.now(timezone.utc)
     await db.commit()
 
 

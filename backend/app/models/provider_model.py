@@ -9,10 +9,10 @@ from sqlalchemy import DateTime, Float, ForeignKey, Integer, String, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.core.database import Base
+from app.core.database import Base, SoftDeleteMixin
 
 
-class ProviderModel(Base):
+class ProviderModel(SoftDeleteMixin, Base):
     """厂商可用模型 — 记录 Provider 下可用的 LLM 模型及价格信息。"""
 
     __tablename__ = "provider_models"

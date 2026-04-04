@@ -40,7 +40,9 @@ async def create_memory(db: AsyncSession, data: MemoryCreate) -> MemoryEntryReco
 
 async def get_memory(db: AsyncSession, entry_id: uuid.UUID) -> MemoryEntryRecord:
     """获取单条记忆条目。"""
-    stmt = select(MemoryEntryRecord).where(MemoryEntryRecord.id == entry_id)
+    stmt = select(MemoryEntryRecord).where(
+        MemoryEntryRecord.id == entry_id, MemoryEntryRecord.is_deleted == False  # noqa: E712
+    )
     record = (await db.execute(stmt)).scalar_one_or_none()
     if record is None:
         raise NotFoundError(f"记忆条目 '{entry_id}' 不存在")
@@ -55,9 +57,12 @@ async def list_memories(
     agent_name: str | None = None,
     limit: int = 20,
     offset: int = 0,
+    org_id: uuid.UUID | None = None,
 ) -> tuple[list[MemoryEntryRecord], int]:
     """获取记忆列表（分页 + 过滤）。"""
-    base = select(MemoryEntryRecord)
+    base = select(MemoryEntryRecord).where(MemoryEntryRecord.is_deleted == False)  # noqa: E712
+    if org_id is not None:
+        base = base.where(MemoryEntryRecord.org_id == org_id)
     if user_id:
         base = base.where(MemoryEntryRecord.user_id == user_id)
     if memory_type:
@@ -97,15 +102,20 @@ async def update_memory(
 
 
 async def delete_memory(db: AsyncSession, entry_id: uuid.UUID) -> None:
-    """删除记忆条目。"""
+    """软删除记忆条目。"""
     record = await get_memory(db, entry_id)
-    await db.delete(record)
+    record.is_deleted = True
+    record.deleted_at = datetime.now(timezone.utc)
     await db.commit()
 
 
 async def delete_user_memories(db: AsyncSession, user_id: str) -> int:
-    """删除指定用户的全部记忆条目。"""
-    stmt = delete(MemoryEntryRecord).where(MemoryEntryRecord.user_id == user_id)
+    """软删除指定用户的全部记忆条目。"""
+    stmt = (
+        update(MemoryEntryRecord)
+        .where(MemoryEntryRecord.user_id == user_id, MemoryEntryRecord.is_deleted == False)  # noqa: E712
+        .values(is_deleted=True, deleted_at=datetime.now(timezone.utc))
+    )
     result = await db.execute(stmt)
     await db.commit()
     return result.rowcount  # type: ignore[return-value]

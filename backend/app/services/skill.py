@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import json
+import json  # noqa: F401 – used elsewhere
 import logging
 import uuid
 from datetime import datetime, timezone
@@ -43,7 +43,9 @@ async def create_skill(db: AsyncSession, data: SkillCreate) -> SkillRecord:
 
 async def get_skill(db: AsyncSession, skill_id: uuid.UUID) -> SkillRecord:
     """获取单个技能。"""
-    stmt = select(SkillRecord).where(SkillRecord.id == skill_id)
+    stmt = select(SkillRecord).where(
+        SkillRecord.id == skill_id, SkillRecord.is_deleted == False  # noqa: E712
+    )
     record = (await db.execute(stmt)).scalar_one_or_none()
     if record is None:
         raise NotFoundError(f"技能 '{skill_id}' 不存在")
@@ -66,9 +68,12 @@ async def list_skills(
     tag: str | None = None,
     limit: int = 20,
     offset: int = 0,
+    org_id: uuid.UUID | None = None,
 ) -> tuple[list[SkillRecord], int]:
     """获取技能列表（分页 + 过滤）。"""
-    base = select(SkillRecord)
+    base = select(SkillRecord).where(SkillRecord.is_deleted == False)  # noqa: E712
+    if org_id is not None:
+        base = base.where(SkillRecord.org_id == org_id)
     if category:
         base = base.where(SkillRecord.category == category)
     if tag:
@@ -107,9 +112,10 @@ async def update_skill(
 
 
 async def delete_skill(db: AsyncSession, skill_id: uuid.UUID) -> None:
-    """删除技能。"""
+    """软删除技能。"""
     record = await get_skill(db, skill_id)
-    await db.delete(record)
+    record.is_deleted = True
+    record.deleted_at = datetime.now(timezone.utc)
     await db.commit()
 
 

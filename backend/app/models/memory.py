@@ -5,14 +5,14 @@ from __future__ import annotations
 import uuid
 from datetime import datetime, timezone
 
-from sqlalchemy import DateTime, Float, String, Text, text
+from sqlalchemy import DateTime, Float, ForeignKey, String, Text, text
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.core.database import Base
+from app.core.database import Base, SoftDeleteMixin
 
 
-class MemoryEntryRecord(Base):
+class MemoryEntryRecord(SoftDeleteMixin, Base):
     """记忆条目表 — 跨会话的长期记忆存储。"""
 
     __tablename__ = "memory_entries"
@@ -40,6 +40,9 @@ class MemoryEntryRecord(Base):
     )
     metadata_: Mapped[dict] = mapped_column(
         "metadata", JSONB, nullable=False, server_default=text("'{}'::jsonb")
+    )
+    org_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("organizations.id"), nullable=True, index=True
     )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

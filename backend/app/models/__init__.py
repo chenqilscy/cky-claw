@@ -10,11 +10,14 @@ from app.models.guardrail import GuardrailRule
 from app.models.im_channel import IMChannel
 from app.models.mcp_server import MCPServerConfig
 from app.models.memory import MemoryEntryRecord
+from app.models.organization import Organization
 from app.models.provider import ProviderConfig
 from app.models.provider_model import ProviderModel
 from app.models.role import Role
+from app.models.scheduled_task import ScheduledTask
 from app.models.skill import SkillRecord
 from app.models.session import SessionRecord
+from app.models.team import TeamConfig
 from app.models.workflow import WorkflowDefinition
 from app.models.token_usage import TokenUsageLog
 from app.models.tool_group import ToolGroupConfig
@@ -31,14 +34,17 @@ __all__ = [
     "IMChannel",
     "MCPServerConfig",
     "MemoryEntryRecord",
+    "Organization",
     "ProviderConfig",
     "ProviderModel",
     "Role",
     "RunEvaluation",
     "RunFeedback",
+    "ScheduledTask",
     "SkillRecord",
     "SessionRecord",
     "SpanRecord",
+    "TeamConfig",
     "TokenUsageLog",
     "ToolGroupConfig",
     "TraceRecord",

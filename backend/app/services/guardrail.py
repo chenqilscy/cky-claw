@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 import uuid
+from datetime import datetime, timezone
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -102,9 +103,12 @@ async def list_guardrail_rules(
     enabled_only: bool = False,
     limit: int = 50,
     offset: int = 0,
+    org_id: uuid.UUID | None = None,
 ) -> tuple[list[GuardrailRule], int]:
     """获取 Guardrail 规则列表。"""
-    base = select(GuardrailRule)
+    base = select(GuardrailRule).where(GuardrailRule.is_deleted == False)  # noqa: E712
+    if org_id is not None:
+        base = base.where(GuardrailRule.org_id == org_id)
 
     if type_filter is not None:
         base = base.where(GuardrailRule.type == type_filter)
@@ -127,7 +131,9 @@ async def get_guardrail_rule(
     rule_id: uuid.UUID,
 ) -> GuardrailRule:
     """获取单个 Guardrail 规则。"""
-    stmt = select(GuardrailRule).where(GuardrailRule.id == rule_id)
+    stmt = select(GuardrailRule).where(
+        GuardrailRule.id == rule_id, GuardrailRule.is_deleted == False  # noqa: E712
+    )
     rule = (await db.execute(stmt)).scalar_one_or_none()
     if rule is None:
         raise NotFoundError(f"Guardrail 规则 '{rule_id}' 不存在")
@@ -190,7 +196,8 @@ async def delete_guardrail_rule(
     db: AsyncSession,
     rule_id: uuid.UUID,
 ) -> None:
-    """删除 Guardrail 规则。"""
+    """软删除 Guardrail 规则。"""
     rule = await get_guardrail_rule(db, rule_id)
-    await db.delete(rule)
+    rule.is_deleted = True
+    rule.deleted_at = datetime.now(timezone.utc)
     await db.flush()

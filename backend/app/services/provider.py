@@ -27,7 +27,7 @@ async def list_providers(
     offset: int = 0,
 ) -> tuple[list[ProviderConfig], int]:
     """获取 Provider 列表（分页 + 可选筛选）。"""
-    base = select(ProviderConfig)
+    base = select(ProviderConfig).where(ProviderConfig.is_deleted == False)  # noqa: E712
     if is_enabled is not None:
         base = base.where(ProviderConfig.is_enabled == is_enabled)
     if provider_type:
@@ -44,7 +44,9 @@ async def list_providers(
 
 async def get_provider(db: AsyncSession, provider_id: uuid.UUID) -> ProviderConfig:
     """按 ID 获取 Provider，不存在则 404。"""
-    stmt = select(ProviderConfig).where(ProviderConfig.id == provider_id)
+    stmt = select(ProviderConfig).where(
+        ProviderConfig.id == provider_id, ProviderConfig.is_deleted == False  # noqa: E712
+    )
     provider = (await db.execute(stmt)).scalar_one_or_none()
     if provider is None:
         raise NotFoundError(f"Provider '{provider_id}' 不存在")
@@ -92,9 +94,10 @@ async def update_provider(
 
 
 async def delete_provider(db: AsyncSession, provider_id: uuid.UUID) -> None:
-    """硬删除 Provider。"""
+    """软删除 Provider。"""
     provider = await get_provider(db, provider_id)
-    await db.delete(provider)
+    provider.is_deleted = True
+    provider.deleted_at = datetime.now(timezone.utc)
     await db.commit()
 
 

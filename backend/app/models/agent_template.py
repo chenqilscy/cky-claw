@@ -9,10 +9,10 @@ from sqlalchemy import Boolean, DateTime, String, Text, text
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.core.database import Base
+from app.core.database import Base, SoftDeleteMixin
 
 
-class AgentTemplate(Base):
+class AgentTemplate(SoftDeleteMixin, Base):
     """Agent 模板表 — 预设的 Agent 配置，可一键创建 Agent。"""
 
     __tablename__ = "agent_templates"

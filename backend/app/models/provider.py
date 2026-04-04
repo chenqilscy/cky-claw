@@ -9,10 +9,10 @@ from sqlalchemy import Boolean, DateTime, Integer, String, Text, text
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.core.database import Base
+from app.core.database import Base, SoftDeleteMixin
 
 
-class ProviderConfig(Base):
+class ProviderConfig(SoftDeleteMixin, Base):
     """模型厂商配置表 — 对应 Data Model v1.3 的 ProviderConfig。"""
 
     __tablename__ = "provider_configs"
