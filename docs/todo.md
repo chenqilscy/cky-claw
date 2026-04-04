@@ -45,7 +45,7 @@
 |---|------|----------|:------:|:------:|------|
 | 16 | ~~**IM 渠道接入**~~ | §7 | P1 | 高 | ✅ 已完成（IMChannel ORM + CRUD API + Webhook 端点 + HMAC 签名验证 + 消息路由 + Migration 0025） |
 | 17 | ~~**定时/批量任务**~~| 附录 A | P2 | 中 | ✅ 已完成（CRUD + SchedulerEngine 执行引擎 + ScheduledRun 历史 + Migration 0031 + 27 测试） |
-| 18 | **完整 RBAC** | §13.3 | P1 | 高 | Organization / Team / Role 层级 + 资源级细粒度授权 |
+| 18 | ~~**完整 RBAC**~~ | §13.3 | P1 | 高 | ✅ 已完成（Role ORM + RBAC Service + require_permission 全端点注入 + 前端 RolePage + Migration 0023 + 29 测试 + mypy re-export 修复） |
 | 19 | ~~**多租户**~~ | §3.3 | P1 | 高 | ✅ 已完成（get_org_id 租户依赖 + 11 路由 org_id 注入 + conftest 全局 fixture + 28 测试） |
 | 20 | ~~**APM 仪表盘**~~ | §9 | P2 | 高 | ✅ 已完成（聚合服务 + ECharts 可视化 + AlertRule/AlertEvent 告警引擎 + 7 API + Migration 0032 + 32 测试） |
 | 21 | ~~**Agent 评估与质量度量**~~ | 附录 B v2.0.4 | P2 | 中 | ✅ 已完成（RunEvaluation 7 维评分 + RunFeedback 用户反馈 + AgentQualitySummary 汇总 + API 8 端点 + Migration 0026） |
@@ -176,7 +176,7 @@
 |------|------|------|
 | ~~Redis 未使用~~ | ✅ 已解决：WebSocket 审批通道使用 Redis pub/sub | ~~资源浪费~~ |
 | ~~前端测试极少~~ | ✅ 已解决：47 个 Vitest 测试 | ~~无法保证 UI 回归~~ |
-| mypy 未集成 CI | ruff lint 已有但 mypy strict 检查未在 CI 中运行 | 类型安全漏网 |
+| mypy 未集成 CI | CI 已添加 mypy 步骤（注释态）；基线：Framework 33 错误 / Backend 206 错误，主要为 `type-arg` 泛型缺失 | 类型安全漏网 |
 | 部分 test 排除 | CI 排除 smoke/performance/e2e/mcp 测试 | 需定期手动运行验证 |
 | Alembic 自动生成 | 迁移均手写；未配置 autogenerate 对比 | 模型/迁移不一致风险 |
 
