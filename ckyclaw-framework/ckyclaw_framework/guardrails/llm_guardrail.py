@@ -134,7 +134,7 @@ class LLMGuardrail:
             message=reason if triggered else "safe",
         )
 
-    def as_input_fn(self):
+    def as_input_fn(self) -> Any:
         """返回与 InputGuardrail.guardrail_function 兼容的异步函数。"""
 
         async def _fn(ctx: RunContext, input_text: str) -> GuardrailResult:
@@ -143,7 +143,7 @@ class LLMGuardrail:
         _fn.__name__ = self.name
         return _fn
 
-    def as_output_fn(self):
+    def as_output_fn(self) -> Any:
         """返回与 OutputGuardrail.guardrail_function 兼容的异步函数。"""
 
         async def _fn(ctx: RunContext, output_text: str) -> GuardrailResult:
@@ -152,18 +152,18 @@ class LLMGuardrail:
         _fn.__name__ = self.name
         return _fn
 
-    def as_tool_before_fn(self):
+    def as_tool_before_fn(self) -> Any:
         """返回与 ToolGuardrail.before_fn 兼容的异步函数。"""
         import json as _json
 
-        async def _fn(ctx: RunContext, tool_name: str, arguments: dict) -> GuardrailResult:
+        async def _fn(ctx: RunContext, tool_name: str, arguments: dict[str, Any]) -> GuardrailResult:
             text = _json.dumps(arguments, ensure_ascii=False)
             return await self.evaluate(text)
 
         _fn.__name__ = self.name
         return _fn
 
-    def as_tool_after_fn(self):
+    def as_tool_after_fn(self) -> Any:
         """返回与 ToolGuardrail.after_fn 兼容的异步函数。"""
 
         async def _fn(ctx: RunContext, tool_name: str, result: str) -> GuardrailResult:

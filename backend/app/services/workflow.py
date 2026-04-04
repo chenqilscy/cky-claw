@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 import uuid
 from datetime import datetime, timezone
+from typing import Any
 
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
@@ -118,7 +119,7 @@ async def delete_workflow(db: AsyncSession, workflow_id: uuid.UUID) -> None:
     await db.commit()
 
 
-def validate_workflow_definition(steps: list[dict], edges: list[dict]) -> list[str]:
+def validate_workflow_definition(steps: list[dict[str, Any]], edges: list[dict[str, Any]]) -> list[str]:
     """验证工作流定义的拓扑结构。
 
     返回错误列表。空列表表示验证通过。

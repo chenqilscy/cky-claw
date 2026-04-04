@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import uuid
 from datetime import datetime
 
@@ -29,7 +31,7 @@ class AlertRuleCreate(BaseModel):
     agent_name: str | None = Field(default=None, description="监控 Agent，None=全局")
     severity: str = Field(default="warning")
     cooldown_minutes: int = Field(default=30, ge=0, le=1440)
-    notification_config: dict = Field(default_factory=dict)
+    notification_config: dict[str, Any] = Field(default_factory=dict)
 
     @field_validator("metric")
     @classmethod
@@ -66,7 +68,7 @@ class AlertRuleUpdate(BaseModel):
     severity: str | None = None
     is_enabled: bool | None = None
     cooldown_minutes: int | None = Field(default=None, ge=0, le=1440)
-    notification_config: dict | None = None
+    notification_config: dict[str, Any] | None = None
 
     @field_validator("metric")
     @classmethod
@@ -106,7 +108,7 @@ class AlertRuleResponse(BaseModel):
     severity: str
     is_enabled: bool
     cooldown_minutes: int
-    notification_config: dict
+    notification_config: dict[str, Any]
     last_triggered_at: datetime | None
     created_at: datetime
     updated_at: datetime

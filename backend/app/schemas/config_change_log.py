@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import uuid
 from datetime import datetime
 
@@ -17,8 +19,8 @@ class ConfigChangeLogCreate(BaseModel):
     config_key: str = Field(..., max_length=255)
     entity_type: str = Field(..., max_length=64)
     entity_id: str = Field(..., max_length=255)
-    old_value: dict | None = None
-    new_value: dict | None = None
+    old_value: dict[str, Any] | None = None
+    new_value: dict[str, Any] | None = None
     change_source: str = Field(default="api")
     description: str = Field(default="")
 
@@ -46,8 +48,8 @@ class ConfigChangeLogResponse(BaseModel):
     config_key: str
     entity_type: str
     entity_id: str
-    old_value: dict | None
-    new_value: dict | None
+    old_value: dict[str, Any] | None
+    new_value: dict[str, Any] | None
     changed_by: uuid.UUID | None
     change_source: str
     rollback_ref: uuid.UUID | None
@@ -74,5 +76,5 @@ class RollbackPreviewResponse(BaseModel):
     config_key: str
     entity_type: str
     entity_id: str
-    current_value: dict | None = Field(description="变更时的值，非实时当前值")
-    rollback_to_value: dict | None
+    current_value: dict[str, Any] | None = Field(description="变更时的值，非实时当前值")
+    rollback_to_value: dict[str, Any] | None

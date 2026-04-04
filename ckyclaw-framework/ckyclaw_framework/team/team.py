@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from ckyclaw_framework.agent.agent import Agent
     from ckyclaw_framework.runner.run_config import RunConfig
+    from ckyclaw_framework.tools.function_tool import FunctionTool
 
 from ckyclaw_framework.team.protocol import TeamProtocol
 
@@ -57,7 +58,7 @@ class Team:
         tool_name: str | None = None,
         tool_description: str | None = None,
         run_config: RunConfig | None = None,
-    ):
+    ) -> FunctionTool:
         """将 Team 包装为 FunctionTool，供其他 Agent 调用。"""
         from ckyclaw_framework.tools.function_tool import FunctionTool
 

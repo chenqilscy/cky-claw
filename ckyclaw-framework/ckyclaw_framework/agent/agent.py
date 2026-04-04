@@ -101,7 +101,7 @@ class Agent:
                 return output
             # 结构化输出：序列化为 JSON 字符串作为 tool result
             if hasattr(output, "model_dump_json"):
-                return output.model_dump_json()
+                return str(output.model_dump_json())
             return str(output)
 
         name = tool_name or self.name

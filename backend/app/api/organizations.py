@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -26,7 +28,7 @@ async def list_organizations(
     limit: int = 20,
     offset: int = 0,
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(require_admin),
+    _: dict[str, Any] = Depends(require_admin),
 ) -> OrganizationListResponse:
     """查询组织列表。"""
     items, total = await svc.list_organizations(db, limit=limit, offset=offset, search=search)
@@ -42,7 +44,7 @@ async def list_organizations(
 async def create_organization(
     data: OrganizationCreate,
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(require_admin),
+    _: dict[str, Any] = Depends(require_admin),
 ) -> OrganizationResponse:
     """创建组织。"""
     record = await svc.create_organization(db, data)
@@ -53,7 +55,7 @@ async def create_organization(
 async def get_organization(
     org_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(require_admin),
+    _: dict[str, Any] = Depends(require_admin),
 ) -> OrganizationResponse:
     """获取单个组织。"""
     record = await svc.get_organization(db, org_id)
@@ -67,7 +69,7 @@ async def update_organization(
     org_id: uuid.UUID,
     data: OrganizationUpdate,
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(require_admin),
+    _: dict[str, Any] = Depends(require_admin),
 ) -> OrganizationResponse:
     """更新组织。"""
     record = await svc.update_organization(db, org_id, data)
@@ -78,7 +80,7 @@ async def update_organization(
 async def delete_organization(
     org_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(require_admin),
+    _: dict[str, Any] = Depends(require_admin),
 ) -> None:
     """删除组织。"""
     ok = await svc.delete_organization(db, org_id)

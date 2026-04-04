@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import uuid
 from datetime import datetime
 
@@ -29,10 +31,10 @@ class ConfigChangeLog(Base):
     entity_id: Mapped[str] = mapped_column(
         String(255), nullable=False, index=True, comment="实体 ID"
     )
-    old_value: Mapped[dict | None] = mapped_column(
+    old_value: Mapped[dict[str, Any] | None] = mapped_column(
         JSONB, nullable=True, comment="变更前的完整值"
     )
-    new_value: Mapped[dict | None] = mapped_column(
+    new_value: Mapped[dict[str, Any] | None] = mapped_column(
         JSONB, nullable=True, comment="变更后的完整值"
     )
     changed_by: Mapped[uuid.UUID | None] = mapped_column(

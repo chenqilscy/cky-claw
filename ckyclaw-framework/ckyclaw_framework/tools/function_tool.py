@@ -159,8 +159,9 @@ class FunctionTool:
                         filtered_args[k] = v
 
             # 带超时执行
-            if asyncio.iscoroutinefunction(self.fn):
-                coro = self.fn(**filtered_args)
+            fn = self.fn
+            if asyncio.iscoroutinefunction(fn):
+                coro = fn(**filtered_args)
                 if self.timeout:
                     result = await asyncio.wait_for(coro, timeout=self.timeout)
                 else:
@@ -169,11 +170,11 @@ class FunctionTool:
                 loop = asyncio.get_running_loop()
                 if self.timeout:
                     result = await asyncio.wait_for(
-                        loop.run_in_executor(None, lambda: self.fn(**filtered_args)),
+                        loop.run_in_executor(None, lambda: fn(**filtered_args)),
                         timeout=self.timeout,
                     )
                 else:
-                    result = await loop.run_in_executor(None, lambda: self.fn(**filtered_args))
+                    result = await loop.run_in_executor(None, lambda: fn(**filtered_args))
 
             # 结果转字符串
             if isinstance(result, str):

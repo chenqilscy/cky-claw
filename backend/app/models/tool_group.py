@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import uuid
 from datetime import datetime, timezone
 
@@ -24,7 +26,7 @@ class ToolGroupConfig(SoftDeleteMixin, Base):
         String(64), unique=True, nullable=False, index=True
     )
     description: Mapped[str] = mapped_column(Text, nullable=False, default="")
-    tools: Mapped[list] = mapped_column(
+    tools: Mapped[list[Any]] = mapped_column(
         JSONB, nullable=False, server_default=text("'[]'::jsonb")
     )
     source: Mapped[str] = mapped_column(
@@ -36,7 +38,7 @@ class ToolGroupConfig(SoftDeleteMixin, Base):
     org_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("organizations.id"), nullable=True, index=True
     )
-    conditions: Mapped[dict] = mapped_column(
+    conditions: Mapped[dict[str, Any]] = mapped_column(
         JSONB, nullable=False, server_default=text("'{}'::jsonb"),
         comment="条件启用规则",
     )

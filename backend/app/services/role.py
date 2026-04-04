@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import uuid
 
 from sqlalchemy import func, select
@@ -199,7 +201,7 @@ async def assign_role_to_user(db: AsyncSession, user_id: uuid.UUID, role_id: uui
     return user
 
 
-def check_permission(permissions: dict, resource: str, action: str) -> bool:
+def check_permission(permissions: dict[str, Any], resource: str, action: str) -> bool:
     """检查权限字典中是否包含指定资源的指定操作。"""
     actions = permissions.get(resource, [])
     return action in actions

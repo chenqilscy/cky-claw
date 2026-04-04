@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import uuid
 from datetime import datetime
 
@@ -16,7 +18,7 @@ class AgentVersionResponse(BaseModel):
     id: uuid.UUID
     agent_config_id: uuid.UUID
     version: int
-    snapshot: dict
+    snapshot: dict[str, Any]
     change_summary: str | None
     created_by: uuid.UUID | None
     created_at: datetime
@@ -34,8 +36,8 @@ class AgentVersionDiffResponse(BaseModel):
 
     version_a: int
     version_b: int
-    snapshot_a: dict
-    snapshot_b: dict
+    snapshot_a: dict[str, Any]
+    snapshot_b: dict[str, Any]
 
 
 class AgentRollbackRequest(BaseModel):

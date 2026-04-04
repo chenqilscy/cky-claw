@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import uuid
 from datetime import datetime, timezone
 
@@ -35,7 +37,7 @@ class ProviderConfig(SoftDeleteMixin, Base):
     auth_type: Mapped[str] = mapped_column(
         String(16), nullable=False, server_default=text("'api_key'")
     )
-    auth_config: Mapped[dict] = mapped_column(
+    auth_config: Mapped[dict[str, Any]] = mapped_column(
         JSONB, nullable=False, server_default=text("'{}'::jsonb")
     )
     rate_limit_rpm: Mapped[int | None] = mapped_column(

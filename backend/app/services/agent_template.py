@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 import uuid
 from datetime import datetime, timezone
+from typing import Any
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -20,7 +21,7 @@ logger = logging.getLogger(__name__)
 # 内置模板定义
 # ---------------------------------------------------------------------------
 
-BUILTIN_TEMPLATES: list[dict] = [
+BUILTIN_TEMPLATES: list[dict[str, Any]] = [
     {
         "name": "triage",
         "display_name": "分诊路由 Agent",

@@ -266,7 +266,7 @@ def _build_output_type_from_schema(schema: dict[str, Any], agent_name: str) -> t
         field_type = field_schema.get("type", "string")
         if field_type == "array":
             items_type = field_schema.get("items", {}).get("type", "string")
-            python_type = list[_JSON_SCHEMA_TYPE_MAP.get(items_type, str)]  # type: ignore[index]
+            python_type = list[_JSON_SCHEMA_TYPE_MAP.get(items_type, str)]  # type: ignore[misc,valid-type]
         else:
             python_type = _JSON_SCHEMA_TYPE_MAP.get(field_type, str)  # type: ignore[assignment]
 
@@ -278,12 +278,12 @@ def _build_output_type_from_schema(schema: dict[str, Any], agent_name: str) -> t
 
     # 使用 Agent name 生成可辨识的 Model 类名
     model_name = f"{agent_name.replace('-', '_').title().replace('_', '')}Output"
-    return create_model(model_name, **field_definitions)
+    return create_model(model_name, **field_definitions)  # type: ignore[no-any-return]
 
 
 def _build_agent_from_config(
     config: AgentConfig,
-    guardrail_rules: list | None = None,
+    guardrail_rules: list[Any] | None = None,
     handoff_agents: list[Any] | None = None,
     mcp_tools: list[Any] | None = None,
 ) -> Any:
@@ -630,7 +630,7 @@ def _find_parent_agent_name(spans: list[Any], target_span: Any) -> str | None:
         return None
     for span in spans:
         if span.span_id == target_span.parent_span_id and getattr(span, "type", None) == "agent":
-            return span.name
+            return str(span.name)
     return None
 
 
@@ -665,7 +665,7 @@ async def _save_trace_from_processor(
 async def get_session_messages(
     db: AsyncSession,
     session_id: uuid.UUID,
-) -> list:
+) -> list[Any]:
     """获取会话的持久化消息列表。"""
     from app.models.session_message import SessionMessage
 

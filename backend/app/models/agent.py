@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import uuid
 from datetime import datetime, timezone
 
@@ -29,14 +31,14 @@ class AgentConfig(SoftDeleteMixin, Base):
     provider_name: Mapped[str | None] = mapped_column(
         String(64), nullable=True, index=True
     )
-    model_settings: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    model_settings: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
     tool_groups: Mapped[list[str]] = mapped_column(
         ARRAY(String), nullable=False, server_default=text("'{}'::varchar[]")
     )
     handoffs: Mapped[list[str]] = mapped_column(
         ARRAY(String), nullable=False, server_default=text("'{}'::varchar[]")
     )
-    guardrails: Mapped[dict] = mapped_column(
+    guardrails: Mapped[dict[str, Any]] = mapped_column(
         JSONB, nullable=False, server_default=text("'{}'::jsonb")
     )
     approval_mode: Mapped[str] = mapped_column(
@@ -51,10 +53,10 @@ class AgentConfig(SoftDeleteMixin, Base):
     skills: Mapped[list[str]] = mapped_column(
         ARRAY(String), nullable=False, server_default=text("'{}'::varchar[]")
     )
-    output_type: Mapped[dict | None] = mapped_column(
+    output_type: Mapped[dict[str, Any] | None] = mapped_column(
         JSONB, nullable=True, comment="结构化输出 JSON Schema"
     )
-    metadata_: Mapped[dict] = mapped_column(
+    metadata_: Mapped[dict[str, Any]] = mapped_column(
         "metadata", JSONB, nullable=False, server_default=text("'{}'::jsonb")
     )
     org_id: Mapped[uuid.UUID | None] = mapped_column(

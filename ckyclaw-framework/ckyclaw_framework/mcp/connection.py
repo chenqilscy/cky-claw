@@ -196,7 +196,7 @@ async def _connect_http(
 
     try:
         transport = await asyncio.wait_for(
-            stack.enter_async_context(streamable_http_client(config.url, headers=config.headers or None)),
+            stack.enter_async_context(streamable_http_client(config.url, headers=config.headers or None)),  # type: ignore[call-arg]
             timeout=config.connect_timeout,
         )
         read_stream, write_stream = transport[0], transport[1]

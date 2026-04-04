@@ -6,6 +6,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import asyncio
 import json
 import logging
@@ -31,7 +33,7 @@ _active_connections: set[WebSocket] = set()
 _subscriber_task: asyncio.Task[None] | None = None
 
 
-async def publish_approval_event(event_type: str, data: dict) -> None:
+async def publish_approval_event(event_type: str, data: dict[str, Any]) -> None:
     """发布审批事件到 Redis channel。
 
     Args:
@@ -73,8 +75,8 @@ async def _redis_subscriber() -> None:
         except asyncio.CancelledError:
             logger.info("Redis subscriber cancelled")
             with suppress(Exception):
-                await pubsub.unsubscribe(APPROVAL_CHANNEL)  # type: ignore[possibly-undefined]
-                await pubsub.aclose()  # type: ignore[possibly-undefined]
+                await pubsub.unsubscribe(APPROVAL_CHANNEL)
+                await pubsub.aclose()  # type: ignore[no-untyped-call]
             return
         except Exception:
             logger.exception("Redis subscriber error, reconnecting in 3s")

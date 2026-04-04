@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import uuid
 from datetime import datetime, timedelta, timezone
 
@@ -105,7 +107,7 @@ async def get_trace_stats(
     agent_name: str | None = None,
     start_time: datetime | None = None,
     end_time: datetime | None = None,
-) -> dict:
+) -> dict[str, Any]:
     """获取 Trace 统计数据。默认最近 7 天。"""
     if start_time is None:
         start_time = datetime.now(timezone.utc) - timedelta(days=7)

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from ckyclaw_framework.guardrails.result import GuardrailResult
 
@@ -39,10 +39,10 @@ class ToolWhitelistGuardrail:
     def __post_init__(self) -> None:
         self._allowed_set = set(self.allowed_tools)
 
-    def as_before_fn(self):
+    def as_before_fn(self) -> Any:
         """返回与 ToolGuardrail.before_fn 兼容的异步函数。"""
 
-        async def _fn(ctx: RunContext, tool_name: str, arguments: dict) -> GuardrailResult:
+        async def _fn(ctx: RunContext, tool_name: str, arguments: dict[str, Any]) -> GuardrailResult:
             if tool_name in self._allowed_set:
                 return GuardrailResult(tripwire_triggered=False, message="allowed")
             return GuardrailResult(

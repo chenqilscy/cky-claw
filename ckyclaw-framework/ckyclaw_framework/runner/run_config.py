@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING, Any, Callable
 
 if TYPE_CHECKING:
     from ckyclaw_framework.approval.handler import ApprovalHandler
@@ -56,7 +56,7 @@ class RunConfig:
     history_trim_strategy: HistoryTrimStrategy | None = None
     """历史裁剪策略。默认 TOKEN_BUDGET。"""
 
-    on_max_turns_exceeded: Callable | None = None
+    on_max_turns_exceeded: Callable[..., Any] | None = None
     """超过 max_turns 时的回调"""
 
     hooks: RunHooks | None = None

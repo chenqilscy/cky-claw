@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from datetime import datetime, timezone
 
 from sqlalchemy import BigInteger, DateTime, Integer, String, Text, text
@@ -22,9 +24,9 @@ class SessionMessage(Base):
     content: Mapped[str] = mapped_column(Text, nullable=False, server_default=text("''"))
     agent_name: Mapped[str | None] = mapped_column(String(64), nullable=True)
     tool_call_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
-    tool_calls: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
-    token_usage: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
-    metadata_: Mapped[dict] = mapped_column(
+    tool_calls: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    token_usage: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    metadata_: Mapped[dict[str, Any]] = mapped_column(
         "metadata_", JSONB, nullable=False, server_default=text("'{}'::jsonb")
     )
     created_at: Mapped[datetime] = mapped_column(
@@ -44,7 +46,7 @@ class SessionMetadataRecord(Base):
     message_count: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("0"))
     total_tokens: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("0"))
     last_agent: Mapped[str | None] = mapped_column(String(64), nullable=True)
-    extra: Mapped[dict] = mapped_column(JSONB, nullable=False, server_default=text("'{}'::jsonb"))
+    extra: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, server_default=text("'{}'::jsonb"))
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,

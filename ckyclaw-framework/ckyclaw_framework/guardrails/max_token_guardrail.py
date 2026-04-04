@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from ckyclaw_framework.guardrails.result import GuardrailResult
 
@@ -52,7 +52,7 @@ class MaxTokenGuardrail:
             )
         return GuardrailResult(tripwire_triggered=False, message="safe")
 
-    def as_input_fn(self):
+    def as_input_fn(self) -> Any:
         """返回与 InputGuardrail.guardrail_function 兼容的异步函数。"""
 
         async def _fn(ctx: RunContext, input_text: str) -> GuardrailResult:

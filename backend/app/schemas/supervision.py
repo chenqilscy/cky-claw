@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import uuid
 from datetime import datetime
 from enum import Enum
@@ -61,7 +63,7 @@ class SupervisionSessionDetail(SupervisionSessionItem):
     """会话详情（含消息历史）。"""
 
     messages: list[MessageItem] = Field(default_factory=list)
-    metadata: dict = Field(default_factory=dict)
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
 
 # ---------------------------------------------------------------------------

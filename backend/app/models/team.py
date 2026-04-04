@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import uuid
 from datetime import datetime, timezone
 
@@ -29,13 +31,13 @@ class TeamConfig(SoftDeleteMixin, Base):
     protocol: Mapped[str] = mapped_column(
         String(32), nullable=False, server_default=text("'SEQUENTIAL'")
     )
-    member_agent_ids: Mapped[list] = mapped_column(
+    member_agent_ids: Mapped[list[Any]] = mapped_column(
         JSONB, nullable=False, server_default=text("'[]'::jsonb")
     )
     coordinator_agent_id: Mapped[str | None] = mapped_column(
         String(64), nullable=True
     )
-    config: Mapped[dict] = mapped_column(
+    config: Mapped[dict[str, Any]] = mapped_column(
         JSONB, nullable=False, server_default=text("'{}'::jsonb")
     )
     org_id: Mapped[uuid.UUID | None] = mapped_column(

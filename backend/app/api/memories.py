@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import uuid
 
 from fastapi import APIRouter, Depends, Query
@@ -89,7 +91,7 @@ async def update_memory(
 async def delete_user_memories(
     user_id: str,
     db: AsyncSession = Depends(get_db),
-) -> dict:
+) -> dict[str, Any]:
     """删除指定用户的全部记忆（GDPR 合规）。"""
     count = await memory_service.delete_user_memories(db, user_id)
     return {"deleted": count}

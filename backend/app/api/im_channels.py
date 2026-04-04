@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -31,7 +33,7 @@ async def list_channels(
     limit: int = 20,
     offset: int = 0,
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(require_admin),
+    _: dict[str, Any] = Depends(require_admin),
     org_id: uuid.UUID | None = Depends(get_org_id),
 ) -> IMChannelListResponse:
     """查询 IM 渠道列表。"""
@@ -50,7 +52,7 @@ async def list_channels(
 async def create_channel(
     data: IMChannelCreate,
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(require_admin),
+    _: dict[str, Any] = Depends(require_admin),
     org_id: uuid.UUID | None = Depends(get_org_id),
 ) -> IMChannelResponse:
     """创建 IM 渠道。"""
@@ -63,7 +65,7 @@ async def create_channel(
 async def get_channel(
     channel_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(require_admin),
+    _: dict[str, Any] = Depends(require_admin),
 ) -> IMChannelResponse:
     """获取单个 IM 渠道。"""
     channel = await svc.get_channel(db, channel_id)
@@ -77,7 +79,7 @@ async def update_channel(
     channel_id: uuid.UUID,
     data: IMChannelUpdate,
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(require_admin),
+    _: dict[str, Any] = Depends(require_admin),
 ) -> IMChannelResponse:
     """更新 IM 渠道。"""
     channel = await svc.update_channel(db, channel_id, data)
@@ -90,7 +92,7 @@ async def update_channel(
 async def delete_channel(
     channel_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(require_admin),
+    _: dict[str, Any] = Depends(require_admin),
 ) -> None:
     """删除 IM 渠道。"""
     ok = await svc.delete_channel(db, channel_id)
@@ -106,7 +108,7 @@ async def receive_webhook(
     channel_id: uuid.UUID,
     request: Request,
     db: AsyncSession = Depends(get_db),
-) -> dict:
+) -> dict[str, Any]:
     """接收 IM 平台 Webhook 回调。
 
     公开端点，通过签名验证安全性。

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -33,7 +35,7 @@ async def list_evaluations(
     limit: int = 20,
     offset: int = 0,
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(require_admin),
+    _: dict[str, Any] = Depends(require_admin),
 ) -> RunEvaluationListResponse:
     """查询评估列表。"""
     items, total = await svc.list_evaluations(db, agent_id=agent_id, run_id=run_id, limit=limit, offset=offset)
@@ -49,7 +51,7 @@ async def list_evaluations(
 async def create_evaluation(
     data: RunEvaluationCreate,
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(require_admin),
+    _: dict[str, Any] = Depends(require_admin),
 ) -> RunEvaluationResponse:
     """创建运行评估。"""
     record = await svc.create_evaluation(db, data)
@@ -60,7 +62,7 @@ async def create_evaluation(
 async def get_evaluation(
     eval_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(require_admin),
+    _: dict[str, Any] = Depends(require_admin),
 ) -> RunEvaluationResponse:
     """获取单个评估。"""
     record = await svc.get_evaluation(db, eval_id)
@@ -76,7 +78,7 @@ async def get_evaluation(
 async def get_agent_quality(
     agent_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(require_admin),
+    _: dict[str, Any] = Depends(require_admin),
 ) -> AgentQualitySummary:
     """获取 Agent 多维质量汇总。"""
     return await svc.get_agent_quality_summary(db, agent_id)
@@ -91,7 +93,7 @@ async def list_feedbacks(
     limit: int = 20,
     offset: int = 0,
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(require_admin),
+    _: dict[str, Any] = Depends(require_admin),
 ) -> RunFeedbackListResponse:
     """查询反馈列表。"""
     items, total = await svc.list_feedbacks(db, run_id=run_id, limit=limit, offset=offset)
@@ -107,7 +109,7 @@ async def list_feedbacks(
 async def create_feedback(
     data: RunFeedbackCreate,
     db: AsyncSession = Depends(get_db),
-    user: dict = Depends(get_current_user),
+    user: dict[str, Any] = Depends(get_current_user),
 ) -> RunFeedbackResponse:
     """创建用户反馈。"""
     user_id = user.get("user_id")

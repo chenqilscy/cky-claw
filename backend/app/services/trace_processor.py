@@ -12,7 +12,7 @@ from ckyclaw_framework.tracing.trace import Trace
 logger = logging.getLogger(__name__)
 
 
-class PostgresTraceProcessor(TraceProcessor):
+class PostgresTraceProcessor(TraceProcessor):  # type: ignore[misc]
     """收集 Trace/Span 数据，在 Trace 结束时批量写入。
 
     注意：此 Processor 不自行管理数据库会话。它只收集数据，
@@ -83,7 +83,8 @@ def _safe_serialize(value: Any) -> dict[str, Any] | None:
     if isinstance(value, dict):
         return value
     if hasattr(value, "model_dump"):
-        return value.model_dump()
+        result: dict[str, Any] = value.model_dump()
+        return result
     if isinstance(value, str):
         return {"text": value}
     if isinstance(value, list):

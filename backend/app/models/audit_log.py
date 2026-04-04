@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import uuid
 from datetime import datetime, timezone
 
@@ -32,7 +34,7 @@ class AuditLog(Base):
     resource_id: Mapped[str | None] = mapped_column(
         String(128), nullable=True
     )
-    detail: Mapped[dict] = mapped_column(
+    detail: Mapped[dict[str, Any]] = mapped_column(
         JSONB, nullable=False, server_default=text("'{}'::jsonb")
     )
     ip_address: Mapped[str | None] = mapped_column(

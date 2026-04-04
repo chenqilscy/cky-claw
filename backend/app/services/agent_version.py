@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import uuid
 from datetime import datetime, timezone
 
@@ -13,7 +15,7 @@ from app.models.agent import AgentConfig
 from app.models.agent_version import AgentConfigVersion
 
 
-def _snapshot_from_agent(agent: AgentConfig) -> dict:
+def _snapshot_from_agent(agent: AgentConfig) -> dict[str, Any]:
     """从 AgentConfig 实例提取完整快照（不含 id/created_at/updated_at 等元数据）。"""
     return {
         "name": agent.name,
@@ -45,7 +47,7 @@ async def _next_version(db: AsyncSession, agent_config_id: uuid.UUID) -> int:
 async def create_version(
     db: AsyncSession,
     agent_config_id: uuid.UUID,
-    snapshot: dict,
+    snapshot: dict[str, Any],
     *,
     change_summary: str | None = None,
     created_by: uuid.UUID | None = None,

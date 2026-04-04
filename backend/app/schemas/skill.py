@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import uuid
 from datetime import datetime
 from enum import Enum
@@ -32,7 +34,7 @@ class SkillCreate(BaseModel):
     tags: list[str] = Field(default_factory=list, description="标签列表")
     applicable_agents: list[str] = Field(default_factory=list, description="适用 Agent 名称列表")
     author: str = Field("", max_length=64, description="作者")
-    metadata: dict = Field(default_factory=dict, description="自定义元数据")
+    metadata: dict[str, Any] = Field(default_factory=dict, description="自定义元数据")
 
 
 class SkillUpdate(BaseModel):
@@ -45,7 +47,7 @@ class SkillUpdate(BaseModel):
     tags: list[str] | None = Field(None, description="标签列表")
     applicable_agents: list[str] | None = Field(None, description="适用 Agent 名称列表")
     author: str | None = Field(None, max_length=64, description="作者")
-    metadata: dict | None = Field(None, description="自定义元数据")
+    metadata: dict[str, Any] | None = Field(None, description="自定义元数据")
 
 
 class SkillSearchRequest(BaseModel):
@@ -75,7 +77,7 @@ class SkillResponse(BaseModel):
     tags: list[str]
     applicable_agents: list[str]
     author: str
-    metadata: dict = Field(default_factory=dict, alias="metadata_")
+    metadata: dict[str, Any] = Field(default_factory=dict, alias="metadata_")
     created_at: datetime
     updated_at: datetime
 

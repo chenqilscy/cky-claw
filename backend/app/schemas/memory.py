@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import uuid
 from datetime import datetime
 from enum import Enum
@@ -31,7 +33,7 @@ class MemoryCreate(BaseModel):
     user_id: str = Field(..., min_length=1, max_length=128, description="用户标识")
     agent_name: str | None = Field(None, max_length=64, description="Agent 名称")
     source_session_id: str | None = Field(None, max_length=128, description="来源会话 ID")
-    metadata: dict = Field(default_factory=dict, description="自定义元数据")
+    metadata: dict[str, Any] = Field(default_factory=dict, description="自定义元数据")
 
 
 class MemoryUpdate(BaseModel):
@@ -40,7 +42,7 @@ class MemoryUpdate(BaseModel):
     content: str | None = Field(None, min_length=1, max_length=10000, description="记忆内容")
     confidence: float | None = Field(None, ge=0.0, le=1.0, description="置信度")
     type: MemoryTypeEnum | None = Field(None, description="记忆类型")
-    metadata: dict | None = Field(None, description="自定义元数据")
+    metadata: dict[str, Any] | None = Field(None, description="自定义元数据")
 
 
 class MemorySearchRequest(BaseModel):
@@ -75,7 +77,7 @@ class MemoryResponse(BaseModel):
     confidence: float
     agent_name: str | None = None
     source_session_id: str | None = None
-    metadata: dict = Field(default_factory=dict, alias="metadata_")
+    metadata: dict[str, Any] = Field(default_factory=dict, alias="metadata_")
     created_at: datetime
     updated_at: datetime
 

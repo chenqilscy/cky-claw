@@ -63,3 +63,9 @@ testpaths = ["tests"]
 
 [tool.uv.sources]
 ckyclaw-framework = { path = "../ckyclaw-framework", editable = true }
+
+[dependency-groups]
+dev = [
+    "types-croniter>=6.2.2.20260402",
+    "types-pyyaml>=6.0.12.20250915",
+]

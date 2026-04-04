@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import uuid
 from datetime import datetime
 
@@ -33,7 +35,7 @@ class ApprovalResponse(BaseModel):
     run_id: str
     agent_name: str
     trigger: str
-    content: dict
+    content: dict[str, Any]
     status: str
     comment: str
     resolved_at: datetime | None = None

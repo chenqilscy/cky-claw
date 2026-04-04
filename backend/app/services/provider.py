@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import logging
 import time
 import uuid
@@ -130,7 +132,7 @@ _DEFAULT_TEST_MODELS: dict[str, str] = {
 async def test_connection(
     db: AsyncSession,
     provider_id: uuid.UUID,
-) -> dict:
+) -> dict[str, Any]:
     """测试 Provider 连通性：发送一个轻量请求验证 API Key + base_url 可用。
 
     Returns:
@@ -157,7 +159,7 @@ async def test_connection(
     test_model = _DEFAULT_TEST_MODELS.get(provider.provider_type, "openai/default")
 
     # 构造请求参数
-    kwargs: dict = {
+    kwargs: dict[str, Any] = {
         "model": test_model,
         "messages": [{"role": "user", "content": "Hi"}],
         "max_tokens": 5,

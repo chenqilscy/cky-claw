@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import uuid
 from datetime import datetime, timezone
 
@@ -30,7 +32,7 @@ class AgentConfigVersion(Base):
         index=True,
     )
     version: Mapped[int] = mapped_column(Integer, nullable=False)
-    snapshot: Mapped[dict] = mapped_column(JSONB, nullable=False)
+    snapshot: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False)
     change_summary: Mapped[str | None] = mapped_column(String(512), nullable=True)
     created_by: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), nullable=True

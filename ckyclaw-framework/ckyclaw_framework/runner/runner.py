@@ -120,7 +120,7 @@ async def _build_system_message(agent: Agent, run_context: RunContext) -> Messag
         if asyncio.iscoroutine(result) or asyncio.isfuture(result):
             text = await result
         else:
-            text = result  # type: ignore[assignment]
+            text = result  # sync callable returns str directly
     else:
         text = agent.instructions or ""
     # output_type: 注入 JSON Schema 描述到 system prompt 作为 fallback 指引
@@ -659,13 +659,13 @@ async def _execute_tool_calls(
             timeout_val = tool.timeout or _tool_timeout
             error_result = f"Error: Tool '{tc.name}' timed out after {timeout_val}s."
             tool_results[tc.id] = tool_result_to_message(tc.id, error_result, agent.name)
-            if tool_span:
+            if tool_span and tracing:
                 await tracing.end_span(tool_span, output=error_result, status=SpanStatus.FAILED)
             return
         except Exception as e:
             error_result = f"Error: {e}"
             tool_results[tc.id] = tool_result_to_message(tc.id, error_result, agent.name)
-            if tool_span:
+            if tool_span and tracing:
                 await tracing.end_span(tool_span, output=error_result, status=SpanStatus.FAILED)
             return
 
@@ -714,7 +714,7 @@ async def _execute_tool_calls(
         if _hooks and run_context:
             await _invoke_hook(_hooks.on_tool_end, "on_tool_end", run_context, tc.name, result)
         tool_results[tc.id] = tool_result_to_message(tc.id, result, agent.name)
-        if tool_span:
+        if tool_span and tracing:
             await tracing.end_span(tool_span, output=result)
 
     # ── 3. 并行执行所有普通工具（支持并发限流）──────────────────────────────

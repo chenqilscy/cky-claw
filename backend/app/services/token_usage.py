@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import uuid
 from datetime import datetime
 
@@ -29,7 +31,7 @@ async def create_token_usage_logs(
 
 
 def _apply_common_filters(
-    stmt,  # type: ignore[no-untyped-def]
+    stmt: Any,
     *,
     agent_name: str | None = None,
     session_id: uuid.UUID | None = None,
@@ -37,7 +39,7 @@ def _apply_common_filters(
     model: str | None = None,
     start_time: datetime | None = None,
     end_time: datetime | None = None,
-):  # type: ignore[no-untyped-def]
+) -> Any:
     """应用通用筛选条件。"""
     if agent_name:
         stmt = stmt.where(TokenUsageLog.agent_name == agent_name)
@@ -104,7 +106,7 @@ async def get_token_usage_summary(
     ]
 
     if group_by == SummaryGroupBy.user:
-        group_cols = [TokenUsageLog.user_id]
+        group_cols: list[Any] = [TokenUsageLog.user_id]
     elif group_by == SummaryGroupBy.model:
         group_cols = [TokenUsageLog.model]
     else:

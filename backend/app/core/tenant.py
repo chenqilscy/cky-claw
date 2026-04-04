@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import uuid
 from collections.abc import Callable
 
@@ -116,7 +118,7 @@ async def check_quota(
     # 统计当前数量
     table_name = _QUOTA_TABLE_MAP[resource_key]
     count_stmt = select(func.count()).select_from(
-        func.table_literal(table_name)  # type: ignore[attr-defined]
+        func.table_literal(table_name)
     )
 
     # 使用原生 SQL 统计，因为不同表的 soft delete 列不同

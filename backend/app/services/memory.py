@@ -5,8 +5,10 @@ from __future__ import annotations
 import logging
 import uuid
 from datetime import datetime, timezone
+from typing import Any, cast
 
 from sqlalchemy import delete, func, select, update
+from sqlalchemy.engine import CursorResult
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import NotFoundError
@@ -118,7 +120,7 @@ async def delete_user_memories(db: AsyncSession, user_id: str) -> int:
     )
     result = await db.execute(stmt)
     await db.commit()
-    return result.rowcount  # type: ignore[return-value]
+    return cast(CursorResult[Any], result).rowcount
 
 
 def _escape_like(query: str) -> str:
@@ -163,4 +165,4 @@ async def decay_memories(db: AsyncSession, data: MemoryDecayRequest) -> int:
     )
     result = await db.execute(stmt)
     await db.commit()
-    return result.rowcount  # type: ignore[return-value]
+    return cast(CursorResult[Any], result).rowcount

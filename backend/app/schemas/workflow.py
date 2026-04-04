@@ -76,7 +76,7 @@ class WorkflowCreate(BaseModel):
     output_keys: list[str] = Field(default_factory=list, description="输出键")
     timeout: float | None = Field(None, ge=0, description="全局超时（秒）")
     guardrail_names: list[str] = Field(default_factory=list, description="护栏名称列表")
-    metadata: dict = Field(default_factory=dict, description="自定义元数据")
+    metadata: dict[str, Any] = Field(default_factory=dict, description="自定义元数据")
 
 
 class WorkflowUpdate(BaseModel):
@@ -89,7 +89,7 @@ class WorkflowUpdate(BaseModel):
     output_keys: list[str] | None = None
     timeout: float | None = Field(None, ge=0)
     guardrail_names: list[str] | None = None
-    metadata: dict | None = None
+    metadata: dict[str, Any] | None = None
 
 
 # ---------------------------------------------------------------------------
@@ -105,13 +105,13 @@ class WorkflowResponse(BaseModel):
     id: uuid.UUID
     name: str
     description: str
-    steps: list[dict]
-    edges: list[dict]
+    steps: list[dict[str, Any]]
+    edges: list[dict[str, Any]]
     input_schema: dict[str, Any]
     output_keys: list[str]
     timeout: float | None
     guardrail_names: list[str]
-    metadata: dict = Field(default_factory=dict, alias="metadata_")
+    metadata: dict[str, Any] = Field(default_factory=dict, alias="metadata_")
     created_at: datetime
     updated_at: datetime
 

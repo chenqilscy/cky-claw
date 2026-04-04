@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import uuid
 from datetime import datetime, timezone
 
@@ -49,7 +51,7 @@ class TraceRecord(Base):
     duration_ms: Mapped[int | None] = mapped_column(
         nullable=True
     )
-    metadata_: Mapped[dict] = mapped_column(
+    metadata_: Mapped[dict[str, Any]] = mapped_column(
         "metadata", JSONB, nullable=False, server_default=text("'{}'::jsonb")
     )
     created_at: Mapped[datetime] = mapped_column(
@@ -93,19 +95,19 @@ class SpanRecord(Base):
     duration_ms: Mapped[int | None] = mapped_column(
         nullable=True
     )
-    input_data: Mapped[dict | None] = mapped_column(
+    input_data: Mapped[dict[str, Any] | None] = mapped_column(
         "input", JSONB, nullable=True
     )
-    output_data: Mapped[dict | None] = mapped_column(
+    output_data: Mapped[dict[str, Any] | None] = mapped_column(
         "output", JSONB, nullable=True
     )
-    metadata_: Mapped[dict] = mapped_column(
+    metadata_: Mapped[dict[str, Any]] = mapped_column(
         "metadata", JSONB, nullable=False, server_default=text("'{}'::jsonb")
     )
     model: Mapped[str | None] = mapped_column(
         String(128), nullable=True
     )
-    token_usage: Mapped[dict | None] = mapped_column(
+    token_usage: Mapped[dict[str, Any] | None] = mapped_column(
         JSONB, nullable=True
     )
     created_at: Mapped[datetime] = mapped_column(

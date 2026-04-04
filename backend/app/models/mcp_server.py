@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import uuid
 from datetime import datetime, timezone
 
@@ -29,10 +31,10 @@ class MCPServerConfig(SoftDeleteMixin, Base):
     )
     command: Mapped[str | None] = mapped_column(Text, nullable=True)
     url: Mapped[str | None] = mapped_column(Text, nullable=True)
-    env: Mapped[dict] = mapped_column(
+    env: Mapped[dict[str, Any]] = mapped_column(
         JSONB, nullable=False, server_default=text("'{}'::jsonb")
     )
-    auth_config: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    auth_config: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
     is_enabled: Mapped[bool] = mapped_column(
         Boolean, nullable=False, server_default=text("true")
     )

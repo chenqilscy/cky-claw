@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 import re
-from typing import Callable
+from typing import Any, Callable, cast
 
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
@@ -46,16 +46,16 @@ def _get_client_ip(request: Request) -> str:
 class AuditLogMiddleware(BaseHTTPMiddleware):
     """审计日志中间件：自动记录 POST/PUT/PATCH/DELETE 操作。"""
 
-    async def dispatch(self, request: Request, call_next: Callable) -> Response:  # type: ignore[type-arg]
+    async def dispatch(self, request: Request, call_next: Callable[..., Any]) -> Response:
         method = request.method.upper()
         path = request.url.path
 
         # 非写操作或跳过路径，直接放行
         if method not in _AUDIT_METHODS or path in _SKIP_PATHS:
-            return await call_next(request)
+            return cast(Response, await call_next(request))
 
         # 执行请求
-        response = await call_next(request)
+        response: Response = await call_next(request)
 
         # Fire-and-forget: 独立 session 写审计日志
         try:

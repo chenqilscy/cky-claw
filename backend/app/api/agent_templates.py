@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -90,7 +92,7 @@ async def delete_template(
 @router.post("/seed", response_model=dict, dependencies=[Depends(require_permission("templates", "write"))])
 async def seed_builtin_templates(
     db: AsyncSession = Depends(get_db),
-) -> dict:
+) -> dict[str, Any]:
     """初始化/同步内置模板（幂等操作）。"""
     created = await template_service.seed_builtin_templates(db)
     return {"created": created}

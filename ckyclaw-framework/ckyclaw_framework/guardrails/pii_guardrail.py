@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from ckyclaw_framework.guardrails.result import GuardrailResult
 
@@ -68,7 +68,7 @@ class PIIDetectionGuardrail:
             )
         return GuardrailResult(tripwire_triggered=False, message="safe")
 
-    def as_input_fn(self):
+    def as_input_fn(self) -> Any:
         """返回与 InputGuardrail.guardrail_function 兼容的异步函数。"""
 
         async def _fn(ctx: RunContext, input_text: str) -> GuardrailResult:
@@ -77,7 +77,7 @@ class PIIDetectionGuardrail:
         _fn.__name__ = self.name
         return _fn
 
-    def as_output_fn(self):
+    def as_output_fn(self) -> Any:
         """返回与 OutputGuardrail.guardrail_function 兼容的异步函数。"""
 
         async def _fn(ctx: RunContext, output_text: str) -> GuardrailResult:
@@ -86,7 +86,7 @@ class PIIDetectionGuardrail:
         _fn.__name__ = self.name
         return _fn
 
-    def as_tool_after_fn(self):
+    def as_tool_after_fn(self) -> Any:
         """返回与 ToolGuardrail.after_fn 兼容的异步函数。"""
 
         async def _fn(ctx: RunContext, tool_name: str, result: str) -> GuardrailResult:

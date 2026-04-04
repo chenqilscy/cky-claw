@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import logging
 import operator as op_module
 import uuid
@@ -189,7 +191,7 @@ async def _compute_metric(
 
     since = datetime.now(timezone.utc) - timedelta(minutes=window_minutes)
     agent_filter = ""
-    params: dict = {"since": since}
+    params: dict[str, Any] = {"since": since}
 
     if agent_name is not None:
         agent_filter = "AND agent_name = :agent_name"

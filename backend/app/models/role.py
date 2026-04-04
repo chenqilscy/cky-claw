@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import uuid
 from datetime import datetime, timezone
 
@@ -26,7 +28,7 @@ class Role(Base):
     description: Mapped[str] = mapped_column(
         String(256), nullable=False, server_default=text("''")
     )
-    permissions: Mapped[dict] = mapped_column(
+    permissions: Mapped[dict[str, Any]] = mapped_column(
         JSONB, nullable=False, server_default=text("'{}'::jsonb")
     )
     is_system: Mapped[bool] = mapped_column(

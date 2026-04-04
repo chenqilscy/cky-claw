@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import uuid
 from datetime import datetime, timezone
 
@@ -30,7 +32,7 @@ class GuardrailRule(SoftDeleteMixin, Base):
     mode: Mapped[str] = mapped_column(
         String(16), nullable=False, default="regex"
     )
-    config: Mapped[dict] = mapped_column(
+    config: Mapped[dict[str, Any]] = mapped_column(
         JSONB, nullable=False, server_default=text("'{}'::jsonb")
     )
     is_enabled: Mapped[bool] = mapped_column(
@@ -39,7 +41,7 @@ class GuardrailRule(SoftDeleteMixin, Base):
     org_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("organizations.id"), nullable=True, index=True
     )
-    conditions: Mapped[dict] = mapped_column(
+    conditions: Mapped[dict[str, Any]] = mapped_column(
         JSONB, nullable=False, server_default=text("'{}'::jsonb"),
         comment="条件启用规则，如 {env: production, agent_tags: [critical]}",
     )

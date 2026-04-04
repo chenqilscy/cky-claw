@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import uuid
 from datetime import datetime
 
@@ -25,7 +27,7 @@ class RunEvaluationCreate(BaseModel):
     eval_method: str = Field(default="manual", description="评估方式：manual/auto/llm_judge")
     evaluator: str = Field(default="", description="评估者")
     comment: str = Field(default="", description="评语")
-    metadata: dict = Field(default_factory=dict)
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
 
 class RunEvaluationResponse(BaseModel):
@@ -78,7 +80,7 @@ class RunFeedbackResponse(BaseModel):
     user_id: uuid.UUID | None
     rating: int
     comment: str
-    tags: list | dict
+    tags: list[Any] | dict[str, Any]
     created_at: datetime
 
 

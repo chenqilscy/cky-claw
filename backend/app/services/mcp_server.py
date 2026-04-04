@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import logging
 import uuid
 from datetime import datetime, timezone
@@ -20,7 +22,7 @@ logger = logging.getLogger(__name__)
 _ENCRYPT_FIELDS = {"api_key", "secret", "token", "password", "client_secret", "refresh_token"}
 
 
-def _encrypt_auth_config(auth: dict | None) -> dict | None:
+def _encrypt_auth_config(auth: dict[str, Any] | None) -> dict[str, Any] | None:
     """加密 auth_config 中的敏感字段。"""
     if not auth:
         return auth
@@ -33,7 +35,7 @@ def _encrypt_auth_config(auth: dict | None) -> dict | None:
     return encrypted
 
 
-def _decrypt_auth_config(auth: dict | None) -> dict | None:
+def _decrypt_auth_config(auth: dict[str, Any] | None) -> dict[str, Any] | None:
     """解密 auth_config 中的敏感字段。"""
     if not auth:
         return auth
@@ -161,7 +163,7 @@ async def get_mcp_servers_by_names(
 async def test_mcp_connection(
     db: AsyncSession,
     server_id: uuid.UUID,
-) -> dict:
+) -> dict[str, Any]:
     """测试 MCP Server 连接：连接 → list_tools → 返回工具列表或错误。
 
     Returns:

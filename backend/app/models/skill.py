@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import uuid
 from datetime import datetime, timezone
 
@@ -35,16 +37,16 @@ class SkillRecord(SoftDeleteMixin, Base):
     category: Mapped[str] = mapped_column(
         String(16), nullable=False, server_default=text("'custom'"), index=True
     )
-    tags: Mapped[list] = mapped_column(
+    tags: Mapped[list[Any]] = mapped_column(
         JSONB, nullable=False, server_default=text("'[]'::jsonb")
     )
-    applicable_agents: Mapped[list] = mapped_column(
+    applicable_agents: Mapped[list[Any]] = mapped_column(
         JSONB, nullable=False, server_default=text("'[]'::jsonb")
     )
     author: Mapped[str] = mapped_column(
         String(64), nullable=False, server_default=text("''")
     )
-    metadata_: Mapped[dict] = mapped_column(
+    metadata_: Mapped[dict[str, Any]] = mapped_column(
         "metadata", JSONB, nullable=False, server_default=text("'{}'::jsonb")
     )
     org_id: Mapped[uuid.UUID | None] = mapped_column(

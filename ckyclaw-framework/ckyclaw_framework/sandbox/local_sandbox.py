@@ -91,7 +91,7 @@ class LocalSandbox(SandboxExecutor):
             except asyncio.TimeoutError:
                 timed_out = True
                 try:
-                    proc.kill()  # type: ignore[possibly-undefined]
+                    proc.kill()
                 except ProcessLookupError:
                     pass
                 stdout_bytes = b""
@@ -105,7 +105,7 @@ class LocalSandbox(SandboxExecutor):
             stderr_str = (stderr_bytes or b"").decode("utf-8", errors="replace")[:max_output]
 
             return SandboxResult(
-                exit_code=proc.returncode if not timed_out else -1,  # type: ignore[union-attr]
+                exit_code=proc.returncode if not timed_out else -1,  # type: ignore[arg-type]
                 stdout=stdout_str,
                 stderr=stderr_str,
                 timed_out=timed_out,

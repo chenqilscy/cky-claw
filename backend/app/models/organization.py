@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import uuid
 from datetime import datetime, timezone
 
@@ -27,10 +29,10 @@ class Organization(SoftDeleteMixin, Base):
         String(64), unique=True, nullable=False, index=True
     )
     description: Mapped[str] = mapped_column(Text, nullable=False, default="")
-    settings: Mapped[dict] = mapped_column(
+    settings: Mapped[dict[str, Any]] = mapped_column(
         JSONB, nullable=False, server_default=text("'{}'::jsonb")
     )
-    quota: Mapped[dict] = mapped_column(
+    quota: Mapped[dict[str, Any]] = mapped_column(
         JSONB, nullable=False, server_default=text("'{}'::jsonb"),
     )
     is_active: Mapped[bool] = mapped_column(

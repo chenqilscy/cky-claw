@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import uuid
 from datetime import datetime
 
@@ -44,7 +46,7 @@ class AlertRule(SoftDeleteMixin, Base):
     cooldown_minutes: Mapped[int] = mapped_column(
         Integer, nullable=False, server_default="30"
     )  # 冷却时间（同一规则触发间隔）
-    notification_config: Mapped[dict] = mapped_column(
+    notification_config: Mapped[dict[str, Any]] = mapped_column(
         JSONB, server_default="{}", nullable=False
     )  # {"webhook_url": "...", "channels": [...]}
     last_triggered_at: Mapped[datetime | None] = mapped_column(

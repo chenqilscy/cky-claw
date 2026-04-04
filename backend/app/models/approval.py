@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import uuid
 from datetime import datetime, timezone
 
@@ -32,7 +34,7 @@ class ApprovalRequest(Base):
     trigger: Mapped[str] = mapped_column(
         String(16), nullable=False, default="tool_call"
     )
-    content: Mapped[dict] = mapped_column(
+    content: Mapped[dict[str, Any]] = mapped_column(
         JSONB, nullable=False, server_default=text("'{}'::jsonb")
     )
     status: Mapped[str] = mapped_column(

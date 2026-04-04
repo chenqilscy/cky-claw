@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import uuid
 from datetime import datetime
 
@@ -13,7 +15,7 @@ VALID_TRANSPORT_TYPES = {"stdio", "sse", "http"}
 _SENSITIVE_AUTH_FIELDS = {"api_key", "secret", "token", "password", "client_secret", "refresh_token"}
 
 
-def _mask_auth_config(auth: dict | None) -> dict | None:
+def _mask_auth_config(auth: dict[str, Any] | None) -> dict[str, Any] | None:
     """对 auth_config 中的敏感字段进行脱敏。"""
     if not auth:
         return auth
@@ -34,8 +36,8 @@ class MCPServerCreate(BaseModel):
     transport_type: str = Field(..., description="传输类型：stdio / sse / http")
     command: str | None = Field(default=None, description="stdio 模式命令")
     url: str | None = Field(default=None, description="sse/http 模式 URL")
-    env: dict = Field(default_factory=dict, description="环境变量")
-    auth_config: dict | None = Field(default=None, description="认证配置")
+    env: dict[str, Any] = Field(default_factory=dict, description="环境变量")
+    auth_config: dict[str, Any] | None = Field(default=None, description="认证配置")
     is_enabled: bool = Field(default=True, description="是否启用")
 
     @field_validator("transport_type")
@@ -61,8 +63,8 @@ class MCPServerUpdate(BaseModel):
     transport_type: str | None = None
     command: str | None = None
     url: str | None = None
-    env: dict | None = None
-    auth_config: dict | None = None
+    env: dict[str, Any] | None = None
+    auth_config: dict[str, Any] | None = None
     is_enabled: bool | None = None
 
     @field_validator("transport_type")
@@ -84,8 +86,8 @@ class MCPServerResponse(BaseModel):
     transport_type: str
     command: str | None
     url: str | None
-    env: dict
-    auth_config: dict | None
+    env: dict[str, Any]
+    auth_config: dict[str, Any] | None
     is_enabled: bool
     org_id: uuid.UUID | None
     created_at: datetime
@@ -93,7 +95,7 @@ class MCPServerResponse(BaseModel):
 
     @field_validator("auth_config", mode="before")
     @classmethod
-    def mask_auth(cls, v: dict | None) -> dict | None:
+    def mask_auth(cls, v: dict[str, Any] | None) -> dict[str, Any] | None:
         return _mask_auth_config(v)
 
 
@@ -111,7 +113,7 @@ class MCPToolInfo(BaseModel):
 
     name: str
     description: str = ""
-    parameters_schema: dict = Field(default_factory=dict)
+    parameters_schema: dict[str, Any] = Field(default_factory=dict)
 
 
 class MCPTestResult(BaseModel):

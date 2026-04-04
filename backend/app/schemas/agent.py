@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import re
 import uuid
 from datetime import datetime
@@ -28,7 +30,7 @@ class AgentCreate(BaseModel):
     instructions: str = Field(default="", description="Agent 行为指令")
     model: str | None = Field(default=None, description="LLM 模型标识")
     provider_name: str | None = Field(default=None, max_length=64, description="模型厂商名称（对应 ProviderConfig.name）")
-    model_settings: dict | None = Field(default=None, description="模型参数")
+    model_settings: dict[str, Any] | None = Field(default=None, description="模型参数")
     tool_groups: list[str] = Field(default_factory=list, description="工具组名称列表")
     handoffs: list[str] = Field(default_factory=list, description="可 Handoff 的目标 Agent")
     guardrails: GuardrailsConfig = Field(default_factory=GuardrailsConfig, description="护栏配置")
@@ -36,8 +38,8 @@ class AgentCreate(BaseModel):
     mcp_servers: list[str] = Field(default_factory=list, description="MCP Server 名称")
     agent_tools: list[str] = Field(default_factory=list, description="作为工具调用的 Agent 名称列表")
     skills: list[str] = Field(default_factory=list, description="已启用 Skill 名称")
-    output_type: dict | None = Field(default=None, description="结构化输出 JSON Schema")
-    metadata: dict = Field(default_factory=dict, description="自定义元数据")
+    output_type: dict[str, Any] | None = Field(default=None, description="结构化输出 JSON Schema")
+    metadata: dict[str, Any] = Field(default_factory=dict, description="自定义元数据")
 
     @field_validator("name")
     @classmethod
@@ -62,7 +64,7 @@ class AgentUpdate(BaseModel):
     instructions: str | None = None
     model: str | None = None
     provider_name: str | None = None
-    model_settings: dict | None = None
+    model_settings: dict[str, Any] | None = None
     tool_groups: list[str] | None = None
     handoffs: list[str] | None = None
     guardrails: GuardrailsConfig | None = None
@@ -70,8 +72,8 @@ class AgentUpdate(BaseModel):
     mcp_servers: list[str] | None = None
     agent_tools: list[str] | None = None
     skills: list[str] | None = None
-    output_type: dict | None = None
-    metadata: dict | None = None
+    output_type: dict[str, Any] | None = None
+    metadata: dict[str, Any] | None = None
 
     @field_validator("approval_mode")
     @classmethod
@@ -94,16 +96,16 @@ class AgentResponse(BaseModel):
     instructions: str
     model: str | None
     provider_name: str | None
-    model_settings: dict | None
+    model_settings: dict[str, Any] | None
     tool_groups: list[str]
     handoffs: list[str]
-    guardrails: dict
+    guardrails: dict[str, Any]
     approval_mode: str
     mcp_servers: list[str]
     agent_tools: list[str]
     skills: list[str]
-    output_type: dict | None
-    metadata: dict = Field(alias="metadata_")
+    output_type: dict[str, Any] | None
+    metadata: dict[str, Any] = Field(alias="metadata_")
     org_id: uuid.UUID | None
     is_active: bool
     created_by: uuid.UUID | None

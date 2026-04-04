@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import uuid
 
 from fastapi import APIRouter, Depends, Query
@@ -89,7 +91,7 @@ async def assign_role(
     user_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
     _user: User = Depends(require_admin),
-) -> dict:
+) -> dict[str, Any]:
     """为用户分配角色。"""
     user = await role_service.assign_role_to_user(db, user_id, role_id)
     return {"message": f"已将角色分配给用户 {user.username}"}

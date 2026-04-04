@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import uuid
 from datetime import datetime, timezone
 
@@ -29,7 +31,7 @@ class IMChannel(SoftDeleteMixin, Base):
     )
     webhook_url: Mapped[str | None] = mapped_column(Text, nullable=True)
     webhook_secret: Mapped[str | None] = mapped_column(Text, nullable=True)
-    app_config: Mapped[dict] = mapped_column(
+    app_config: Mapped[dict[str, Any]] = mapped_column(
         JSONB, nullable=False, server_default=text("'{}'::jsonb")
     )
     agent_id: Mapped[uuid.UUID | None] = mapped_column(

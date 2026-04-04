@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import re
 import uuid
 from datetime import datetime
@@ -17,8 +19,8 @@ class OrganizationCreate(BaseModel):
     name: str = Field(..., min_length=2, max_length=128, description="组织名称")
     slug: str = Field(..., min_length=3, max_length=64, description="唯一标识 (URL 友好)")
     description: str = Field(default="", description="描述")
-    settings: dict = Field(default_factory=dict, description="组织设置")
-    quota: dict = Field(default_factory=dict, description="配额限制")
+    settings: dict[str, Any] = Field(default_factory=dict, description="组织设置")
+    quota: dict[str, Any] = Field(default_factory=dict, description="配额限制")
 
     @field_validator("slug")
     @classmethod
@@ -33,8 +35,8 @@ class OrganizationUpdate(BaseModel):
 
     name: str | None = None
     description: str | None = None
-    settings: dict | None = None
-    quota: dict | None = None
+    settings: dict[str, Any] | None = None
+    quota: dict[str, Any] | None = None
     is_active: bool | None = None
 
 
@@ -47,8 +49,8 @@ class OrganizationResponse(BaseModel):
     name: str
     slug: str
     description: str
-    settings: dict
-    quota: dict
+    settings: dict[str, Any]
+    quota: dict[str, Any]
     is_active: bool
     created_at: datetime
     updated_at: datetime

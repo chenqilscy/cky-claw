@@ -23,7 +23,7 @@ from app.services.approval_manager import ApprovalManager
 logger = logging.getLogger(__name__)
 
 
-class HttpApprovalHandler(ApprovalHandler):
+class HttpApprovalHandler(ApprovalHandler):  # type: ignore[misc]
     """HTTP/DB 驱动的审批处理器。
 
     在 Runner Agent Loop 内部被调用，使用独立 DB session（不复用 request-scoped session），
@@ -108,11 +108,11 @@ class HttpApprovalHandler(ApprovalHandler):
         }
         async with async_session_factory() as db:
             stmt = select(ApprovalRequest).where(ApprovalRequest.id == approval_id)
-            record = (await db.execute(stmt)).scalar_one_or_none()
-            if record and record.status == "pending":
+            db_record = (await db.execute(stmt)).scalar_one_or_none()
+            if db_record and db_record.status == "pending":
                 # 仅在 API 端尚未更新时由 handler 更新（超时场景）
-                record.status = status_map.get(decision, "timeout")
-                record.resolved_at = datetime.now(timezone.utc)
+                db_record.status = status_map.get(decision, "timeout")
+                db_record.resolved_at = datetime.now(timezone.utc)
                 await db.commit()
 
         logger.info("Approval %s resolved: %s", approval_id, decision.value)

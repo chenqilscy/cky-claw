@@ -21,7 +21,7 @@ from app.models.session_message import SessionMessage, SessionMetadataRecord
 logger = logging.getLogger(__name__)
 
 
-class SQLAlchemySessionBackend(SessionBackend):
+class SQLAlchemySessionBackend(SessionBackend):  # type: ignore[misc]
     """基于 SQLAlchemy Async 的 Session 消息持久化后端。
 
     与 Backend 共享同一个 AsyncSession（同一个连接池），避免额外的连接管理。

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import uuid
 from datetime import datetime
 
@@ -23,7 +25,7 @@ class ProviderCreate(BaseModel):
     base_url: str = Field(..., min_length=1, max_length=512, description="API 端点 URL")
     api_key: str = Field(..., min_length=1, description="API Key（明文，服务端加密存储）")
     auth_type: str = Field(default="api_key", description="认证类型")
-    auth_config: dict = Field(default_factory=dict, description="额外认证参数")
+    auth_config: dict[str, Any] = Field(default_factory=dict, description="额外认证参数")
     rate_limit_rpm: int | None = Field(default=None, ge=0, description="每分钟请求数上限")
     rate_limit_tpm: int | None = Field(default=None, ge=0, description="每分钟 Token 数上限")
 
@@ -50,7 +52,7 @@ class ProviderUpdate(BaseModel):
     base_url: str | None = Field(default=None, min_length=1, max_length=512)
     api_key: str | None = Field(default=None, min_length=1, description="新 API Key（可选更新）")
     auth_type: str | None = None
-    auth_config: dict | None = None
+    auth_config: dict[str, Any] | None = None
     rate_limit_rpm: int | None = Field(default=None, ge=0)
     rate_limit_tpm: int | None = Field(default=None, ge=0)
 
@@ -86,7 +88,7 @@ class ProviderResponse(BaseModel):
     base_url: str
     api_key_set: bool = Field(description="是否已设置 API Key（不返回密钥本身）")
     auth_type: str
-    auth_config: dict
+    auth_config: dict[str, Any]
     rate_limit_rpm: int | None
     rate_limit_tpm: int | None
     is_enabled: bool

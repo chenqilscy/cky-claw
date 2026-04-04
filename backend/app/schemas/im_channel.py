@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import uuid
 from datetime import datetime
 
@@ -12,7 +14,7 @@ VALID_CHANNEL_TYPES = {"wecom", "dingtalk", "slack", "telegram", "feishu", "webh
 _SENSITIVE_CONFIG_FIELDS = {"token", "secret", "api_key", "app_secret", "client_secret", "password"}
 
 
-def _mask_app_config(config: dict) -> dict:
+def _mask_app_config(config: dict[str, Any]) -> dict[str, Any]:
     """对 app_config 中的敏感字段进行脱敏。"""
     masked = {}
     for key, value in config.items():
@@ -31,7 +33,7 @@ class IMChannelCreate(BaseModel):
     channel_type: str = Field(..., description="渠道类型：wecom/dingtalk/slack/telegram/feishu/webhook")
     webhook_url: str | None = Field(default=None, description="Webhook 回调 URL")
     webhook_secret: str | None = Field(default=None, description="Webhook 签名密钥")
-    app_config: dict = Field(default_factory=dict, description="渠道应用配置（app_id、token 等）")
+    app_config: dict[str, Any] = Field(default_factory=dict, description="渠道应用配置（app_id、token 等）")
     agent_id: uuid.UUID | None = Field(default=None, description="绑定的 Agent ID")
     is_enabled: bool = Field(default=True, description="是否启用")
 
@@ -50,7 +52,7 @@ class IMChannelUpdate(BaseModel):
     channel_type: str | None = None
     webhook_url: str | None = None
     webhook_secret: str | None = None
-    app_config: dict | None = None
+    app_config: dict[str, Any] | None = None
     agent_id: uuid.UUID | None = None
     is_enabled: bool | None = None
 
@@ -73,7 +75,7 @@ class IMChannelResponse(BaseModel):
     channel_type: str
     webhook_url: str | None
     webhook_secret: str | None = None
-    app_config: dict
+    app_config: dict[str, Any]
     agent_id: uuid.UUID | None
     is_enabled: bool
     created_at: datetime
@@ -88,7 +90,7 @@ class IMChannelResponse(BaseModel):
 
     @field_validator("app_config", mode="before")
     @classmethod
-    def mask_config(cls, v: dict) -> dict:
+    def mask_config(cls, v: dict[str, Any]) -> dict[str, Any]:
         return _mask_app_config(v) if v else v
 
 
@@ -110,4 +112,4 @@ class IMWebhookPayload(BaseModel):
     content: str = ""
     message_id: str = ""
     conversation_id: str = ""
-    raw_payload: dict = Field(default_factory=dict)
+    raw_payload: dict[str, Any] = Field(default_factory=dict)

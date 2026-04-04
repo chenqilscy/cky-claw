@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import re
 import uuid
 from datetime import datetime, timezone
@@ -17,7 +19,7 @@ VALID_MODES = {"regex", "keyword", "llm"}
 MAX_PATTERN_LENGTH = 500
 
 
-def _validate_config(mode: str, config: dict) -> None:
+def _validate_config(mode: str, config: dict[str, Any]) -> None:
     """校验 config 与 mode 的匹配性。"""
     if mode == "regex":
         patterns = config.get("patterns", [])
@@ -65,7 +67,7 @@ async def create_guardrail_rule(
     description: str = "",
     type_: str = "input",
     mode: str = "regex",
-    config: dict | None = None,
+    config: dict[str, Any] | None = None,
 ) -> GuardrailRule:
     """创建 Guardrail 规则。"""
     if type_ not in VALID_TYPES:
@@ -162,7 +164,7 @@ async def update_guardrail_rule(
     description: str | None = None,
     type_: str | None = None,
     mode: str | None = None,
-    config: dict | None = None,
+    config: dict[str, Any] | None = None,
     is_enabled: bool | None = None,
 ) -> GuardrailRule:
     """更新 Guardrail 规则。"""

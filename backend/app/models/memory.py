@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import uuid
 from datetime import datetime, timezone
 
@@ -38,7 +40,7 @@ class MemoryEntryRecord(SoftDeleteMixin, Base):
     source_session_id: Mapped[str | None] = mapped_column(
         String(128), nullable=True
     )
-    metadata_: Mapped[dict] = mapped_column(
+    metadata_: Mapped[dict[str, Any]] = mapped_column(
         "metadata", JSONB, nullable=False, server_default=text("'{}'::jsonb")
     )
     org_id: Mapped[uuid.UUID | None] = mapped_column(

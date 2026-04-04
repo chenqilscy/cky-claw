@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import uuid
 from datetime import datetime, timezone
 
@@ -26,25 +28,25 @@ class WorkflowDefinition(SoftDeleteMixin, Base):
     description: Mapped[str] = mapped_column(
         Text, nullable=False, server_default=text("''")
     )
-    steps: Mapped[list] = mapped_column(
+    steps: Mapped[list[Any]] = mapped_column(
         JSONB, nullable=False, server_default=text("'[]'::jsonb")
     )
-    edges: Mapped[list] = mapped_column(
+    edges: Mapped[list[Any]] = mapped_column(
         JSONB, nullable=False, server_default=text("'[]'::jsonb")
     )
-    input_schema: Mapped[dict] = mapped_column(
+    input_schema: Mapped[dict[str, Any]] = mapped_column(
         JSONB, nullable=False, server_default=text("'{}'::jsonb")
     )
-    output_keys: Mapped[list] = mapped_column(
+    output_keys: Mapped[list[Any]] = mapped_column(
         JSONB, nullable=False, server_default=text("'[]'::jsonb")
     )
     timeout: Mapped[float | None] = mapped_column(
         nullable=True
     )
-    guardrail_names: Mapped[list] = mapped_column(
+    guardrail_names: Mapped[list[Any]] = mapped_column(
         JSONB, nullable=False, server_default=text("'[]'::jsonb")
     )
-    metadata_: Mapped[dict] = mapped_column(
+    metadata_: Mapped[dict[str, Any]] = mapped_column(
         "metadata", JSONB, nullable=False, server_default=text("'{}'::jsonb")
     )
     org_id: Mapped[uuid.UUID | None] = mapped_column(

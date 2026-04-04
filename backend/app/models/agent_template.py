@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import uuid
 from datetime import datetime, timezone
 
@@ -35,13 +37,13 @@ class AgentTemplate(SoftDeleteMixin, Base):
     icon: Mapped[str] = mapped_column(
         String(64), nullable=False, server_default=text("'RobotOutlined'")
     )
-    config: Mapped[dict] = mapped_column(
+    config: Mapped[dict[str, Any]] = mapped_column(
         JSONB, nullable=False, server_default=text("'{}'::jsonb")
     )
     is_builtin: Mapped[bool] = mapped_column(
         Boolean, nullable=False, server_default=text("false")
     )
-    metadata_: Mapped[dict] = mapped_column(
+    metadata_: Mapped[dict[str, Any]] = mapped_column(
         "metadata", JSONB, nullable=False, server_default=text("'{}'::jsonb")
     )
     created_at: Mapped[datetime] = mapped_column(

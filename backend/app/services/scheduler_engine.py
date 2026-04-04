@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import asyncio
 import logging
 import uuid
@@ -60,14 +62,14 @@ async def execute_task(db: AsyncSession, task: ScheduledTask, triggered_by: str 
         run.status = "success"
         run.output = output
         run.finished_at = now
-        run.duration_ms = (now - run.started_at).total_seconds() * 1000
+        run.duration_ms = (now - run.started_at).total_seconds() * 1000 if run.started_at else 0
 
     except Exception as exc:
         now = datetime.now(timezone.utc)
         run.status = "failed"
         run.error = str(exc)[:2000]
         run.finished_at = now
-        run.duration_ms = (now - run.started_at).total_seconds() * 1000
+        run.duration_ms = (now - run.started_at).total_seconds() * 1000 if run.started_at else 0
         logger.exception("定时任务 %s 执行失败", task.id)
 
     # 更新任务的执行时间
@@ -141,7 +143,7 @@ async def get_run(db: AsyncSession, run_id: uuid.UUID) -> ScheduledRun | None:
 # 后台调度器（生命周期管理）
 # ---------------------------------------------------------------------------
 
-_scheduler_task: asyncio.Task | None = None
+_scheduler_task: asyncio.Task[Any] | None = None
 
 
 async def _scheduler_loop() -> None:

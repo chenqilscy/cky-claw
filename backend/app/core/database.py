@@ -44,4 +44,4 @@ class SoftDeleteMixin:
 async def get_db() -> AsyncSession:  # type: ignore[misc]
     """获取数据库 session（FastAPI 依赖注入）。"""
     async with async_session_factory() as session:
-        yield session  # type: ignore[misc]
+        yield session

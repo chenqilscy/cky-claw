@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import uuid
 from datetime import datetime
 
@@ -17,7 +19,7 @@ class SessionCreate(BaseModel):
     """创建 Session 请求体。"""
 
     agent_name: str = Field(..., description="绑定的 Agent 名称")
-    metadata: dict = Field(default_factory=dict, description="自定义元数据")
+    metadata: dict[str, Any] = Field(default_factory=dict, description="自定义元数据")
 
 
 class MessageItem(BaseModel):
@@ -38,8 +40,8 @@ class SessionMessageItem(BaseModel):
     content: str
     agent_name: str | None = None
     tool_call_id: str | None = None
-    tool_calls: list[dict] | None = None
-    token_usage: dict | None = None
+    tool_calls: list[dict[str, Any]] | None = None
+    token_usage: dict[str, Any] | None = None
     created_at: datetime
 
 
@@ -60,7 +62,7 @@ class SessionResponse(BaseModel):
     agent_name: str
     status: str
     title: str
-    metadata: dict = Field(alias="metadata_")
+    metadata: dict[str, Any] = Field(alias="metadata_")
     messages: list[MessageItem] = Field(default_factory=list)
     created_at: datetime
     updated_at: datetime
