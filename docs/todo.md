@@ -34,7 +34,7 @@
 | 9 | ~~**Dynamic Instructions**~~ | §2.1 | P2 | 低 | ✅ 已完成（InstructionsType 支持 str/sync/async callable + 6 测试） |
 | 10 | ~~**Handoff input_type**~~ | §2.3 | P2 | 低 | ✅ 已完成（Handoff.input_type Pydantic Schema + 5 测试） |
 | 11 | ~~**ToolSearchTool 延迟加载**~~ | §2.6 | P2 | 中 | ✅ 已完成（ToolSearchTool 元工具 + keyword 匹配 + threshold 阈值机制） |
-| 12 | **条件启用** | §2.6 | P3 | 低 | ⏳ Guardrail condition 已实现（Framework 16 测试 + Migration 0028），Agent-as-Tool / FunctionTool 条件启用待补齐 |
+| 12 | ~~**条件启用**~~ | §2.6 | P3 | 低 | ✅ 已完成（Guardrail + FunctionTool + Agent-as-Tool 三级条件启用，condition: Callable[[RunContext], bool]，20 测试） |
 | 13 | ~~**Hosted Tool 内置工具**~~ | §2.6 | P2 | 中 | ✅ 已完成（10 个工具函数 + 5 组 ToolGroup + 种子数据 + Framework 29 测试 + Backend 7 测试） |
 | 14 | ~~**Session 历史裁剪**~~ | §2.9 | P1 | 中 | ✅ 已完成（HistoryTrimmer 滑动窗口 + Token 预算集成） |
 | 15 | ~~**Guardrail 并行模式**~~ | §2.10 | P2 | 中 | ✅ 已完成（RunConfig.guardrail_parallel + asyncio.TaskGroup 并行执行 Input/Output 护栏） |
@@ -44,12 +44,12 @@
 | # | 功能 | PRD 章节 | 优先级 | 复杂度 | 说明 |
 |---|------|----------|:------:|:------:|------|
 | 16 | ~~**IM 渠道接入**~~ | §7 | P1 | 高 | ✅ 已完成（IMChannel ORM + CRUD API + Webhook 端点 + HMAC 签名验证 + 消息路由 + Migration 0025） |
-| 17 | **定时/批量任务** | 附录 A | P2 | 中 | ⏳ CRUD 已完成（ORM + API + Frontend + Migration 0029），缺执行引擎/历史/批量 |
+| 17 | ~~**定时/批量任务**~~| 附录 A | P2 | 中 | ✅ 已完成（CRUD + SchedulerEngine 执行引擎 + ScheduledRun 历史 + Migration 0031 + 27 测试） |
 | 18 | **完整 RBAC** | §13.3 | P1 | 高 | Organization / Team / Role 层级 + 资源级细粒度授权 |
-| 19 | **多租户** | §3.3 | P1 | 高 | ⏳ Organization CRUD 已完成（ORM + API + Frontend + Migration 0027），缺数据隔离中间件/配额管理 |
-| 20 | **APM 仪表盘** | §9 | P2 | 高 | ⏳ 核心仪表盘已完成（聚合服务 + ECharts 可视化 + 19 测试），缺告警规则/异常检测/Grafana 集成 |
+| 19 | ~~**多租户**~~ | §3.3 | P1 | 高 | ✅ 已完成（get_org_id 租户依赖 + 11 路由 org_id 注入 + conftest 全局 fixture + 28 测试） |
+| 20 | ~~**APM 仪表盘**~~ | §9 | P2 | 高 | ✅ 已完成（聚合服务 + ECharts 可视化 + AlertRule/AlertEvent 告警引擎 + 7 API + Migration 0032 + 32 测试） |
 | 21 | ~~**Agent 评估与质量度量**~~ | 附录 B v2.0.4 | P2 | 中 | ✅ 已完成（RunEvaluation 7 维评分 + RunFeedback 用户反馈 + AgentQualitySummary 汇总 + API 8 端点 + Migration 0026） |
-| 22 | **配置热更新** | 附录 B v2.0.5 | P3 | 中 | ⏳ 缓存清除 API 已实现（TTL 内存缓存 + invalidate），缺 ConfigChangeLog/审计/回滚 |
+| 22 | ~~**配置热更新**~~ | 附录 B v2.0.5 | P3 | 中 | ✅ 已完成（ConfigChangeLog 审计 + 回滚预览 + require_admin 权限 + Migration 0033-0034 + 28 测试） |
 | 23 | **Agent 国际化** | 附录 B v2.0.5 | P3 | 低 | 多语言 Instructions / UI / 描述 |
 | 24 | ~~**模型列表管理**~~ | §2.13 | P2 | 低 | ✅ 已完成（ProviderModel ORM + CRUD API 5 端点 + Migration 0024） |
 | 25 | ~~**成本计算**~~ | §2.13 | P2 | 低 | ✅ 已完成（TokenUsage 3 列成本字段 + 汇总聚合 + Migration 0024） |
@@ -132,7 +132,7 @@
 | Agent Team 协作协议 | #5 | ✅ | Framework: Team + TeamProtocol + TeamRunner + 18 测试 |
 | Team Backend 持久化 | #5 | ✅ | ORM + Schema + Service + 5 API + Migration 0021 + 18 测试 |
 | Team 管理 UI | #5 | ✅ | TeamPage CRUD + teamService + 7 测试 |
-| Team 可视化 | #5 | ❌ | ReactFlow Team 编排画布 |
+| Team 可视化 | #5 | ✅ | TeamFlowPage + MemberNode + 3 协议布局 + dagre 自动排版 |
 
 ### v2.4 — 企业能力
 
@@ -141,7 +141,7 @@
 | 功能 | 对应编号 | 状态 | 关键交付物 |
 |------|:--------:|:----:|----------|
 | 完整 RBAC | #18 | ✅ | Role ORM + RBAC Service + require_permission 依赖 + API 端点 + 前端 RolePage + Migration 0023 + 29 测试 |
-| 多租户 | #19 | ⏳ | Organization CRUD ✅ | 缺数据隔离中间件/配额管理 |
+| 多租户 | #19 | ✅ | Organization CRUD + get_org_id 租户依赖 + 数据隔离 + 28 测试 |
 | ~~操作审计~~ | O11 | ✅ | AuditLog + AuditMiddleware + API + UI（已在 v2.3 提前完成） |
 | IM 渠道接入 | #16 | ✅ | IMChannel CRUD + Webhook + HMAC 验签 + 消息路由 + Migration 0025 |
 
@@ -153,7 +153,7 @@
 |------|:--------:|-----------|
 | OTel + Jaeger | #2 | ✅ | OTelTraceProcessor + FastAPI 中间件 + Jaeger docker-compose profile |
 | Prometheus + Grafana | #2 | ✅ | Prometheus docker-compose profile + scrape 配置 |
-| APM 仪表盘 | #20 | ⏳ 核心仪表盘 ✅（聚合 API + ECharts 前端）| 缺告警规则/异常检测 |
+| APM 仪表盘 | #20 | ✅ | 聚合 API + ECharts + AlertRule 告警引擎 + 32 测试 |
 | Agent 评估 | #21 | ✅ | RunEvaluation 7 维 + RunFeedback + AgentQualitySummary + 8 API + Migration 0026 |
 
 ### v2.6 — 高级特性
@@ -163,9 +163,9 @@
 | 功能 | 对应编号 | 关键交付物 |
 |------|:--------:|-----------|
 | Sandbox 沙箱 | #7 | Docker-in-Docker 代码执行隔离 |
-| 定时/批量任务 | #17 | ScheduledRun + BatchRun + Celery/APScheduler |
+| 定时/批量任务 | #17 | ✅ | SchedulerEngine + ScheduledRun + cron/interval + 27 测试 |
 | ToolSearchTool | #11 | ✅ | ToolSearchTool 元工具 + keyword 匹配 + threshold 阈值 |
-| 配置热更新 | #22 | ConfigChangeLog + 回滚 |
+| 配置热更新 | #22 | ✅ | ConfigChangeLog + 回滚 + 审计 + 28 测试 |
 | 灾备 | #27 | 自动备份 + 恢复脚本 |
 
 ---
