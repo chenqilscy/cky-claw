@@ -134,7 +134,7 @@ pipeline {
 import socket, sys
 s = socket.socket()
 try:
-    s.connect(('127.0.0.1', 5432))
+    s.connect(('127.0.0.1', 15432))
     print('PostgreSQL ready')
     sys.exit(0)
 except:
@@ -144,7 +144,7 @@ except:
                             done
                             cd backend
                             uv sync --extra dev
-                            CKYCLAW_DATABASE_URL=postgresql+asyncpg://ckyclaw:ckyclaw_dev@127.0.0.1:5432/ckyclaw \
+                            CKYCLAW_DATABASE_URL=postgresql+asyncpg://admin:Admin888@127.0.0.1:15432/ckyclaw \
                             uv run pytest tests/ \
                                 --ignore=tests/test_smoke.py \
                                 --ignore=tests/test_performance.py \
