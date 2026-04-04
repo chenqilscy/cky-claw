@@ -14,6 +14,7 @@ import {
   ToolOutlined,
   BulbOutlined,
   BookOutlined,
+  AppstoreOutlined,
 } from '@ant-design/icons';
 
 const menuRoutes = {
@@ -82,6 +83,11 @@ const menuRoutes = {
       path: '/skills',
       name: '技能管理',
       icon: <BookOutlined />,
+    },
+    {
+      path: '/templates',
+      name: '模板市场',
+      icon: <AppstoreOutlined />,
     },
   ],
 };
