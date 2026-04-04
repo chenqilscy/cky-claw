@@ -1,8 +1,10 @@
 import { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { Spin } from 'antd';
+import { ConfigProvider, Spin, theme } from 'antd';
+import zhCN from 'antd/locale/zh_CN';
 import BasicLayout from './layouts/BasicLayout';
 import useAuthStore from './stores/authStore';
+import useThemeStore from './stores/themeStore';
 
 const LoginPage = lazy(() => import('./pages/Login'));
 const DashboardPage = lazy(() => import('./pages/dashboard/DashboardPage'));
@@ -30,6 +32,9 @@ const AuditLogPage = lazy(() => import('./pages/audit-logs/AuditLogPage'));
 const RolePage = lazy(() => import('./pages/roles/RolePage'));
 const IMChannelPage = lazy(() => import('./pages/im-channels/IMChannelPage'));
 const EvaluationPage = lazy(() => import('./pages/evaluations/EvaluationPage'));
+const OrganizationPage = lazy(() => import('./pages/organizations/OrganizationPage'));
+const ScheduledTasksPage = lazy(() => import('./pages/scheduled-tasks/ScheduledTasksPage'));
+const ApmDashboardPage = lazy(() => import('./pages/apm/ApmDashboardPage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 
 const PageLoading = () => (
@@ -47,9 +52,15 @@ const RequireAuth: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 };
 
 const App: React.FC = () => {
+  const themeMode = useThemeStore((s) => s.mode);
+
   return (
-    <Suspense fallback={<PageLoading />}>
-      <Routes>
+    <ConfigProvider
+      locale={zhCN}
+      theme={{ algorithm: themeMode === 'dark' ? theme.darkAlgorithm : theme.defaultAlgorithm }}
+    >
+      <Suspense fallback={<PageLoading />}>
+        <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route
           path="/"
@@ -87,10 +98,14 @@ const App: React.FC = () => {
           <Route path="roles" element={<RolePage />} />
           <Route path="im-channels" element={<IMChannelPage />} />
           <Route path="evaluations" element={<EvaluationPage />} />
+          <Route path="organizations" element={<OrganizationPage />} />
+          <Route path="scheduled-tasks" element={<ScheduledTasksPage />} />
+          <Route path="apm" element={<ApmDashboardPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>
     </Suspense>
+    </ConfigProvider>
   );
 };
 

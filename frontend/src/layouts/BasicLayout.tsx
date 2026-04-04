@@ -1,5 +1,6 @@
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { ProLayout } from '@ant-design/pro-components';
+import { Button, Tooltip } from 'antd';
 import {
   DashboardOutlined,
   MessageOutlined,
@@ -13,6 +14,7 @@ import {
   ApiOutlined,
   ToolOutlined,
   BulbOutlined,
+  BulbFilled,
   BookOutlined,
   AppstoreOutlined,
   BranchesOutlined,
@@ -21,7 +23,11 @@ import {
   CrownOutlined,
   LinkOutlined,
   StarOutlined,
+  BankOutlined,
+  ClockCircleOutlined,
+  LineChartOutlined,
 } from '@ant-design/icons';
+import useThemeStore from '../stores/themeStore';
 
 const menuRoutes = {
   routes: [
@@ -125,12 +131,29 @@ const menuRoutes = {
       name: 'Agent 评估',
       icon: <StarOutlined />,
     },
+    {
+      path: '/organizations',
+      name: '组织管理',
+      icon: <BankOutlined />,
+    },
+    {
+      path: '/scheduled-tasks',
+      name: '定时任务',
+      icon: <ClockCircleOutlined />,
+    },
+    {
+      path: '/apm',
+      name: 'APM 仪表盘',
+      icon: <LineChartOutlined />,
+    },
   ],
 };
 
 const BasicLayout: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const themeMode = useThemeStore((s: { mode: 'light' | 'dark' }) => s.mode);
+  const toggleTheme = useThemeStore((s: { toggle: () => void }) => s.toggle);
 
   return (
     <ProLayout
@@ -143,6 +166,15 @@ const BasicLayout: React.FC = () => {
       menuItemRender={(item, dom) => (
         <a onClick={() => item.path && navigate(item.path)}>{dom}</a>
       )}
+      actionsRender={() => [
+        <Tooltip key="theme" title={themeMode === 'dark' ? '切换亮色模式' : '切换暗色模式'}>
+          <Button
+            type="text"
+            icon={themeMode === 'dark' ? <BulbFilled /> : <BulbOutlined />}
+            onClick={toggleTheme}
+          />
+        </Tooltip>,
+      ]}
     >
       <Outlet />
     </ProLayout>
