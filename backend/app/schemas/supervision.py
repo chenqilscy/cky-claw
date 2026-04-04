@@ -45,6 +45,8 @@ class SupervisionSessionListResponse(BaseModel):
 
     data: list[SupervisionSessionItem]
     total: int
+    limit: int = 20
+    offset: int = 0
 
 
 class MessageItem(BaseModel):

@@ -90,5 +90,7 @@ class GuardrailRuleResponse(BaseModel):
 class GuardrailRuleListResponse(BaseModel):
     """Guardrail 规则列表响应。"""
 
-    items: list[GuardrailRuleResponse]
+    data: list[GuardrailRuleResponse]
     total: int
+    limit: int = 20
+    offset: int = 0

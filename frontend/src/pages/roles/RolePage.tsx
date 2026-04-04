@@ -55,7 +55,7 @@ const RolePage: React.FC = () => {
     queryKey: ['roles'],
     queryFn: () => roleService.list({ limit: 200 }),
   });
-  const roles = data?.items ?? [];
+  const roles = data?.data ?? [];
 
   const createMutation = useMutation({
     mutationFn: (params: RoleCreateParams) => roleService.create(params),

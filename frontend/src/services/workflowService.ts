@@ -51,7 +51,7 @@ export interface WorkflowItem {
 }
 
 export interface WorkflowListResponse {
-  items: WorkflowItem[];
+  data: WorkflowItem[];
   total: number;
 }
 

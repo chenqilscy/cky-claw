@@ -196,7 +196,7 @@ const ApprovalQueuePage: React.FC = () => {
             ...rest,
           });
           return {
-            data: resp.items,
+            data: resp.data,
             total: resp.total,
             success: true,
           };

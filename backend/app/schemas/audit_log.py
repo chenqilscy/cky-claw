@@ -30,8 +30,10 @@ class AuditLogResponse(BaseModel):
 class AuditLogListResponse(BaseModel):
     """审计日志列表响应。"""
 
-    items: list[AuditLogResponse]
+    data: list[AuditLogResponse]
     total: int
+    limit: int = 20
+    offset: int = 0
 
 
 class AuditLogQuery(BaseModel):

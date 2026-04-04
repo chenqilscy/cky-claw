@@ -13,7 +13,7 @@ export interface GuardrailRuleItem {
 }
 
 export interface GuardrailRuleListResponse {
-  items: GuardrailRuleItem[];
+  data: GuardrailRuleItem[];
   total: number;
 }
 

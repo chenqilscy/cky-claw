@@ -13,7 +13,7 @@ export interface TeamConfig {
 }
 
 export interface TeamConfigListResponse {
-  items: TeamConfig[];
+  data: TeamConfig[];
   total: number;
 }
 

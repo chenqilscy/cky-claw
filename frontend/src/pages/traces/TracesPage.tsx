@@ -162,7 +162,7 @@ const TracesPage: React.FC = () => {
       if (maxDuration !== null) params.max_duration_ms = maxDuration;
       if (guardrailTriggered) params.has_guardrail_triggered = true;
       const res = await traceService.list(params);
-      setData(res.items);
+      setData(res.data);
       setTotal(res.total);
     } catch {
       message.error('获取 Trace 列表失败');

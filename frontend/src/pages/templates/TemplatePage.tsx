@@ -66,7 +66,7 @@ const TemplatePage: React.FC = () => {
     setLoading(true);
     try {
       const res = await agentTemplateService.list({ category: categoryFilter, limit: 100 });
-      setTemplates(res.items);
+      setTemplates(res.data);
     } finally {
       setLoading(false);
     }

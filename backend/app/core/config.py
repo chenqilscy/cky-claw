@@ -25,6 +25,11 @@ class Settings(BaseSettings):
     secret_key: str = "dev-secret-key-change-in-production"
     access_token_expire_minutes: int = 60 * 24  # 24 小时
 
+    # OpenTelemetry
+    otel_enabled: bool = False
+    otel_service_name: str = "ckyclaw-backend"
+    otel_exporter_endpoint: str = "http://localhost:4317"
+
     model_config = {"env_prefix": "CKYCLAW_", "env_file": ".env", "extra": "ignore"}
 
 

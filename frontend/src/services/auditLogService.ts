@@ -15,7 +15,7 @@ export interface AuditLog {
 }
 
 export interface AuditLogListResponse {
-  items: AuditLog[];
+  data: AuditLog[];
   total: number;
 }
 

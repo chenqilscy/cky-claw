@@ -56,7 +56,7 @@ async def list_guardrail_rules(
         offset=offset,
     )
     items = [GuardrailRuleResponse.model_validate(r) for r in rules]
-    return GuardrailRuleListResponse(items=items, total=total)
+    return GuardrailRuleListResponse(data=items, total=total, limit=limit, offset=offset)
 
 
 @router.get("/{rule_id}", response_model=GuardrailRuleResponse)

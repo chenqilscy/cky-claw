@@ -83,8 +83,10 @@ class MemoryResponse(BaseModel):
 class MemoryListResponse(BaseModel):
     """记忆列表响应。"""
 
-    items: list[MemoryResponse]
+    data: list[MemoryResponse]
     total: int
+    limit: int = 20
+    offset: int = 0
 
 
 class MemoryDecayResponse(BaseModel):

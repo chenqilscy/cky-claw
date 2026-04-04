@@ -97,6 +97,9 @@ async def get_token_usage_summary(
         func.sum(TokenUsageLog.prompt_tokens).label("total_prompt_tokens"),
         func.sum(TokenUsageLog.completion_tokens).label("total_completion_tokens"),
         func.sum(TokenUsageLog.total_tokens).label("total_tokens"),
+        func.sum(TokenUsageLog.prompt_cost).label("total_prompt_cost"),
+        func.sum(TokenUsageLog.completion_cost).label("total_completion_cost"),
+        func.sum(TokenUsageLog.total_cost).label("total_cost"),
         func.count().label("call_count"),
     ]
 
@@ -123,6 +126,9 @@ async def get_token_usage_summary(
                 total_prompt_tokens=row.total_prompt_tokens,
                 total_completion_tokens=row.total_completion_tokens,
                 total_tokens=row.total_tokens,
+                total_prompt_cost=float(row.total_prompt_cost or 0),
+                total_completion_cost=float(row.total_completion_cost or 0),
+                total_cost=float(row.total_cost or 0),
                 call_count=row.call_count,
             )
             for row in rows
@@ -135,6 +141,9 @@ async def get_token_usage_summary(
                 total_prompt_tokens=row.total_prompt_tokens,
                 total_completion_tokens=row.total_completion_tokens,
                 total_tokens=row.total_tokens,
+                total_prompt_cost=float(row.total_prompt_cost or 0),
+                total_completion_cost=float(row.total_completion_cost or 0),
+                total_cost=float(row.total_cost or 0),
                 call_count=row.call_count,
             )
             for row in rows
@@ -147,6 +156,9 @@ async def get_token_usage_summary(
             total_prompt_tokens=row.total_prompt_tokens,
             total_completion_tokens=row.total_completion_tokens,
             total_tokens=row.total_tokens,
+            total_prompt_cost=float(row.total_prompt_cost or 0),
+            total_completion_cost=float(row.total_completion_cost or 0),
+            total_cost=float(row.total_cost or 0),
             call_count=row.call_count,
         )
         for row in rows

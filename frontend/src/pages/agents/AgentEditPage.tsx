@@ -35,17 +35,17 @@ const AgentEditPage: React.FC = () => {
     guardrailService.list({ enabled_only: true, limit: 200 })
       .then((res) => {
         setGuardrailOptions(
-          res.items
+          res.data
             .filter((r: GuardrailRuleItem) => r.type === 'input')
             .map((r: GuardrailRuleItem) => ({ label: `${r.name} (${r.mode})`, value: r.name }))
         );
         setOutputGuardrailOptions(
-          res.items
+          res.data
             .filter((r: GuardrailRuleItem) => r.type === 'output')
             .map((r: GuardrailRuleItem) => ({ label: `${r.name} (${r.mode})`, value: r.name }))
         );
         setToolGuardrailOptions(
-          res.items
+          res.data
             .filter((r: GuardrailRuleItem) => r.type === 'tool')
             .map((r: GuardrailRuleItem) => ({ label: `${r.name} (${r.mode})`, value: r.name }))
         );

@@ -119,8 +119,10 @@ class WorkflowResponse(BaseModel):
 class WorkflowListResponse(BaseModel):
     """工作流列表响应。"""
 
-    items: list[WorkflowResponse]
+    data: list[WorkflowResponse]
     total: int
+    limit: int = 20
+    offset: int = 0
 
 
 class WorkflowValidateResponse(BaseModel):

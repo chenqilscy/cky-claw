@@ -60,15 +60,19 @@ class TraceDetailResponse(BaseModel):
 class TraceListResponse(BaseModel):
     """Trace 列表响应。"""
 
-    items: list[TraceResponse]
+    data: list[TraceResponse]
     total: int
+    limit: int = 20
+    offset: int = 0
 
 
 class SpanListResponse(BaseModel):
     """Span 列表响应。"""
 
-    items: list[SpanResponse]
+    data: list[SpanResponse]
     total: int
+    limit: int = 20
+    offset: int = 0
 
 
 class TokenUsageStats(BaseModel):

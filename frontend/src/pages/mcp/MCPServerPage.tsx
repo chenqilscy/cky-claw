@@ -71,7 +71,7 @@ const MCPServerPage: React.FC = () => {
         limit: pagination.pageSize,
         offset: (pagination.current - 1) * pagination.pageSize,
       });
-      setData(res.items);
+      setData(res.data);
       setTotal(res.total);
     } catch {
       message.error('获取 MCP Server 列表失败');

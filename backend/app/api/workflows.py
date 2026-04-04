@@ -39,8 +39,10 @@ async def list_workflows(
     """查询工作流列表。"""
     rows, total = await workflow_service.list_workflows(db, limit=limit, offset=offset)
     return WorkflowListResponse(
-        items=[WorkflowResponse.model_validate(r) for r in rows],
+        data=[WorkflowResponse.model_validate(r) for r in rows],
         total=total,
+        limit=limit,
+        offset=offset,
     )
 
 

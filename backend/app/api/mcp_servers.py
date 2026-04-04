@@ -45,8 +45,10 @@ async def list_mcp_servers(
         db, transport_type=transport_type, is_enabled=is_enabled, limit=limit, offset=offset,
     )
     return MCPServerListResponse(
-        items=[MCPServerResponse.model_validate(r) for r in items],
+        data=[MCPServerResponse.model_validate(r) for r in items],
         total=total,
+        limit=limit,
+        offset=offset,
     )
 
 

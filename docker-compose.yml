@@ -49,6 +49,8 @@ services:
       CKYCLAW_REDIS_URL: redis://redis:6379/0
       CKYCLAW_SECRET_KEY: ${CKYCLAW_SECRET_KEY:-dev-secret-key-change-in-production}
       CKYCLAW_DEBUG: ${CKYCLAW_DEBUG:-true}
+      CKYCLAW_OTEL_ENABLED: ${CKYCLAW_OTEL_ENABLED:-false}
+      CKYCLAW_OTEL_EXPORTER_ENDPOINT: ${CKYCLAW_OTEL_EXPORTER_ENDPOINT:-http://jaeger:4317}
     depends_on:
       db:
         condition: service_healthy
@@ -73,6 +75,33 @@ services:
       backend:
         condition: service_healthy
 
+  # === 可观测性（按需启用：CKYCLAW_OTEL_ENABLED=true）===
+  jaeger:
+    image: jaegertracing/all-in-one:1.58
+    container_name: ckyclaw-jaeger
+    restart: unless-stopped
+    ports:
+      - "16686:16686"   # Jaeger UI
+      - "4317:4317"     # OTLP gRPC
+      - "4318:4318"     # OTLP HTTP
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+    profiles:
+      - otel
+
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    container_name: ckyclaw-prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./docker/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - promdata:/prometheus
+    profiles:
+      - otel
+
 volumes:
   pgdata:
   redisdata:
+  promdata:

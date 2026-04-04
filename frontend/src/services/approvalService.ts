@@ -14,7 +14,7 @@ export interface ApprovalItem {
 }
 
 export interface ApprovalListResponse {
-  items: ApprovalItem[];
+  data: ApprovalItem[];
   total: number;
 }
 

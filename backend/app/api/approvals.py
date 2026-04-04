@@ -33,8 +33,10 @@ async def list_approvals(
         offset=offset,
     )
     return ApprovalListResponse(
-        items=[ApprovalResponse.model_validate(item) for item in items],
+        data=[ApprovalResponse.model_validate(item) for item in items],
         total=total,
+        limit=limit,
+        offset=offset,
     )
 
 

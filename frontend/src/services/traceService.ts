@@ -34,7 +34,7 @@ export interface SpanItem {
 }
 
 export interface TraceListResponse {
-  items: TraceItem[];
+  data: TraceItem[];
   total: number;
 }
 
@@ -44,7 +44,7 @@ export interface TraceDetailResponse {
 }
 
 export interface SpanListResponse {
-  items: SpanItem[];
+  data: SpanItem[];
   total: number;
 }
 

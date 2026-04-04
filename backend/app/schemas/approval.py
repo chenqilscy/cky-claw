@@ -43,5 +43,7 @@ class ApprovalResponse(BaseModel):
 class ApprovalListResponse(BaseModel):
     """审批请求列表响应。"""
 
-    items: list[ApprovalResponse]
+    data: list[ApprovalResponse]
     total: int
+    limit: int = 20
+    offset: int = 0

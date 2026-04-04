@@ -12,14 +12,17 @@ from app.core.config import settings
 from app.core.exceptions import register_exception_handlers
 from app.core.middleware import RequestIDMiddleware
 from app.core.audit_middleware import AuditLogMiddleware
+from app.core.otel import setup_otel, instrument_fastapi
 from app.api.agents import router as agents_router
 from app.api.agent_templates import router as agent_templates_router
 from app.api.agent_versions import router as agent_versions_router
 from app.api.approvals import router as approvals_router
 from app.api.audit_logs import router as audit_logs_router
 from app.api.auth import router as auth_router
+from app.api.evaluations import router as evaluations_router
 from app.api.health import router as health_router
 from app.api.providers import router as providers_router
+from app.api.provider_models import router as provider_models_router
 from app.api.roles import router as roles_router
 from app.api.sandbox import router as sandbox_router
 from app.api.sessions import router as sessions_router
@@ -27,6 +30,7 @@ from app.api.supervision import router as supervision_router
 from app.api.token_usage import router as token_usage_router
 from app.api.traces import router as traces_router
 from app.api.guardrails import router as guardrails_router
+from app.api.im_channels import router as im_channels_router
 from app.api.mcp_servers import router as mcp_servers_router
 from app.api.memories import router as memories_router
 from app.api.skills import router as skills_router
@@ -50,6 +54,9 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
 def create_app() -> FastAPI:
     """创建 FastAPI 应用实例。"""
+    # OTel 必须在 app 创建前初始化
+    setup_otel()
+
     app = FastAPI(
         title="CkyClaw",
         description="AI Agent 管理与运行平台",
@@ -81,7 +88,9 @@ def create_app() -> FastAPI:
     app.include_router(agent_templates_router)
     app.include_router(agent_versions_router)
     app.include_router(approvals_router)
+    app.include_router(evaluations_router)
     app.include_router(providers_router)
+    app.include_router(provider_models_router)
     app.include_router(roles_router)
     app.include_router(sandbox_router)
     app.include_router(sessions_router)
@@ -89,6 +98,7 @@ def create_app() -> FastAPI:
     app.include_router(token_usage_router)
     app.include_router(traces_router)
     app.include_router(guardrails_router)
+    app.include_router(im_channels_router)
     app.include_router(mcp_servers_router)
     app.include_router(memories_router)
     app.include_router(skills_router)
@@ -96,6 +106,9 @@ def create_app() -> FastAPI:
     app.include_router(workflows_router)
     app.include_router(teams_router)
     app.include_router(ws_router)
+
+    # OTel FastAPI 自动埋点（最后添加）
+    instrument_fastapi(app)
 
     return app
 

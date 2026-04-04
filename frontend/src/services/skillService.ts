@@ -16,7 +16,7 @@ export interface SkillItem {
 }
 
 export interface SkillListResponse {
-  items: SkillItem[];
+  data: SkillItem[];
   total: number;
 }
 

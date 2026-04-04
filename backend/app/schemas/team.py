@@ -50,5 +50,7 @@ class TeamConfigResponse(BaseModel):
 class TeamConfigListResponse(BaseModel):
     """团队配置列表响应。"""
 
-    items: list[TeamConfigResponse]
+    data: list[TeamConfigResponse]
     total: int
+    limit: int = 20
+    offset: int = 0

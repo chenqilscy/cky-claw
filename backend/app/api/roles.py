@@ -32,8 +32,10 @@ async def list_roles(
     """列出所有角色。"""
     roles, total = await role_service.list_roles(db, limit=limit, offset=offset)
     return RoleListResponse(
-        items=[RoleResponse.model_validate(r) for r in roles],
+        data=[RoleResponse.model_validate(r) for r in roles],
         total=total,
+        limit=limit,
+        offset=offset,
     )
 
 

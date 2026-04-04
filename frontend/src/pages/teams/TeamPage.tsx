@@ -45,7 +45,7 @@ const TeamPage: React.FC = () => {
         offset: (page - 1) * pageSize,
         search: search || undefined,
       });
-      setTeams(res.items);
+      setTeams(res.data);
       setTotal(res.total);
     } catch {
       message.error('加载团队列表失败');

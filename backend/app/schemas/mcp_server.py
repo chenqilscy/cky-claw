@@ -100,8 +100,10 @@ class MCPServerResponse(BaseModel):
 class MCPServerListResponse(BaseModel):
     """MCP Server 列表响应。"""
 
-    items: list[MCPServerResponse]
+    data: list[MCPServerResponse]
     total: int
+    limit: int = 20
+    offset: int = 0
 
 
 class MCPToolInfo(BaseModel):

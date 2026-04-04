@@ -80,6 +80,9 @@ class RunConfig:
     tool_timeout: float | None = None
     """全局工具执行超时（秒）。当 FunctionTool 未设置自身 timeout 时生效。"""
 
+    guardrail_parallel: bool = False
+    """是否启用 Guardrail 并行执行模式。True 时所有 Guardrail 并发执行，False 时串行短路。"""
+
     max_retries: int = 0
     """LLM API 调用失败时的最大重试次数（0 表示不重试）。"""
 

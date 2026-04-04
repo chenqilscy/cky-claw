@@ -19,7 +19,7 @@ export interface MCPServerResponse {
 }
 
 export interface MCPServerListResponse {
-  items: MCPServerResponse[];
+  data: MCPServerResponse[];
   total: number;
 }
 

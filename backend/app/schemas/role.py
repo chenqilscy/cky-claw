@@ -85,8 +85,10 @@ class RoleResponse(BaseModel):
 class RoleListResponse(BaseModel):
     """角色列表响应。"""
 
-    items: list[RoleResponse]
+    data: list[RoleResponse]
     total: int
+    limit: int = 20
+    offset: int = 0
 
 
 class UserRoleAssign(BaseModel):

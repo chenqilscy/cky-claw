@@ -69,5 +69,7 @@ class AgentTemplateResponse(BaseModel):
 class AgentTemplateListResponse(BaseModel):
     """Agent 模板列表响应。"""
 
-    items: list[AgentTemplateResponse]
+    data: list[AgentTemplateResponse]
     total: int
+    limit: int = 20
+    offset: int = 0

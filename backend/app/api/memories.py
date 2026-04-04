@@ -51,8 +51,10 @@ async def list_memories(
         offset=offset,
     )
     return MemoryListResponse(
-        items=[MemoryResponse.model_validate(r) for r in rows],
+        data=[MemoryResponse.model_validate(r) for r in rows],
         total=total,
+        limit=limit,
+        offset=offset,
     )
 
 

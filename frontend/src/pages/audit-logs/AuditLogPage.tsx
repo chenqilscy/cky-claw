@@ -34,7 +34,7 @@ const AuditLogPage: React.FC = () => {
         resource_type: resourceTypeFilter,
         resource_id: resourceIdFilter,
       });
-      setData(result.items);
+      setData(result.data);
       setTotal(result.total);
     } finally {
       setLoading(false);

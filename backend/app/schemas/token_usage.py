@@ -32,6 +32,9 @@ class TokenUsageLogResponse(BaseModel):
     prompt_tokens: int
     completion_tokens: int
     total_tokens: int
+    prompt_cost: float = 0.0
+    completion_cost: float = 0.0
+    total_cost: float = 0.0
     timestamp: datetime
 
 
@@ -52,6 +55,9 @@ class TokenUsageSummaryItem(BaseModel):
     total_prompt_tokens: int = Field(description="汇总输入 Token")
     total_completion_tokens: int = Field(description="汇总输出 Token")
     total_tokens: int = Field(description="汇总总 Token")
+    total_prompt_cost: float = Field(default=0.0, description="汇总输入成本")
+    total_completion_cost: float = Field(default=0.0, description="汇总输出成本")
+    total_cost: float = Field(default=0.0, description="汇总总成本")
     call_count: int = Field(description="调用次数")
 
 
@@ -62,6 +68,9 @@ class TokenUsageByUserItem(BaseModel):
     total_prompt_tokens: int = Field(description="汇总输入 Token")
     total_completion_tokens: int = Field(description="汇总输出 Token")
     total_tokens: int = Field(description="汇总总 Token")
+    total_prompt_cost: float = Field(default=0.0, description="汇总输入成本")
+    total_completion_cost: float = Field(default=0.0, description="汇总输出成本")
+    total_cost: float = Field(default=0.0, description="汇总总成本")
     call_count: int = Field(description="调用次数")
 
 
@@ -72,6 +81,9 @@ class TokenUsageByModelItem(BaseModel):
     total_prompt_tokens: int = Field(description="汇总输入 Token")
     total_completion_tokens: int = Field(description="汇总输出 Token")
     total_tokens: int = Field(description="汇总总 Token")
+    total_prompt_cost: float = Field(default=0.0, description="汇总输入成本")
+    total_completion_cost: float = Field(default=0.0, description="汇总输出成本")
+    total_cost: float = Field(default=0.0, description="汇总总成本")
     call_count: int = Field(description="调用次数")
 
 

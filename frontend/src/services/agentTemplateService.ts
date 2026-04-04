@@ -15,7 +15,7 @@ export interface AgentTemplateItem {
 }
 
 export interface AgentTemplateListResponse {
-  items: AgentTemplateItem[];
+  data: AgentTemplateItem[];
   total: number;
 }
 

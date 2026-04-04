@@ -11,7 +11,7 @@ export interface RoleItem {
 }
 
 export interface RoleListResponse {
-  items: RoleItem[];
+  data: RoleItem[];
   total: number;
 }
 

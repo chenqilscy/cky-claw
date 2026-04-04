@@ -38,7 +38,7 @@ const WorkflowPage: React.FC = () => {
     limit: pageSize,
     offset: (page - 1) * pageSize,
   });
-  const workflows = listData?.items ?? [];
+  const workflows = listData?.data ?? [];
   const total = listData?.total ?? 0;
 
   const createMutation = useCreateWorkflow();

@@ -3,11 +3,17 @@
 from __future__ import annotations
 
 from ckyclaw_framework.approval.handler import ApprovalHandler
-from ckyclaw_framework.approval.mode import ApprovalDecision, ApprovalMode, ApprovalRejectedError
+from ckyclaw_framework.approval.mode import (
+    ApprovalDecision,
+    ApprovalMode,
+    ApprovalRejectedError,
+    classify_tool_risk,
+)
 
 __all__ = [
     "ApprovalHandler",
     "ApprovalDecision",
     "ApprovalMode",
     "ApprovalRejectedError",
+    "classify_tool_risk",
 ]

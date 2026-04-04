@@ -64,7 +64,7 @@ async def list_spans(
         offset=offset,
     )
     items = [SpanResponse.model_validate(s) for s in spans]
-    return SpanListResponse(items=items, total=total)
+    return SpanListResponse(data=items, total=total, limit=limit, offset=offset)
 
 
 @router.get("", response_model=TraceListResponse)
@@ -98,7 +98,7 @@ async def list_traces(
         offset=offset,
     )
     items = [TraceResponse.model_validate(t) for t in traces]
-    return TraceListResponse(items=items, total=total)
+    return TraceListResponse(data=items, total=total, limit=limit, offset=offset)
 
 
 @router.get("/{trace_id}", response_model=TraceDetailResponse)

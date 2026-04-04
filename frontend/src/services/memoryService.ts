@@ -14,7 +14,7 @@ export interface MemoryItem {
 }
 
 export interface MemoryListResponse {
-  items: MemoryItem[];
+  data: MemoryItem[];
   total: number;
 }
 

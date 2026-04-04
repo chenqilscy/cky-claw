@@ -43,8 +43,10 @@ async def list_templates(
         db, category=category, is_builtin=is_builtin, limit=limit, offset=offset
     )
     return AgentTemplateListResponse(
-        items=[AgentTemplateResponse.model_validate(r) for r in rows],
+        data=[AgentTemplateResponse.model_validate(r) for r in rows],
         total=total,
+        limit=limit,
+        offset=offset,
     )
 
 

@@ -166,7 +166,7 @@ const SkillPage: React.FC = () => {
             limit: params.pageSize,
             offset: ((params.current ?? 1) - 1) * (params.pageSize ?? 20),
           });
-          return { data: res.items, total: res.total, success: true };
+          return { data: res.data, total: res.total, success: true };
         }}
         rowKey="id"
         headerTitle="技能管理"

@@ -35,8 +35,10 @@ async def list_audit_logs(
         resource_id=resource_id,
     )
     return AuditLogListResponse(
-        items=[AuditLogResponse.model_validate(r) for r in rows],
+        data=[AuditLogResponse.model_validate(r) for r in rows],
         total=total,
+        limit=limit,
+        offset=offset,
     )
 
 

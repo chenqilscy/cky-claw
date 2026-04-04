@@ -10,7 +10,7 @@ from typing import Any, AsyncIterator
 
 from ckyclaw_framework.agent.agent import Agent
 from ckyclaw_framework.approval.handler import ApprovalHandler
-from ckyclaw_framework.approval.mode import ApprovalDecision, ApprovalMode, ApprovalRejectedError
+from ckyclaw_framework.approval.mode import ApprovalDecision, ApprovalMode, ApprovalRejectedError, classify_tool_risk
 from ckyclaw_framework.guardrails.input_guardrail import InputGuardrail
 from ckyclaw_framework.guardrails.output_guardrail import OutputGuardrail
 from ckyclaw_framework.guardrails.result import GuardrailResult, InputGuardrailTripwireError, OutputGuardrailTripwireError
@@ -231,12 +231,18 @@ async def _execute_input_guardrails(
     run_context: RunContext,
     input_text: str,
     tracing: _TracingCtx | None = None,
+    *,
+    parallel: bool = False,
 ) -> None:
-    """执行 Input Guardrails（阻塞模式）。
+    """执行 Input Guardrails。
 
-    按列表顺序依次执行。首个 Tripwire 触发后立即中断（短路）。
-    触发时抛出 InputGuardrailTripwireError。
+    parallel=False（默认）: 串行短路，首个 Tripwire 触发后立即中断。
+    parallel=True: 并行执行所有 Guardrail，收集全部结果后报告首个触发项。
     """
+    if parallel and len(guardrails) > 1:
+        await _execute_input_guardrails_parallel(guardrails, run_context, input_text, tracing)
+        return
+
     for guardrail in guardrails:
         # Tracing: Guardrail Span
         guardrail_span = None
@@ -286,17 +292,58 @@ async def _execute_input_guardrails(
             )
 
 
+async def _execute_input_guardrails_parallel(
+    guardrails: list[InputGuardrail],
+    run_context: RunContext,
+    input_text: str,
+    tracing: _TracingCtx | None = None,
+) -> None:
+    """并行执行 Input Guardrails，收集所有结果后报告首个触发项。"""
+    results: list[tuple[InputGuardrail, GuardrailResult | Exception]] = []
+
+    async def _run_one(g: InputGuardrail) -> tuple[InputGuardrail, GuardrailResult | Exception]:
+        try:
+            r = await g.guardrail_function(run_context, input_text)
+            return (g, r)
+        except Exception as e:
+            return (g, e)
+
+    async with asyncio.TaskGroup() as tg:
+        tasks = [tg.create_task(_run_one(g)) for g in guardrails]
+
+    results = [t.result() for t in tasks]
+
+    # 报告结果
+    for guardrail, result in results:
+        if isinstance(result, Exception):
+            raise InputGuardrailTripwireError(
+                guardrail_name=guardrail.name,
+                message=f"Guardrail execution error: {result}",
+            )
+        if result.tripwire_triggered:
+            raise InputGuardrailTripwireError(
+                guardrail_name=guardrail.name,
+                message=result.message,
+            )
+
+
 async def _execute_output_guardrails(
     guardrails: list[OutputGuardrail],
     run_context: RunContext,
     output_text: str,
     tracing: _TracingCtx | None = None,
+    *,
+    parallel: bool = False,
 ) -> None:
-    """执行 Output Guardrails（阻塞模式）。
+    """执行 Output Guardrails。
 
-    按列表顺序依次执行。首个 Tripwire 触发后立即中断（短路）。
-    触发时抛出 OutputGuardrailTripwireError。
+    parallel=False（默认）: 串行短路，首个 Tripwire 触发后立即中断。
+    parallel=True: 并行执行所有 Guardrail，收集全部结果后报告首个触发项。
     """
+    if parallel and len(guardrails) > 1:
+        await _execute_output_guardrails_parallel(guardrails, run_context, output_text, tracing)
+        return
+
     for guardrail in guardrails:
         # Tracing: Guardrail Span
         guardrail_span = None
@@ -346,6 +393,38 @@ async def _execute_output_guardrails(
             )
 
 
+async def _execute_output_guardrails_parallel(
+    guardrails: list[OutputGuardrail],
+    run_context: RunContext,
+    output_text: str,
+    tracing: _TracingCtx | None = None,
+) -> None:
+    """并行执行 Output Guardrails，收集所有结果后报告首个触发项。"""
+    async def _run_one(g: OutputGuardrail) -> tuple[OutputGuardrail, GuardrailResult | Exception]:
+        try:
+            r = await g.guardrail_function(run_context, output_text)
+            return (g, r)
+        except Exception as e:
+            return (g, e)
+
+    async with asyncio.TaskGroup() as tg:
+        tasks = [tg.create_task(_run_one(g)) for g in guardrails]
+
+    results = [t.result() for t in tasks]
+
+    for guardrail, result in results:
+        if isinstance(result, Exception):
+            raise OutputGuardrailTripwireError(
+                guardrail_name=guardrail.name,
+                message=f"Guardrail execution error: {result}",
+            )
+        if result.tripwire_triggered:
+            raise OutputGuardrailTripwireError(
+                guardrail_name=guardrail.name,
+                message=result.message,
+            )
+
+
 def _resolve_approval_mode(agent: Agent, config: RunConfig | None) -> ApprovalMode:
     """确定审批模式（RunConfig 覆盖 > Agent 定义 > 默认 full-auto）。"""
     if config and config.approval_mode is not None:
@@ -361,17 +440,37 @@ async def _check_approval(
     mode: ApprovalMode,
     tool_name: str,
     arguments: dict[str, Any],
+    *,
+    tool_approval_required: bool = False,
 ) -> None:
     """检查工具调用是否需要审批。需要时调用 handler 并处理结果。
 
     full-auto: 直接返回（不审批）。
     suggest: 所有工具调用需审批。
-    auto-edit: MVP 阶段等同 full-auto（待 RiskClassifier 实现）。
+    auto-edit: 安全操作自动执行，高风险需审批（基于 classify_tool_risk）。
     """
     if mode == ApprovalMode.FULL_AUTO:
         return
     if mode == ApprovalMode.AUTO_EDIT:
-        # MVP: auto-edit 暂等同 full-auto，后续加 RiskClassifier
+        # auto-edit: 使用风险分级判断是否需要审批
+        needs_approval = classify_tool_risk(tool_name, approval_required=tool_approval_required)
+        if not needs_approval:
+            return
+        # 高风险工具需要审批 — 若无 handler 则拒绝
+        if handler is None:
+            raise ApprovalRejectedError(
+                tool_name=tool_name,
+                reason="auto-edit mode: risky tool requires approval but no ApprovalHandler provided",
+            )
+        decision = await handler.request_approval(
+            run_context=run_context,
+            action_type="tool_call",
+            action_detail={"tool_name": tool_name, "arguments": arguments, "risk": "high"},
+        )
+        if decision == ApprovalDecision.REJECTED:
+            raise ApprovalRejectedError(tool_name=tool_name, reason="rejected by approver")
+        if decision == ApprovalDecision.TIMEOUT:
+            raise ApprovalRejectedError(tool_name=tool_name, reason="approval timed out")
         return
     # suggest 模式: 必须有 handler
     if handler is None:
@@ -492,7 +591,10 @@ async def _execute_tool_calls(
             await _invoke_hook(_hooks.on_tool_start, "on_tool_start", run_context, tc.name, arguments)
         try:
             if run_context is not None:
-                await _check_approval(run_context, approval_handler, approval_mode, tc.name, arguments)
+                await _check_approval(
+                    run_context, approval_handler, approval_mode, tc.name, arguments,
+                    tool_approval_required=getattr(tool, "approval_required", False),
+                )
             # 超时优先级: tool.timeout（工具内部已处理）> RunConfig.tool_timeout > 无限
             if tool.timeout is None and _tool_timeout is not None:
                 result = await asyncio.wait_for(tool.execute(arguments), timeout=_tool_timeout)
@@ -774,6 +876,7 @@ class Runner:
                     guardrail_ctx,
                     user_text,
                     tracing=tracing if tracing.active else None,
+                    parallel=config.guardrail_parallel if config else False,
                 )
             except InputGuardrailTripwireError:
                 trace = await tracing.end_trace()
@@ -908,6 +1011,7 @@ class Runner:
                             run_ctx,
                             raw_output,
                             tracing=tracing if tracing.active else None,
+                            parallel=config.guardrail_parallel if config else False,
                         )
                     except OutputGuardrailTripwireError:
                         if agent_span:
@@ -1075,6 +1179,7 @@ class Runner:
                     guardrail_ctx,
                     user_text,
                     tracing=tracing if tracing.active else None,
+                    parallel=config.guardrail_parallel if config else False,
                 )
             except InputGuardrailTripwireError:
                 await tracing.end_trace()
@@ -1238,6 +1343,7 @@ class Runner:
                             run_ctx,
                             raw_output,
                             tracing=tracing if tracing.active else None,
+                            parallel=config.guardrail_parallel if config else False,
                         )
                     except OutputGuardrailTripwireError:
                         if llm_span:

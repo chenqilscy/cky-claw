@@ -39,8 +39,10 @@ async def list_teams(
     """查询团队配置列表。"""
     rows, total = await team_service.list_teams(db, limit=limit, offset=offset, search=search)
     return TeamConfigListResponse(
-        items=[TeamConfigResponse.model_validate(r) for r in rows],
+        data=[TeamConfigResponse.model_validate(r) for r in rows],
         total=total,
+        limit=limit,
+        offset=offset,
     )
 
 

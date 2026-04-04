@@ -5,10 +5,13 @@ from app.models.agent_template import AgentTemplate
 from app.models.agent_version import AgentConfigVersion
 from app.models.approval import ApprovalRequest
 from app.models.audit_log import AuditLog
+from app.models.evaluation import RunEvaluation, RunFeedback
 from app.models.guardrail import GuardrailRule
+from app.models.im_channel import IMChannel
 from app.models.mcp_server import MCPServerConfig
 from app.models.memory import MemoryEntryRecord
 from app.models.provider import ProviderConfig
+from app.models.provider_model import ProviderModel
 from app.models.role import Role
 from app.models.skill import SkillRecord
 from app.models.session import SessionRecord
@@ -25,10 +28,14 @@ __all__ = [
     "ApprovalRequest",
     "AuditLog",
     "GuardrailRule",
+    "IMChannel",
     "MCPServerConfig",
     "MemoryEntryRecord",
     "ProviderConfig",
+    "ProviderModel",
     "Role",
+    "RunEvaluation",
+    "RunFeedback",
     "SkillRecord",
     "SessionRecord",
     "SpanRecord",

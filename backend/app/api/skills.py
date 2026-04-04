@@ -43,8 +43,10 @@ async def list_skills(
         db, category=category, tag=tag, limit=limit, offset=offset
     )
     return SkillListResponse(
-        items=[SkillResponse.model_validate(r) for r in rows],
+        data=[SkillResponse.model_validate(r) for r in rows],
         total=total,
+        limit=limit,
+        offset=offset,
     )
 
 

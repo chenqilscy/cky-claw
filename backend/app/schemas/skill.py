@@ -83,5 +83,7 @@ class SkillResponse(BaseModel):
 class SkillListResponse(BaseModel):
     """技能列表响应。"""
 
-    items: list[SkillResponse]
+    data: list[SkillResponse]
     total: int
+    limit: int = 20
+    offset: int = 0
