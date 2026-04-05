@@ -308,7 +308,7 @@ CkyClaw Framework 的核心设计（Agent 数据类、Runner 循环、Handoff、
 |------|------|
 | 测试总数 | **2446**（Backend 1248 + Framework 1134 + Frontend 64） |
 | 测试覆盖率 | Backend **95%** · Framework **100%** |
-| Alembic 迁移 | **35** 个（0001–0035） |
+| Alembic 迁移 | **36** 个（0001–0036） |
 | API 路由模块 | **30** 个 |
 | 前端页面 | **25** 个（React.lazy 懒加载） |
 | CI Job | **5** 个 GitHub Actions + **5** Stage Jenkinsfile |
@@ -316,6 +316,37 @@ CkyClaw Framework 的核心设计（Agent 数据类、Runner 循环、Handoff、
 
 ---
 
-*文档版本：v2.0.0*
+## 十、未完成项汇总
+
+> 截至 2026-04-05，以下功能已有设计或基础支撑，但尚未实现：
+
+### 10.1 多渠道接入（待开发）
+
+| # | 渠道 | 优先级 | 依赖 | 预计工作量 |
+|---|------|:------:|------|-----------|
+| C3 | 飞书 | P2 | 飞书开放平台应用凭证 | 中（事件订阅 + 消息卡片 + 签名验证） |
+| C4 | 微信公众号/服务号 | P2 | 微信认证 + 模板消息接口 | 高（OAuth 微信授权 + 模板消息 + 客服接口） |
+| C5 | Slack | P3 | Slack App + Bolt SDK | 低（Bolt SDK 成熟，社区资源丰富） |
+| C6 | 自定义 Webhook | P3 | 无 | 低（已有通用 HMAC 框架，包装即可） |
+
+### 10.2 用户认证扩展（待开发）
+
+| # | 方案 | 优先级 | 依赖 | 预计工作量 |
+|---|------|:------:|------|-----------|
+| A3 | 企微/钉钉/飞书扫码登录 | P1 | 各平台应用凭证；已有 OAuth 框架 | 中（每个 Provider 新增 OAuthProviderConfig 即可） |
+| A4 | Keycloak / Casdoor 集成 | P2 | 私有化 IdP 实例 | 中（标准 OIDC，需配置 well-known） |
+| A5 | Google OAuth | P3 | Google Cloud Console 凭证 | 低（标准 OAuth 2.0 流程） |
+
+### 10.3 其它待完成
+
+| # | 项目 | 优先级 | 说明 |
+|---|------|:------:|------|
+| V1 | 完整功能流程验证 | P1 | 需 Docker 环境启动全链路（PG + Redis + Backend + Frontend），体验完整功能流程 |
+| V2 | Agents SDK 兼容层 | P3 | 实现 Adapter 允许 OpenAI Agents SDK 的 Agent 定义直接在 CkyClaw 上运行 |
+| V3 | 竞品分析：LangChain/LangGraph 深度对比 | P2 | 分析基于 LangChain/LangGraph 重构所需调整，补充到竞品分析文档 |
+
+---
+
+*文档版本：v2.1.0*
 *生成日期：2026-04-05*
-*基于：PRD v2.0.9 / M0–M7 + v2.1–v2.6 全部完成 + 覆盖率冲刺*
+*基于：PRD v2.0.9 / M0–M7 + v2.1–v2.6 全部完成 + OAuth 2.0 + ChannelAdapter + 覆盖率冲刺*

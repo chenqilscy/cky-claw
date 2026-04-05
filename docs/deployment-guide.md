@@ -83,6 +83,9 @@ curl http://localhost:8000/health
 | `CKYCLAW_ACCESS_TOKEN_EXPIRE_MINUTES` | `1440`（24h） | Token 有效期（分钟） |
 | `CKYCLAW_DEBUG` | `true` | 调试模式 |
 | `CKYCLAW_CORS_ORIGINS` | `["http://localhost:3000", "http://localhost:5173"]` | CORS 允许来源 |
+| `CKYCLAW_OAUTH_GITHUB_CLIENT_ID` | （空） | GitHub OAuth App Client ID |
+| `CKYCLAW_OAUTH_GITHUB_CLIENT_SECRET` | （空） | GitHub OAuth App Client Secret |
+| `CKYCLAW_OAUTH_REDIRECT_BASE_URL` | `http://localhost:3000` | OAuth 回调基础 URL |
 
 ## 服务架构
 

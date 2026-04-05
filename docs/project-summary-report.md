@@ -12,7 +12,7 @@ CkyClaw 是基于自研 **CkyClaw Framework** 构建的 AI Agent 管理与运行
 |---|--------|------|
 | **ckyclaw-framework** | Python 3.12+ | Agent 运行时库（独立 pip 包） |
 | **backend** | FastAPI + SQLAlchemy async + Alembic | 后端 API 服务 |
-| **frontend** | React 18 + Vite + TypeScript + Ant Design 5 | Web 管理面板 |
+| **frontend** | React 19 + Vite 6 + TypeScript 5.8 + Ant Design 5 | Web 管理面板 |
 
 基础设施：PostgreSQL 16 + Redis 7，Docker Compose 编排。
 
@@ -22,14 +22,16 @@ CkyClaw 是基于自研 **CkyClaw Framework** 构建的 AI Agent 管理与运行
 
 | 指标 | 数值 |
 |------|------|
-| **Backend 测试** | **809 passed** |
-| **Framework 测试** | **640 passed**（+ 4 个集成测试需 LLM API Key） |
-| **总测试数** | **1,449+** |
-| **Alembic 迁移** | 35 个（0001–0035） |
-| **API 端点** | 44+ |
-| **前端页面** | 18 个（含 I18nSettingsPage） |
+| **Backend 测试** | **1248 passed** |
+| **Framework 测试** | **1134 passed**（+ 4 个集成测试需 LLM API Key） |
+| **Frontend 测试** | **64 passed** |
+| **总测试数** | **2446** |
+| **测试覆盖率** | Backend **95%** · Framework **100%** |
+| **Alembic 迁移** | 36 个（0001–0036） |
+| **API 端点** | 157+（30 个路由模块） |
+| **前端页面** | 25 个（React.lazy 懒加载） |
 | **TypeScript 错误** | 0 |
-| **CI Job** | 5 个 |
+| **CI Job** | 5 个 GitHub Actions + 5 Stage Jenkinsfile |
 | **Docker Compose Services** | 6 个（db / redis / backend / frontend / jaeger / prometheus） + backup |
 
 ---
@@ -123,8 +125,8 @@ CkyClaw 是基于自研 **CkyClaw Framework** 构建的 AI Agent 管理与运行
 - **i18n**: LocalizedInstructions + locale 解析链
 
 ### Backend 能力
-- **40+ API 端点**: 完整 CRUD + 多维查询 + 导入导出
-- **35 Alembic 迁移**: 全自动升级
+- **157+ API 端点（30 路由模块）**: 完整 CRUD + 多维查询 + 导入导出
+- **36 Alembic 迁移**: 全自动升级
 - **RBAC**: 角色权限 + require_permission 全端点注入
 - **多租户**: Organization + get_org_id 数据隔离
 - **APM**: 聚合统计 + AlertRule 告警引擎
@@ -133,9 +135,10 @@ CkyClaw 是基于自研 **CkyClaw Framework** 构建的 AI Agent 管理与运行
 - **灾备**: 自动备份 + 恢复脚本 + 验证
 
 ### Frontend 能力
-- **18 页面**: React.lazy 懒加载
+- **25 页面**: React.lazy 懒加载
+- **React 19 + Vite 6 + TypeScript 5.8**: 最新前端技术栈
 - **ProComponents + Ant Design 5**: 企业级 UI
-- **ReactFlow**: Handoff + Workflow + Team 可视化
+- **@xyflow/react（ReactFlow）**: Handoff + Workflow + Team 可视化
 - **ECharts**: Dashboard 图表
 - **Zustand + TanStack Query**: 状态管理 + 数据缓存
 - **暗色模式 + 响应式**: 全端适配
@@ -156,6 +159,25 @@ CkyClaw 是基于自研 **CkyClaw Framework** 构建的 AI Agent 管理与运行
 - `scripts/backup-verify.sh` — 完整性验证
 - `docker-compose.yml` — backup profile
 - `docs/disaster-recovery.md` — 运维文档
+
+### OAuth 2.0 认证框架 + GitHub OAuth
+- Backend: `OAuthProviderConfig` + `oauth_service` + Redis CSRF state + Fernet token 加密
+- API: 6 端点（providers / authorize / callback / bind / connections / unbind）
+- Frontend: OAuth 跳转 + `OAuthCallbackPage` + 登录页 GitHub 按钮
+- Migration: 0036（`user_oauth_connections` 表 + `users.avatar_url` 列）
+- 测试: 21 个
+
+### 多渠道 ChannelAdapter 适配器
+- `ChannelAdapter` 抽象基类 + 适配器注册表
+- `WeComAdapter`: SHA1 签名验证 + AES-256-CBC 消息加解密 + XML 解析 + 应用消息推送
+- `DingTalkAdapter`: HMAC-SHA256 签名 + JSON 解析 + Webhook 推送
+- Webhook 端点升级为适配器模式（支持回退到通用 HMAC）
+- 测试: 42 个
+
+### 前端依赖升级
+- React 18 → 19, Vite 5 → 6, TypeScript 5.5 → 5.8, Node 20 → 22
+- Vitest 2 → 3, @xyflow/react 升级
+- 修复 React 19 `useRef` 破坏性变更 + TS 5.8 tsconfig 冲突
 
 ---
 
