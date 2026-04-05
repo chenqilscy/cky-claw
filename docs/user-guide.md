@@ -16,6 +16,18 @@
 3. 授权成功后自动回调并完成登录。
 4. 首次通过 GitHub 登录时，系统会自动创建账号。
 
+### 企微 / 钉钉 / 飞书 SSO 登录
+
+管理员配置相应 OAuth 应用凭证后：
+1. 在登录页点击对应平台的登录按钮（「企微登录」/「钉钉登录」/「飞书登录」）。
+2. 跳转到对应平台授权页面（企微：扫码登录、钉钉：扫码/账号授权、飞书：扫码授权）。
+3. 授权成功后自动回调并完成登录。
+4. 首次通过 SSO 登录时，系统会自动创建账号并关联企业身份。
+
+> **配置环境变量**：企微需设置 `CKYCLAW_OAUTH_WECOM_CORP_ID` / `CKYCLAW_OAUTH_WECOM_AGENT_ID` / `CKYCLAW_OAUTH_WECOM_SECRET`；
+> 钉钉需设置 `CKYCLAW_OAUTH_DINGTALK_CLIENT_ID` / `CKYCLAW_OAUTH_DINGTALK_CLIENT_SECRET`；
+> 飞书需设置 `CKYCLAW_OAUTH_FEISHU_APP_ID` / `CKYCLAW_OAUTH_FEISHU_APP_SECRET`。
+
 ### OAuth 账号绑定
 
 已登录用户可在个人设置中绑定/解绑 OAuth 账号：

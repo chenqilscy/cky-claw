@@ -1,10 +1,15 @@
-"""OAuth 业务逻辑层。"""
+"""OAuth 业务逻辑层。
+
+支持 GitHub / 企微 / 钉钉 / 飞书 四种 OAuth Provider。
+每种 Provider 通过分发表（dispatch dict）挂载独立的 token 交换、
+用户信息获取和授权 URL 构建函数。
+"""
 
 from __future__ import annotations
 
 import logging
 import secrets
-from typing import Any
+from typing import Any, Awaitable, Callable
 from urllib.parse import urlencode
 
 import httpx
@@ -47,13 +52,18 @@ async def generate_authorize_url(provider: str) -> tuple[str, str]:
     redis = await get_redis()
     await redis.set(f"{_STATE_PREFIX}{state}", provider, ex=_STATE_TTL_SECONDS)
 
-    params = urlencode({
-        "client_id": config.client_id,
-        "redirect_uri": config.redirect_uri,
-        "scope": config.scope,
-        "state": state,
-    })
-    authorize_url = f"{config.authorize_url}?{params}"
+    # Provider 分发：自定义或默认 URL 构建
+    builder = _CUSTOM_AUTHORIZE_BUILDERS.get(provider)
+    if builder is not None:
+        authorize_url = builder(config, state)
+    else:
+        params = urlencode({
+            "client_id": config.client_id,
+            "redirect_uri": config.redirect_uri,
+            "scope": config.scope,
+            "state": state,
+        })
+        authorize_url = f"{config.authorize_url}?{params}"
     return authorize_url, state
 
 
@@ -91,8 +101,8 @@ async def handle_oauth_callback(
     # 3. 用 code 换取 access_token
     access_token = await _exchange_code_for_token(config, code)
 
-    # 4. 获取用户信息
-    user_info = await _fetch_user_info(config, access_token)
+    # 4. 获取用户信息（企微等 Provider 需要 code 参数）
+    user_info = await _fetch_user_info(config, access_token, code=code)
 
     # 5. 创建或关联用户
     user = await _find_or_create_user(db, config.name, user_info, access_token)
@@ -127,7 +137,7 @@ async def bind_oauth_to_user(
         raise ValidationError(f"OAuth Provider '{provider}' 不存在或未配置")
 
     access_token = await _exchange_code_for_token(config, code)
-    user_info = await _fetch_user_info(config, access_token)
+    user_info = await _fetch_user_info(config, access_token, code=code)
 
     raw_id = user_info.get("id")
     if raw_id is None:
@@ -188,11 +198,313 @@ async def unbind_oauth(db: AsyncSession, user: User, provider: str) -> None:
     await db.commit()
 
 
-# ------ 内部函数 ------
+# ------ Provider 分发表 ------
+
+# 授权 URL 构建器：provider_name → (config, state) -> url
+_CUSTOM_AUTHORIZE_BUILDERS: dict[str, Callable[[OAuthProviderConfig, str], str]] = {}
+
+# Token 交换器：provider_name → async (config, code) -> access_token
+_CUSTOM_TOKEN_EXCHANGERS: dict[
+    str, Callable[[OAuthProviderConfig, str], Awaitable[str]]
+] = {}
+
+# 用户信息获取器：provider_name → async (config, access_token, code) -> user_info
+_CUSTOM_USERINFO_FETCHERS: dict[
+    str, Callable[[OAuthProviderConfig, str, str], Awaitable[dict[str, Any]]]
+] = {}
+
+
+# ------ 企微 (WeCom) ------
+
+
+def _build_authorize_url_wecom(config: OAuthProviderConfig, state: str) -> str:
+    """构建企微 SSO 授权 URL。"""
+    params = urlencode({
+        "login_type": "CorpApp",
+        "appid": config.client_id,
+        "agentid": settings.oauth_wecom_agent_id,
+        "redirect_uri": config.redirect_uri,
+        "state": state,
+    })
+    return f"{config.authorize_url}?{params}"
+
+
+async def _exchange_code_for_token_wecom(
+    config: OAuthProviderConfig, code: str
+) -> str:
+    """企微：获取企业 access_token（corp-level，非用户级）。
+
+    TODO: 企微 corp access_token 有效期 2 小时，后续可加 Redis 缓存避免重复请求。
+    """
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            resp = await client.get(
+                config.token_url,
+                params={
+                    "corpid": config.client_id,
+                    "corpsecret": config.client_secret,
+                },
+            )
+    except httpx.HTTPError as exc:
+        logger.error("企微 access_token 获取网络异常: %s", exc)
+        raise AuthenticationError("OAuth 服务暂不可用，请稍后重试") from exc
+
+    if resp.status_code != 200:
+        raise AuthenticationError("企微 access_token 获取失败")
+
+    data = resp.json()
+    if data.get("errcode", 0) != 0:
+        raise AuthenticationError(
+            f"企微 access_token 获取失败: {data.get('errmsg', '未知错误')}"
+        )
+
+    token = data.get("access_token")
+    if not token:
+        raise AuthenticationError("企微响应中缺少 access_token")
+    return str(token)
+
+
+async def _fetch_user_info_wecom(
+    config: OAuthProviderConfig, access_token: str, code: str
+) -> dict[str, Any]:
+    """企微：先用 code 获取 userid，再获取用户详情。"""
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            # Step 1: code → userid
+            resp = await client.get(
+                config.userinfo_url,
+                params={"access_token": access_token, "code": code},
+            )
+            if resp.status_code != 200:
+                raise AuthenticationError("获取企微用户身份失败")
+
+            identity = resp.json()
+            if identity.get("errcode", 0) != 0:
+                raise AuthenticationError(
+                    f"获取企微用户身份失败: {identity.get('errmsg', '未知错误')}"
+                )
+
+            userid = identity.get("userid") or identity.get("UserId")
+            if not userid:
+                raise AuthenticationError("企微未返回用户 ID")
+
+            # Step 2: userid → 用户详情
+            resp2 = await client.get(
+                "https://qyapi.weixin.qq.com/cgi-bin/user/get",
+                params={"access_token": access_token, "userid": userid},
+            )
+            if resp2.status_code != 200 or resp2.json().get("errcode", 0) != 0:
+                # 降级：仅返回基础身份
+                return {"id": userid, "name": userid}
+
+            detail = resp2.json()
+            return {
+                "id": userid,
+                "name": detail.get("name", userid),
+                "email": detail.get("email", ""),
+                "avatar_url": detail.get("avatar", ""),
+            }
+    except httpx.HTTPError as exc:
+        logger.error("获取企微用户信息网络异常: %s", exc)
+        raise AuthenticationError("获取企微用户信息失败，请稍后重试") from exc
+
+
+# ------ 钉钉 (DingTalk) ------
+
+
+def _build_authorize_url_dingtalk(config: OAuthProviderConfig, state: str) -> str:
+    """构建钉钉授权 URL。"""
+    params = urlencode({
+        "client_id": config.client_id,
+        "redirect_uri": config.redirect_uri,
+        "scope": config.scope,
+        "response_type": "code",
+        "state": state,
+        "prompt": "consent",
+    })
+    return f"{config.authorize_url}?{params}"
+
+
+async def _exchange_code_for_token_dingtalk(
+    config: OAuthProviderConfig, code: str
+) -> str:
+    """钉钉：JSON body 格式换取 userAccessToken。"""
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            resp = await client.post(
+                config.token_url,
+                json={
+                    "clientId": config.client_id,
+                    "clientSecret": config.client_secret,
+                    "code": code,
+                    "grantType": "authorization_code",
+                },
+            )
+    except httpx.HTTPError as exc:
+        logger.error("钉钉 token 交换网络异常: %s", exc)
+        raise AuthenticationError("OAuth 服务暂不可用，请稍后重试") from exc
+
+    if resp.status_code != 200:
+        raise AuthenticationError("钉钉 accessToken 获取失败")
+
+    data = resp.json()
+    token = data.get("accessToken")
+    if not token:
+        raise AuthenticationError(
+            f"钉钉 accessToken 获取失败: {data.get('message', '未知错误')}"
+        )
+    return str(token)
+
+
+async def _fetch_user_info_dingtalk(
+    config: OAuthProviderConfig, access_token: str, code: str
+) -> dict[str, Any]:
+    """钉钉：通过 x-acs-dingtalk-access-token 获取用户信息。"""
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            resp = await client.get(
+                config.userinfo_url,
+                headers={"x-acs-dingtalk-access-token": access_token},
+            )
+    except httpx.HTTPError as exc:
+        logger.error("获取钉钉用户信息网络异常: %s", exc)
+        raise AuthenticationError("获取钉钉用户信息失败，请稍后重试") from exc
+
+    if resp.status_code != 200:
+        raise AuthenticationError("获取钉钉用户信息失败")
+
+    data = resp.json()
+    return {
+        "id": data.get("openId", data.get("unionId", "")),
+        "name": data.get("nick", ""),
+        "email": data.get("email", ""),
+        "avatar_url": data.get("avatarUrl", ""),
+    }
+
+
+# ------ 飞书 (Feishu) ------
+
+
+def _build_authorize_url_feishu(config: OAuthProviderConfig, state: str) -> str:
+    """构建飞书授权 URL。"""
+    params = urlencode({
+        "app_id": config.client_id,
+        "redirect_uri": config.redirect_uri,
+        "state": state,
+    })
+    return f"{config.authorize_url}?{params}"
+
+
+async def _exchange_code_for_token_feishu(
+    config: OAuthProviderConfig, code: str
+) -> str:
+    """飞书：先获取 app_access_token，再用 code 换取 user_access_token。"""
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            # Step 1: 获取 app_access_token
+            app_resp = await client.post(
+                "https://open.feishu.cn/open-apis/auth/v3/app_access_token/internal",
+                json={
+                    "app_id": config.client_id,
+                    "app_secret": config.client_secret,
+                },
+            )
+            if app_resp.status_code != 200:
+                raise AuthenticationError("飞书 app_access_token 获取失败")
+
+            app_data = app_resp.json()
+            app_token = app_data.get("app_access_token")
+            if not app_token:
+                raise AuthenticationError(
+                    f"飞书 app_access_token 获取失败: {app_data.get('msg', '未知错误')}"
+                )
+
+            # Step 2: code → user_access_token
+            resp = await client.post(
+                config.token_url,
+                json={"grant_type": "authorization_code", "code": code},
+                headers={"Authorization": f"Bearer {app_token}"},
+            )
+    except httpx.HTTPError as exc:
+        logger.error("飞书 token 交换网络异常: %s", exc)
+        raise AuthenticationError("OAuth 服务暂不可用，请稍后重试") from exc
+
+    if resp.status_code != 200:
+        raise AuthenticationError("飞书 user_access_token 获取失败")
+
+    data = resp.json()
+    token_data = data.get("data", data)
+    token = token_data.get("access_token")
+    if not token:
+        msg = data.get("msg", data.get("message", "未知错误"))
+        raise AuthenticationError(f"飞书 user_access_token 获取失败: {msg}")
+    return str(token)
+
+
+async def _fetch_user_info_feishu(
+    config: OAuthProviderConfig, access_token: str, code: str
+) -> dict[str, Any]:
+    """飞书：标准 Bearer token 获取用户信息。"""
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            resp = await client.get(
+                config.userinfo_url,
+                headers={"Authorization": f"Bearer {access_token}"},
+            )
+    except httpx.HTTPError as exc:
+        logger.error("获取飞书用户信息网络异常: %s", exc)
+        raise AuthenticationError("获取飞书用户信息失败，请稍后重试") from exc
+
+    if resp.status_code != 200:
+        raise AuthenticationError("获取飞书用户信息失败")
+
+    raw = resp.json()
+    data = raw.get("data", raw)
+    avatar = data.get("avatar_url", "")
+    if not avatar and isinstance(data.get("avatar"), dict):
+        avatar = data["avatar"].get("avatar_origin", "")
+    return {
+        "id": data.get("open_id", data.get("user_id", "")),
+        "name": data.get("name", ""),
+        "email": data.get("email", ""),
+        "avatar_url": avatar,
+    }
+
+
+# ------ 注册分发表 ------
+
+_CUSTOM_AUTHORIZE_BUILDERS.update({
+    "wecom": _build_authorize_url_wecom,
+    "dingtalk": _build_authorize_url_dingtalk,
+    "feishu": _build_authorize_url_feishu,
+})
+
+_CUSTOM_TOKEN_EXCHANGERS.update({
+    "wecom": _exchange_code_for_token_wecom,
+    "dingtalk": _exchange_code_for_token_dingtalk,
+    "feishu": _exchange_code_for_token_feishu,
+})
+
+_CUSTOM_USERINFO_FETCHERS.update({
+    "wecom": _fetch_user_info_wecom,
+    "dingtalk": _fetch_user_info_dingtalk,
+    "feishu": _fetch_user_info_feishu,
+})
+
+
+# ------ 默认（GitHub 等标准 OAuth 2.0）内部函数 ------
 
 
 async def _exchange_code_for_token(config: OAuthProviderConfig, code: str) -> str:
-    """用 authorization code 换取 access_token。"""
+    """用 authorization code 换取 access_token。
+
+    优先使用 provider 级自定义实现，否则走标准 OAuth 2.0 form-encoded 流程。
+    """
+    custom = _CUSTOM_TOKEN_EXCHANGERS.get(config.name)
+    if custom is not None:
+        return await custom(config, code)
+
+    # 默认：标准 OAuth 2.0（GitHub 等）
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
             resp = await client.post(
@@ -221,8 +533,19 @@ async def _exchange_code_for_token(config: OAuthProviderConfig, code: str) -> st
     return str(token)
 
 
-async def _fetch_user_info(config: OAuthProviderConfig, access_token: str) -> dict[str, Any]:
-    """用 access_token 获取用户信息。"""
+async def _fetch_user_info(
+    config: OAuthProviderConfig, access_token: str, *, code: str = ""
+) -> dict[str, Any]:
+    """用 access_token 获取用户信息。
+
+    优先使用 provider 级自定义实现，否则走标准 Bearer token GET 流程。
+    code 参数传递给需要它的 Provider（如企微）。
+    """
+    custom = _CUSTOM_USERINFO_FETCHERS.get(config.name)
+    if custom is not None:
+        return await custom(config, access_token, code)
+
+    # 默认：标准 Bearer token（GitHub 等）
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
             resp = await client.get(

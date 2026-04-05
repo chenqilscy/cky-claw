@@ -230,10 +230,10 @@
 |---|------|:------:|:------:|------|
 | C1 | ~~**企业微信**~~ | P1 | 中 | ✅ 已完成（WeComAdapter：签名验证 + AES-256-CBC 消息加解密 + XML 解析 + 应用消息推送 + 19 测试） |
 | C2 | ~~**钉钉**~~ | P1 | 中 | ✅ 已完成（DingTalkAdapter：HMAC-SHA256 签名验证 + JSON 解析 + Webhook 推送 + 15 测试） |
-| C3 | **飞书** | P2 | 中 | 字节系企业使用广泛。需对接事件订阅 + 消息卡片 |
+| C3 | ~~**飞书**~~ | P2 | 中 | ✅ 已完成（FeishuAdapter：SHA256 签名验证 + JSON 解析 + URL 验证回调 + REST API 消息推送 + 16 测试） |
 | C4 | **微信公众号/服务号** | P2 | 高 | 面向 C 端客服场景。需微信认证 + 模板消息 + 客服接口 |
 | C5 | **Slack** | P3 | 低 | 海外企业标配。Bolt SDK 成熟 |
-| C6 | **自定义 Webhook** | P3 | 低 | 通用 HTTP 回调，已有基础框架支持 |
+| C6 | ~~**自定义 Webhook**~~ | P3 | 低 | ✅ 已完成（CustomWebhookAdapter：可配 HMAC 签名 + 嵌套字段映射 + 通用推送 + 16 测试） |
 
 **已实现架构**：`ChannelAdapter` 抽象基类 + `WeComAdapter` / `DingTalkAdapter` 子类 + 适配器注册表 + Webhook 端点集成，位于 `backend/app/services/channel_adapters/`。
 
@@ -324,16 +324,16 @@ CkyClaw Framework 的核心设计（Agent 数据类、Runner 循环、Handoff、
 
 | # | 渠道 | 优先级 | 依赖 | 预计工作量 |
 |---|------|:------:|------|-----------|
-| C3 | 飞书 | P2 | 飞书开放平台应用凭证 | 中（事件订阅 + 消息卡片 + 签名验证） |
+| ~~C3~~ | ~~飞书~~ | ~~P2~~ | — | ✅ 已完成 |
 | C4 | 微信公众号/服务号 | P2 | 微信认证 + 模板消息接口 | 高（OAuth 微信授权 + 模板消息 + 客服接口） |
 | C5 | Slack | P3 | Slack App + Bolt SDK | 低（Bolt SDK 成熟，社区资源丰富） |
-| C6 | 自定义 Webhook | P3 | 无 | 低（已有通用 HMAC 框架，包装即可） |
+| ~~C6~~ | ~~自定义 Webhook~~ | ~~P3~~ | — | ✅ 已完成 |
 
 ### 10.2 用户认证扩展（待开发）
 
 | # | 方案 | 优先级 | 依赖 | 预计工作量 |
 |---|------|:------:|------|-----------|
-| A3 | 企微/钉钉/飞书扫码登录 | P1 | 各平台应用凭证；已有 OAuth 框架 | 中（每个 Provider 新增 OAuthProviderConfig 即可） |
+| ~~A3~~ | ~~企微/钉钉/飞书扫码登录~~ | ~~P1~~ | — | ✅ 已完成（三种 Provider 的 token 交换 + 用户信息获取 + 授权 URL 构建 + 分发表架构 + 52 测试） |
 | A4 | Keycloak / Casdoor 集成 | P2 | 私有化 IdP 实例 | 中（标准 OIDC，需配置 well-known） |
 | A5 | Google OAuth | P3 | Google Cloud Console 凭证 | 低（标准 OAuth 2.0 流程） |
 
@@ -342,8 +342,8 @@ CkyClaw Framework 的核心设计（Agent 数据类、Runner 循环、Handoff、
 | # | 项目 | 优先级 | 说明 |
 |---|------|:------:|------|
 | V1 | 完整功能流程验证 | P1 | 需 Docker 环境启动全链路（PG + Redis + Backend + Frontend），体验完整功能流程 |
-| V2 | Agents SDK 兼容层 | P3 | 实现 Adapter 允许 OpenAI Agents SDK 的 Agent 定义直接在 CkyClaw 上运行 |
-| V3 | 竞品分析：LangChain/LangGraph 深度对比 | P2 | 分析基于 LangChain/LangGraph 重构所需调整，补充到竞品分析文档 |
+| ~~V2~~ | ~~Agents SDK 兼容层~~ | ~~P3~~ | ~~实现 Adapter 允许 OpenAI Agents SDK 的 Agent 定义直接在 CkyClaw 上运行~~ |
+| ~~V3~~ | ~~竞品分析：LangChain/LangGraph 深度对比~~ | ~~P2~~ | ~~分析基于 LangChain/LangGraph 重构所需调整，补充到竞品分析文档~~ |
 
 ---
 

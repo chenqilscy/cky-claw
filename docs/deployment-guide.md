@@ -86,6 +86,13 @@ curl http://localhost:8000/health
 | `CKYCLAW_OAUTH_GITHUB_CLIENT_ID` | （空） | GitHub OAuth App Client ID |
 | `CKYCLAW_OAUTH_GITHUB_CLIENT_SECRET` | （空） | GitHub OAuth App Client Secret |
 | `CKYCLAW_OAUTH_REDIRECT_BASE_URL` | `http://localhost:3000` | OAuth 回调基础 URL |
+| `CKYCLAW_OAUTH_WECOM_CORP_ID` | （空） | 企微 CorpID |
+| `CKYCLAW_OAUTH_WECOM_AGENT_ID` | （空） | 企微应用 AgentID |
+| `CKYCLAW_OAUTH_WECOM_SECRET` | （空） | 企微应用 Secret |
+| `CKYCLAW_OAUTH_DINGTALK_CLIENT_ID` | （空） | 钉钉 OAuth AppKey (ClientID) |
+| `CKYCLAW_OAUTH_DINGTALK_CLIENT_SECRET` | （空） | 钉钉 OAuth AppSecret (ClientSecret) |
+| `CKYCLAW_OAUTH_FEISHU_APP_ID` | （空） | 飞书 App ID |
+| `CKYCLAW_OAUTH_FEISHU_APP_SECRET` | （空） | 飞书 App Secret |
 
 ## 服务架构
 
