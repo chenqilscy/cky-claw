@@ -54,6 +54,11 @@ class Settings(BaseSettings):
     oauth_oidc_client_secret: str = ""
     oauth_oidc_scope: str = "openid profile email"
 
+    # OAuth 2.0 — Google
+    oauth_google_client_id: str = ""
+    oauth_google_client_secret: str = ""
+    oauth_google_scope: str = "openid profile email"
+
     model_config = {"env_prefix": "CKYCLAW_", "env_file": ".env", "extra": "ignore"}
 
 

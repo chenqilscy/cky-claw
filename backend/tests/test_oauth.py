@@ -65,6 +65,14 @@ def _make_config(name: str = "github") -> "OAuthProviderConfig":
             "client_secret": "oidc-secret",
             "scope": "openid profile email",
         },
+        "google": {
+            "authorize_url": "https://accounts.google.com/o/oauth2/v2/auth",
+            "token_url": "https://oauth2.googleapis.com/token",
+            "userinfo_url": "https://www.googleapis.com/oauth2/v2/userinfo",
+            "client_id": "google-client-id",
+            "client_secret": "google-secret",
+            "scope": "openid profile email",
+        },
     }
     u = urls[name]
     return OAuthProviderConfig(
@@ -1153,6 +1161,175 @@ def test_oidc_in_provider_factories() -> None:
     from app.core.oauth_providers import _PROVIDER_FACTORIES
 
     assert "oidc" in _PROVIDER_FACTORIES
+
+
+# ======== Google OAuth Provider ========
+
+
+def test_google_provider_unconfigured() -> None:
+    """未配置 Google 时返回 None。"""
+    from app.core.oauth_providers import get_google_provider
+
+    with patch("app.core.config.settings") as mock_settings:
+        mock_settings.oauth_google_client_id = ""
+        mock_settings.oauth_google_client_secret = ""
+        assert get_google_provider() is None
+
+
+def test_google_provider_configured() -> None:
+    """配置 Google 后返回正确 config。"""
+    from app.core.oauth_providers import get_google_provider
+
+    with patch("app.core.config.settings") as mock_settings:
+        mock_settings.oauth_google_client_id = "google-id"
+        mock_settings.oauth_google_client_secret = "google-secret"
+        mock_settings.oauth_google_scope = "openid profile email"
+        mock_settings.oauth_redirect_base_url = "http://localhost:3000"
+        cfg = get_google_provider()
+        assert cfg is not None
+        assert cfg.name == "google"
+        assert cfg.authorize_url == "https://accounts.google.com/o/oauth2/v2/auth"
+        assert cfg.token_url == "https://oauth2.googleapis.com/token"
+        assert cfg.scope == "openid profile email"
+
+
+def test_google_authorize_url_params() -> None:
+    """Google 授权 URL 包含 response_type=code 和 access_type=offline。"""
+    from app.services.oauth_service import _build_authorize_url_google
+
+    config = _make_config("google")
+    url = _build_authorize_url_google(config, "test-state")
+
+    assert "response_type=code" in url
+    assert "access_type=offline" in url
+    assert "client_id=google-client-id" in url
+    assert "state=test-state" in url
+    assert "scope=openid" in url
+
+
+def test_google_authorize_url_redirect_uri() -> None:
+    """Google 授权 URL 包含 redirect_uri。"""
+    from app.services.oauth_service import _build_authorize_url_google
+
+    config = _make_config("google")
+    url = _build_authorize_url_google(config, "s")
+    assert "redirect_uri=" in url
+
+
+@pytest.mark.asyncio
+async def test_google_fetch_userinfo_success() -> None:
+    """Google UserInfo 成功获取。"""
+    from app.services.oauth_service import _fetch_user_info_google
+
+    mock_resp = MagicMock()
+    mock_resp.status_code = 200
+    mock_resp.json.return_value = {
+        "id": "1234567890",
+        "name": "Jane Smith",
+        "email": "jane@gmail.com",
+        "picture": "https://lh3.googleusercontent.com/photo.jpg",
+    }
+
+    mock_client = AsyncMock()
+    mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+    mock_client.__aexit__ = AsyncMock(return_value=False)
+    mock_client.get = AsyncMock(return_value=mock_resp)
+
+    config = _make_config("google")
+    with patch("app.services.oauth_service.httpx.AsyncClient", return_value=mock_client):
+        info = await _fetch_user_info_google(config, "access-token", "code")
+
+    assert info["id"] == "1234567890"
+    assert info["login"] == "jane@gmail.com"
+    assert info["name"] == "Jane Smith"
+    assert info["email"] == "jane@gmail.com"
+    assert info["avatar_url"] == "https://lh3.googleusercontent.com/photo.jpg"
+
+
+@pytest.mark.asyncio
+async def test_google_fetch_userinfo_minimal() -> None:
+    """Google UserInfo 最小响应：仅 id。"""
+    from app.services.oauth_service import _fetch_user_info_google
+
+    mock_resp = MagicMock()
+    mock_resp.status_code = 200
+    mock_resp.json.return_value = {"id": "999"}
+
+    mock_client = AsyncMock()
+    mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+    mock_client.__aexit__ = AsyncMock(return_value=False)
+    mock_client.get = AsyncMock(return_value=mock_resp)
+
+    config = _make_config("google")
+    with patch("app.services.oauth_service.httpx.AsyncClient", return_value=mock_client):
+        info = await _fetch_user_info_google(config, "token", "code")
+
+    assert info["id"] == "999"
+    assert info["login"] == ""
+    assert info["name"] == ""
+    assert info["avatar_url"] == ""
+
+
+@pytest.mark.asyncio
+async def test_google_fetch_userinfo_http_error() -> None:
+    """Google UserInfo 网络异常时抛出 AuthenticationError。"""
+    from app.core.exceptions import AuthenticationError
+    from app.services.oauth_service import _fetch_user_info_google
+
+    mock_client = AsyncMock()
+    mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+    mock_client.__aexit__ = AsyncMock(return_value=False)
+    mock_client.get = AsyncMock(side_effect=httpx.ConnectError("timeout"))
+
+    config = _make_config("google")
+    with patch("app.services.oauth_service.httpx.AsyncClient", return_value=mock_client), \
+         pytest.raises(AuthenticationError, match="Google"):
+        await _fetch_user_info_google(config, "token", "code")
+
+
+@pytest.mark.asyncio
+async def test_google_fetch_userinfo_non_200() -> None:
+    """Google UserInfo 返回非 200 时抛出 AuthenticationError。"""
+    from app.core.exceptions import AuthenticationError
+    from app.services.oauth_service import _fetch_user_info_google
+
+    mock_resp = MagicMock()
+    mock_resp.status_code = 403
+
+    mock_client = AsyncMock()
+    mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+    mock_client.__aexit__ = AsyncMock(return_value=False)
+    mock_client.get = AsyncMock(return_value=mock_resp)
+
+    config = _make_config("google")
+    with patch("app.services.oauth_service.httpx.AsyncClient", return_value=mock_client), \
+         pytest.raises(AuthenticationError, match="Google"):
+        await _fetch_user_info_google(config, "bad", "code")
+
+
+def test_google_token_exchange_uses_default_flow() -> None:
+    """Google token 交换应使用默认标准 OAuth 2.0 form-encoded 流程。"""
+    from app.services.oauth_service import _CUSTOM_TOKEN_EXCHANGERS
+
+    assert "google" not in _CUSTOM_TOKEN_EXCHANGERS
+
+
+def test_google_registered_in_dispatch_tables() -> None:
+    """Google 在授权 URL 和用户信息分发表中已注册。"""
+    from app.services.oauth_service import (
+        _CUSTOM_AUTHORIZE_BUILDERS,
+        _CUSTOM_USERINFO_FETCHERS,
+    )
+
+    assert "google" in _CUSTOM_AUTHORIZE_BUILDERS
+    assert "google" in _CUSTOM_USERINFO_FETCHERS
+
+
+def test_google_in_provider_factories() -> None:
+    """Google 已注册到 Provider 工厂。"""
+    from app.core.oauth_providers import _PROVIDER_FACTORIES
+
+    assert "google" in _PROVIDER_FACTORIES
 
 
 @pytest.mark.asyncio

@@ -164,6 +164,25 @@ def get_oidc_provider() -> OAuthProviderConfig | None:
     )
 
 
+def get_google_provider() -> OAuthProviderConfig | None:
+    """获取 Google OAuth Provider 配置。未配置时返回 None。"""
+    from app.core.config import settings
+
+    if not settings.oauth_google_client_id or not settings.oauth_google_client_secret:
+        return None
+
+    return OAuthProviderConfig(
+        name="google",
+        authorize_url="https://accounts.google.com/o/oauth2/v2/auth",
+        token_url="https://oauth2.googleapis.com/token",
+        userinfo_url="https://www.googleapis.com/oauth2/v2/userinfo",
+        client_id=settings.oauth_google_client_id,
+        client_secret=settings.oauth_google_client_secret,
+        scope=settings.oauth_google_scope,
+        redirect_uri=f"{settings.oauth_redirect_base_url}/oauth/callback/google",
+    )
+
+
 # Provider 注册表：名称 → 配置获取函数
 _PROVIDER_FACTORIES: dict[str, Callable[[], OAuthProviderConfig | None]] = {
     "github": get_github_provider,
@@ -171,6 +190,7 @@ _PROVIDER_FACTORIES: dict[str, Callable[[], OAuthProviderConfig | None]] = {
     "dingtalk": get_dingtalk_provider,
     "feishu": get_feishu_provider,
     "oidc": get_oidc_provider,
+    "google": get_google_provider,
 }
 
 
