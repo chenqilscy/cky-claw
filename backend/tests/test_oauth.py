@@ -10,6 +10,7 @@ import pytest
 from httpx import ASGITransport, AsyncClient
 
 from app.core.auth import create_access_token
+from app.core.exceptions import AuthenticationError, ConflictError, NotFoundError, ValidationError
 from app.main import app
 
 
@@ -1577,3 +1578,851 @@ async def test_authorize_feishu_via_api() -> None:
     assert resp.status_code == 200
     data = resp.json()
     assert "app_id=fs-app-id" in data["authorize_url"]
+
+
+# ======== handle_oauth_callback 全流程 ========
+
+
+@pytest.mark.asyncio
+async def test_handle_oauth_callback_success_new_user() -> None:
+    """handle_oauth_callback: 新用户完整流程。"""
+    from app.services.oauth_service import handle_oauth_callback
+
+    mock_redis = AsyncMock()
+    mock_redis.getdel = AsyncMock(return_value="github")
+    mock_config = _make_config("github")
+
+    mock_user = MagicMock()
+    mock_user.id = uuid.uuid4()
+    mock_user.role = "user"
+
+    mock_db = AsyncMock()
+
+    with patch("app.services.oauth_service.get_redis", return_value=mock_redis), \
+         patch("app.services.oauth_service.get_provider_config", return_value=mock_config), \
+         patch("app.services.oauth_service._exchange_code_for_token", return_value="access-token-123"), \
+         patch("app.services.oauth_service._fetch_user_info", return_value={"id": "gh-123", "login": "testuser", "email": "t@e.com"}), \
+         patch("app.services.oauth_service._find_or_create_user", return_value=mock_user):
+        token = await handle_oauth_callback(mock_db, "github", "auth-code", "valid-state")
+
+    assert token  # JWT 非空
+    mock_redis.getdel.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_handle_oauth_callback_invalid_state() -> None:
+    """handle_oauth_callback: state 验证失败。"""
+    from app.services.oauth_service import handle_oauth_callback
+
+    mock_redis = AsyncMock()
+    mock_redis.getdel = AsyncMock(return_value=None)
+    mock_db = AsyncMock()
+
+    with patch("app.services.oauth_service.get_redis", return_value=mock_redis):
+        with pytest.raises(ValidationError, match="state 验证失败"):
+            await handle_oauth_callback(mock_db, "github", "code", "bad-state")
+
+
+@pytest.mark.asyncio
+async def test_handle_oauth_callback_state_mismatch_provider() -> None:
+    """handle_oauth_callback: state 对应的 provider 不匹配。"""
+    from app.services.oauth_service import handle_oauth_callback
+
+    mock_redis = AsyncMock()
+    mock_redis.getdel = AsyncMock(return_value="dingtalk")
+
+    with patch("app.services.oauth_service.get_redis", return_value=mock_redis):
+        with pytest.raises(ValidationError, match="state 验证失败"):
+            await handle_oauth_callback(AsyncMock(), "github", "code", "state-123")
+
+
+@pytest.mark.asyncio
+async def test_handle_oauth_callback_unconfigured_provider() -> None:
+    """handle_oauth_callback: provider 未配置。"""
+    from app.services.oauth_service import handle_oauth_callback
+
+    mock_redis = AsyncMock()
+    mock_redis.getdel = AsyncMock(return_value="unknown")
+
+    with patch("app.services.oauth_service.get_redis", return_value=mock_redis), \
+         patch("app.services.oauth_service.get_provider_config", return_value=None):
+        with pytest.raises(ValidationError, match="不存在或未配置"):
+            await handle_oauth_callback(AsyncMock(), "unknown", "code", "state")
+
+
+# ======== bind_oauth_to_user ========
+
+
+@pytest.mark.asyncio
+async def test_bind_oauth_to_user_success_new_binding() -> None:
+    """bind_oauth_to_user: 创建新绑定。"""
+    from app.services.oauth_service import bind_oauth_to_user
+
+    mock_redis = AsyncMock()
+    mock_redis.getdel = AsyncMock(return_value="github")
+    mock_config = _make_config("github")
+
+    mock_user = MagicMock()
+    mock_user.id = uuid.uuid4()
+
+    mock_result = MagicMock()
+    mock_result.scalar_one_or_none.return_value = None
+
+    mock_db = AsyncMock()
+    mock_db.execute = AsyncMock(return_value=mock_result)
+    mock_db.add = MagicMock()
+    mock_db.commit = AsyncMock()
+    mock_db.refresh = AsyncMock()
+
+    with patch("app.services.oauth_service.get_redis", return_value=mock_redis), \
+         patch("app.services.oauth_service.get_provider_config", return_value=mock_config), \
+         patch("app.services.oauth_service._exchange_code_for_token", return_value="token-456"), \
+         patch("app.services.oauth_service._fetch_user_info", return_value={"id": "gh-999", "login": "user1", "email": "u@e.com"}), \
+         patch("app.services.oauth_service.encrypt_api_key", return_value="enc-token"):
+        result = await bind_oauth_to_user(mock_db, mock_user, "github", "code", "state")
+
+    mock_db.add.assert_called_once()
+    mock_db.commit.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_bind_oauth_to_user_already_bound_same_user() -> None:
+    """bind_oauth_to_user: 已绑定到当前用户，直接返回。"""
+    from app.services.oauth_service import bind_oauth_to_user
+
+    mock_redis = AsyncMock()
+    mock_redis.getdel = AsyncMock(return_value="github")
+    mock_config = _make_config("github")
+
+    user_id = uuid.uuid4()
+    mock_user = MagicMock()
+    mock_user.id = user_id
+
+    existing_conn = MagicMock()
+    existing_conn.user_id = user_id
+
+    mock_result = MagicMock()
+    mock_result.scalar_one_or_none.return_value = existing_conn
+
+    mock_db = AsyncMock()
+    mock_db.execute = AsyncMock(return_value=mock_result)
+
+    with patch("app.services.oauth_service.get_redis", return_value=mock_redis), \
+         patch("app.services.oauth_service.get_provider_config", return_value=mock_config), \
+         patch("app.services.oauth_service._exchange_code_for_token", return_value="token"), \
+         patch("app.services.oauth_service._fetch_user_info", return_value={"id": "gh-1", "login": "x"}):
+        result = await bind_oauth_to_user(mock_db, mock_user, "github", "code", "state")
+
+    assert result is existing_conn
+
+
+@pytest.mark.asyncio
+async def test_bind_oauth_to_user_conflict_other_user() -> None:
+    """bind_oauth_to_user: 已绑定到其他用户，抛出冲突错误。"""
+    from app.services.oauth_service import bind_oauth_to_user
+
+    mock_redis = AsyncMock()
+    mock_redis.getdel = AsyncMock(return_value="github")
+    mock_config = _make_config("github")
+
+    mock_user = MagicMock()
+    mock_user.id = uuid.uuid4()
+
+    existing_conn = MagicMock()
+    existing_conn.user_id = uuid.uuid4()  # 不同用户
+
+    mock_result = MagicMock()
+    mock_result.scalar_one_or_none.return_value = existing_conn
+
+    mock_db = AsyncMock()
+    mock_db.execute = AsyncMock(return_value=mock_result)
+
+    with patch("app.services.oauth_service.get_redis", return_value=mock_redis), \
+         patch("app.services.oauth_service.get_provider_config", return_value=mock_config), \
+         patch("app.services.oauth_service._exchange_code_for_token", return_value="token"), \
+         patch("app.services.oauth_service._fetch_user_info", return_value={"id": "gh-1", "login": "x"}):
+        with pytest.raises(ConflictError, match="已被其他用户绑定"):
+            await bind_oauth_to_user(mock_db, mock_user, "github", "code", "state")
+
+
+@pytest.mark.asyncio
+async def test_bind_oauth_no_user_id() -> None:
+    """bind_oauth_to_user: Provider 未返回 user id。"""
+    from app.services.oauth_service import bind_oauth_to_user
+
+    mock_redis = AsyncMock()
+    mock_redis.getdel = AsyncMock(return_value="github")
+    mock_config = _make_config("github")
+
+    with patch("app.services.oauth_service.get_redis", return_value=mock_redis), \
+         patch("app.services.oauth_service.get_provider_config", return_value=mock_config), \
+         patch("app.services.oauth_service._exchange_code_for_token", return_value="token"), \
+         patch("app.services.oauth_service._fetch_user_info", return_value={"login": "x"}):
+        with pytest.raises(AuthenticationError, match="未返回用户 ID"):
+            await bind_oauth_to_user(AsyncMock(), MagicMock(), "github", "code", "state")
+
+
+@pytest.mark.asyncio
+async def test_bind_oauth_invalid_state() -> None:
+    """bind_oauth_to_user: state 验证失败（Redis 返回 None）。"""
+    from app.services.oauth_service import bind_oauth_to_user
+
+    mock_redis = AsyncMock()
+    mock_redis.getdel = AsyncMock(return_value=None)
+
+    with patch("app.services.oauth_service.get_redis", return_value=mock_redis):
+        with pytest.raises(ValidationError, match="state 验证失败"):
+            await bind_oauth_to_user(AsyncMock(), MagicMock(), "github", "code", "bad-state")
+
+
+@pytest.mark.asyncio
+async def test_bind_oauth_unconfigured_provider() -> None:
+    """bind_oauth_to_user: provider 未配置。"""
+    from app.services.oauth_service import bind_oauth_to_user
+
+    mock_redis = AsyncMock()
+    mock_redis.getdel = AsyncMock(return_value="unknown")
+
+    with patch("app.services.oauth_service.get_redis", return_value=mock_redis), \
+         patch("app.services.oauth_service.get_provider_config", return_value=None):
+        with pytest.raises(ValidationError, match="不存在或未配置"):
+            await bind_oauth_to_user(AsyncMock(), MagicMock(), "unknown", "code", "state")
+
+
+# ======== get_user_connections / unbind_oauth ========
+
+
+@pytest.mark.asyncio
+async def test_get_user_connections() -> None:
+    """get_user_connections: 返回用户绑定列表。"""
+    from app.services.oauth_service import get_user_connections
+
+    mock_conn1 = MagicMock()
+    mock_conn2 = MagicMock()
+    mock_result = MagicMock()
+    mock_result.scalars.return_value.all.return_value = [mock_conn1, mock_conn2]
+
+    mock_db = AsyncMock()
+    mock_db.execute = AsyncMock(return_value=mock_result)
+
+    result = await get_user_connections(mock_db, uuid.uuid4())
+    assert len(result) == 2
+
+
+@pytest.mark.asyncio
+async def test_unbind_oauth_success() -> None:
+    """unbind_oauth: 成功解绑。"""
+    from app.services.oauth_service import unbind_oauth
+
+    mock_conn = MagicMock()
+    mock_result = MagicMock()
+    mock_result.scalar_one_or_none.return_value = mock_conn
+
+    mock_db = AsyncMock()
+    mock_db.execute = AsyncMock(return_value=mock_result)
+    mock_db.delete = AsyncMock()
+    mock_db.commit = AsyncMock()
+
+    mock_user = MagicMock()
+    mock_user.id = uuid.uuid4()
+    await unbind_oauth(mock_db, mock_user, "github")
+    mock_db.delete.assert_called_once_with(mock_conn)
+
+
+@pytest.mark.asyncio
+async def test_unbind_oauth_not_found() -> None:
+    """unbind_oauth: 绑定不存在。"""
+    from app.services.oauth_service import unbind_oauth
+
+    mock_result = MagicMock()
+    mock_result.scalar_one_or_none.return_value = None
+
+    mock_db = AsyncMock()
+    mock_db.execute = AsyncMock(return_value=mock_result)
+
+    with pytest.raises(NotFoundError, match="未找到"):
+        await unbind_oauth(mock_db, MagicMock(id=uuid.uuid4()), "github")
+
+
+# ======== Provider 网络异常 ========
+
+
+@pytest.mark.asyncio
+async def test_wecom_exchange_network_error() -> None:
+    """企微 token 交换网络异常。"""
+    from app.services.oauth_service import _exchange_code_for_token_wecom
+    config = _make_config("wecom")
+
+    with patch("httpx.AsyncClient.get", side_effect=httpx.ConnectError("timeout")):
+        with pytest.raises(AuthenticationError, match="暂不可用"):
+            await _exchange_code_for_token_wecom(config, "code")
+
+
+@pytest.mark.asyncio
+async def test_wecom_exchange_non_200() -> None:
+    """企微 token 交换非 200 响应。"""
+    from app.services.oauth_service import _exchange_code_for_token_wecom
+    config = _make_config("wecom")
+
+    mock_resp = MagicMock()
+    mock_resp.status_code = 500
+
+    with patch("httpx.AsyncClient.get", return_value=mock_resp):
+        with pytest.raises(AuthenticationError, match="获取失败"):
+            await _exchange_code_for_token_wecom(config, "code")
+
+
+@pytest.mark.asyncio
+async def test_wecom_exchange_no_token() -> None:
+    """企微响应缺少 access_token。"""
+    from app.services.oauth_service import _exchange_code_for_token_wecom
+    config = _make_config("wecom")
+
+    mock_resp = MagicMock()
+    mock_resp.status_code = 200
+    mock_resp.json.return_value = {"errcode": 0}
+
+    with patch("httpx.AsyncClient.get", return_value=mock_resp):
+        with pytest.raises(AuthenticationError, match="缺少 access_token"):
+            await _exchange_code_for_token_wecom(config, "code")
+
+
+@pytest.mark.asyncio
+async def test_wecom_userinfo_network_error() -> None:
+    """企微用户信息获取网络异常。"""
+    from app.services.oauth_service import _fetch_user_info_wecom
+    config = _make_config("wecom")
+
+    with patch("httpx.AsyncClient.get", side_effect=httpx.ConnectError("timeout")):
+        with pytest.raises(AuthenticationError, match="获取企微用户信息失败"):
+            await _fetch_user_info_wecom(config, "token", "code")
+
+
+@pytest.mark.asyncio
+async def test_wecom_userinfo_non_200() -> None:
+    """企微用户信息非 200 响应。"""
+    from app.services.oauth_service import _fetch_user_info_wecom
+    config = _make_config("wecom")
+
+    mock_resp = MagicMock()
+    mock_resp.status_code = 500
+
+    with patch("httpx.AsyncClient.get", return_value=mock_resp):
+        with pytest.raises(AuthenticationError, match="获取企微用户身份失败"):
+            await _fetch_user_info_wecom(config, "token", "code")
+
+
+@pytest.mark.asyncio
+async def test_wecom_userinfo_errcode() -> None:
+    """企微用户信息 errcode 非 0。"""
+    from app.services.oauth_service import _fetch_user_info_wecom
+    config = _make_config("wecom")
+
+    mock_resp = MagicMock()
+    mock_resp.status_code = 200
+    mock_resp.json.return_value = {"errcode": 42, "errmsg": "bad"}
+
+    with patch("httpx.AsyncClient.get", return_value=mock_resp):
+        with pytest.raises(AuthenticationError, match="获取企微用户身份失败"):
+            await _fetch_user_info_wecom(config, "token", "code")
+
+
+@pytest.mark.asyncio
+async def test_dingtalk_exchange_network_error() -> None:
+    """钉钉 token 交换网络异常。"""
+    from app.services.oauth_service import _exchange_code_for_token_dingtalk
+    config = _make_config("dingtalk")
+
+    with patch("httpx.AsyncClient.post", side_effect=httpx.ConnectError("timeout")):
+        with pytest.raises(AuthenticationError, match="暂不可用"):
+            await _exchange_code_for_token_dingtalk(config, "code")
+
+
+@pytest.mark.asyncio
+async def test_dingtalk_exchange_non_200() -> None:
+    """钉钉 token 交换非 200 响应。"""
+    from app.services.oauth_service import _exchange_code_for_token_dingtalk
+    config = _make_config("dingtalk")
+
+    mock_resp = MagicMock()
+    mock_resp.status_code = 500
+
+    with patch("httpx.AsyncClient.post", return_value=mock_resp):
+        with pytest.raises(AuthenticationError, match="获取失败"):
+            await _exchange_code_for_token_dingtalk(config, "code")
+
+
+@pytest.mark.asyncio
+async def test_dingtalk_userinfo_network_error() -> None:
+    """钉钉用户信息网络异常。"""
+    from app.services.oauth_service import _fetch_user_info_dingtalk
+    config = _make_config("dingtalk")
+
+    with patch("httpx.AsyncClient.get", side_effect=httpx.ConnectError("timeout")):
+        with pytest.raises(AuthenticationError, match="获取钉钉用户信息失败"):
+            await _fetch_user_info_dingtalk(config, "token", "code")
+
+
+@pytest.mark.asyncio
+async def test_feishu_exchange_network_error() -> None:
+    """飞书 token 交换网络异常。"""
+    from app.services.oauth_service import _exchange_code_for_token_feishu
+    config = _make_config("feishu")
+
+    with patch("httpx.AsyncClient.post", side_effect=httpx.ConnectError("timeout")):
+        with pytest.raises(AuthenticationError, match="暂不可用"):
+            await _exchange_code_for_token_feishu(config, "code")
+
+
+@pytest.mark.asyncio
+async def test_feishu_exchange_user_token_non_200() -> None:
+    """飞书 user_access_token 非 200。"""
+    from app.services.oauth_service import _exchange_code_for_token_feishu
+    config = _make_config("feishu")
+
+    app_resp = MagicMock()
+    app_resp.status_code = 200
+    app_resp.json.return_value = {"app_access_token": "app-token"}
+
+    user_resp = MagicMock()
+    user_resp.status_code = 400
+
+    with patch("httpx.AsyncClient.post", side_effect=[app_resp, user_resp]):
+        with pytest.raises(AuthenticationError, match="user_access_token 获取失败"):
+            await _exchange_code_for_token_feishu(config, "code")
+
+
+@pytest.mark.asyncio
+async def test_feishu_exchange_no_access_token() -> None:
+    """飞书 user_access_token 响应缺少 token。"""
+    from app.services.oauth_service import _exchange_code_for_token_feishu
+    config = _make_config("feishu")
+
+    app_resp = MagicMock()
+    app_resp.status_code = 200
+    app_resp.json.return_value = {"app_access_token": "app-tok"}
+
+    user_resp = MagicMock()
+    user_resp.status_code = 200
+    user_resp.json.return_value = {"msg": "bad code"}
+
+    with patch("httpx.AsyncClient.post", side_effect=[app_resp, user_resp]):
+        with pytest.raises(AuthenticationError, match="user_access_token 获取失败"):
+            await _exchange_code_for_token_feishu(config, "code")
+
+
+@pytest.mark.asyncio
+async def test_feishu_exchange_app_token_non_200() -> None:
+    """飞书 app_access_token 请求非 200 状态码。"""
+    from app.services.oauth_service import _exchange_code_for_token_feishu
+    config = _make_config("feishu")
+
+    app_resp = MagicMock()
+    app_resp.status_code = 500
+
+    with patch("httpx.AsyncClient.post", return_value=app_resp):
+        with pytest.raises(AuthenticationError, match="飞书 app_access_token 获取失败"):
+            await _exchange_code_for_token_feishu(config, "code")
+
+
+@pytest.mark.asyncio
+async def test_feishu_userinfo_network_error() -> None:
+    """飞书用户信息网络异常。"""
+    from app.services.oauth_service import _fetch_user_info_feishu
+    config = _make_config("feishu")
+
+    with patch("httpx.AsyncClient.get", side_effect=httpx.ConnectError("timeout")):
+        with pytest.raises(AuthenticationError, match="获取飞书用户信息失败"):
+            await _fetch_user_info_feishu(config, "token", "code")
+
+
+@pytest.mark.asyncio
+async def test_feishu_userinfo_non_200() -> None:
+    """飞书用户信息非 200。"""
+    from app.services.oauth_service import _fetch_user_info_feishu
+    config = _make_config("feishu")
+
+    mock_resp = MagicMock()
+    mock_resp.status_code = 500
+
+    with patch("httpx.AsyncClient.get", return_value=mock_resp):
+        with pytest.raises(AuthenticationError, match="获取飞书用户信息失败"):
+            await _fetch_user_info_feishu(config, "token", "code")
+
+
+# ======== 默认 _exchange_code_for_token ========
+
+
+@pytest.mark.asyncio
+async def test_default_exchange_code_network_error() -> None:
+    """默认 token 交换网络异常。"""
+    from app.services.oauth_service import _exchange_code_for_token
+    config = _make_config("github")
+
+    with patch("httpx.AsyncClient.post", side_effect=httpx.ConnectError("timeout")):
+        with pytest.raises(AuthenticationError, match="暂不可用"):
+            await _exchange_code_for_token(config, "code")
+
+
+@pytest.mark.asyncio
+async def test_default_exchange_code_non_200() -> None:
+    """默认 token 交换非 200。"""
+    from app.services.oauth_service import _exchange_code_for_token
+    config = _make_config("github")
+
+    mock_resp = MagicMock()
+    mock_resp.status_code = 400
+    mock_resp.text = "bad request"
+
+    with patch("httpx.AsyncClient.post", return_value=mock_resp):
+        with pytest.raises(AuthenticationError, match="授权码验证失败"):
+            await _exchange_code_for_token(config, "code")
+
+
+@pytest.mark.asyncio
+async def test_default_exchange_code_no_token() -> None:
+    """默认 token 交换无 access_token。"""
+    from app.services.oauth_service import _exchange_code_for_token
+    config = _make_config("github")
+
+    mock_resp = MagicMock()
+    mock_resp.status_code = 200
+    mock_resp.json.return_value = {"error": "bad_verification_code", "error_description": "Bad code"}
+
+    with patch("httpx.AsyncClient.post", return_value=mock_resp):
+        with pytest.raises(AuthenticationError, match="token 获取失败"):
+            await _exchange_code_for_token(config, "code")
+
+
+# ======== 默认 _fetch_user_info ========
+
+
+@pytest.mark.asyncio
+async def test_default_fetch_userinfo_network_error() -> None:
+    """默认 userinfo 获取网络异常。"""
+    from app.services.oauth_service import _fetch_user_info
+    config = _make_config("github")
+
+    with patch("httpx.AsyncClient.get", side_effect=httpx.ConnectError("timeout")):
+        with pytest.raises(AuthenticationError, match="获取 OAuth 用户信息失败"):
+            await _fetch_user_info(config, "token")
+
+
+@pytest.mark.asyncio
+async def test_default_fetch_userinfo_non_200() -> None:
+    """默认 userinfo 获取非 200。"""
+    from app.services.oauth_service import _fetch_user_info
+    config = _make_config("github")
+
+    mock_resp = MagicMock()
+    mock_resp.status_code = 401
+
+    with patch("httpx.AsyncClient.get", return_value=mock_resp):
+        with pytest.raises(AuthenticationError, match="获取 OAuth 用户信息失败"):
+            await _fetch_user_info(config, "token")
+
+
+@pytest.mark.asyncio
+async def test_default_fetch_userinfo_success() -> None:
+    """默认 userinfo 成功获取。"""
+    from app.services.oauth_service import _fetch_user_info
+    config = _make_config("github")
+
+    mock_resp = MagicMock()
+    mock_resp.status_code = 200
+    mock_resp.json.return_value = {"id": 123, "login": "ghuser", "email": "gh@e.com"}
+
+    with patch("httpx.AsyncClient.get", return_value=mock_resp):
+        info = await _fetch_user_info(config, "token")
+    assert info["id"] == 123
+    assert info["login"] == "ghuser"
+
+
+# ======== _find_or_create_user ========
+
+
+@pytest.mark.asyncio
+async def test_find_or_create_user_existing_binding() -> None:
+    """_find_or_create_user: 已有绑定 → 返回关联用户。"""
+    from app.services.oauth_service import _find_or_create_user
+
+    user_id = uuid.uuid4()
+    mock_conn = MagicMock()
+    mock_conn.user_id = user_id
+    mock_conn.access_token_encrypted = ""
+    mock_conn.provider_username = ""
+    mock_conn.provider_avatar_url = ""
+
+    mock_user = MagicMock()
+    mock_user.id = user_id
+    mock_user.is_active = True
+
+    # 第一次 execute → 查 OAuthConnection → 有
+    result1 = MagicMock()
+    result1.scalar_one_or_none.return_value = mock_conn
+    # 第二次 execute → 查 User → 有
+    result2 = MagicMock()
+    result2.scalar_one_or_none.return_value = mock_user
+
+    mock_db = AsyncMock()
+    mock_db.execute = AsyncMock(side_effect=[result1, result2])
+    mock_db.commit = AsyncMock()
+
+    with patch("app.services.oauth_service.encrypt_api_key", return_value="enc"):
+        user = await _find_or_create_user(
+            mock_db, "github", {"id": "gh-1", "login": "u", "avatar_url": "a"}, "token"
+        )
+
+    assert user is mock_user
+
+
+@pytest.mark.asyncio
+async def test_find_or_create_user_existing_binding_user_disabled() -> None:
+    """_find_or_create_user: 已有绑定但用户停用 → 抛出异常。"""
+    from app.services.oauth_service import _find_or_create_user
+
+    mock_conn = MagicMock()
+    mock_conn.user_id = uuid.uuid4()
+    mock_conn.access_token_encrypted = ""
+    mock_conn.provider_username = ""
+    mock_conn.provider_avatar_url = ""
+
+    result1 = MagicMock()
+    result1.scalar_one_or_none.return_value = mock_conn
+    result2 = MagicMock()
+    result2.scalar_one_or_none.return_value = None  # 用户不存在/停用
+
+    mock_db = AsyncMock()
+    mock_db.execute = AsyncMock(side_effect=[result1, result2])
+    mock_db.commit = AsyncMock()
+
+    with patch("app.services.oauth_service.encrypt_api_key", return_value="enc"):
+        with pytest.raises(AuthenticationError, match="已停用"):
+            await _find_or_create_user(
+                mock_db, "github", {"id": "gh-1", "login": "u"}, "token"
+            )
+
+
+@pytest.mark.asyncio
+async def test_find_or_create_user_email_match() -> None:
+    """_find_or_create_user: 无绑定但邮箱匹配 → 自动绑定。"""
+    from app.services.oauth_service import _find_or_create_user
+
+    existing_user = MagicMock()
+    existing_user.id = uuid.uuid4()
+    existing_user.avatar_url = None
+
+    # 第一次 execute → 查 OAuthConnection → 无
+    result1 = MagicMock()
+    result1.scalar_one_or_none.return_value = None
+    # 第二次 execute → 查 email 匹配 → 有
+    result2 = MagicMock()
+    result2.scalar_one_or_none.return_value = existing_user
+
+    mock_db = AsyncMock()
+    mock_db.execute = AsyncMock(side_effect=[result1, result2])
+    mock_db.add = MagicMock()
+    mock_db.commit = AsyncMock()
+
+    with patch("app.services.oauth_service.encrypt_api_key", return_value="enc"):
+        user = await _find_or_create_user(
+            mock_db, "github",
+            {"id": "gh-2", "login": "u2", "email": "match@e.com", "avatar_url": "https://img.com/a.png"},
+            "token",
+        )
+
+    assert user is existing_user
+    assert existing_user.avatar_url == "https://img.com/a.png"
+
+
+@pytest.mark.asyncio
+async def test_find_or_create_user_new_user() -> None:
+    """_find_or_create_user: 无绑定无邮箱匹配 → 创建新用户。"""
+    from app.services.oauth_service import _find_or_create_user
+
+    # 查 OAuthConnection → 无
+    result1 = MagicMock()
+    result1.scalar_one_or_none.return_value = None
+    # 查 email → 无
+    result2 = MagicMock()
+    result2.scalar_one_or_none.return_value = None
+    # 查 username 唯一性 → 无冲突
+    result3 = MagicMock()
+    result3.scalar_one_or_none.return_value = None
+
+    mock_db = AsyncMock()
+    mock_db.execute = AsyncMock(side_effect=[result1, result2, result3])
+    mock_db.add = MagicMock()
+    mock_db.flush = AsyncMock()
+    mock_db.commit = AsyncMock()
+    mock_db.refresh = AsyncMock()
+
+    with patch("app.services.oauth_service.encrypt_api_key", return_value="enc"):
+        user = await _find_or_create_user(
+            mock_db, "github",
+            {"id": "gh-3", "login": "newuser", "email": "new@e.com", "avatar_url": ""},
+            "token",
+        )
+
+    assert user.username == "newuser"
+    assert mock_db.add.call_count == 2  # user + conn
+
+
+@pytest.mark.asyncio
+async def test_find_or_create_user_username_conflict_retry() -> None:
+    """_find_or_create_user: 用户名冲突后重试。"""
+    from app.services.oauth_service import _find_or_create_user
+
+    result1 = MagicMock()
+    result1.scalar_one_or_none.return_value = None  # 无绑定
+    result2 = MagicMock()
+    result2.scalar_one_or_none.return_value = None  # 无邮箱匹配
+    result_conflict = MagicMock()
+    result_conflict.scalar_one_or_none.return_value = MagicMock()  # 用户名已存在
+    result_ok = MagicMock()
+    result_ok.scalar_one_or_none.return_value = None  # 带后缀的用户名可用
+
+    mock_db = AsyncMock()
+    mock_db.execute = AsyncMock(side_effect=[result1, result2, result_conflict, result_ok])
+    mock_db.add = MagicMock()
+    mock_db.flush = AsyncMock()
+    mock_db.commit = AsyncMock()
+    mock_db.refresh = AsyncMock()
+
+    with patch("app.services.oauth_service.encrypt_api_key", return_value="enc"):
+        user = await _find_or_create_user(
+            mock_db, "github",
+            {"id": "gh-4", "login": "taken", "email": "taken@e.com"},
+            "token",
+        )
+
+    # User 构建时 username 应带后缀 _1（首次冲突）
+    assert user.username == "taken_1"
+
+
+@pytest.mark.asyncio
+async def test_find_or_create_user_no_id() -> None:
+    """_find_or_create_user: Provider 未返回 id。"""
+    from app.services.oauth_service import _find_or_create_user
+
+    with pytest.raises(AuthenticationError, match="未返回用户 ID"):
+        await _find_or_create_user(AsyncMock(), "github", {"login": "x"}, "token")
+
+
+@pytest.mark.asyncio
+async def test_find_or_create_user_integrity_error() -> None:
+    """_find_or_create_user: flush 时唯一约束冲突。"""
+    from sqlalchemy.exc import IntegrityError
+    from app.services.oauth_service import _find_or_create_user
+
+    result1 = MagicMock()
+    result1.scalar_one_or_none.return_value = None
+    result2 = MagicMock()
+    result2.scalar_one_or_none.return_value = None
+    result3 = MagicMock()
+    result3.scalar_one_or_none.return_value = None
+
+    mock_db = AsyncMock()
+    mock_db.execute = AsyncMock(side_effect=[result1, result2, result3])
+    mock_db.add = MagicMock()
+    mock_db.flush = AsyncMock(side_effect=IntegrityError("dup", {}, Exception()))
+    mock_db.rollback = AsyncMock()
+
+    with patch("app.services.oauth_service.encrypt_api_key", return_value="enc"):
+        with pytest.raises(ConflictError, match="已被注册"):
+            await _find_or_create_user(
+                mock_db, "github",
+                {"id": "gh-5", "login": "conflict_user", "email": "c@e.com"},
+                "token",
+            )
+
+
+@pytest.mark.asyncio
+async def test_find_or_create_user_no_email() -> None:
+    """_find_or_create_user: 无邮箱时跳过邮箱匹配。"""
+    from app.services.oauth_service import _find_or_create_user
+
+    result1 = MagicMock()
+    result1.scalar_one_or_none.return_value = None  # 无绑定
+    # 无邮箱时直接跳到 username 检查
+    result2 = MagicMock()
+    result2.scalar_one_or_none.return_value = None
+
+    mock_db = AsyncMock()
+    mock_db.execute = AsyncMock(side_effect=[result1, result2])
+    mock_db.add = MagicMock()
+    mock_db.flush = AsyncMock()
+    mock_db.commit = AsyncMock()
+    mock_db.refresh = AsyncMock()
+
+    with patch("app.services.oauth_service.encrypt_api_key", return_value="enc"):
+        user = await _find_or_create_user(
+            mock_db, "github",
+            {"id": "gh-noemail", "login": "noemail_user"},
+            "token",
+        )
+
+    assert user.username == "noemail_user"
+    # email 应生成 fallback
+    assert "oauth.github" in user.email
+
+
+@pytest.mark.asyncio
+async def test_find_or_create_user_max_username_retries() -> None:
+    """_find_or_create_user: 用户名重试超过最大次数。"""
+    from app.services.oauth_service import _find_or_create_user
+
+    result_no_binding = MagicMock()
+    result_no_binding.scalar_one_or_none.return_value = None
+    result_no_email = MagicMock()
+    result_no_email.scalar_one_or_none.return_value = None
+    # 每次检查用户名都发现已存在
+    result_conflict = MagicMock()
+    result_conflict.scalar_one_or_none.return_value = MagicMock()
+
+    mock_db = AsyncMock()
+    # 第 1 次=绑定查询 None, 第 2 次=邮箱查询 None, 之后全冲突
+    mock_db.execute = AsyncMock(
+        side_effect=[result_no_binding, result_no_email] + [result_conflict] * 101
+    )
+
+    with pytest.raises(ConflictError, match="无法生成唯一用户名"):
+        await _find_or_create_user(
+            mock_db, "github",
+            {"id": "gh-max", "login": "popular", "email": "p@e.com"},
+            "token",
+        )
+
+
+# ======== OIDC userinfo 非 200 ========
+
+
+@pytest.mark.asyncio
+async def test_oidc_fetch_userinfo_status_error() -> None:
+    """OIDC userinfo 非 200 带日志。"""
+    from app.services.oauth_service import _fetch_user_info_oidc
+    config = _make_config("oidc")
+
+    mock_resp = MagicMock()
+    mock_resp.status_code = 403
+
+    with patch("httpx.AsyncClient.get", return_value=mock_resp):
+        with pytest.raises(AuthenticationError, match="获取 OIDC 用户信息失败"):
+            await _fetch_user_info_oidc(config, "token", "code")
+
+
+# ======== Google userinfo 非 200 ========
+
+
+@pytest.mark.asyncio
+async def test_google_fetch_userinfo_status_error() -> None:
+    """Google userinfo 非 200 带日志。"""
+    from app.services.oauth_service import _fetch_user_info_google
+    config = _make_config("google")
+
+    mock_resp = MagicMock()
+    mock_resp.status_code = 403
+
+    with patch("httpx.AsyncClient.get", return_value=mock_resp):
+        with pytest.raises(AuthenticationError, match="获取 Google 用户信息失败"):
+            await _fetch_user_info_google(config, "token", "code")
