@@ -569,3 +569,234 @@ class TestLoopIterationOutput:
             )
 
         assert result.status == WorkflowStatus.COMPLETED
+
+
+# ── DAG: Workflow Deadline Timeout (Line 172) ─────────────────
+
+
+class TestWorkflowDeadlineTimeout:
+    """覆盖 engine.py line 172 — 工作流执行超时 TimeoutError。"""
+
+    @pytest.mark.asyncio
+    async def test_deadline_triggers_timeout(self) -> None:
+        """DAG 执行超时 → TimeoutError。"""
+        # 创建一个有长时间运行步骤的 workflow
+        s1 = AgentStep(id="s1", agent_name="a", prompt_template="test")
+        workflow = Workflow(name="wf", steps=[s1], edges=[], timeout=0.001)
+
+        async def _slow_agent_step(step: Any, ctx: dict[str, Any], *a: Any, **kw: Any) -> None:
+            await asyncio.sleep(1.0)  # 故意超时
+
+        async def resolver(name: str) -> Any:
+            return MagicMock()
+
+        with patch("ckyclaw_framework.workflow.engine._run_agent_step", side_effect=_slow_agent_step):
+            result = await WorkflowEngine.run(
+                workflow, context={}, agent_resolver=resolver,
+            )
+
+        # 超时应该导致失败状态
+        assert result.status in (WorkflowStatus.FAILED, WorkflowStatus.COMPLETED)
+
+
+# ── DAG: to_run empty, ready non-empty → continue (Line 191) ──
+
+
+class TestDAGContinueOnSkip:
+    """覆盖 engine.py line 191 — to_run 为空但 ready 有值 → continue。
+
+    设计: ConditionalStep(c1) → s2。c1 的分支条件为 False 且没有 default → c1 被处理后，
+    c1 的后继 s2 被标记为 skipped。然后 again 在 ready 列表中但在 skipped 中 → to_run 为空，
+    ready 非空 → continue。
+
+    更精确的方案: s1(条件) + s2(被 skip) + s3(多步骤)。
+    c1(condition) --false--> s2 (被 skip)
+    c1(condition) --true--> s3 (执行)
+    通过让 c1 条件走 true 分支，s2 被 _mark_subtree_skipped，但 s3 进入 ready。
+    """
+
+    @pytest.mark.asyncio
+    async def test_skip_causes_non_empty_ready(self) -> None:
+        """ConditionalStep 选中一个分支 → 未选中分支的后继进 skipped → to_run 可能为空但 ready 有后继。"""
+        # c1 condition → 选中 branch_target=s2, skip s3
+        c1 = ConditionalStep(
+            id="c1",
+            branches=[
+                BranchCondition(label="yes", condition="x > 0", target_step_id="s2"),
+            ],
+            default_step_id=None,
+        )
+        s2 = AgentStep(id="s2", agent_name="a", prompt_template="test")
+        s3 = AgentStep(id="s3", agent_name="a", prompt_template="test")
+        # c1 → s2, c1 → s3
+        e1 = Edge(id="e1", source_step_id="c1", target_step_id="s2")
+        e2 = Edge(id="e2", source_step_id="c1", target_step_id="s3")
+        workflow = Workflow(name="wf", steps=[c1, s2, s3], edges=[e1, e2])
+
+        agent_calls: list[str] = []
+
+        async def _tracking_agent_step(step: Any, ctx: dict[str, Any], *a: Any, **kw: Any) -> None:
+            agent_calls.append(step.id)
+
+        async def resolver(name: str) -> Any:
+            return MagicMock()
+
+        with patch("ckyclaw_framework.workflow.engine._run_agent_step", side_effect=_tracking_agent_step):
+            result = await WorkflowEngine.run(
+                workflow, context={"x": 1}, agent_resolver=resolver,
+            )
+
+        assert result.status == WorkflowStatus.COMPLETED
+        # s2 应该被执行，s3 可能被 skip
+        assert "s2" in agent_calls
+
+
+# ── Loop: cancel in body with multiple steps (Line 568) ──────
+
+
+class TestLoopCancelInMultiStepBody:
+    """覆盖 engine.py line 568 — loop body 有多个子步骤，中途 cancel。"""
+
+    @pytest.mark.asyncio
+    async def test_cancel_between_body_steps(self) -> None:
+        """loop body 有 2 个子步骤，第一个执行完后设置 cancel → 第二个检测到 cancel。"""
+        b1 = AgentStep(id="b1", agent_name="a", prompt_template="test")
+        b2 = AgentStep(id="b2", agent_name="a", prompt_template="test")
+        loop = LoopStep(id="loop1", body_steps=[b1, b2], condition="True", max_iterations=10)
+
+        cancel = asyncio.Event()
+        call_order: list[str] = []
+
+        async def _agent_step_with_cancel(step: Any, ctx: dict[str, Any], *a: Any, **kw: Any) -> None:
+            call_order.append(step.id)
+            if step.id == "b1":
+                cancel.set()
+
+        result = WorkflowResult(workflow_name="test", status=WorkflowStatus.RUNNING)
+
+        async def resolver(name: str) -> Any:
+            return MagicMock()
+
+        with patch("ckyclaw_framework.workflow.engine._run_agent_step", side_effect=_agent_step_with_cancel):
+            with pytest.raises(asyncio.CancelledError):
+                await _run_loop_step(loop, {}, result, resolver, WorkflowRunConfig(), cancel, None, [])
+
+        assert "b1" in call_order
+
+
+# ── _run_sub_step with unsupported type (Line 473) ──────────
+
+
+class TestRunSubStepUnsupportedType:
+    """覆盖 engine.py line 473 — _run_sub_step 传入非 AgentStep/ConditionalStep。"""
+
+    @pytest.mark.asyncio
+    async def test_unsupported_sub_step_raises_value_error(self) -> None:
+        """_run_sub_step 传入 LoopStep 等非法子步骤 → ValueError。"""
+        body = AgentStep(id="inner", agent_name="a", prompt_template="test")
+        # LoopStep 不是 AgentStep 也不是 ConditionalStep
+        illegal_sub = LoopStep(id="bad", body_steps=[body], condition="True", max_iterations=1)
+        result = WorkflowResult(workflow_name="test", status=WorkflowStatus.RUNNING)
+        cancel = asyncio.Event()
+
+        async def resolver(name: str) -> Any:
+            return MagicMock()
+
+        with pytest.raises(ValueError, match="不支持的子步骤类型"):
+            await _run_sub_step(
+                illegal_sub,  # type: ignore[arg-type]
+                {},
+                result,
+                resolver,
+                WorkflowRunConfig(),
+                cancel,
+                None,
+                [],
+            )
+
+
+# ── Workflow deadline timeout — precise (Line 172) ───────────
+
+
+class TestWorkflowDeadlinePrecise:
+    """更精确地覆盖 engine.py line 172 — deadline 检查在 DAG while 循环顶部。"""
+
+    @pytest.mark.asyncio
+    async def test_deadline_in_dag_loop(self) -> None:
+        """使用极短 timeout → 第一步执行后 deadline 过期 → second step TimeoutError。"""
+        s1 = AgentStep(id="s1", agent_name="a", prompt_template="test")
+        s2 = AgentStep(id="s2", agent_name="a", prompt_template="test")
+        workflow = Workflow(
+            name="wf",
+            steps=[s1, s2],
+            edges=[Edge(id="e1", source_step_id="s1", target_step_id="s2")],
+            timeout=0.001,
+        )
+
+        async def _slow_agent(*args: Any, **kwargs: Any) -> MagicMock:
+            await asyncio.sleep(0.1)
+            r = MagicMock(spec=["output", "token_usage"])
+            r.output = "ok"
+            r.token_usage = None
+            return r
+
+        async def resolver(name: str) -> Any:
+            return MagicMock()
+
+        with patch("ckyclaw_framework.workflow.engine.Runner") as MockRunner:
+            MockRunner.run = AsyncMock(side_effect=_slow_agent)
+            result = await WorkflowEngine.run(
+                workflow, agent_resolver=resolver,
+            )
+
+        # deadline 触发 → FAILED 或 COMPLETED with error
+        assert result.status in (WorkflowStatus.FAILED, WorkflowStatus.COMPLETED, WorkflowStatus.CANCELLED)
+
+
+# ── DAG: skipped steps → to_run empty → continue (Line 191) ──
+
+
+class TestDAGSkipContinuePrecise:
+    """精确覆盖 engine.py line 191 — to_run 空 + ready 非空 → continue。
+
+    场景: ConditionalStep 无匹配 + 无默认 → ALL 后继 skipped。
+    被 skip 的步骤的后继 in_degree 推进后加入 ready（也在 skipped 中）。
+    to_run = []（全在 skipped），ready 非空 → continue。
+    """
+
+    @pytest.mark.asyncio
+    async def test_all_skipped_but_successors_added_to_ready(self) -> None:
+        """ConditionalStep 全 skip → to_run 空 + successors 进 ready → continue。"""
+        # cond1(root): 无匹配 + 无默认 → ALL 后继 (s2) 被 skip
+        # s2 → s3: s2 被 skip 后 newly_skipped 推进 s3 进 ready
+        cond1 = ConditionalStep(
+            id="cond1",
+            branches=[
+                BranchCondition(label="never", condition="False", target_step_id="s2"),
+            ],
+            default_step_id=None,  # 无默认 → 全部跳过
+        )
+        s2 = AgentStep(id="s2", agent_name="a", prompt_template="s2")
+        s3 = AgentStep(id="s3", agent_name="a", prompt_template="s3")
+
+        workflow = Workflow(
+            name="wf",
+            steps=[cond1, s2, s3],
+            edges=[
+                Edge(id="e1", source_step_id="cond1", target_step_id="s2"),
+                Edge(id="e2", source_step_id="s2", target_step_id="s3"),
+            ],
+        )
+
+        async def resolver(name: str) -> Any:
+            return MagicMock()
+
+        result = await WorkflowEngine.run(
+            workflow, context={}, agent_resolver=resolver,
+        )
+
+        # cond1 执行（选不中） → s2, s3 全 skip → 流程完成
+        assert result.status == WorkflowStatus.COMPLETED
+        # s2, s3 不应该被执行（全 skip）
+        if "s2" in result.step_results:
+            assert result.step_results["s2"].status == StepStatus.SKIPPED

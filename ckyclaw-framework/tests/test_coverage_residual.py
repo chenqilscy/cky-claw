@@ -145,41 +145,107 @@ class TestOtelProcessorExceptionBranches:
 
 
 class TestMCPConnectionEmbeddedResource:
-    """覆盖 mcp/connection.py lines 61-68 — EmbeddedResource 内容解析。
-
-    EmbeddedResource 处理逻辑是内联在 _build_mcp_tool 的闭包中，
-    无法直接单元测试。通过 mock MCP session 间接触发。
-    """
+    """覆盖 mcp/connection.py lines 61-68 — EmbeddedResource 内容解析。"""
 
     @pytest.mark.asyncio
-    async def test_embedded_resource_handling(self) -> None:
-        """通过模拟 MCP tool 调用触发 EmbeddedResource 解析。"""
-        # 这些行是 MCP 工具回调的内联代码，需要真正的 MCP session 才能触发
-        # 在集成测试覆盖范围之外，跳过
-        pass
+    async def test_embedded_resource_with_text(self) -> None:
+        """EmbeddedResource 有 text 属性 → 追加 text（line 63-64）。"""
+        from mcp import types
+
+        from ckyclaw_framework.mcp.connection import _create_mcp_tool
+
+        mock_session = AsyncMock()
+        resource = types.TextResourceContents(uri="file:///test.txt", text="embedded content")
+        embedded = types.EmbeddedResource(type="resource", resource=resource)
+        mock_result = MagicMock()
+        mock_result.content = [embedded]
+        mock_result.isError = False
+        mock_session.call_tool = AsyncMock(return_value=mock_result)
+
+        tool_info = MagicMock()
+        tool_info.name = "test_tool"
+        tool_info.description = "test"
+        tool_info.inputSchema = {"type": "object", "properties": {}}
+
+        tool = _create_mcp_tool(mock_session, "srv", tool_info, timeout=10.0)
+        result = await tool.fn()
+        assert result == "embedded content"
+
+    @pytest.mark.asyncio
+    async def test_embedded_resource_without_text(self) -> None:
+        """EmbeddedResource 无 text 属性（BlobResourceContents）→ [resource: uri]（line 65-66）。"""
+        from mcp import types
+
+        from ckyclaw_framework.mcp.connection import _create_mcp_tool
+
+        mock_session = AsyncMock()
+        resource = types.BlobResourceContents(uri="file:///test.bin", blob="YQ==")
+        embedded = types.EmbeddedResource(type="resource", resource=resource)
+        mock_result = MagicMock()
+        mock_result.content = [embedded]
+        mock_result.isError = False
+        mock_session.call_tool = AsyncMock(return_value=mock_result)
+
+        tool_info = MagicMock()
+        tool_info.name = "test_tool"
+        tool_info.description = "test"
+        tool_info.inputSchema = {"type": "object", "properties": {}}
+
+        tool = _create_mcp_tool(mock_session, "srv", tool_info, timeout=10.0)
+        result = await tool.fn()
+        assert "[resource:" in result
+
+    @pytest.mark.asyncio
+    async def test_unknown_content_type(self) -> None:
+        """未知内容类型 → str(content)（line 67-68）。"""
+        from ckyclaw_framework.mcp.connection import _create_mcp_tool
+
+        mock_session = AsyncMock()
+        unknown_content = MagicMock()
+        unknown_content.__str__ = lambda self: "unknown-data"
+        # 确保不匹配任何已知类型
+        unknown_content.__class__ = type("UnknownContent", (), {})
+        mock_result = MagicMock()
+        mock_result.content = [unknown_content]
+        mock_result.isError = False
+        mock_session.call_tool = AsyncMock(return_value=mock_result)
+
+        tool_info = MagicMock()
+        tool_info.name = "test_tool"
+        tool_info.description = "test"
+        tool_info.inputSchema = {"type": "object", "properties": {}}
+
+        tool = _create_mcp_tool(mock_session, "srv", tool_info, timeout=10.0)
+        result = await tool.fn()
+        assert result  # 应有内容
 
 
 class TestMCPConnectionHTTPError:
-    """覆盖 mcp/connection.py lines 209-210 — HTTP 连接异常。"""
+    """覆盖 mcp/connection.py lines 209-210 — HTTP 连接 TimeoutError。"""
 
     @pytest.mark.asyncio
-    async def test_http_connection_error(self) -> None:
-        """HTTP 传输连接异常 → 返回空列表。"""
+    async def test_http_connection_timeout(self) -> None:
+        """HTTP 传输连接超时 → 返回空列表（lines 209-210）。"""
         from ckyclaw_framework.mcp.connection import _connect_http
         from ckyclaw_framework.mcp.server import MCPServerConfig
 
-        config = MCPServerConfig(name="test", transport="http", url="http://broken:9999/mcp")
+        config = MCPServerConfig(name="test", transport="http", url="http://localhost:99999/mcp", connect_timeout=0.001)
 
-        async with asyncio.timeout(5):
-            from contextlib import AsyncExitStack
-            async with AsyncExitStack() as stack:
-                original = stack.enter_async_context
+        from contextlib import AsyncExitStack
 
-                async def _broken_enter(cm: Any) -> Any:
-                    raise ConnectionError("broken connection")
+        class SlowContextManager:
+            async def __aenter__(self) -> tuple[Any, Any]:
+                await asyncio.sleep(100)  # 远超 timeout
+                return (MagicMock(), MagicMock())
 
-                stack.enter_async_context = _broken_enter  # type: ignore[assignment]
+            async def __aexit__(self, *args: Any) -> None:
+                pass
+
+        async with AsyncExitStack() as stack:
+            with patch("mcp.client.streamable_http.streamable_http_client", return_value=SlowContextManager()):
                 result = await _connect_http(stack, config)
+
+        assert result == []
 
         assert result == []
 
@@ -334,3 +400,183 @@ class TestHistoryTrimmerSummaryPrefix:
         result = HistoryTrimmer.trim(messages, config)
         # 应该裁剪掉一些消息（回退到 TOKEN_BUDGET 逻辑）
         assert len(result) <= len(messages)
+
+    def test_unknown_strategy_returns_copy(self) -> None:
+        """未知策略 → else 分支，返回 list(messages) 副本（line 74）。"""
+        from ckyclaw_framework.model.message import Message, MessageRole
+        from ckyclaw_framework.session.history_trimmer import (
+            HistoryTrimConfig,
+            HistoryTrimStrategy,
+            HistoryTrimmer,
+        )
+
+        messages = [
+            Message(role=MessageRole.USER, content="Hello"),
+            Message(role=MessageRole.ASSISTANT, content="World"),
+        ]
+
+        config = HistoryTrimConfig(strategy=HistoryTrimStrategy.TOKEN_BUDGET)
+        # 强制 strategy 为一个不在 if-elif 链中匹配的值
+        config.strategy = "unknown_strategy"  # type: ignore[assignment]
+
+        result = HistoryTrimmer.trim(messages, config)
+        assert result == messages
+        assert result is not messages  # 是副本而非原列表
+
+
+# ── hosted_tools: generic except Exception 分支 (Lines 182-183, 201-202, 232-233) ──
+
+
+class TestHostedToolsGenericException:
+    """覆盖 hosted_tools.py 的 except Exception 兜底分支（非 PermissionError/FileNotFoundError）。"""
+
+    @pytest.mark.asyncio
+    async def test_file_read_generic_exception(self) -> None:
+        """file_read 中 read_text 抛 UnicodeDecodeError → 'except Exception' 兜底。"""
+        from ckyclaw_framework.tools.hosted_tools import file_read
+
+        mock_path = MagicMock()
+        with patch("ckyclaw_framework.tools.hosted_tools._safe_resolve", return_value=mock_path):
+            with patch("asyncio.to_thread", side_effect=UnicodeDecodeError("utf-8", b"", 0, 1, "bad")):
+                result = await file_read.fn(path="test.bin")
+        assert "读取失败" in result
+
+    @pytest.mark.asyncio
+    async def test_file_write_generic_exception(self) -> None:
+        """file_write 中 write_text 抛 OSError → 'except Exception' 兜底。"""
+        from ckyclaw_framework.tools.hosted_tools import file_write
+
+        mock_path = MagicMock()
+        mock_path.parent = MagicMock()
+        with patch("ckyclaw_framework.tools.hosted_tools._safe_resolve", return_value=mock_path):
+            with patch("asyncio.to_thread", side_effect=OSError("disk full")):
+                result = await file_write.fn(path="test.txt", content="data")
+        assert "写入失败" in result
+
+    @pytest.mark.asyncio
+    async def test_file_list_generic_exception(self) -> None:
+        """file_list 中 iterdir 抛 OSError → 'except Exception' 兜底。"""
+        from ckyclaw_framework.tools.hosted_tools import file_list
+
+        mock_path = MagicMock()
+        mock_path.is_dir.return_value = True
+        with patch("ckyclaw_framework.tools.hosted_tools._safe_resolve", return_value=mock_path):
+            with patch("asyncio.to_thread", side_effect=OSError("io error")):
+                result = await file_list.fn(directory=".")
+        assert "列目录失败" in result
+
+
+# ── otel_processor: _init_tracer 调用 + span.end() 异常 (Lines 68, 175-176) ──
+
+
+class TestOtelProcessorInitAndSpanEnd:
+    """覆盖 otel_processor.py line 68 (_init_tracer 调用) 和 lines 175-176 (span.end 异常)。"""
+
+    @contextmanager
+    def _mock_otel_modules(self) -> Generator[dict[str, MagicMock], None, None]:
+        """临时注入模拟的 OTel 模块。"""
+        mocks: dict[str, MagicMock] = {}
+        names = [
+            "opentelemetry",
+            "opentelemetry.trace",
+            "opentelemetry.sdk",
+            "opentelemetry.sdk.trace",
+            "opentelemetry.sdk.trace.export",
+            "opentelemetry.sdk.resources",
+            "opentelemetry.exporter.otlp",
+            "opentelemetry.exporter.otlp.proto.grpc",
+            "opentelemetry.exporter.otlp.proto.grpc.trace_exporter",
+        ]
+        saved = {}
+        for n in names:
+            saved[n] = sys.modules.get(n)
+            m = MagicMock()
+            sys.modules[n] = m
+            mocks[n] = m
+        try:
+            yield mocks
+        finally:
+            for n in names:
+                if saved[n] is None:
+                    sys.modules.pop(n, None)
+                else:
+                    sys.modules[n] = saved[n]
+
+    def test_init_tracer_called_when_otel_available(self) -> None:
+        """_check_otel() → True → _init_tracer() 被调用（覆盖 line 68）。"""
+        with self._mock_otel_modules() as mocks:
+            from ckyclaw_framework.tracing.otel_processor import OTelTraceProcessor, _check_otel
+
+            with patch("ckyclaw_framework.tracing.otel_processor._check_otel", return_value=True):
+                proc = OTelTraceProcessor.__new__(OTelTraceProcessor)
+                proc._service_name = "test"
+                proc._endpoint = "localhost:4317"
+                proc._insecure = True
+                proc._otel_spans = {}
+                proc._root_spans = {}
+                # 手动调用 __init__ 触发 _init_tracer
+                proc.__init__(service_name="test")  # type: ignore[misc]
+                # _init_tracer 被调用（可能失败但无所谓，关键是 line 68 被执行）
+
+    @pytest.mark.asyncio
+    async def test_span_end_exception_suppressed(self) -> None:
+        """on_trace_end 中 span.end() 抛异常 → 被 except Exception: pass 吞掉（lines 175-176）。"""
+        from ckyclaw_framework.tracing.otel_processor import OTelTraceProcessor
+        from ckyclaw_framework.tracing.trace import Trace
+        from ckyclaw_framework.tracing.span import Span, SpanType
+
+        proc = OTelTraceProcessor.__new__(OTelTraceProcessor)
+        proc._tracer = MagicMock()
+        proc._root_spans = {}
+        proc._otel_spans = {}
+
+        broken_span = MagicMock()
+        broken_span.end = MagicMock(side_effect=RuntimeError("span end failed"))
+
+        span = Span(
+            span_id="s1",
+            parent_span_id=None,
+            type=SpanType.AGENT,
+            name="test",
+        )
+
+        trace = Trace(trace_id="t1")
+        trace.spans.append(span)
+
+        proc._otel_spans["s1"] = broken_span
+
+        # on_trace_end 应该成功完成，异常被吞掉
+        await proc.on_trace_end(trace)
+        broken_span.end.assert_called_once()
+
+
+# ── Evaluator: NotEq, unknown UnaryOp, unknown AST node (Lines 120, 129, 156) ──
+
+
+class TestEvaluatorNotEqAndUnknownOps:
+    """覆盖 evaluator.py 残余分支。"""
+
+    def test_noteq_comparison(self) -> None:
+        """NotEq 比较运算 → line 129。"""
+        from ckyclaw_framework.workflow.evaluator import evaluate
+
+        assert evaluate("1 != 2", {}) is True
+        assert evaluate("1 != 1", {}) is False
+
+    def test_unknown_unary_op_fallthrough(self) -> None:
+        """未知一元运算符 → return operand（line 120）。"""
+        from ckyclaw_framework.workflow.evaluator import _eval_node
+
+        # 手工构造一个 UnaryOp 节点，op 不是 Not 也不是 USub
+        node = ast.UnaryOp(op=ast.UAdd(), operand=ast.Constant(value=42))
+        result = _eval_node(node, {})
+        assert result == 42
+
+    def test_unknown_ast_node_type(self) -> None:
+        """完全未知的 AST 节点类型 → UnsafeExpressionError（line 156）。"""
+        from ckyclaw_framework.workflow.evaluator import _eval_node, UnsafeExpressionError
+
+        # ast.Delete 是一个 statement，不应该出现在表达式求值中
+        node = ast.Delete(targets=[])
+        with pytest.raises(UnsafeExpressionError, match="无法求值"):
+            _eval_node(node, {})

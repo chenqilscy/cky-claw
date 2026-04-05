@@ -176,7 +176,7 @@ class TestInputGuardrailConditionException:
 
     @pytest.mark.asyncio
     async def test_condition_raises_treated_as_enabled(self) -> None:
-        """condition 抛异常 → guardrail 不被跳过（当作启用）。"""
+        """condition 抛异常 → guardrail 不被跳过（当作启用）——串行路径。"""
         call_count = 0
 
         async def counting_guard(ctx: RunContext, text: str) -> GuardrailResult:
@@ -196,6 +196,56 @@ class TestInputGuardrailConditionException:
             tracing=None,
         )
         assert call_count == 1, "condition 异常时 guardrail 应被执行"
+
+    @pytest.mark.asyncio
+    async def test_condition_raises_parallel_path(self) -> None:
+        """condition 抛异常 → 并行路径也当作 enabled（line 326-328）。"""
+        call_count = 0
+
+        async def counting_guard(ctx: RunContext, text: str) -> GuardrailResult:
+            nonlocal call_count
+            call_count += 1
+            return GuardrailResult(tripwire_triggered=False)
+
+        def bad_condition(ctx: RunContext) -> bool:
+            raise ValueError("condition error")
+
+        g1 = InputGuardrail(name="g1", guardrail_function=counting_guard, condition=bad_condition)
+        g2 = InputGuardrail(name="g2", guardrail_function=counting_guard)
+
+        await _execute_input_guardrails(
+            [g1, g2],
+            RunContext(agent=Agent(name="t", instructions="t"), config=RunConfig(), context={}, turn_count=0),
+            "hello",
+            tracing=None,
+            parallel=True,
+        )
+        assert call_count == 2, "condition 异常时两个 guardrail 都应被执行"
+
+    @pytest.mark.asyncio
+    async def test_condition_true_parallel_path(self) -> None:
+        """condition 返回 True → 并行路径 active.append（line 325）。"""
+        call_count = 0
+
+        async def counting_guard(ctx: RunContext, text: str) -> GuardrailResult:
+            nonlocal call_count
+            call_count += 1
+            return GuardrailResult(tripwire_triggered=False)
+
+        def true_condition(ctx: RunContext) -> bool:
+            return True
+
+        g1 = InputGuardrail(name="g1", guardrail_function=counting_guard, condition=true_condition)
+        g2 = InputGuardrail(name="g2", guardrail_function=counting_guard)
+
+        await _execute_input_guardrails(
+            [g1, g2],
+            RunContext(agent=Agent(name="t", instructions="t"), config=RunConfig(), context={}, turn_count=0),
+            "hello",
+            tracing=None,
+            parallel=True,
+        )
+        assert call_count == 2
 
 
 # ── OUTPUT GUARDRAILS (Lines 375, 400, 407, 450-453) ─────────
@@ -247,7 +297,7 @@ class TestOutputGuardrailConditionExceptionAndEmpty:
 
     @pytest.mark.asyncio
     async def test_condition_raises_treated_as_enabled(self) -> None:
-        """output guardrail condition 抛异常 → 当作启用。"""
+        """output guardrail condition 抛异常 → 当作启用（串行路径）。"""
         call_count = 0
 
         async def counting_guard(ctx: RunContext, text: str) -> GuardrailResult:
@@ -267,6 +317,56 @@ class TestOutputGuardrailConditionExceptionAndEmpty:
             tracing=None,
         )
         assert call_count == 1
+
+    @pytest.mark.asyncio
+    async def test_condition_raises_parallel_path(self) -> None:
+        """output guardrail condition 抛异常 → 并行路径也当作 enabled（line 450）。"""
+        call_count = 0
+
+        async def counting_guard(ctx: RunContext, text: str) -> GuardrailResult:
+            nonlocal call_count
+            call_count += 1
+            return GuardrailResult(tripwire_triggered=False)
+
+        def bad_condition(ctx: RunContext) -> bool:
+            raise ValueError("cond error")
+
+        g1 = OutputGuardrail(name="og1", guardrail_function=counting_guard, condition=bad_condition)
+        g2 = OutputGuardrail(name="og2", guardrail_function=counting_guard)
+
+        await _execute_output_guardrails(
+            [g1, g2],
+            RunContext(agent=Agent(name="t", instructions="t"), config=RunConfig(), context={}, turn_count=0),
+            "output",
+            tracing=None,
+            parallel=True,
+        )
+        assert call_count == 2
+
+    @pytest.mark.asyncio
+    async def test_condition_true_parallel_path(self) -> None:
+        """output guardrail condition 返回 True → 并行路径 active.append（line 450）。"""
+        call_count = 0
+
+        async def counting_guard(ctx: RunContext, text: str) -> GuardrailResult:
+            nonlocal call_count
+            call_count += 1
+            return GuardrailResult(tripwire_triggered=False)
+
+        def true_condition(ctx: RunContext) -> bool:
+            return True
+
+        g1 = OutputGuardrail(name="og1", guardrail_function=counting_guard, condition=true_condition)
+        g2 = OutputGuardrail(name="og2", guardrail_function=counting_guard)
+
+        await _execute_output_guardrails(
+            [g1, g2],
+            RunContext(agent=Agent(name="t", instructions="t"), config=RunConfig(), context={}, turn_count=0),
+            "output",
+            tracing=None,
+            parallel=True,
+        )
+        assert call_count == 2
 
     @pytest.mark.asyncio
     async def test_all_conditions_false_early_return(self) -> None:
@@ -296,7 +396,7 @@ class TestToolGuardrailSpanProcessors:
 
     @pytest.mark.asyncio
     async def test_tool_guardrail_with_tracing_processors(self) -> None:
-        """tool guardrail (before + after) 使用 tracing → on_span_start 被调用。"""
+        """tool guardrail (before + after) 使用 tracing + processors → on_span_start 被调用（lines 618, 689）。"""
         async def before_fn(ctx: RunContext, tool_name: str, args: dict[str, Any]) -> GuardrailResult:
             return GuardrailResult(tripwire_triggered=False)
 
@@ -307,15 +407,77 @@ class TestToolGuardrailSpanProcessors:
         tool = _make_tool("test_tool", "ok")
         tc = ToolCall(id="tc1", name="test_tool", arguments="{}")
 
+        mock_proc = AsyncMock()
+        mock_proc.on_trace_start = AsyncMock()
+        mock_proc.on_span_start = AsyncMock()
+        mock_proc.on_span_end = AsyncMock()
+        mock_proc.on_trace_end = AsyncMock()
+
         provider = _mock_provider([
             _tool_response([tc]),
             _text_response("done"),
         ])
         agent = Agent(name="t", instructions="t", tools=[tool], tool_guardrails=[tg])
-        config = RunConfig(model_provider=provider, tracing_enabled=True)
+        config = RunConfig(model_provider=provider, tracing_enabled=True, trace_processors=[mock_proc])
 
         result = await Runner.run(agent, "Hi", config=config)
         assert result.output == "done"
+        # on_span_start 应被调用多次（agent span + llm span + tool guardrail before span + tool span + tool guardrail after span ...）
+        assert mock_proc.on_span_start.call_count >= 4
+
+
+class TestInputGuardrailWithTracingProcessors:
+    """覆盖 runner.py line 275 — input guardrail serial 执行时 tracing.processors 非空。"""
+
+    @pytest.mark.asyncio
+    async def test_input_guardrail_serial_with_processors(self) -> None:
+        """input guardrail (serial) 使用 tracing + processors → on_span_start 被调用（line 275）。"""
+        async def ok_guard(ctx: RunContext, text: str) -> GuardrailResult:
+            return GuardrailResult(tripwire_triggered=False)
+
+        g = InputGuardrail(name="ig1", guardrail_function=ok_guard)
+
+        mock_proc = AsyncMock()
+        mock_proc.on_trace_start = AsyncMock()
+        mock_proc.on_span_start = AsyncMock()
+        mock_proc.on_span_end = AsyncMock()
+        mock_proc.on_trace_end = AsyncMock()
+
+        provider = _mock_provider([_text_response("ok")])
+        agent = Agent(name="t", instructions="t", input_guardrails=[g])
+        config = RunConfig(model_provider=provider, tracing_enabled=True, trace_processors=[mock_proc])
+
+        result = await Runner.run(agent, "Hi", config=config)
+        assert result.output == "ok"
+        # on_span_start: agent span + input guardrail span + llm span = 3+
+        assert mock_proc.on_span_start.call_count >= 3
+
+
+class TestOutputGuardrailWithTracingProcessors:
+    """覆盖 runner.py line 400 — output guardrail serial 执行时 tracing.processors 非空。"""
+
+    @pytest.mark.asyncio
+    async def test_output_guardrail_serial_with_processors(self) -> None:
+        """output guardrail (serial) 使用 tracing + processors → on_span_start 被调用（line 400）。"""
+        async def ok_guard(ctx: RunContext, text: str) -> GuardrailResult:
+            return GuardrailResult(tripwire_triggered=False)
+
+        g = OutputGuardrail(name="og1", guardrail_function=ok_guard)
+
+        mock_proc = AsyncMock()
+        mock_proc.on_trace_start = AsyncMock()
+        mock_proc.on_span_start = AsyncMock()
+        mock_proc.on_span_end = AsyncMock()
+        mock_proc.on_trace_end = AsyncMock()
+
+        provider = _mock_provider([_text_response("final output")])
+        agent = Agent(name="t", instructions="t", output_guardrails=[g])
+        config = RunConfig(model_provider=provider, tracing_enabled=True, trace_processors=[mock_proc])
+
+        result = await Runner.run(agent, "Hi", config=config)
+        assert result.output == "final output"
+        # on_span_start: agent span + llm span + output guardrail span = 3+
+        assert mock_proc.on_span_start.call_count >= 3
 
 
 # ── RUN_STREAMED LLM RETRY FAILURE (Lines 1146-1185) ─────────
@@ -481,7 +643,7 @@ class TestRunWithTracingGuardrailException:
 
     @pytest.mark.asyncio
     async def test_input_guardrail_exception_with_tracing(self) -> None:
-        """Runner.run 中 input guardrail 抛异常 + tracing=True → span FAILED。"""
+        """Runner.run 中 input guardrail 抛异常 + tracing=True + session → span FAILED + session save。"""
         async def bad_guard(ctx: RunContext, text: str) -> GuardrailResult:
             raise RuntimeError("guard error")
 
@@ -489,9 +651,12 @@ class TestRunWithTracingGuardrailException:
         provider = _mock_provider([_text_response("ok")])
         agent = Agent(name="t", instructions="t", input_guardrails=[g])
         config = RunConfig(model_provider=provider, tracing_enabled=True)
+        session = AsyncMock()
+        session.get_history = AsyncMock(return_value=[])
 
         with pytest.raises(InputGuardrailTripwireError):
-            await Runner.run(agent, "Hi", config=config)
+            await Runner.run(agent, "Hi", config=config, session=session)
+        session.append.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_input_guardrail_condition_exception_with_run(self) -> None:
@@ -519,7 +684,7 @@ class TestRunWithTracingGuardrailException:
 
     @pytest.mark.asyncio
     async def test_output_guardrail_exception_with_tracing(self) -> None:
-        """Runner.run + output guardrail 抛异常 + tracing=True → span FAILED。"""
+        """Runner.run + output guardrail 抛异常 + tracing=True + session → span FAILED + session save。"""
         async def bad_og(ctx: RunContext, text: str) -> GuardrailResult:
             raise RuntimeError("output guard error")
 
@@ -527,9 +692,12 @@ class TestRunWithTracingGuardrailException:
         provider = _mock_provider([_text_response("some output")])
         agent = Agent(name="t", instructions="t", output_guardrails=[g])
         config = RunConfig(model_provider=provider, tracing_enabled=True)
+        session = AsyncMock()
+        session.get_history = AsyncMock(return_value=[])
 
         with pytest.raises(OutputGuardrailTripwireError):
-            await Runner.run(agent, "Hi", config=config)
+            await Runner.run(agent, "Hi", config=config, session=session)
+        session.append.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_output_guardrail_condition_exception_parallel_with_tracing(self) -> None:
@@ -845,3 +1013,142 @@ class TestRunStreamedSimpleSuccess:
         assert chunk_events[0].data == "Hello "
         assert chunk_events[1].data == "World"
         assert any(e.type == StreamEventType.RUN_COMPLETE for e in events)
+
+
+# ── Runner.run output guardrail tripwire + tracing + session (Line 1088) ──
+
+
+class TestRunOutputGuardrailTripwireWithSession:
+    """Runner.run() 中 output guardrail 触发 tripwire + tracing + session → line 1088。"""
+
+    @pytest.mark.asyncio
+    async def test_run_output_guardrail_tripwire_saves_session(self) -> None:
+        """Runner.run() output guardrail tripwire → trace end + session.append + raise。"""
+        async def blocking_guard(ctx: RunContext, text: str) -> GuardrailResult:
+            return GuardrailResult(tripwire_triggered=True, message="blocked by guard")
+
+        g = OutputGuardrail(name="block", guardrail_function=blocking_guard)
+        provider = _mock_provider([_text_response("some output")])
+        session = AsyncMock()
+        session.get_history = AsyncMock(return_value=[])
+
+        agent = Agent(name="t", instructions="t", output_guardrails=[g])
+        config = RunConfig(model_provider=provider, tracing_enabled=True)
+
+        with pytest.raises(OutputGuardrailTripwireError):
+            await Runner.run(agent, "Hi", config=config, session=session)
+
+        session.append.assert_called_once()
+
+
+# ── Runner.run max_turns + tracing + session (Lines 1146-1147, 1153) ──
+
+
+class TestRunMaxTurnsWithTracingAndSession:
+    """Runner.run max_turns 超出 + tracing + session → 覆盖 lines 1146-1147, 1149, 1153。"""
+
+    @pytest.mark.asyncio
+    async def test_run_max_turns_with_session_and_tracing(self) -> None:
+        """Runner.run max_turns=1 + tool call with content → 超出 → trace end + session save。"""
+        tc = ToolCall(id="tc1", name="my_tool", arguments="{}")
+        provider = _mock_provider([
+            _tool_response([tc], content="I will use a tool"),  # 有内容的 tool call
+            _tool_response([tc], content="Again using tool"),   # 第 2 轮也有内容
+        ])
+
+        tool = _make_tool("my_tool", "ok")
+        session = AsyncMock()
+        session.get_history = AsyncMock(return_value=[])
+
+        hooks = RunHooks(
+            on_run_start=AsyncMock(),
+            on_run_end=AsyncMock(),
+            on_agent_start=AsyncMock(),
+            on_agent_end=AsyncMock(),
+            on_llm_start=AsyncMock(),
+            on_llm_end=AsyncMock(),
+        )
+
+        agent = Agent(name="t", instructions="t", tools=[tool])
+        config = RunConfig(
+            model_provider=provider,
+            tracing_enabled=True,
+            hooks=hooks,
+        )
+
+        result = await Runner.run(agent, "Hi", config=config, max_turns=1, session=session)
+        # max_turns 超出后应该返回最后一个 assistant 消息内容
+        assert result is not None
+        assert result.output  # 应该有内容
+        session.append.assert_called_once()
+        hooks.on_run_end.assert_called_once()
+
+
+# ── run_streamed output guardrail tripwire + tracing + session (Line 1088) ──
+
+
+class TestRunStreamedOutputGuardrailTripwire:
+    """run_streamed 中 output guardrail 触发 tripwire + tracing + session。"""
+
+    @pytest.mark.asyncio
+    async def test_streamed_output_guardrail_tripwire_with_session(self) -> None:
+        """run_streamed output guardrail tripwire + tracing + session → lines 1083-1088。"""
+        async def bad_og(ctx: RunContext, text: str) -> GuardrailResult:
+            return GuardrailResult(tripwire_triggered=True, message="blocked")
+
+        g = OutputGuardrail(name="block_og", guardrail_function=bad_og)
+        provider = AsyncMock()
+
+        async def _chat(*args: Any, **kwargs: Any) -> Any:
+            if kwargs.get("stream"):
+                return _make_stream_chunks([ModelChunk(content="bad output", tool_call_chunks=[])])
+            return ModelResponse(content="bad output", tool_calls=[], token_usage=TokenUsage())
+
+        provider.chat = AsyncMock(side_effect=_chat)
+
+        session = AsyncMock()
+        session.get_history = AsyncMock(return_value=[])
+
+        agent = Agent(name="t", instructions="t", output_guardrails=[g])
+        config = RunConfig(model_provider=provider, tracing_enabled=True)
+
+        events: list[StreamEvent] = []
+        with pytest.raises(OutputGuardrailTripwireError):
+            async for evt in Runner.run_streamed(agent, "Hi", config=config, session=session):
+                events.append(evt)
+
+        session.append.assert_called_once()
+
+
+# ── run_sync in running event loop (Line 1182-1185) ──
+
+
+class TestRunSyncWithRunningLoop:
+    """run_sync 在已有事件循环中运行（覆盖 line 1182-1185 ThreadPoolExecutor 路径）。"""
+
+    @pytest.mark.asyncio
+    async def test_run_sync_in_running_loop(self) -> None:
+        """在 async 上下文中调用 run_sync → ThreadPoolExecutor 路径。
+
+        run_sync 检测到 running loop → 启动 ThreadPoolExecutor 提交 asyncio.run。
+        需要在另一个线程中创建 running loop 以触发 ThreadPoolExecutor 分支。
+        """
+        provider = _mock_provider([_text_response("sync threadpool")])
+        agent = Agent(name="t", instructions="t")
+        config = RunConfig(model_provider=provider, tracing_enabled=False)
+
+        def _call_sync_in_running_loop() -> RunResult:
+            """在有 running loop 的上下文中调用 run_sync。"""
+            loop = asyncio.new_event_loop()
+
+            async def _inner() -> RunResult:
+                # 此时 loop 正在运行，run_sync 内部会检测到 running loop
+                return Runner.run_sync(agent, "Hi", config=config)
+
+            try:
+                return loop.run_until_complete(_inner())
+            finally:
+                loop.close()
+
+        result = await asyncio.to_thread(_call_sync_in_running_loop)
+        assert result.output == "sync threadpool"
