@@ -239,19 +239,19 @@
 
 ### 用户认证
 
-**当前状态**：已实现 JWT + bcrypt 本地认证 + Admin/User 双角色 + RBAC 权限。
+**当前状态**：已实现 JWT + bcrypt 本地认证 + Admin/User 双角色 + RBAC 权限 + **OAuth 2.0 框架 + GitHub OAuth 登录**。
 
 **规划升级**（按优先级排序）：
 
 | # | 方案 | 优先级 | 说明 |
 |---|------|:------:|------|
-| A1 | **OAuth 2.0 / OIDC 框架** | P1 | 统一 OAuth 基础设施（authlib / python-social-auth），支持 Authorization Code Flow |
-| A2 | **GitHub OAuth** | P1 | 开发者社区标配，接入简单 |
-| A3 | **企业微信/钉钉/飞书扫码登录** | P1 | 国内企业 SSO 必备，与多渠道接入协同 |
+| A1 | ~~**OAuth 2.0 / OIDC 框架**~~ | P1 | ✅ 已完成（OAuthProviderConfig + oauth_service + Redis CSRF state + Fernet token 加密 + 6 API + Migration 0036 + 21 测试） |
+| A2 | ~~**GitHub OAuth**~~ | P1 | ✅ 已完成（GitHub Authorization Code Flow + 前端 OAuth 跳转 + Token 交换 + 登录页 GitHub 按钮） |
+| A3 | **企业微信/钉钉/飞书扫码登录** | P1 | 国内企业 SSO 必备，与多渠道接入协同。已有 OAuth 框架，新增 Provider 即可 |
 | A4 | **Keycloak / Casdoor 集成** | P2 | 私有化部署 IdP，企业级 SSO + SAML + LDAP |
 | A5 | **Google OAuth** | P3 | 海外用户场景 |
 
-**推荐架构**：Backend 统一 OAuth 2.0 回调端点 `/api/v1/auth/oauth/{provider}/callback`，前端 OAuth 跳转 + Token 交换，用户表新增 `oauth_provider` + `oauth_id` 字段。
+**已实现架构**：Backend 统一 OAuth 2.0 回调端点 `/api/v1/auth/oauth/{provider}/callback`，前端 OAuth 跳转 + Token 交换，`user_oauth_connections` 表记录 Provider 绑定关系。
 
 ### 本地启动/调试
 
@@ -306,7 +306,7 @@ CkyClaw Framework 的核心设计（Agent 数据类、Runner 循环、Handoff、
 
 | 指标 | 数值 |
 |------|------|
-| 测试总数 | **2383**（Backend 1185 + Framework 1134 + Frontend 64） |
+| 测试总数 | **2404**（Backend 1206 + Framework 1134 + Frontend 64） |
 | 测试覆盖率 | Backend **95%** · Framework **100%** |
 | Alembic 迁移 | **35** 个（0001–0035） |
 | API 路由模块 | **30** 个 |
