@@ -35,7 +35,7 @@
 | 10 | ~~**Handoff input_type**~~ | §2.3 | P2 | 低 | ✅ 已完成（Handoff.input_type Pydantic Schema + 5 测试） |
 | 11 | ~~**ToolSearchTool 延迟加载**~~ | §2.6 | P2 | 中 | ✅ 已完成（ToolSearchTool 元工具 + keyword 匹配 + threshold 阈值机制） |
 | 12 | ~~**条件启用**~~ | §2.6 | P3 | 低 | ✅ 已完成（Guardrail + FunctionTool + Agent-as-Tool 三级条件启用，condition: Callable[[RunContext], bool]，20 测试） |
-| 13 | ~~**Hosted Tool 内置工具**~~ | §2.6 | P2 | 中 | ✅ 已完成（10 个工具函数 + 5 组 ToolGroup + 种子数据 + Framework 29 测试 + Backend 7 测试） |
+| 13 | ~~**Hosted Tool 内置工具**~~ | §2.6 | P2 | 中 | ✅ 已完成（10 个工具函数 + 5 组 ToolGroup + 种子数据 + Framework 57 测试 + Backend 7 测试） |
 | 14 | ~~**Session 历史裁剪**~~ | §2.9 | P1 | 中 | ✅ 已完成（HistoryTrimmer 滑动窗口 + Token 预算集成） |
 | 15 | ~~**Guardrail 并行模式**~~ | §2.10 | P2 | 中 | ✅ 已完成（RunConfig.guardrail_parallel + asyncio.TaskGroup 并行执行 Input/Output 护栏） |
 
@@ -50,11 +50,11 @@
 | 20 | ~~**APM 仪表盘**~~ | §9 | P2 | 高 | ✅ 已完成（聚合服务 + ECharts 可视化 + AlertRule/AlertEvent 告警引擎 + 7 API + Migration 0032 + 32 测试） |
 | 21 | ~~**Agent 评估与质量度量**~~ | 附录 B v2.0.4 | P2 | 中 | ✅ 已完成（RunEvaluation 7 维评分 + RunFeedback 用户反馈 + AgentQualitySummary 汇总 + API 8 端点 + Migration 0026） |
 | 22 | ~~**配置热更新**~~ | 附录 B v2.0.5 | P3 | 中 | ✅ 已完成（ConfigChangeLog 审计 + 回滚预览 + require_admin 权限 + Migration 0033-0034 + 28 测试） |
-| 23 | **Agent 国际化** | 附录 B v2.0.5 | P3 | 低 | 多语言 Instructions / UI / 描述 |
+| 23 | ~~**Agent 国际化**~~ | 附录 B v2.0.5 | P3 | 低 | ✅ 已完成（Framework LocalizedInstructions + RunConfig.locale + Backend CRUD API 4 端点 + Migration 0035 + Frontend I18nSettingsPage + 24 测试） |
 | 24 | ~~**模型列表管理**~~ | §2.13 | P2 | 低 | ✅ 已完成（ProviderModel ORM + CRUD API 5 端点 + Migration 0024） |
 | 25 | ~~**成本计算**~~ | §2.13 | P2 | 低 | ✅ 已完成（TokenUsage 3 列成本字段 + 汇总聚合 + Migration 0024） |
 | 26 | ~~**限流配置**~~ | §2.13 | P2 | 低 | ✅ 已完成（Redis 滑动窗口 RPM/TPM 限流器 + RateLimitExceeded 429） |
-| 27 | **灾备策略** | 附录 B v2.0.4 | P3 | 中 | RTO<4h / RPO<1h、PostgreSQL/Redis/对象存储备份方案 |
+| 27 | ~~**灾备策略**~~ | 附录 B v2.0.4 | P3 | 中 | ✅ 已完成（scripts/backup.sh + restore.sh + backup-verify.sh + docker-compose backup profile 每日 2:00 AM cron + PG 30 天 / Redis 7 天保留策略） |
 | 28 | ~~**内置 Agent 模板**~~ | 附录 B v2.0.5 | P2 | 低 | ✅ 已完成（10 个预设模板 + 模板市场 UI + CRUD API + Seed + 18 测试） |
 | 29 | ~~**垂直 Agent**~~ | 定位守卫 P2 | P2 | 高 | ✅ 已完成（新增 4 个垂直模板：code-reviewer / devops-assistant / bi-analyst / complaint-handler，种子在 BUILTIN_TEMPLATES） |
 | 30 | ~~**声明式配置（YAML/TOML）**~~ | §3.4 | P3 | 低 | ✅ 已完成（Agent 导出/导入 API + YAML/JSON 双格式 + 前端服务 + 16 测试） |
@@ -166,7 +166,7 @@
 | 定时/批量任务 | #17 | ✅ | SchedulerEngine + ScheduledRun + cron/interval + 27 测试 |
 | ToolSearchTool | #11 | ✅ | ToolSearchTool 元工具 + keyword 匹配 + threshold 阈值 |
 | 配置热更新 | #22 | ✅ | ConfigChangeLog + 回滚 + 审计 + 28 测试 |
-| 灾备 | #27 | 自动备份 + 恢复脚本 |
+| 灾备 | #27 | ✅ | scripts/backup.sh + restore.sh + backup-verify.sh + cron 每日 2:00 AM |
 
 ---
 
@@ -177,7 +177,7 @@
 | ~~Redis 未使用~~ | ✅ 已解决：WebSocket 审批通道使用 Redis pub/sub | ~~资源浪费~~ |
 | ~~前端测试极少~~ | ✅ 已解决：47 个 Vitest 测试 | ~~无法保证 UI 回归~~ |
 | mypy 未集成 CI | ✅ 已解决：Framework 0/81 + Backend 0/138 全部 0 错误，CI mypy 步骤已激活 | 已修复 |
-| 部分 test 排除 | CI 排除 smoke/performance/e2e/mcp 测试 | 需定期手动运行验证 |
+| ~~部分 test 排除~~ | ✅ 已优化：CI 仅排除 test_performance.py（SSE 流式 + 并发线程不适合 CI），smoke/e2e/mcp 已纳入 CI | 已修复 |
 | Alembic 自动生成 | ✅ 已解决：`alembic/env.py` 已配置 `target_metadata = Base.metadata` + 全模型导入，`alembic revision --autogenerate -m "描述"` 直接可用 | 已修复 |
 
 ## 六、工作流引擎
@@ -199,6 +199,13 @@
 
 ✅ 已解决：Settings 使用 Pydantic v2 BaseSettings，全部通过 `CKYCLAW_` 前缀环境变量配置，无硬编码
 
+### 本地启动/调试
+
+本机启动所有的系统，体验功能，提出缺陷。
+
+### CI/CD
+
+jenkins 自动构建与部署
 
 ---
 

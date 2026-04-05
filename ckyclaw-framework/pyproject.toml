@@ -71,3 +71,8 @@ testpaths = ["tests"]
 markers = [
     "integration: 端到端集成测试（需要真实 LLM API Key）",
 ]
+
+[dependency-groups]
+dev = [
+    "pytest-cov>=7.1.0",
+]

@@ -14,6 +14,7 @@ from app.core.middleware import RequestIDMiddleware
 from app.core.audit_middleware import AuditLogMiddleware
 from app.core.otel import setup_otel, instrument_fastapi
 from app.api.agents import router as agents_router
+from app.api.agent_locales import router as agent_locales_router
 from app.api.alerts import router as alerts_router
 from app.api.apm import router as apm_router
 from app.api.agent_templates import router as agent_templates_router
@@ -110,6 +111,7 @@ def create_app() -> FastAPI:
     app.include_router(auth_router)
     app.include_router(audit_logs_router)
     app.include_router(agents_router)
+    app.include_router(agent_locales_router)
     app.include_router(alerts_router)
     app.include_router(apm_router)
     app.include_router(agent_templates_router)

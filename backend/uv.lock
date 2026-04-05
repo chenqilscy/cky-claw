@@ -502,6 +502,9 @@ requires-dist = [
 ]
 provides-extras = ["postgres", "redis", "mcp", "dev"]
 
+[package.metadata.requires-dev]
+dev = [{ name = "pytest-cov", specifier = ">=7.1.0" }]
+
 [[package]]
 name = "click"
 version = "8.3.1"

@@ -26,6 +26,7 @@ import {
   BankOutlined,
   ClockCircleOutlined,
   LineChartOutlined,
+  GlobalOutlined,
 } from '@ant-design/icons';
 import useThemeStore from '../stores/themeStore';
 
@@ -145,6 +146,11 @@ const menuRoutes = {
       path: '/apm',
       name: 'APM 仪表盘',
       icon: <LineChartOutlined />,
+    },
+    {
+      path: '/i18n',
+      name: '国际化设置',
+      icon: <GlobalOutlined />,
     },
   ],
 };

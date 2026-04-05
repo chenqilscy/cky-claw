@@ -1,6 +1,7 @@
 """数据库模型。"""
 
 from app.models.agent import AgentConfig
+from app.models.agent_locale import AgentLocale
 from app.models.agent_template import AgentTemplate
 from app.models.agent_version import AgentConfigVersion
 from app.models.approval import ApprovalRequest
@@ -27,6 +28,7 @@ from app.models.user import User
 __all__ = [
     "AgentConfig",
     "AgentConfigVersion",
+    "AgentLocale",
     "AgentTemplate",
     "ApprovalRequest",
     "AuditLog",

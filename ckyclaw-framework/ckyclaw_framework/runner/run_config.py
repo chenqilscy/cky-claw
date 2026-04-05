@@ -86,6 +86,9 @@ class RunConfig:
     guardrail_parallel: bool = False
     """是否启用 Guardrail 并行执行模式。True 时所有 Guardrail 并发执行，False 时串行短路。"""
 
+    locale: str | None = None
+    """用户语言偏好（BCP 47 格式，如 'zh-CN'、'en-US'）。用于 Agent 多语言 Instructions 解析。"""
+
     max_retries: int = 0
     """LLM API 调用失败时的最大重试次数（0 表示不重试）。"""
 

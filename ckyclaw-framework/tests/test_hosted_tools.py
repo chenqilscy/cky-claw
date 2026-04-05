@@ -4,8 +4,11 @@ from __future__ import annotations
 
 import json
 import os
+import sys
 import tempfile
+from contextlib import contextmanager
 from pathlib import Path
+from typing import Any, Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -28,6 +31,27 @@ from ckyclaw_framework.tools.hosted_tools import (
 )
 from ckyclaw_framework.tools.tool_group import ToolGroup
 from ckyclaw_framework.tools.tool_registry import ToolRegistry
+
+
+@contextmanager
+def _mock_module(name: str, mock_obj: Any) -> Generator[Any, None, None]:
+    """临时替换 sys.modules 中的模块（用于 mock 函数内部的 import）。"""
+    original = sys.modules.get(name)
+    sys.modules[name] = mock_obj
+    try:
+        yield mock_obj
+    finally:
+        if original is not None:
+            sys.modules[name] = original
+        else:
+            sys.modules.pop(name, None)
+
+
+def _make_async_client(mock_client: AsyncMock) -> MagicMock:
+    """构造一个可用作 httpx.AsyncClient context manager 的 mock。"""
+    mock_httpx = MagicMock()
+    mock_httpx.AsyncClient = MagicMock(return_value=mock_client)
+    return mock_httpx
 
 
 # ---------------------------------------------------------------------------
@@ -117,11 +141,112 @@ class TestWebSearchTools:
         assert "httpx" in result or isinstance(result, str)
 
     @pytest.mark.asyncio
+    async def test_web_search_success(self) -> None:
+        """成功搜索返回 JSON 结果。"""
+        html = (
+            '<div class="result__a" href="https://example.com">Example <b>Title</b></a>'
+            '<a class="result__snippet">This is a snippet</a>'
+        )
+        mock_resp = MagicMock()
+        mock_resp.text = html
+        mock_resp.raise_for_status = MagicMock()
+
+        mock_client = AsyncMock()
+        mock_client.post = AsyncMock(return_value=mock_resp)
+        mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+        mock_client.__aexit__ = AsyncMock(return_value=False)
+
+        with _mock_module("httpx", _make_async_client(mock_client)):
+            result = await web_search.execute({"query": "test", "max_results": 3})
+        parsed = json.loads(result)
+        assert isinstance(parsed, list)
+        assert len(parsed) >= 1
+        assert parsed[0]["title"] == "Example Title"
+
+    @pytest.mark.asyncio
+    async def test_web_search_request_failure(self) -> None:
+        """搜索请求异常返回错误字符串。"""
+        mock_client = AsyncMock()
+        mock_client.post = AsyncMock(side_effect=Exception("connection refused"))
+        mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+        mock_client.__aexit__ = AsyncMock(return_value=False)
+
+        with _mock_module("httpx", _make_async_client(mock_client)):
+            result = await web_search.execute({"query": "test"})
+        assert "搜索失败" in result
+
+    @pytest.mark.asyncio
+    async def test_web_search_no_results(self) -> None:
+        """搜索无结果时返回提示。"""
+        mock_resp = MagicMock()
+        mock_resp.text = "<html><body>No results</body></html>"
+        mock_resp.raise_for_status = MagicMock()
+
+        mock_client = AsyncMock()
+        mock_client.post = AsyncMock(return_value=mock_resp)
+        mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+        mock_client.__aexit__ = AsyncMock(return_value=False)
+
+        with _mock_module("httpx", _make_async_client(mock_client)):
+            result = await web_search.execute({"query": "xyznonexistent"})
+        assert "未找到" in result
+
+    @pytest.mark.asyncio
     async def test_fetch_webpage_no_httpx(self) -> None:
         """httpx 不可用时返回错误提示。"""
         with patch.dict("sys.modules", {"httpx": None}):
             result = await fetch_webpage.execute({"url": "https://example.com"})
         assert isinstance(result, str)
+
+    @pytest.mark.asyncio
+    async def test_fetch_webpage_success(self) -> None:
+        """成功抓取网页并去除 HTML 标签。"""
+        html = "<html><script>var x=1;</script><style>body{}</style><p>Hello World</p></html>"
+        mock_resp = MagicMock()
+        mock_resp.text = html
+        mock_resp.raise_for_status = MagicMock()
+
+        mock_client = AsyncMock()
+        mock_client.get = AsyncMock(return_value=mock_resp)
+        mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+        mock_client.__aexit__ = AsyncMock(return_value=False)
+
+        with _mock_module("httpx", _make_async_client(mock_client)):
+            result = await fetch_webpage.execute({"url": "https://example.com"})
+        assert "Hello World" in result
+        assert "<script>" not in result
+        assert "<style>" not in result
+
+    @pytest.mark.asyncio
+    async def test_fetch_webpage_truncation(self) -> None:
+        """超过 max_length 时截断内容。"""
+        html = "<p>" + "A" * 10000 + "</p>"
+        mock_resp = MagicMock()
+        mock_resp.text = html
+        mock_resp.raise_for_status = MagicMock()
+
+        mock_client = AsyncMock()
+        mock_client.get = AsyncMock(return_value=mock_resp)
+        mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+        mock_client.__aexit__ = AsyncMock(return_value=False)
+
+        with _mock_module("httpx", _make_async_client(mock_client)):
+            result = await fetch_webpage.execute({"url": "https://example.com", "max_length": 100})
+        assert result.endswith("...(已截断)")
+        # 100 字符 + 截断标记
+        assert len(result) <= 200
+
+    @pytest.mark.asyncio
+    async def test_fetch_webpage_request_failure(self) -> None:
+        """抓取失败返回错误信息。"""
+        mock_client = AsyncMock()
+        mock_client.get = AsyncMock(side_effect=Exception("timeout"))
+        mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+        mock_client.__aexit__ = AsyncMock(return_value=False)
+
+        with _mock_module("httpx", _make_async_client(mock_client)):
+            result = await fetch_webpage.execute({"url": "https://example.com"})
+        assert "抓取失败" in result
 
 
 # ---------------------------------------------------------------------------
@@ -184,6 +309,55 @@ class TestFileOpsTools:
                 assert "已写入" in result
                 assert (Path(tmp) / "sub" / "dir" / "file.txt").read_text() == "nested"
 
+    @pytest.mark.asyncio
+    async def test_file_list_nonexistent_directory(self) -> None:
+        """列出不存在的目录返回错误提示。"""
+        with tempfile.TemporaryDirectory() as tmp:
+            with patch("ckyclaw_framework.tools.hosted_tools._FILE_OPS_BASE_DIR", tmp):
+                result = await file_list.execute({"directory": "nonexistent"})
+                assert "不存在" in result
+
+    @pytest.mark.asyncio
+    async def test_file_list_with_subdirectory(self) -> None:
+        """列出包含子目录的目录，返回正确 type。"""
+        with tempfile.TemporaryDirectory() as tmp:
+            (Path(tmp) / "file.txt").write_text("content")
+            (Path(tmp) / "subdir").mkdir()
+            with patch("ckyclaw_framework.tools.hosted_tools._FILE_OPS_BASE_DIR", tmp):
+                result = await file_list.execute({"directory": "."})
+                entries = json.loads(result)
+                types = {e["name"]: e["type"] for e in entries}
+                assert types["file.txt"] == "file"
+                assert types["subdir"] == "directory"
+                # 目录的 size 应为 None
+                for e in entries:
+                    if e["type"] == "directory":
+                        assert e["size"] is None
+
+    @pytest.mark.asyncio
+    async def test_file_read_traversal_error(self) -> None:
+        """路径穿越读取返回权限错误。"""
+        with tempfile.TemporaryDirectory() as tmp:
+            with patch("ckyclaw_framework.tools.hosted_tools._FILE_OPS_BASE_DIR", tmp):
+                result = await file_read.execute({"path": "../../etc/passwd"})
+                assert "权限错误" in result
+
+    @pytest.mark.asyncio
+    async def test_file_write_traversal_error(self) -> None:
+        """路径穿越写入返回权限错误。"""
+        with tempfile.TemporaryDirectory() as tmp:
+            with patch("ckyclaw_framework.tools.hosted_tools._FILE_OPS_BASE_DIR", tmp):
+                result = await file_write.execute({"path": "../../tmp/hack.txt", "content": "bad"})
+                assert "权限错误" in result
+
+    @pytest.mark.asyncio
+    async def test_file_list_traversal_error(self) -> None:
+        """路径穿越列目录返回权限错误。"""
+        with tempfile.TemporaryDirectory() as tmp:
+            with patch("ckyclaw_framework.tools.hosted_tools._FILE_OPS_BASE_DIR", tmp):
+                result = await file_list.execute({"directory": "../../"})
+                assert "权限错误" in result
+
 
 # ---------------------------------------------------------------------------
 # http 工具测试
@@ -209,6 +383,80 @@ class TestHttpTools:
         """无效 headers JSON 返回错误。"""
         result = await http_request.execute({"url": "https://example.com", "headers": "not-json"})
         assert "格式错误" in result
+
+    @pytest.mark.asyncio
+    async def test_http_request_success(self) -> None:
+        """成功发送 HTTP 请求返回状态码和响应体。"""
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.headers = {"content-type": "application/json"}
+        mock_resp.text = '{"ok": true}'
+
+        mock_client = AsyncMock()
+        mock_client.request = AsyncMock(return_value=mock_resp)
+        mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+        mock_client.__aexit__ = AsyncMock(return_value=False)
+
+        with _mock_module("httpx", _make_async_client(mock_client)):
+            result = await http_request.execute({"url": "https://api.example.com/data", "method": "POST", "body": "{}"})
+        parsed = json.loads(result)
+        assert parsed["status_code"] == 200
+        assert "ok" in parsed["body"]
+
+    @pytest.mark.asyncio
+    async def test_http_request_no_httpx(self) -> None:
+        """httpx 不可用时返回错误提示。"""
+        with patch.dict("sys.modules", {"httpx": None}):
+            result = await http_request.execute({"url": "https://example.com"})
+        assert "httpx" in result
+
+    @pytest.mark.asyncio
+    async def test_http_request_exception(self) -> None:
+        """请求异常返回错误信息。"""
+        mock_client = AsyncMock()
+        mock_client.request = AsyncMock(side_effect=Exception("connection reset"))
+        mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+        mock_client.__aexit__ = AsyncMock(return_value=False)
+
+        with _mock_module("httpx", _make_async_client(mock_client)):
+            result = await http_request.execute({"url": "https://example.com"})
+        assert "HTTP 请求失败" in result
+
+    @pytest.mark.asyncio
+    async def test_http_request_all_methods(self) -> None:
+        """所有允许的 HTTP 方法都被接受。"""
+        for method in ["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS"]:
+            mock_resp = MagicMock()
+            mock_resp.status_code = 200
+            mock_resp.headers = {}
+            mock_resp.text = ""
+
+            mock_client = AsyncMock()
+            mock_client.request = AsyncMock(return_value=mock_resp)
+            mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+            mock_client.__aexit__ = AsyncMock(return_value=False)
+
+            with _mock_module("httpx", _make_async_client(mock_client)):
+                result = await http_request.execute({"url": "https://example.com", "method": method})
+            assert "不支持" not in result
+
+    @pytest.mark.asyncio
+    async def test_http_request_empty_headers(self) -> None:
+        """空 headers 字符串正常处理。"""
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.headers = {}
+        mock_resp.text = "ok"
+
+        mock_client = AsyncMock()
+        mock_client.request = AsyncMock(return_value=mock_resp)
+        mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+        mock_client.__aexit__ = AsyncMock(return_value=False)
+
+        with _mock_module("httpx", _make_async_client(mock_client)):
+            result = await http_request.execute({"url": "https://example.com", "headers": ""})
+        parsed = json.loads(result)
+        assert parsed["status_code"] == 200
 
 
 # ---------------------------------------------------------------------------
@@ -243,6 +491,112 @@ class TestDatabaseTools:
             os.environ.pop("CKYCLAW_DB_QUERY_DSN", None)
             result = await database_query.execute({"query": "SELECT 1"})
             assert "未配置" in result
+
+    @pytest.mark.asyncio
+    async def test_database_query_no_asyncpg(self) -> None:
+        """asyncpg 不可用时返回错误提示。"""
+        with patch.dict(os.environ, {"CKYCLAW_DB_QUERY_DSN": "postgresql://x"}, clear=False):
+            with patch.dict("sys.modules", {"asyncpg": None}):
+                result = await database_query.execute({"query": "SELECT 1"})
+        assert "asyncpg" in result
+
+    @pytest.mark.asyncio
+    async def test_database_query_success(self) -> None:
+        """成功查询返回 JSON 结果。"""
+        mock_conn = AsyncMock()
+        mock_conn.fetch = AsyncMock(return_value=[
+            {"id": 1, "name": "Alice"},
+            {"id": 2, "name": "Bob"},
+        ])
+        mock_conn.close = AsyncMock()
+
+        mock_asyncpg = MagicMock()
+        mock_asyncpg.connect = AsyncMock(return_value=mock_conn)
+
+        with patch.dict(os.environ, {"CKYCLAW_DB_QUERY_DSN": "postgresql://x"}, clear=False):
+            with _mock_module("asyncpg", mock_asyncpg):
+                result = await database_query.execute({"query": "SELECT * FROM users", "max_rows": 10})
+        parsed = json.loads(result)
+        assert len(parsed) == 2
+        assert parsed[0]["name"] == "Alice"
+
+    @pytest.mark.asyncio
+    async def test_database_query_connection_failure(self) -> None:
+        """数据库连接失败返回错误信息。"""
+        mock_asyncpg = MagicMock()
+        mock_asyncpg.connect = AsyncMock(side_effect=Exception("connection refused"))
+
+        with patch.dict(os.environ, {"CKYCLAW_DB_QUERY_DSN": "postgresql://x"}, clear=False):
+            with patch.dict("sys.modules", {"asyncpg": mock_asyncpg}):
+                result = await database_query.execute({"query": "SELECT 1"})
+        assert "查询失败" in result
+
+    @pytest.mark.asyncio
+    async def test_database_query_timeout(self) -> None:
+        """查询超时返回超时信息。"""
+        import asyncio as _asyncio
+
+        mock_conn = AsyncMock()
+        mock_conn.fetch = AsyncMock(side_effect=_asyncio.TimeoutError())
+        mock_conn.close = AsyncMock()
+
+        mock_asyncpg = MagicMock()
+        mock_asyncpg.connect = AsyncMock(return_value=mock_conn)
+
+        with patch.dict(os.environ, {"CKYCLAW_DB_QUERY_DSN": "postgresql://x"}, clear=False):
+            with patch.dict("sys.modules", {"asyncpg": mock_asyncpg}):
+                result = await database_query.execute({"query": "SELECT 1"})
+        assert "超时" in result
+
+    @pytest.mark.asyncio
+    async def test_database_query_max_rows(self) -> None:
+        """max_rows 限制返回行数。"""
+        rows = [{"id": i} for i in range(200)]
+        mock_conn = AsyncMock()
+        mock_conn.fetch = AsyncMock(return_value=rows)
+        mock_conn.close = AsyncMock()
+
+        mock_asyncpg = MagicMock()
+        mock_asyncpg.connect = AsyncMock(return_value=mock_conn)
+
+        with patch.dict(os.environ, {"CKYCLAW_DB_QUERY_DSN": "postgresql://x"}, clear=False):
+            with patch.dict("sys.modules", {"asyncpg": mock_asyncpg}):
+                result = await database_query.execute({"query": "SELECT * FROM big", "max_rows": 5})
+        parsed = json.loads(result)
+        assert len(parsed) == 5
+
+    @pytest.mark.asyncio
+    async def test_database_query_with_explicit_connection_string(self) -> None:
+        """使用显式连接字符串而非环境变量。"""
+        mock_conn = AsyncMock()
+        mock_conn.fetch = AsyncMock(return_value=[{"val": 42}])
+        mock_conn.close = AsyncMock()
+
+        mock_asyncpg = MagicMock()
+        mock_asyncpg.connect = AsyncMock(return_value=mock_conn)
+
+        # 清除环境变量确保用的是参数传入的
+        with patch.dict(os.environ, {}, clear=False):
+            os.environ.pop("CKYCLAW_DB_QUERY_DSN", None)
+            with patch.dict("sys.modules", {"asyncpg": mock_asyncpg}):
+                result = await database_query.execute({
+                    "query": "SELECT 42 AS val",
+                    "connection_string": "postgresql://explicit",
+                })
+        parsed = json.loads(result)
+        assert parsed[0]["val"] == 42
+
+    @pytest.mark.asyncio
+    async def test_reject_insert_query(self) -> None:
+        """拒绝 INSERT 查询。"""
+        result = await database_query.execute({"query": "INSERT INTO users VALUES (1)"})
+        assert "仅允许 SELECT" in result
+
+    @pytest.mark.asyncio
+    async def test_reject_select_with_update(self) -> None:
+        """拒绝包含 UPDATE 子句的 SELECT。"""
+        result = await database_query.execute({"query": "SELECT * FROM users; UPDATE users SET name='x'"})
+        assert "禁止" in result
 
 
 # ---------------------------------------------------------------------------
@@ -297,3 +651,72 @@ class TestCodeExecutorTools:
             result = await execute_python.execute({"code": "print(x)"})
         assert "NameError" in result
         assert "exit_code: 1" in result
+
+    @pytest.mark.asyncio
+    async def test_execute_python_no_output(self) -> None:
+        """Python 无输出时返回"(无输出)"。"""
+        mock_result = MagicMock()
+        mock_result.stdout = ""
+        mock_result.stderr = ""
+        mock_result.exit_code = 0
+
+        mock_sandbox = MagicMock()
+        mock_sandbox.execute = AsyncMock(return_value=mock_result)
+
+        mock_cls = MagicMock(return_value=mock_sandbox)
+        with patch("ckyclaw_framework.sandbox.LocalSandbox", mock_cls), \
+             patch("ckyclaw_framework.sandbox.SandboxConfig"):
+            result = await execute_python.execute({"code": "x = 1"})
+        assert result == "(无输出)"
+
+    @pytest.mark.asyncio
+    async def test_execute_shell_with_mock_sandbox(self) -> None:
+        """通过 mock sandbox 测试 Shell 执行。"""
+        mock_result = MagicMock()
+        mock_result.stdout = "file1.txt\nfile2.txt"
+        mock_result.stderr = ""
+        mock_result.exit_code = 0
+
+        mock_sandbox = MagicMock()
+        mock_sandbox.execute = AsyncMock(return_value=mock_result)
+
+        mock_cls = MagicMock(return_value=mock_sandbox)
+        with patch("ckyclaw_framework.sandbox.LocalSandbox", mock_cls), \
+             patch("ckyclaw_framework.sandbox.SandboxConfig"):
+            result = await execute_shell.execute({"command": "ls"})
+        assert "file1.txt" in result
+
+    @pytest.mark.asyncio
+    async def test_execute_shell_error_output(self) -> None:
+        """Shell 执行错误时包含 stderr 和 exit_code。"""
+        mock_result = MagicMock()
+        mock_result.stdout = ""
+        mock_result.stderr = "command not found"
+        mock_result.exit_code = 127
+
+        mock_sandbox = MagicMock()
+        mock_sandbox.execute = AsyncMock(return_value=mock_result)
+
+        mock_cls = MagicMock(return_value=mock_sandbox)
+        with patch("ckyclaw_framework.sandbox.LocalSandbox", mock_cls), \
+             patch("ckyclaw_framework.sandbox.SandboxConfig"):
+            result = await execute_shell.execute({"command": "nonexistent"})
+        assert "command not found" in result
+        assert "exit_code: 127" in result
+
+    @pytest.mark.asyncio
+    async def test_execute_shell_no_output(self) -> None:
+        """Shell 无输出时返回"(无输出)"。"""
+        mock_result = MagicMock()
+        mock_result.stdout = ""
+        mock_result.stderr = ""
+        mock_result.exit_code = 0
+
+        mock_sandbox = MagicMock()
+        mock_sandbox.execute = AsyncMock(return_value=mock_result)
+
+        mock_cls = MagicMock(return_value=mock_sandbox)
+        with patch("ckyclaw_framework.sandbox.LocalSandbox", mock_cls), \
+             patch("ckyclaw_framework.sandbox.SandboxConfig"):
+            result = await execute_shell.execute({"command": "true"})
+        assert result == "(无输出)"

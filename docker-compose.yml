@@ -101,7 +101,42 @@ services:
     profiles:
       - otel
 
+  # === 定时备份（按需启用：docker-compose --profile backup up -d）===
+  backup:
+    image: postgres:16-alpine
+    container_name: ckyclaw-backup
+    restart: unless-stopped
+    volumes:
+      - ./scripts/backup.sh:/scripts/backup.sh:ro
+      - backupdata:/var/backups/ckyclaw
+      - redisdata:/redis-data:ro
+    environment:
+      PGHOST: db
+      PGPORT: "5432"
+      PGUSER: ckyclaw
+      PGPASSWORD: ${POSTGRES_PASSWORD:-ckyclaw_dev}
+      PGDATABASE: ckyclaw
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      BACKUP_DIR: /var/backups/ckyclaw
+      PG_RETAIN_DAYS: "30"
+      REDIS_RETAIN_DAYS: "7"
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        apk add --no-cache redis bash
+        echo "0 2 * * * /bin/bash /scripts/backup.sh >> /var/log/backup.log 2>&1" | crontab -
+        crond -f -l 2
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    profiles:
+      - backup
+
 volumes:
   pgdata:
   redisdata:
   promdata:
+  backupdata:
