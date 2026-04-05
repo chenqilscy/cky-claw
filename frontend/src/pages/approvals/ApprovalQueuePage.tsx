@@ -22,7 +22,7 @@ const triggerLabelMap: Record<string, string> = {
 };
 
 const ApprovalQueuePage: React.FC = () => {
-  const actionRef = useRef<ActionType>();
+  const actionRef = useRef<ActionType>(null);
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
   const [rejectingId, setRejectingId] = useState<string>('');
   const [rejectComment, setRejectComment] = useState('');
