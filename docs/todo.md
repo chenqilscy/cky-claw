@@ -197,31 +197,132 @@
 
 ✅ 已解决：Settings 使用 Pydantic v2 BaseSettings，全部通过 `CKYCLAW_` 前缀环境变量配置，无硬编码
 
-### 引用版本
-分析引用的框架、包、基础镜像等版本是否需要升级更新
+### ~~引用版本~~
+
+✅ 已分析（2026-04-05）：当前依赖版本均为宽松下界约束（`>=`），适合快速迭代阶段。
+
+| 层 | 关键依赖 | 当前约束 | 评估 |
+|---|---|---|---|
+| Framework | litellm | `>=1.40.0` | ✅ 宽松，跟随上游即可 |
+| Framework | pydantic | `>=2.0.0` | ✅ 正确 |
+| Backend | fastapi | `>=0.115.0` | ✅ 正确 |
+| Backend | sqlalchemy[asyncio] | `>=2.0.0` | ✅ 正确 |
+| Backend | alembic | `>=1.13.0` | ✅ 正确 |
+| Frontend | react | `^18.3.0` | ⚠️ React 19 已发布，后续可评估升级 |
+| Frontend | vite | `^5.4.0` | ⚠️ Vite 6 已发布，后续可评估升级 |
+| Frontend | typescript | `~5.5.0` | ⚠️ TS 5.7+ 已发布，可升级 |
+| Docker | python 基础镜像 | `3.12-slim` | ✅ 正确 |
+| Docker | node 基础镜像 | `20-alpine` | ⚠️ Node 22 LTS 已发布，后续可升级 |
+
+**结论**：Python 侧依赖版本健康。前端侧 React 19 / Vite 6 / Node 22 可作为后续优化项，非紧急。
+
+### ~~todo.md 未完成项~~
+
+✅ 已分析（2026-04-05）：#1–#30 全部已完成打勾，O1–O16 全部已完成打勾，v2.1–v2.6 全部已完成。本节完成标记。
 
 ### 多渠道接入
-目前支持哪些渠道，至少要规划哪些渠道？
-- wechat
-- 企业微信
-- 钉钉
-- 自定义渠道
-- ...
+
+**当前状态**：已实现通用 IM 渠道框架（IMChannel ORM + CRUD + Webhook + HMAC 签名验证 + 消息路由），但尚未对接具体 IM 平台。
+
+**规划渠道**（按优先级排序）：
+
+| # | 渠道 | 优先级 | 复杂度 | 说明 |
+|---|------|:------:|:------:|------|
+| C1 | **企业微信** | P1 | 中 | 国内企业首选。需对接回调验证、消息加解密、应用消息推送 |
+| C2 | **钉钉** | P1 | 中 | 阿里系企业标配。需对接机器人 Webhook + Stream 模式 |
+| C3 | **飞书** | P2 | 中 | 字节系企业使用广泛。需对接事件订阅 + 消息卡片 |
+| C4 | **微信公众号/服务号** | P2 | 高 | 面向 C 端客服场景。需微信认证 + 模板消息 + 客服接口 |
+| C5 | **Slack** | P3 | 低 | 海外企业标配。Bolt SDK 成熟 |
+| C6 | **自定义 Webhook** | P3 | 低 | 通用 HTTP 回调，已有基础框架支持 |
+
+**实现方案**：在现有 `IMChannel` 框架基础上，为每个平台实现 `ChannelAdapter`（消息格式转换 + 签名验证 + API 调用）。
 
 ### 用户认证
-- 多种OAuth认证：github google keycloak tenant(qq/wechat) 等
-- 行业常见的优秀认证方案（）
+
+**当前状态**：已实现 JWT + bcrypt 本地认证 + Admin/User 双角色 + RBAC 权限。
+
+**规划升级**（按优先级排序）：
+
+| # | 方案 | 优先级 | 说明 |
+|---|------|:------:|------|
+| A1 | **OAuth 2.0 / OIDC 框架** | P1 | 统一 OAuth 基础设施（authlib / python-social-auth），支持 Authorization Code Flow |
+| A2 | **GitHub OAuth** | P1 | 开发者社区标配，接入简单 |
+| A3 | **企业微信/钉钉/飞书扫码登录** | P1 | 国内企业 SSO 必备，与多渠道接入协同 |
+| A4 | **Keycloak / Casdoor 集成** | P2 | 私有化部署 IdP，企业级 SSO + SAML + LDAP |
+| A5 | **Google OAuth** | P3 | 海外用户场景 |
+
+**推荐架构**：Backend 统一 OAuth 2.0 回调端点 `/api/v1/auth/oauth/{provider}/callback`，前端 OAuth 跳转 + Token 交换，用户表新增 `oauth_provider` + `oauth_id` 字段。
 
 ### 本地启动/调试
 
-本机启动所有的系统，体验功能，提出缺陷。
+**当前状态**：
+- `docker-compose up -d db redis` 启动基础设施 ✅
+- Backend `uv run uvicorn app.main:app --reload` 开发模式 ✅
+- Frontend `pnpm dev` 开发模式 ✅
+- Alembic 迁移 `uv run alembic upgrade head` ✅
 
-### CI/CD
+**待验证**：需实际启动全链路（PG + Redis + Backend + Frontend），体验完整功能流程、发现和修复 UI/API 缺陷。
 
-jenkins 自动构建与部署
+### ~~CI/CD~~
+
+✅ 已完成：
+- **GitHub Actions**: 5 Job 全激活（lint-python / lint-frontend / test-python / test-frontend / build）
+- **Jenkinsfile**: 5 Stage 流水线（Lint 3 并行 + Test 3 并行 + Frontend Build + Docker Build），使用容器化执行
+
+## 八、开放性分析
+
+### 框架分析
+
+当前 `docs/references/competitive-analysis.md` 的分析维度需要重构为两个维度：
+
+**维度一：AI Coding Agent（终端工具类）**
+- Claude Code、OpenAI Codex CLI、DeerFlow
+- 共同特征：单用户终端交互、代码生成/编辑为主、沙箱隔离、MCP 工具扩展
+
+**维度二：Agent 开发框架（SDK 类）**
+- OpenAI Agents SDK、LangChain/LangGraph、AutoGen、CrewAI
+- 共同特征：编程 API、Agent 定义/编排/执行、工具系统、可观测性
+
+CkyClaw Framework 属于**维度二**（Agent 开发框架），在此基础上构建了企业级管理平台。
+
+**待完成**：重写 `competitive-analysis.md`，按双维度对比。
+
+### 自研 vs OpenAI Agents SDK
+
+**决策分析**：
+
+CkyClaw Framework 的核心设计（Agent 数据类、Runner 循环、Handoff、Guardrails、Tracing、Sessions）大量借鉴 OpenAI Agents SDK 的优秀设计。选择自研而非直接依赖 SDK 的原因：
+
+| 维度 | 直接依赖 Agents SDK | 自研 CkyClaw Framework |
+|------|:---:|:---:|
+| **多 Provider 支持** | ❌ 默认绑定 OpenAI | ✅ LiteLLM 适配 10+ 厂商 |
+| **国产模型适配** | ❌ 无原生支持 | ✅ 通义/文心/讯飞/混元/DeepSeek... |
+| **数据主权** | ⚠️ 依赖 OpenAI 基础设施 | ✅ 完全本地化部署 |
+| **定制深度** | ⚠️ 受 SDK API 限制 | ✅ 完全掌控 Runner/Tracing/Session |
+| **企业级扩展** | ❌ 无内置 RBAC/多租户/审计 | ✅ 企业能力深度集成 |
+| **依赖风险** | ⚠️ SDK 版本更新可能 breaking | ✅ 自主演进节奏 |
+| **开发成本** | ✅ 开箱即用 | ⚠️ 需自行实现核心逻辑 |
+
+**结论**：对于面向中国企业的 AI Agent 平台，多 Provider 适配（尤其国产模型）、数据本地化、深度定制能力是刚需。自研框架在设计理念上与 Agents SDK 对齐，同时获得了完全的架构自主权。
+
+**后续方向**：可考虑实现 Agents SDK 兼容层（Adapter），允许用户用 Agents SDK 的 Agent 定义直接在 CkyClaw 上运行。
+
+## 九、当前关键指标
+
+> 更新日期：2026-04-05
+
+| 指标 | 数值 |
+|------|------|
+| 测试总数 | **2383**（Backend 1185 + Framework 1134 + Frontend 64） |
+| 测试覆盖率 | Backend **95%** · Framework **100%** |
+| Alembic 迁移 | **35** 个（0001–0035） |
+| API 路由模块 | **30** 个 |
+| 前端页面 | **25** 个（React.lazy 懒加载） |
+| CI Job | **5** 个 GitHub Actions + **5** Stage Jenkinsfile |
+| TypeScript 错误 | **0** |
 
 ---
 
-*文档版本：v1.5.0*
-*生成日期：2026-04-04*
-*基于：PRD v2.0.9 / mvp-progress.md M0–M7 + v2.1~v2.5 增量实现*
+*文档版本：v2.0.0*
+*生成日期：2026-04-05*
+*基于：PRD v2.0.9 / M0–M7 + v2.1–v2.6 全部完成 + 覆盖率冲刺*

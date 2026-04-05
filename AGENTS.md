@@ -6,17 +6,18 @@ CkyClaw 是基于自研 **CkyClaw Framework** 构建的 AI Agent 管理与运行
 
 ## 项目现状（M0–M7 全部完成）
 
-截至 2026-04-03，**M0–M7 共 8 个里程碑、60+ Phase 全部完成**。
+截至 2026-04-05，**M0–M7 共 8 个里程碑、60+ Phase 全部完成**。
 
 ### 关键指标
 
 | 指标 | 数值 |
 |------|------|
-| 测试总数 | **1965**（Backend 809 + Framework 1092 + Frontend 64） |
-| Alembic 迁移 | 15 个（0001–0015） |
-| API 端点 | 40+ |
-| 前端页面 | 17 个（React.lazy 懒加载） |
-| CI Job | 5 个（lint-python / lint-frontend / test-python / test-frontend / build） |
+| 测试总数 | **2383**（Backend 1185 + Framework 1134 + Frontend 64） |
+| 测试覆盖率 | Backend **95%** · Framework **100%** |
+| Alembic 迁移 | 35 个（0001–0035） |
+| API 路由模块 | 30 个 |
+| 前端页面 | 25 个（React.lazy 懒加载） |
+| CI Job | 5 个 GitHub Actions + 5 Stage Jenkinsfile |
 | TypeScript 错误 | 0 |
 
 ### 已完成能力矩阵
@@ -43,17 +44,11 @@ CkyClaw 是基于自研 **CkyClaw Framework** 构建的 AI Agent 管理与运行
 
 ### 未完成 / 延期项
 
-以下功能在 MVP 范围内标记为"后续迭代"：
-
-- WebSocket 审批通道（实时推送审批请求到前端）
-- 可观测性基础设施（OTel + Jaeger + Prometheus + Grafana）
-- auto-edit 审批模式真实语义（当前等同 FULL_AUTO）
-
-完整的待办事项、PRD 差距分析和演进规划见 `docs/todo.md`。
+重新分析：完整的待办事项、PRD 差距分析和演进规划见 `docs/todo.md`。
 
 ## 代理身份
 
-我（AI 助手）的名字叫 cky，老板也叫 boss。
+我（AI 助手）的名字叫 `cky`，老板也叫 boss。
 
 **永远使用中文回答**。
 
@@ -109,19 +104,19 @@ cky-claw/
 │   │   ├── mcp/                 # MCP 客户端（stdio/sse/http）
 │   │   ├── session/             # Session 会话管理（InMemory/Postgres）
 │   │   └── tracing/             # Tracing 链路追踪（Trace/Span/Processor）
-│   └── tests/                   # 316 个测试
+│   └── tests/                   # 1134 个测试
 ├── backend/                     # CkyClaw Backend — FastAPI 后端服务
 │   ├── app/
-│   │   ├── api/                 # 40+ REST API 端点
-│   │   ├── models/              # SQLAlchemy ORM（15 张表）
+│   │   ├── api/                 # 30 个 REST API 路由模块
+│   │   ├── models/              # SQLAlchemy ORM（35 张表）
 │   │   ├── schemas/             # Pydantic v2 Schema
 │   │   ├── services/            # 业务逻辑层
 │   │   └── core/                # 基础设施（config/auth/crypto/database）
-│   ├── alembic/versions/        # 15 个 Alembic 迁移
-│   └── tests/                   # 401 个测试
+│   ├── alembic/versions/        # 35 个 Alembic 迁移
+│   └── tests/                   # 1185 个测试
 ├── frontend/                    # CkyClaw Frontend — React Web 前端
 │   └── src/
-│       ├── pages/               # 17 个页面（React.lazy 懒加载）
+│       ├── pages/               # 25 个页面（React.lazy 懒加载）
 │       ├── services/            # API 服务层
 │       ├── stores/              # Zustand 状态管理
 │       ├── components/          # 公共组件（ErrorBoundary 等）
