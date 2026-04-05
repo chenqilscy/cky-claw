@@ -208,13 +208,13 @@
 | Backend | fastapi | `>=0.115.0` | ✅ 正确 |
 | Backend | sqlalchemy[asyncio] | `>=2.0.0` | ✅ 正确 |
 | Backend | alembic | `>=1.13.0` | ✅ 正确 |
-| Frontend | react | `^18.3.0` | ⚠️ React 19 已发布，后续可评估升级 |
-| Frontend | vite | `^5.4.0` | ⚠️ Vite 6 已发布，后续可评估升级 |
-| Frontend | typescript | `~5.5.0` | ⚠️ TS 5.7+ 已发布，可升级 |
+| Frontend | react | `^19.0.0` | ✅ 已升级到 React 19 |
+| Frontend | vite | `^6.0.0` | ✅ 已升级到 Vite 6 |
+| Frontend | typescript | `~5.8.0` | ✅ 已升级到 TS 5.8 |
 | Docker | python 基础镜像 | `3.12-slim` | ✅ 正确 |
-| Docker | node 基础镜像 | `20-alpine` | ⚠️ Node 22 LTS 已发布，后续可升级 |
+| Docker | node 基础镜像 | `22-alpine` | ✅ 已升级到 Node 22 LTS |
 
-**结论**：Python 侧依赖版本健康。前端侧 React 19 / Vite 6 / Node 22 可作为后续优化项，非紧急。
+**结论**：全部依赖版本健康。前端侧已完成 React 19 / Vite 6 / TS 5.8 / Node 22 升级。
 
 ### ~~todo.md 未完成项~~
 

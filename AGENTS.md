@@ -312,7 +312,7 @@ npx tsc --noEmit       # 类型检查
 |----|------|
 | **Framework** | Python 3.12+, CkyClaw Framework (自研) |
 | **Backend** | FastAPI, SQLAlchemy (async), Alembic, LiteLLM, Pydantic v2 |
-| **Frontend** | React 18, Vite 5, TypeScript, Ant Design 5, ProComponents, TanStack Query, ReactFlow, ECharts, Zustand |
+| **Frontend** | React 19, Vite 6, TypeScript 5.8, Ant Design 5, ProComponents, TanStack Query, ReactFlow, ECharts, Zustand |
 | **Database** | PostgreSQL 16, Redis 7 |
 | **Deploy** | Docker Compose (MVP), Kubernetes (后续) |
 | **Python 包管理** | uv |
