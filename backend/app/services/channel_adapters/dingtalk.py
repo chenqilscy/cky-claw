@@ -149,7 +149,8 @@ class DingTalkAdapter(ChannelAdapter):
                 digestmod=hashlib.sha256,
             ).digest()
             sign = base64.b64encode(hmac_code).decode("utf-8")
-            webhook_url = f"{webhook_url}&timestamp={timestamp}&sign={sign}"
+            separator = "&" if "?" in webhook_url else "?"
+            webhook_url = f"{webhook_url}{separator}timestamp={timestamp}&sign={sign}"
 
         try:
             async with httpx.AsyncClient(timeout=10.0) as client:

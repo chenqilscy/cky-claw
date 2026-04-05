@@ -18,9 +18,8 @@ from __future__ import annotations
 import base64
 import hashlib
 import logging
-import socket
+import os
 import struct
-import time
 import xml.etree.ElementTree as ET
 from typing import Any
 
@@ -249,7 +248,6 @@ def _encrypt_message(
 
 def _generate_random_bytes(length: int) -> bytes:
     """生成随机字节。"""
-    import os
     return os.urandom(length)
 
 
