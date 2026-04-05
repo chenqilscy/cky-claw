@@ -271,21 +271,14 @@
 
 ## 八、开放性分析
 
-### 框架分析
+### ~~框架分析~~
 
-当前 `docs/references/competitive-analysis.md` 的分析维度需要重构为两个维度：
+✅ 已完成（2026-04-05）：`docs/references/competitive-analysis.md` 已按双维度重构（v2.0）。
 
-**维度一：AI Coding Agent（终端工具类）**
-- Claude Code、OpenAI Codex CLI、DeerFlow
-- 共同特征：单用户终端交互、代码生成/编辑为主、沙箱隔离、MCP 工具扩展
+**维度一：AI Coding Agent（终端工具类）** — Claude Code、Codex CLI、DeerFlow
+**维度二：Agent 开发框架（SDK 类）** — Agents SDK、LangChain/LangGraph、AutoGen、CrewAI
 
-**维度二：Agent 开发框架（SDK 类）**
-- OpenAI Agents SDK、LangChain/LangGraph、AutoGen、CrewAI
-- 共同特征：编程 API、Agent 定义/编排/执行、工具系统、可观测性
-
-CkyClaw Framework 属于**维度二**（Agent 开发框架），在此基础上构建了企业级管理平台。
-
-**待完成**：重写 `competitive-analysis.md`，按双维度对比。
+CkyClaw Framework 属于维度二，横向对比 5 个 SDK 框架 + 纵向分析 3 个 Coding Agent 的设计借鉴。
 
 ### 自研 vs OpenAI Agents SDK
 
