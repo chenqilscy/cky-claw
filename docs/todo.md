@@ -231,11 +231,11 @@
 | C1 | ~~**企业微信**~~ | P1 | 中 | ✅ 已完成（WeComAdapter：签名验证 + AES-256-CBC 消息加解密 + XML 解析 + 应用消息推送 + 19 测试） |
 | C2 | ~~**钉钉**~~ | P1 | 中 | ✅ 已完成（DingTalkAdapter：HMAC-SHA256 签名验证 + JSON 解析 + Webhook 推送 + 15 测试） |
 | C3 | ~~**飞书**~~ | P2 | 中 | ✅ 已完成（FeishuAdapter：SHA256 签名验证 + JSON 解析 + URL 验证回调 + REST API 消息推送 + 16 测试） |
-| C4 | **微信公众号/服务号** | P2 | 高 | 面向 C 端客服场景。需微信认证 + 模板消息 + 客服接口 |
-| C5 | **Slack** | P3 | 低 | 海外企业标配。Bolt SDK 成熟 |
+| C4 | ~~**微信公众号/服务号**~~ | P2 | 高 | ✅ 已完成（WeChatOfficialAdapter：SHA1 签名验证 + 明文/加密 XML 解析 + 7 种消息类型 + 被动回复 + 客服消息推送 + 模板消息推送 + 36 测试） |
+| C5 | ~~**Slack**~~ | P3 | 低 | ✅ 已完成（SlackAdapter：HMAC-SHA256 签名验证 + 时间戳防重放 + JSON 消息解析 + Bot/系统消息过滤 + challenge 验证 + chat.postMessage 推送 + 23 测试） |
 | C6 | ~~**自定义 Webhook**~~ | P3 | 低 | ✅ 已完成（CustomWebhookAdapter：可配 HMAC 签名 + 嵌套字段映射 + 通用推送 + 16 测试） |
 
-**已实现架构**：`ChannelAdapter` 抽象基类 + `WeComAdapter` / `DingTalkAdapter` 子类 + 适配器注册表 + Webhook 端点集成，位于 `backend/app/services/channel_adapters/`。
+**已实现架构**：`ChannelAdapter` 抽象基类 + `WeComAdapter` / `DingTalkAdapter` / `FeishuAdapter` / `CustomWebhookAdapter` / `WeChatOfficialAdapter` / `SlackAdapter` 子类 + 适配器注册表 + Webhook 端点集成，位于 `backend/app/services/channel_adapters/`。
 
 ### 用户认证
 
@@ -306,7 +306,7 @@ CkyClaw Framework 的核心设计（Agent 数据类、Runner 循环、Handoff、
 
 | 指标 | 数值 |
 |------|------|
-| 测试总数 | **2446**（Backend 1248 + Framework 1134 + Frontend 64） |
+| 测试总数 | **2504**（Backend 1370 + Framework 1134 + Frontend 64） |
 | 测试覆盖率 | Backend **95%** · Framework **100%** |
 | Alembic 迁移 | **36** 个（0001–0036） |
 | API 路由模块 | **30** 个 |
@@ -325,8 +325,8 @@ CkyClaw Framework 的核心设计（Agent 数据类、Runner 循环、Handoff、
 | # | 渠道 | 优先级 | 依赖 | 预计工作量 |
 |---|------|:------:|------|-----------|
 | ~~C3~~ | ~~飞书~~ | ~~P2~~ | — | ✅ 已完成 |
-| C4 | 微信公众号/服务号 | P2 | 微信认证 + 模板消息接口 | 高（OAuth 微信授权 + 模板消息 + 客服接口） |
-| C5 | Slack | P3 | Slack App + Bolt SDK | 低（Bolt SDK 成熟，社区资源丰富） |
+| ~~C4~~ | ~~微信公众号/服务号~~ | ~~P2~~ | — | ✅ 已完成（WeChatOfficialAdapter + 36 测试） |
+| ~~C5~~ | ~~Slack~~ | ~~P3~~ | — | ✅ 已完成（SlackAdapter + 23 测试） |
 | ~~C6~~ | ~~自定义 Webhook~~ | ~~P3~~ | — | ✅ 已完成 |
 
 ### 10.2 用户认证扩展（待开发）
@@ -347,6 +347,6 @@ CkyClaw Framework 的核心设计（Agent 数据类、Runner 循环、Handoff、
 
 ---
 
-*文档版本：v2.1.0*
+*文档版本：v2.2.0*
 *生成日期：2026-04-05*
 *基于：PRD v2.0.9 / M0–M7 + v2.1–v2.6 全部完成 + OAuth 2.0 + ChannelAdapter + 覆盖率冲刺*

@@ -16,6 +16,8 @@ import pytest
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives.padding import PKCS7
 
+import httpx
+
 
 # ========== ChannelAdapter 基础架构 ==========
 
@@ -83,7 +85,7 @@ class TestChannelAdapterBase:
         from app.services.channel_adapters import get_adapter
 
         assert get_adapter("unknown") is None
-        assert get_adapter("slack") is None
+        assert get_adapter("telegram") is None
 
     def test_adapter_registry_exports(self) -> None:
         """__init__ 导出完整。"""
@@ -923,3 +925,976 @@ class TestCustomWebhookAdapter:
         call_args = mock_client.post.call_args
         headers = call_args[1].get("headers", {})
         assert "x-signature" in headers
+
+
+# ========== 微信公众号/服务号适配器测试 ==========
+
+_WECHAT_OFFICIAL_CONFIG: dict[str, Any] = {
+    "appid": "wx_test_appid",
+    "appsecret": "wx_test_appsecret",
+    "token": "wx_verify_token",
+}
+
+_WECHAT_OFFICIAL_CONFIG_ENCRYPTED: dict[str, Any] = {
+    **_WECHAT_OFFICIAL_CONFIG,
+    "encoding_aes_key": base64.b64encode(b"a" * 32).decode().rstrip("="),
+}
+
+
+def _make_wechat_signature(token: str, timestamp: str, nonce: str) -> str:
+    """按微信公众号规则生成签名。"""
+    sort_list = sorted([token, timestamp, nonce])
+    return hashlib.sha1("".join(sort_list).encode("utf-8")).hexdigest()
+
+
+def _build_text_xml(
+    from_user: str, to_user: str, content: str, msg_id: str = "123456"
+) -> bytes:
+    """构造微信文本消息 XML。"""
+    create_time = str(int(time.time()))
+    return (
+        "<xml>"
+        f"<ToUserName><![CDATA[{to_user}]]></ToUserName>"
+        f"<FromUserName><![CDATA[{from_user}]]></FromUserName>"
+        f"<CreateTime>{create_time}</CreateTime>"
+        "<MsgType><![CDATA[text]]></MsgType>"
+        f"<Content><![CDATA[{content}]]></Content>"
+        f"<MsgId>{msg_id}</MsgId>"
+        "</xml>"
+    ).encode("utf-8")
+
+
+def _build_image_xml(from_user: str, to_user: str) -> bytes:
+    """构造微信图片消息 XML。"""
+    create_time = str(int(time.time()))
+    return (
+        "<xml>"
+        f"<ToUserName><![CDATA[{to_user}]]></ToUserName>"
+        f"<FromUserName><![CDATA[{from_user}]]></FromUserName>"
+        f"<CreateTime>{create_time}</CreateTime>"
+        "<MsgType><![CDATA[image]]></MsgType>"
+        "<PicUrl><![CDATA[https://example.com/pic.jpg]]></PicUrl>"
+        "<MediaId><![CDATA[media_id_123]]></MediaId>"
+        "<MsgId>123457</MsgId>"
+        "</xml>"
+    ).encode("utf-8")
+
+
+def _build_voice_xml(from_user: str, to_user: str, recognition: str = "") -> bytes:
+    """构造微信语音消息 XML。"""
+    create_time = str(int(time.time()))
+    recognition_tag = (
+        f"<Recognition><![CDATA[{recognition}]]></Recognition>" if recognition else ""
+    )
+    return (
+        "<xml>"
+        f"<ToUserName><![CDATA[{to_user}]]></ToUserName>"
+        f"<FromUserName><![CDATA[{from_user}]]></FromUserName>"
+        f"<CreateTime>{create_time}</CreateTime>"
+        "<MsgType><![CDATA[voice]]></MsgType>"
+        "<MediaId><![CDATA[voice_media_123]]></MediaId>"
+        "<Format><![CDATA[amr]]></Format>"
+        f"{recognition_tag}"
+        "<MsgId>123458</MsgId>"
+        "</xml>"
+    ).encode("utf-8")
+
+
+def _build_event_xml(from_user: str, to_user: str, event_type: str) -> bytes:
+    """构造微信事件消息 XML。"""
+    create_time = str(int(time.time()))
+    return (
+        "<xml>"
+        f"<ToUserName><![CDATA[{to_user}]]></ToUserName>"
+        f"<FromUserName><![CDATA[{from_user}]]></FromUserName>"
+        f"<CreateTime>{create_time}</CreateTime>"
+        "<MsgType><![CDATA[event]]></MsgType>"
+        f"<Event><![CDATA[{event_type}]]></Event>"
+        "</xml>"
+    ).encode("utf-8")
+
+
+def _build_location_xml(from_user: str, to_user: str) -> bytes:
+    """构造微信位置消息 XML。"""
+    create_time = str(int(time.time()))
+    return (
+        "<xml>"
+        f"<ToUserName><![CDATA[{to_user}]]></ToUserName>"
+        f"<FromUserName><![CDATA[{from_user}]]></FromUserName>"
+        f"<CreateTime>{create_time}</CreateTime>"
+        "<MsgType><![CDATA[location]]></MsgType>"
+        "<Location_X>39.908860</Location_X>"
+        "<Location_Y>116.397470</Location_Y>"
+        "<Scale>20</Scale>"
+        "<Label><![CDATA[天安门广场]]></Label>"
+        "<MsgId>123459</MsgId>"
+        "</xml>"
+    ).encode("utf-8")
+
+
+def _build_link_xml(from_user: str, to_user: str) -> bytes:
+    """构造微信链接消息 XML。"""
+    create_time = str(int(time.time()))
+    return (
+        "<xml>"
+        f"<ToUserName><![CDATA[{to_user}]]></ToUserName>"
+        f"<FromUserName><![CDATA[{from_user}]]></FromUserName>"
+        f"<CreateTime>{create_time}</CreateTime>"
+        "<MsgType><![CDATA[link]]></MsgType>"
+        "<Title><![CDATA[CkyClaw 官网]]></Title>"
+        "<Description><![CDATA[AI Agent 平台]]></Description>"
+        "<Url><![CDATA[https://ckyclaw.com]]></Url>"
+        "<MsgId>123460</MsgId>"
+        "</xml>"
+    ).encode("utf-8")
+
+
+def _build_video_xml(from_user: str, to_user: str, msg_type: str = "video") -> bytes:
+    """构造微信视频/短视频消息 XML。"""
+    create_time = str(int(time.time()))
+    return (
+        "<xml>"
+        f"<ToUserName><![CDATA[{to_user}]]></ToUserName>"
+        f"<FromUserName><![CDATA[{from_user}]]></FromUserName>"
+        f"<CreateTime>{create_time}</CreateTime>"
+        f"<MsgType><![CDATA[{msg_type}]]></MsgType>"
+        "<MediaId><![CDATA[video_media_123]]></MediaId>"
+        "<ThumbMediaId><![CDATA[thumb_media_123]]></ThumbMediaId>"
+        "<MsgId>123461</MsgId>"
+        "</xml>"
+    ).encode("utf-8")
+
+
+class TestWeChatOfficialAdapter:
+    """微信公众号/服务号适配器测试。"""
+
+    def _get_adapter(self):
+        from app.services.channel_adapters.wechat_official import WeChatOfficialAdapter
+        return WeChatOfficialAdapter()
+
+    # ---------- 签名验证 ----------
+
+    def test_verify_request_valid(self) -> None:
+        """有效签名验证通过。"""
+        adapter = self._get_adapter()
+        ts, nonce = "1609459200", "abc123"
+        sig = _make_wechat_signature(_WECHAT_OFFICIAL_CONFIG["token"], ts, nonce)
+        headers = {"signature": sig, "timestamp": ts, "nonce": nonce}
+        assert adapter.verify_request(headers, b"", _WECHAT_OFFICIAL_CONFIG) is True
+
+    def test_verify_request_invalid_signature(self) -> None:
+        """无效签名验证失败。"""
+        adapter = self._get_adapter()
+        headers = {"signature": "bad_sig", "timestamp": "123", "nonce": "abc"}
+        assert adapter.verify_request(headers, b"", _WECHAT_OFFICIAL_CONFIG) is False
+
+    def test_verify_request_missing_params(self) -> None:
+        """缺少签名参数验证失败。"""
+        adapter = self._get_adapter()
+        # 缺少 signature
+        assert adapter.verify_request(
+            {"timestamp": "123", "nonce": "abc"}, b"", _WECHAT_OFFICIAL_CONFIG
+        ) is False
+        # 缺少 timestamp
+        assert adapter.verify_request(
+            {"signature": "abc", "nonce": "abc"}, b"", _WECHAT_OFFICIAL_CONFIG
+        ) is False
+        # 缺少 nonce
+        assert adapter.verify_request(
+            {"signature": "abc", "timestamp": "123"}, b"", _WECHAT_OFFICIAL_CONFIG
+        ) is False
+
+    def test_verify_request_empty_headers(self) -> None:
+        """空 headers 验证失败。"""
+        adapter = self._get_adapter()
+        assert adapter.verify_request({}, b"", _WECHAT_OFFICIAL_CONFIG) is False
+
+    # ---------- 消息解析：文本 ----------
+
+    def test_parse_text_message(self) -> None:
+        """解析文本消息。"""
+        adapter = self._get_adapter()
+        body = _build_text_xml("user_openid", "gh_official", "hello world")
+        msg = adapter.parse_message(body, _WECHAT_OFFICIAL_CONFIG)
+        assert msg is not None
+        assert msg.sender_id == "user_openid"
+        assert msg.content == "hello world"
+        assert msg.message_type == "text"
+        assert msg.raw_data["_to_user"] == "gh_official"
+
+    # ---------- 消息解析：图片 ----------
+
+    def test_parse_image_message(self) -> None:
+        """解析图片消息。"""
+        adapter = self._get_adapter()
+        body = _build_image_xml("user1", "gh_official")
+        msg = adapter.parse_message(body, _WECHAT_OFFICIAL_CONFIG)
+        assert msg is not None
+        assert msg.message_type == "image"
+        assert msg.content == "https://example.com/pic.jpg"
+
+    # ---------- 消息解析：语音 ----------
+
+    def test_parse_voice_message_with_recognition(self) -> None:
+        """解析语音消息（带语音识别）。"""
+        adapter = self._get_adapter()
+        body = _build_voice_xml("user1", "gh_official", "你好世界")
+        msg = adapter.parse_message(body, _WECHAT_OFFICIAL_CONFIG)
+        assert msg is not None
+        assert msg.message_type == "voice"
+        assert msg.content == "你好世界"
+
+    def test_parse_voice_message_without_recognition(self) -> None:
+        """解析语音消息（无语音识别）。"""
+        adapter = self._get_adapter()
+        body = _build_voice_xml("user1", "gh_official")
+        msg = adapter.parse_message(body, _WECHAT_OFFICIAL_CONFIG)
+        assert msg is not None
+        assert msg.message_type == "voice"
+        assert msg.content == "voice_media_123"
+
+    # ---------- 消息解析：视频 / 短视频 ----------
+
+    def test_parse_video_message(self) -> None:
+        """解析视频消息。"""
+        adapter = self._get_adapter()
+        body = _build_video_xml("user1", "gh_official", "video")
+        msg = adapter.parse_message(body, _WECHAT_OFFICIAL_CONFIG)
+        assert msg is not None
+        assert msg.message_type == "video"
+        assert msg.content == "video_media_123"
+
+    def test_parse_shortvideo_message(self) -> None:
+        """解析短视频消息。"""
+        adapter = self._get_adapter()
+        body = _build_video_xml("user1", "gh_official", "shortvideo")
+        msg = adapter.parse_message(body, _WECHAT_OFFICIAL_CONFIG)
+        assert msg is not None
+        assert msg.message_type == "shortvideo"
+        assert msg.content == "video_media_123"
+
+    # ---------- 消息解析：位置 ----------
+
+    def test_parse_location_message(self) -> None:
+        """解析位置消息。"""
+        adapter = self._get_adapter()
+        body = _build_location_xml("user1", "gh_official")
+        msg = adapter.parse_message(body, _WECHAT_OFFICIAL_CONFIG)
+        assert msg is not None
+        assert msg.message_type == "location"
+        assert "39.908860" in msg.content
+        assert "天安门广场" in msg.content
+
+    # ---------- 消息解析：链接 ----------
+
+    def test_parse_link_message(self) -> None:
+        """解析链接消息。"""
+        adapter = self._get_adapter()
+        body = _build_link_xml("user1", "gh_official")
+        msg = adapter.parse_message(body, _WECHAT_OFFICIAL_CONFIG)
+        assert msg is not None
+        assert msg.message_type == "link"
+        assert "CkyClaw 官网" in msg.content
+        assert "https://ckyclaw.com" in msg.content
+
+    # ---------- 消息解析：事件 ----------
+
+    def test_parse_event_subscribe(self) -> None:
+        """解析关注事件。"""
+        adapter = self._get_adapter()
+        body = _build_event_xml("user1", "gh_official", "subscribe")
+        msg = adapter.parse_message(body, _WECHAT_OFFICIAL_CONFIG)
+        assert msg is not None
+        assert msg.message_type == "event"
+        assert msg.content == "event:subscribe"
+        assert msg.raw_data["_to_user"] == "gh_official"
+
+    def test_parse_event_unsubscribe(self) -> None:
+        """解析取消关注事件。"""
+        adapter = self._get_adapter()
+        body = _build_event_xml("user1", "gh_official", "unsubscribe")
+        msg = adapter.parse_message(body, _WECHAT_OFFICIAL_CONFIG)
+        assert msg is not None
+        assert msg.content == "event:unsubscribe"
+
+    # ---------- 消息解析：异常 ----------
+
+    def test_parse_invalid_xml(self) -> None:
+        """无效 XML 返回 None。"""
+        adapter = self._get_adapter()
+        assert adapter.parse_message(b"not xml", _WECHAT_OFFICIAL_CONFIG) is None
+
+    def test_parse_empty_body(self) -> None:
+        """空消息体返回 None。"""
+        adapter = self._get_adapter()
+        assert adapter.parse_message(b"", _WECHAT_OFFICIAL_CONFIG) is None
+
+    # ---------- URL 验证 ----------
+
+    def test_handle_verification(self) -> None:
+        """URL 验证请求返回 echostr。"""
+        adapter = self._get_adapter()
+        result = adapter.handle_verification(
+            b"", {"echostr": "echo_test_123"}, _WECHAT_OFFICIAL_CONFIG
+        )
+        assert result == "echo_test_123"
+
+    def test_handle_verification_no_echostr(self) -> None:
+        """非验证请求返回 None。"""
+        adapter = self._get_adapter()
+        result = adapter.handle_verification(b"", {}, _WECHAT_OFFICIAL_CONFIG)
+        assert result is None
+
+    # ---------- 被动回复 ----------
+
+    def test_build_passive_reply(self) -> None:
+        """构造被动回复 XML。"""
+        from app.services.channel_adapters.wechat_official import build_passive_reply
+
+        xml = build_passive_reply("hello user", "user_openid", "gh_official")
+        assert "<ToUserName><![CDATA[user_openid]]>" in xml
+        assert "<FromUserName><![CDATA[gh_official]]>" in xml
+        assert "<Content><![CDATA[hello user]]>" in xml
+        assert "<MsgType><![CDATA[text]]>" in xml
+        assert "<CreateTime>" in xml
+
+    # ---------- 客服消息推送 ----------
+
+    @pytest.mark.asyncio
+    async def test_send_message_success(self) -> None:
+        """客服消息推送成功。"""
+        adapter = self._get_adapter()
+
+        mock_token_resp = MagicMock()
+        mock_token_resp.json.return_value = {"access_token": "test_access_token", "expires_in": 7200}
+
+        mock_send_resp = MagicMock()
+        mock_send_resp.json.return_value = {"errcode": 0, "errmsg": "ok"}
+
+        mock_client = AsyncMock()
+        mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+        mock_client.__aexit__ = AsyncMock(return_value=False)
+        mock_client.get = AsyncMock(return_value=mock_token_resp)
+        mock_client.post = AsyncMock(return_value=mock_send_resp)
+
+        with patch("app.services.channel_adapters.wechat_official.httpx.AsyncClient", return_value=mock_client):
+            result = await adapter.send_message(_WECHAT_OFFICIAL_CONFIG, "user_openid", "hello")
+        assert result is True
+
+    @pytest.mark.asyncio
+    async def test_send_message_no_credentials(self) -> None:
+        """缺少 appid/appsecret 发送失败。"""
+        adapter = self._get_adapter()
+        result = await adapter.send_message({}, "user1", "hello")
+        assert result is False
+
+    @pytest.mark.asyncio
+    async def test_send_message_token_error(self) -> None:
+        """获取 access_token 失败。"""
+        adapter = self._get_adapter()
+
+        mock_resp = MagicMock()
+        mock_resp.json.return_value = {"errcode": 40013, "errmsg": "invalid appid"}
+
+        mock_client = AsyncMock()
+        mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+        mock_client.__aexit__ = AsyncMock(return_value=False)
+        mock_client.get = AsyncMock(return_value=mock_resp)
+
+        with patch("app.services.channel_adapters.wechat_official.httpx.AsyncClient", return_value=mock_client):
+            result = await adapter.send_message(_WECHAT_OFFICIAL_CONFIG, "user1", "hello")
+        assert result is False
+
+    @pytest.mark.asyncio
+    async def test_send_message_api_error(self) -> None:
+        """客服消息 API 返回错误。"""
+        adapter = self._get_adapter()
+
+        mock_token_resp = MagicMock()
+        mock_token_resp.json.return_value = {"access_token": "tok", "expires_in": 7200}
+
+        mock_send_resp = MagicMock()
+        mock_send_resp.json.return_value = {"errcode": 45015, "errmsg": "out of response count limit"}
+
+        mock_client = AsyncMock()
+        mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+        mock_client.__aexit__ = AsyncMock(return_value=False)
+        mock_client.get = AsyncMock(return_value=mock_token_resp)
+        mock_client.post = AsyncMock(return_value=mock_send_resp)
+
+        with patch("app.services.channel_adapters.wechat_official.httpx.AsyncClient", return_value=mock_client):
+            result = await adapter.send_message(_WECHAT_OFFICIAL_CONFIG, "user1", "hello")
+        assert result is False
+
+    @pytest.mark.asyncio
+    async def test_send_message_network_error(self) -> None:
+        """网络异常。"""
+        adapter = self._get_adapter()
+
+        mock_token_resp = MagicMock()
+        mock_token_resp.json.return_value = {"access_token": "tok", "expires_in": 7200}
+
+        mock_client = AsyncMock()
+        mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+        mock_client.__aexit__ = AsyncMock(return_value=False)
+        mock_client.get = AsyncMock(return_value=mock_token_resp)
+        mock_client.post = AsyncMock(side_effect=httpx.HTTPError("connection refused"))
+
+        with patch("app.services.channel_adapters.wechat_official.httpx.AsyncClient", return_value=mock_client):
+            result = await adapter.send_message(_WECHAT_OFFICIAL_CONFIG, "user1", "hello")
+        assert result is False
+
+    # ---------- 模板消息 ----------
+
+    @pytest.mark.asyncio
+    async def test_send_template_message_success(self) -> None:
+        """模板消息发送成功。"""
+        adapter = self._get_adapter()
+
+        mock_token_resp = MagicMock()
+        mock_token_resp.json.return_value = {"access_token": "tok", "expires_in": 7200}
+
+        mock_send_resp = MagicMock()
+        mock_send_resp.json.return_value = {"errcode": 0, "errmsg": "ok", "msgid": 12345}
+
+        mock_client = AsyncMock()
+        mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+        mock_client.__aexit__ = AsyncMock(return_value=False)
+        mock_client.get = AsyncMock(return_value=mock_token_resp)
+        mock_client.post = AsyncMock(return_value=mock_send_resp)
+
+        template_data = {
+            "first": {"value": "您好", "color": "#173177"},
+            "keyword1": {"value": "Agent 运行完成"},
+        }
+
+        with patch("app.services.channel_adapters.wechat_official.httpx.AsyncClient", return_value=mock_client):
+            result = await adapter.send_template_message(
+                _WECHAT_OFFICIAL_CONFIG, "user_openid", "tpl_1234", template_data, url="https://ckyclaw.com"
+            )
+        assert result is True
+
+    @pytest.mark.asyncio
+    async def test_send_template_message_error(self) -> None:
+        """模板消息发送失败。"""
+        adapter = self._get_adapter()
+
+        mock_token_resp = MagicMock()
+        mock_token_resp.json.return_value = {"access_token": "tok", "expires_in": 7200}
+
+        mock_send_resp = MagicMock()
+        mock_send_resp.json.return_value = {"errcode": 40037, "errmsg": "invalid template_id"}
+
+        mock_client = AsyncMock()
+        mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+        mock_client.__aexit__ = AsyncMock(return_value=False)
+        mock_client.get = AsyncMock(return_value=mock_token_resp)
+        mock_client.post = AsyncMock(return_value=mock_send_resp)
+
+        with patch("app.services.channel_adapters.wechat_official.httpx.AsyncClient", return_value=mock_client):
+            result = await adapter.send_template_message(
+                _WECHAT_OFFICIAL_CONFIG, "user1", "bad_tpl", {}
+            )
+        assert result is False
+
+    @pytest.mark.asyncio
+    async def test_send_template_message_no_credentials(self) -> None:
+        """缺少凭证时模板消息发送失败。"""
+        adapter = self._get_adapter()
+        result = await adapter.send_template_message({}, "user1", "tpl_1234", {})
+        assert result is False
+
+    @pytest.mark.asyncio
+    async def test_send_template_message_network_error(self) -> None:
+        """模板消息网络异常。"""
+        adapter = self._get_adapter()
+
+        mock_token_resp = MagicMock()
+        mock_token_resp.json.return_value = {"access_token": "tok", "expires_in": 7200}
+
+        mock_client = AsyncMock()
+        mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+        mock_client.__aexit__ = AsyncMock(return_value=False)
+        mock_client.get = AsyncMock(return_value=mock_token_resp)
+        mock_client.post = AsyncMock(side_effect=httpx.HTTPError("timeout"))
+
+        with patch("app.services.channel_adapters.wechat_official.httpx.AsyncClient", return_value=mock_client):
+            result = await adapter.send_template_message(
+                _WECHAT_OFFICIAL_CONFIG, "user1", "tpl_1234", {}
+            )
+        assert result is False
+
+    # ---------- 注册表集成 ----------
+
+    def test_adapter_in_registry(self) -> None:
+        """适配器已注册在全局注册表中。"""
+        from app.services.channel_adapters import get_adapter
+        from app.services.channel_adapters.wechat_official import WeChatOfficialAdapter
+
+        adapter = get_adapter("wechat_official")
+        assert isinstance(adapter, WeChatOfficialAdapter)
+
+    # ---------- 加解密（安全模式） ----------
+
+    def test_decrypt_encrypted_message(self) -> None:
+        """解密安全模式下的加密消息。"""
+        from app.services.channel_adapters.wechat_official import _decrypt_message
+
+        appid = "wx_test_appid"
+        encoding_aes_key = base64.b64encode(b"a" * 32).decode().rstrip("=")
+        aes_key = base64.b64decode(encoding_aes_key + "=")
+        iv = aes_key[:16]
+
+        # 构造明文：random(16) + msg_len(4) + msg + appid
+        import os as _os
+        random_bytes = _os.urandom(16)
+        msg = "<xml><Content>encrypted hello</Content></xml>"
+        msg_bytes = msg.encode("utf-8")
+        appid_bytes = appid.encode("utf-8")
+        content = random_bytes + struct.pack("!I", len(msg_bytes)) + msg_bytes + appid_bytes
+
+        # PKCS7 填充 + AES 加密
+        padder = PKCS7(128).padder()
+        padded = padder.update(content) + padder.finalize()
+        cipher = Cipher(algorithms.AES(aes_key), modes.CBC(iv))
+        encryptor = cipher.encryptor()
+        encrypted = encryptor.update(padded) + encryptor.finalize()
+        encrypt_text = base64.b64encode(encrypted).decode()
+
+        result = _decrypt_message(encrypt_text, encoding_aes_key, appid)
+        assert result == msg
+
+    def test_decrypt_message_appid_mismatch(self) -> None:
+        """AppID 不匹配时解密返回 None。"""
+        from app.services.channel_adapters.wechat_official import _decrypt_message
+
+        encoding_aes_key = base64.b64encode(b"a" * 32).decode().rstrip("=")
+        aes_key = base64.b64decode(encoding_aes_key + "=")
+        iv = aes_key[:16]
+
+        import os as _os
+        random_bytes = _os.urandom(16)
+        msg = "<xml><Content>test</Content></xml>"
+        msg_bytes = msg.encode("utf-8")
+        wrong_appid = "wrong_appid".encode("utf-8")
+        content = random_bytes + struct.pack("!I", len(msg_bytes)) + msg_bytes + wrong_appid
+
+        padder = PKCS7(128).padder()
+        padded = padder.update(content) + padder.finalize()
+        cipher = Cipher(algorithms.AES(aes_key), modes.CBC(iv))
+        encryptor = cipher.encryptor()
+        encrypted = encryptor.update(padded) + encryptor.finalize()
+        encrypt_text = base64.b64encode(encrypted).decode()
+
+        result = _decrypt_message(encrypt_text, encoding_aes_key, "wx_test_appid")
+        assert result is None
+
+    def test_decrypt_message_empty_key(self) -> None:
+        """空 encoding_aes_key 返回 None。"""
+        from app.services.channel_adapters.wechat_official import _decrypt_message
+
+        result = _decrypt_message("encrypted_data", "", "appid")
+        assert result is None
+
+    def test_decrypt_message_invalid_data(self) -> None:
+        """无效密文数据返回 None。"""
+        from app.services.channel_adapters.wechat_official import _decrypt_message
+
+        encoding_aes_key = base64.b64encode(b"a" * 32).decode().rstrip("=")
+        result = _decrypt_message("not_valid_base64!!!", encoding_aes_key, "appid")
+        assert result is None
+
+    def test_parse_encrypted_message(self) -> None:
+        """解析安全模式加密消息（端到端）。"""
+        adapter = self._get_adapter()
+
+        appid = "wx_test_appid"
+        encoding_aes_key = base64.b64encode(b"a" * 32).decode().rstrip("=")
+        aes_key = base64.b64decode(encoding_aes_key + "=")
+        iv = aes_key[:16]
+
+        # 构造内层 XML
+        inner_xml = (
+            "<xml>"
+            "<ToUserName><![CDATA[gh_official]]></ToUserName>"
+            "<FromUserName><![CDATA[enc_user]]></FromUserName>"
+            "<CreateTime>1609459200</CreateTime>"
+            "<MsgType><![CDATA[text]]></MsgType>"
+            "<Content><![CDATA[encrypted hello]]></Content>"
+            "<MsgId>999</MsgId>"
+            "</xml>"
+        )
+
+        # 加密
+        import os as _os
+        random_bytes = _os.urandom(16)
+        msg_bytes = inner_xml.encode("utf-8")
+        appid_bytes = appid.encode("utf-8")
+        content = random_bytes + struct.pack("!I", len(msg_bytes)) + msg_bytes + appid_bytes
+
+        padder = PKCS7(128).padder()
+        padded = padder.update(content) + padder.finalize()
+        cipher = Cipher(algorithms.AES(aes_key), modes.CBC(iv))
+        encryptor = cipher.encryptor()
+        encrypted = encryptor.update(padded) + encryptor.finalize()
+        encrypt_text = base64.b64encode(encrypted).decode()
+
+        # 构造外层 XML（安全模式下微信发来的格式）
+        outer_xml = (
+            "<xml>"
+            f"<Encrypt><![CDATA[{encrypt_text}]]></Encrypt>"
+            "</xml>"
+        ).encode("utf-8")
+
+        config = {
+            "appid": appid,
+            "appsecret": "secret",
+            "token": "tok",
+            "encoding_aes_key": encoding_aes_key,
+        }
+        msg = adapter.parse_message(outer_xml, config)
+        assert msg is not None
+        assert msg.sender_id == "enc_user"
+        assert msg.content == "encrypted hello"
+        assert msg.message_type == "text"
+
+    # ---------- _extract_content 未知类型 ----------
+
+    def test_parse_unknown_message_type(self) -> None:
+        """未知消息类型返回空内容。"""
+        adapter = self._get_adapter()
+        body = (
+            "<xml>"
+            "<ToUserName><![CDATA[gh_official]]></ToUserName>"
+            "<FromUserName><![CDATA[user1]]></FromUserName>"
+            "<CreateTime>1609459200</CreateTime>"
+            "<MsgType><![CDATA[unknown_type]]></MsgType>"
+            "</xml>"
+        ).encode("utf-8")
+        msg = adapter.parse_message(body, _WECHAT_OFFICIAL_CONFIG)
+        assert msg is not None
+        assert msg.message_type == "unknown_type"
+        assert msg.content == ""
+
+    # ---------- access_token 获取 ----------
+
+    @pytest.mark.asyncio
+    async def test_get_access_token_network_error(self) -> None:
+        """access_token 获取网络异常。"""
+        from app.services.channel_adapters.wechat_official import _get_access_token
+
+        mock_client = AsyncMock()
+        mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+        mock_client.__aexit__ = AsyncMock(return_value=False)
+        mock_client.get = AsyncMock(side_effect=httpx.HTTPError("network error"))
+
+        with patch("app.services.channel_adapters.wechat_official.httpx.AsyncClient", return_value=mock_client):
+            result = await _get_access_token("appid", "secret")
+        assert result is None
+
+
+# ========== Slack 适配器测试 ==========
+
+_SLACK_CONFIG: dict[str, Any] = {
+    "signing_secret": "slack_test_signing_secret",
+    "bot_token": "xoxb-test-bot-token",
+}
+
+
+def _make_slack_signature(
+    signing_secret: str, timestamp: str, body: str
+) -> str:
+    """按 Slack 规则生成请求签名。"""
+    sig_basestring = f"v0:{timestamp}:{body}"
+    return "v0=" + hmac.new(
+        signing_secret.encode("utf-8"),
+        sig_basestring.encode("utf-8"),
+        hashlib.sha256,
+    ).hexdigest()
+
+
+def _build_slack_event(
+    event_type: str = "message",
+    user: str = "U12345",
+    text: str = "hello",
+    channel: str = "C67890",
+    subtype: str | None = None,
+    bot_id: str | None = None,
+) -> dict[str, Any]:
+    """构造 Slack event_callback 消息体。"""
+    event: dict[str, Any] = {
+        "type": event_type,
+        "user": user,
+        "text": text,
+        "channel": channel,
+        "ts": "1609459200.000100",
+    }
+    if subtype is not None:
+        event["subtype"] = subtype
+    if bot_id is not None:
+        event["bot_id"] = bot_id
+    return {
+        "type": "event_callback",
+        "event": event,
+        "team_id": "T_TEAM",
+        "event_id": "Ev_TEST",
+    }
+
+
+class TestSlackAdapter:
+    """Slack 渠道适配器测试。"""
+
+    def _get_adapter(self):
+        from app.services.channel_adapters.slack import SlackAdapter
+        return SlackAdapter()
+
+    # ---------- 签名验证 ----------
+
+    def test_verify_request_valid(self) -> None:
+        """有效 HMAC-SHA256 签名验证通过。"""
+        adapter = self._get_adapter()
+        ts = str(int(time.time()))
+        body_str = '{"type":"event_callback"}'
+        sig = _make_slack_signature(_SLACK_CONFIG["signing_secret"], ts, body_str)
+        headers = {
+            "X-Slack-Signature": sig,
+            "X-Slack-Request-Timestamp": ts,
+        }
+        assert adapter.verify_request(headers, body_str.encode(), _SLACK_CONFIG) is True
+
+    def test_verify_request_invalid_signature(self) -> None:
+        """无效签名验证失败。"""
+        adapter = self._get_adapter()
+        ts = str(int(time.time()))
+        headers = {
+            "X-Slack-Signature": "v0=invalid_signature",
+            "X-Slack-Request-Timestamp": ts,
+        }
+        assert adapter.verify_request(headers, b'{}', _SLACK_CONFIG) is False
+
+    def test_verify_request_missing_headers(self) -> None:
+        """缺少签名 headers 验证失败。"""
+        adapter = self._get_adapter()
+        # 缺少 X-Slack-Signature
+        assert adapter.verify_request(
+            {"X-Slack-Request-Timestamp": "123"}, b'{}', _SLACK_CONFIG
+        ) is False
+        # 缺少 X-Slack-Request-Timestamp
+        assert adapter.verify_request(
+            {"X-Slack-Signature": "v0=abc"}, b'{}', _SLACK_CONFIG
+        ) is False
+
+    def test_verify_request_no_signing_secret(self) -> None:
+        """未配置 signing_secret 验证失败。"""
+        adapter = self._get_adapter()
+        assert adapter.verify_request({}, b'{}', {}) is False
+
+    def test_verify_request_timestamp_replay(self) -> None:
+        """时间戳超出容差（防重放攻击）。"""
+        adapter = self._get_adapter()
+        old_ts = str(int(time.time()) - 600)  # 10 分钟前
+        body_str = '{"type":"event_callback"}'
+        sig = _make_slack_signature(_SLACK_CONFIG["signing_secret"], old_ts, body_str)
+        headers = {
+            "X-Slack-Signature": sig,
+            "X-Slack-Request-Timestamp": old_ts,
+        }
+        assert adapter.verify_request(headers, body_str.encode(), _SLACK_CONFIG) is False
+
+    def test_verify_request_custom_tolerance(self) -> None:
+        """自定义时间戳容差。"""
+        adapter = self._get_adapter()
+        old_ts = str(int(time.time()) - 400)  # 超过 300 秒但在 600 秒内
+        body_str = '{"data":true}'
+        sig = _make_slack_signature(_SLACK_CONFIG["signing_secret"], old_ts, body_str)
+        config = {**_SLACK_CONFIG, "timestamp_tolerance": 600}
+        headers = {
+            "X-Slack-Signature": sig,
+            "X-Slack-Request-Timestamp": old_ts,
+        }
+        assert adapter.verify_request(headers, body_str.encode(), config) is True
+
+    def test_verify_request_invalid_timestamp(self) -> None:
+        """无效时间戳格式。"""
+        adapter = self._get_adapter()
+        headers = {
+            "X-Slack-Signature": "v0=abc",
+            "X-Slack-Request-Timestamp": "not_a_number",
+        }
+        assert adapter.verify_request(headers, b'{}', _SLACK_CONFIG) is False
+
+    def test_verify_request_lowercase_headers(self) -> None:
+        """小写 header 名兼容。"""
+        adapter = self._get_adapter()
+        ts = str(int(time.time()))
+        body_str = '{"test":1}'
+        sig = _make_slack_signature(_SLACK_CONFIG["signing_secret"], ts, body_str)
+        headers = {
+            "x-slack-signature": sig,
+            "x-slack-request-timestamp": ts,
+        }
+        assert adapter.verify_request(headers, body_str.encode(), _SLACK_CONFIG) is True
+
+    # ---------- 消息解析 ----------
+
+    def test_parse_text_message(self) -> None:
+        """解析文本消息。"""
+        adapter = self._get_adapter()
+        event_data = _build_slack_event(text="hello world")
+        body = json.dumps(event_data).encode()
+        msg = adapter.parse_message(body, _SLACK_CONFIG)
+        assert msg is not None
+        assert msg.sender_id == "U12345"
+        assert msg.content == "hello world"
+        assert msg.message_type == "text"
+        assert msg.raw_data["_channel"] == "C67890"
+
+    def test_parse_ignore_bot_message(self) -> None:
+        """忽略 bot 消息，避免消息循环。"""
+        adapter = self._get_adapter()
+        event_data = _build_slack_event(bot_id="B_BOT")
+        body = json.dumps(event_data).encode()
+        msg = adapter.parse_message(body, _SLACK_CONFIG)
+        assert msg is None
+
+    def test_parse_ignore_system_subtype(self) -> None:
+        """忽略系统子类型消息。"""
+        adapter = self._get_adapter()
+        for subtype in ["bot_message", "channel_join", "channel_leave"]:
+            event_data = _build_slack_event(subtype=subtype)
+            body = json.dumps(event_data).encode()
+            msg = adapter.parse_message(body, _SLACK_CONFIG)
+            assert msg is None, f"subtype '{subtype}' should be ignored"
+
+    def test_parse_non_event_callback(self) -> None:
+        """非 event_callback 类型返回 None。"""
+        adapter = self._get_adapter()
+        body = json.dumps({"type": "url_verification", "challenge": "abc"}).encode()
+        msg = adapter.parse_message(body, _SLACK_CONFIG)
+        assert msg is None
+
+    def test_parse_non_message_event(self) -> None:
+        """非 message 事件作为 event 类型返回。"""
+        adapter = self._get_adapter()
+        event_data = {
+            "type": "event_callback",
+            "event": {"type": "app_mention", "user": "U999", "text": "<@B123> help"},
+        }
+        body = json.dumps(event_data).encode()
+        msg = adapter.parse_message(body, _SLACK_CONFIG)
+        assert msg is not None
+        assert msg.message_type == "event"
+        assert msg.content == "event:app_mention"
+
+    def test_parse_no_user(self) -> None:
+        """缺少 user 的消息返回 None。"""
+        adapter = self._get_adapter()
+        event_data = {
+            "type": "event_callback",
+            "event": {"type": "message", "text": "orphan"},
+        }
+        body = json.dumps(event_data).encode()
+        msg = adapter.parse_message(body, _SLACK_CONFIG)
+        assert msg is None
+
+    def test_parse_invalid_json(self) -> None:
+        """无效 JSON 返回 None。"""
+        adapter = self._get_adapter()
+        assert adapter.parse_message(b"not json!", _SLACK_CONFIG) is None
+
+    # ---------- URL 验证 ----------
+
+    def test_handle_verification(self) -> None:
+        """URL 验证请求返回 challenge。"""
+        adapter = self._get_adapter()
+        body = json.dumps({
+            "type": "url_verification",
+            "challenge": "challenge_abc_123",
+            "token": "deprecated_token",
+        }).encode()
+        result = adapter.handle_verification(body, {}, _SLACK_CONFIG)
+        assert result == "challenge_abc_123"
+
+    def test_handle_verification_not_verification(self) -> None:
+        """非验证请求返回 None。"""
+        adapter = self._get_adapter()
+        body = json.dumps({"type": "event_callback"}).encode()
+        result = adapter.handle_verification(body, {}, _SLACK_CONFIG)
+        assert result is None
+
+    def test_handle_verification_invalid_json(self) -> None:
+        """无效 JSON 返回 None。"""
+        adapter = self._get_adapter()
+        result = adapter.handle_verification(b"bad json", {}, _SLACK_CONFIG)
+        assert result is None
+
+    # ---------- 消息推送 ----------
+
+    @pytest.mark.asyncio
+    async def test_send_message_success(self) -> None:
+        """Slack 消息发送成功。"""
+        adapter = self._get_adapter()
+
+        mock_resp = MagicMock()
+        mock_resp.json.return_value = {"ok": True, "channel": "C67890", "ts": "123456"}
+
+        mock_client = AsyncMock()
+        mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+        mock_client.__aexit__ = AsyncMock(return_value=False)
+        mock_client.post = AsyncMock(return_value=mock_resp)
+
+        with patch("app.services.channel_adapters.slack.httpx.AsyncClient", return_value=mock_client):
+            result = await adapter.send_message(_SLACK_CONFIG, "C67890", "hello slack")
+        assert result is True
+        # 验证 Authorization header
+        call_args = mock_client.post.call_args
+        headers = call_args[1].get("headers", {})
+        assert headers["Authorization"] == "Bearer xoxb-test-bot-token"
+
+    @pytest.mark.asyncio
+    async def test_send_message_no_token(self) -> None:
+        """缺少 bot_token 发送失败。"""
+        adapter = self._get_adapter()
+        result = await adapter.send_message({}, "C67890", "hello")
+        assert result is False
+
+    @pytest.mark.asyncio
+    async def test_send_message_api_error(self) -> None:
+        """Slack API 返回错误。"""
+        adapter = self._get_adapter()
+
+        mock_resp = MagicMock()
+        mock_resp.json.return_value = {"ok": False, "error": "channel_not_found"}
+
+        mock_client = AsyncMock()
+        mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+        mock_client.__aexit__ = AsyncMock(return_value=False)
+        mock_client.post = AsyncMock(return_value=mock_resp)
+
+        with patch("app.services.channel_adapters.slack.httpx.AsyncClient", return_value=mock_client):
+            result = await adapter.send_message(_SLACK_CONFIG, "C_BAD", "hello")
+        assert result is False
+
+    @pytest.mark.asyncio
+    async def test_send_message_network_error(self) -> None:
+        """网络异常。"""
+        adapter = self._get_adapter()
+
+        mock_client = AsyncMock()
+        mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+        mock_client.__aexit__ = AsyncMock(return_value=False)
+        mock_client.post = AsyncMock(side_effect=httpx.HTTPError("connection refused"))
+
+        with patch("app.services.channel_adapters.slack.httpx.AsyncClient", return_value=mock_client):
+            result = await adapter.send_message(_SLACK_CONFIG, "C67890", "hello")
+        assert result is False
+
+    # ---------- 注册表集成 ----------
+
+    def test_adapter_in_registry(self) -> None:
+        """适配器已注册在全局注册表中。"""
+        from app.services.channel_adapters import get_adapter
+        from app.services.channel_adapters.slack import SlackAdapter
+
+        adapter = get_adapter("slack")
+        assert isinstance(adapter, SlackAdapter)

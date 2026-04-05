@@ -6,6 +6,8 @@ from .base import ChannelAdapter, ChannelMessage
 from .custom_webhook import CustomWebhookAdapter
 from .dingtalk import DingTalkAdapter
 from .feishu import FeishuAdapter
+from .slack import SlackAdapter
+from .wechat_official import WeChatOfficialAdapter
 from .wecom import WeComAdapter
 
 # 适配器注册表：channel_type → Adapter 实例
@@ -14,6 +16,8 @@ _ADAPTER_REGISTRY: dict[str, ChannelAdapter] = {
     "dingtalk": DingTalkAdapter(),
     "feishu": FeishuAdapter(),
     "custom_webhook": CustomWebhookAdapter(),
+    "wechat_official": WeChatOfficialAdapter(),
+    "slack": SlackAdapter(),
 }
 
 
@@ -28,6 +32,8 @@ __all__ = [
     "CustomWebhookAdapter",
     "DingTalkAdapter",
     "FeishuAdapter",
+    "SlackAdapter",
+    "WeChatOfficialAdapter",
     "WeComAdapter",
     "get_adapter",
 ]
