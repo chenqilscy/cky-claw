@@ -6,26 +6,27 @@ from typing import Any
 
 from datetime import datetime, timedelta, timezone
 
+import bcrypt
 from jose import JWTError, jwt
-from passlib.context import CryptContext
 
 from app.core.config import settings
-
-# 密码哈希
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # JWT 配置
 ALGORITHM = "HS256"
 
 
 def hash_password(password: str) -> str:
-    """Hash 密码。"""
-    return str(pwd_context.hash(password))
+    """Hash 密码（bcrypt, cost=12）。"""
+    hashed = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt(rounds=12))
+    return hashed.decode("utf-8")
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """验证密码。"""
-    return bool(pwd_context.verify(plain_password, hashed_password))
+    """验证密码（兼容 $2b$ 和 $2a$ 前缀）。"""
+    try:
+        return bcrypt.checkpw(plain_password.encode("utf-8"), hashed_password.encode("utf-8"))
+    except (ValueError, TypeError):
+        return False
 
 
 def create_access_token(data: dict[str, Any], expires_delta: timedelta | None = None) -> str:
