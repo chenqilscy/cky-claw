@@ -341,7 +341,7 @@ CkyClaw Framework 的核心设计（Agent 数据类、Runner 循环、Handoff、
 
 | # | 项目 | 优先级 | 说明 |
 |---|------|:------:|------|
-| V1 | 完整功能流程验证 | P1 | 需 Docker 环境启动全链路（PG + Redis + Backend + Frontend），体验完整功能流程 |
+| ~~V1~~ | ~~完整功能流程验证~~ | ~~P1~~ | ✅ 已完成（PG + Redis healthy → 36 迁移成功 → Backend 启动 → health 200 → OpenAPI 98 路径 → 401 认证保护 → 2582 测试通过） |
 | ~~V2~~ | ~~Agents SDK 兼容层~~ | ~~P3~~ | ~~实现 Adapter 允许 OpenAI Agents SDK 的 Agent 定义直接在 CkyClaw 上运行~~ |
 | ~~V3~~ | ~~竞品分析：LangChain/LangGraph 深度对比~~ | ~~P2~~ | ~~分析基于 LangChain/LangGraph 重构所需调整，补充到竞品分析文档~~ |
 
