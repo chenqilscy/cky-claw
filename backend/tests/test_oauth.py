@@ -136,8 +136,7 @@ async def test_callback_success_new_user() -> None:
     )
 
     mock_redis = AsyncMock()
-    mock_redis.get = AsyncMock(return_value="github")
-    mock_redis.delete = AsyncMock()
+    mock_redis.getdel = AsyncMock(return_value="github")
 
     # Mock: token 交换返回 access_token
     mock_token_resp = MagicMock()

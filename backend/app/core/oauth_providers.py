@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Callable
 
 
 @dataclass(frozen=True)
@@ -39,7 +40,7 @@ def get_github_provider() -> OAuthProviderConfig | None:
 
 
 # Provider 注册表：名称 → 配置获取函数
-_PROVIDER_FACTORIES: dict[str, object] = {
+_PROVIDER_FACTORIES: dict[str, Callable[[], OAuthProviderConfig | None]] = {
     "github": get_github_provider,
 }
 
@@ -49,14 +50,14 @@ def get_provider_config(provider: str) -> OAuthProviderConfig | None:
     factory = _PROVIDER_FACTORIES.get(provider)
     if factory is None:
         return None
-    return factory()  # type: ignore[operator]
+    return factory()
 
 
 def list_available_providers() -> list[str]:
     """列出所有已配置（client_id 非空）的 Provider 名称。"""
     result: list[str] = []
     for name, factory in _PROVIDER_FACTORIES.items():
-        config = factory()  # type: ignore[operator]
+        config = factory()
         if config is not None:
             result.append(name)
     return result

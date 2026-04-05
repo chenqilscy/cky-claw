@@ -35,7 +35,7 @@ class UserOAuthConnection(Base):
     provider_username: Mapped[str] = mapped_column(
         String(256), nullable=False, server_default=text("''")
     )
-    provider_email: Mapped[str] = mapped_column(
+    provider_email: Mapped[str | None] = mapped_column(
         String(256), nullable=True
     )
     provider_avatar_url: Mapped[str | None] = mapped_column(

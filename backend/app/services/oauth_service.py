@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 import secrets
 from typing import Any
+from urllib.parse import urlencode
 
 import httpx
 from sqlalchemy import select
@@ -46,12 +47,12 @@ async def generate_authorize_url(provider: str) -> tuple[str, str]:
     redis = await get_redis()
     await redis.set(f"{_STATE_PREFIX}{state}", provider, ex=_STATE_TTL_SECONDS)
 
-    params = (
-        f"client_id={config.client_id}"
-        f"&redirect_uri={config.redirect_uri}"
-        f"&scope={config.scope}"
-        f"&state={state}"
-    )
+    params = urlencode({
+        "client_id": config.client_id,
+        "redirect_uri": config.redirect_uri,
+        "scope": config.scope,
+        "state": state,
+    })
     authorize_url = f"{config.authorize_url}?{params}"
     return authorize_url, state
 
@@ -75,14 +76,12 @@ async def handle_oauth_callback(
         ValidationError: state 验证失败或 Provider 未配置。
         AuthenticationError: OAuth token 交换或用户信息获取失败。
     """
-    # 1. 验证 state
+    # 1. 验证 state（原子消费，防止并发重放）
     redis = await get_redis()
     redis_key = f"{_STATE_PREFIX}{state}"
-    stored_provider = await redis.get(redis_key)
+    stored_provider = await redis.getdel(redis_key)
     if stored_provider is None or stored_provider != provider:
         raise ValidationError("OAuth state 验证失败，请重新授权")
-    # 一次性消费
-    await redis.delete(redis_key)
 
     # 2. 获取 Provider 配置
     config = get_provider_config(provider)
@@ -116,13 +115,12 @@ async def bind_oauth_to_user(
     Raises:
         ConflictError: 该 Provider 账号已被其他用户绑定。
     """
-    # 验证 state
+    # 验证 state（原子消费）
     redis = await get_redis()
     redis_key = f"{_STATE_PREFIX}{state}"
-    stored_provider = await redis.get(redis_key)
+    stored_provider = await redis.getdel(redis_key)
     if stored_provider is None or stored_provider != provider:
         raise ValidationError("OAuth state 验证失败，请重新授权")
-    await redis.delete(redis_key)
 
     config = get_provider_config(provider)
     if config is None:
@@ -131,7 +129,10 @@ async def bind_oauth_to_user(
     access_token = await _exchange_code_for_token(config, code)
     user_info = await _fetch_user_info(config, access_token)
 
-    provider_user_id = str(user_info["id"])
+    raw_id = user_info.get("id")
+    if raw_id is None:
+        raise AuthenticationError("OAuth Provider 未返回用户 ID")
+    provider_user_id = str(raw_id)
 
     # 检查是否已绑定到其他用户
     stmt = select(UserOAuthConnection).where(
@@ -192,43 +193,53 @@ async def unbind_oauth(db: AsyncSession, user: User, provider: str) -> None:
 
 async def _exchange_code_for_token(config: OAuthProviderConfig, code: str) -> str:
     """用 authorization code 换取 access_token。"""
-    async with httpx.AsyncClient(timeout=10.0) as client:
-        resp = await client.post(
-            config.token_url,
-            data={
-                "client_id": config.client_id,
-                "client_secret": config.client_secret,
-                "code": code,
-                "redirect_uri": config.redirect_uri,
-            },
-            headers={"Accept": "application/json"},
-        )
-        if resp.status_code != 200:
-            logger.error("OAuth token 交换失败: status=%d body=%s", resp.status_code, resp.text)
-            raise AuthenticationError("OAuth 授权码验证失败")
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            resp = await client.post(
+                config.token_url,
+                data={
+                    "client_id": config.client_id,
+                    "client_secret": config.client_secret,
+                    "code": code,
+                    "redirect_uri": config.redirect_uri,
+                },
+                headers={"Accept": "application/json"},
+            )
+    except httpx.HTTPError as exc:
+        logger.error("OAuth token 交换网络异常: %s", exc)
+        raise AuthenticationError("OAuth 服务暂不可用，请稍后重试") from exc
 
-        data = resp.json()
-        token = data.get("access_token")
-        if not token:
-            error = data.get("error_description", data.get("error", "未知错误"))
-            raise AuthenticationError(f"OAuth token 获取失败: {error}")
-        return str(token)
+    if resp.status_code != 200:
+        logger.error("OAuth token 交换失败: status=%d body=%s", resp.status_code, resp.text)
+        raise AuthenticationError("OAuth 授权码验证失败")
+
+    data = resp.json()
+    token = data.get("access_token")
+    if not token:
+        error = data.get("error_description", data.get("error", "未知错误"))
+        raise AuthenticationError(f"OAuth token 获取失败: {error}")
+    return str(token)
 
 
 async def _fetch_user_info(config: OAuthProviderConfig, access_token: str) -> dict[str, Any]:
     """用 access_token 获取用户信息。"""
-    async with httpx.AsyncClient(timeout=10.0) as client:
-        resp = await client.get(
-            config.userinfo_url,
-            headers={
-                "Authorization": f"Bearer {access_token}",
-                "Accept": "application/json",
-            },
-        )
-        if resp.status_code != 200:
-            logger.error("获取 OAuth 用户信息失败: status=%d", resp.status_code)
-            raise AuthenticationError("获取 OAuth 用户信息失败")
-        return dict(resp.json())
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            resp = await client.get(
+                config.userinfo_url,
+                headers={
+                    "Authorization": f"Bearer {access_token}",
+                    "Accept": "application/json",
+                },
+            )
+    except httpx.HTTPError as exc:
+        logger.error("获取 OAuth 用户信息网络异常: %s", exc)
+        raise AuthenticationError("获取 OAuth 用户信息失败，请稍后重试") from exc
+
+    if resp.status_code != 200:
+        logger.error("获取 OAuth 用户信息失败: status=%d", resp.status_code)
+        raise AuthenticationError("获取 OAuth 用户信息失败")
+    return dict(resp.json())
 
 
 async def _find_or_create_user(
@@ -243,7 +254,10 @@ async def _find_or_create_user(
     再查邮箱匹配的本地用户并绑定；
     都没有则创建新用户。
     """
-    provider_user_id = str(user_info["id"])
+    raw_id = user_info.get("id")
+    if raw_id is None:
+        raise AuthenticationError("OAuth Provider 未返回用户 ID")
+    provider_user_id = str(raw_id)
 
     # 1. 查已有绑定
     stmt = select(UserOAuthConnection).where(
@@ -265,7 +279,10 @@ async def _find_or_create_user(
             raise AuthenticationError("关联用户已停用")
         return user
 
-    # 2. 查邮箱匹配
+    # 2. 查邮箱匹配（仅当 Provider 返回了邮箱时）
+    # 安全提醒：邮箱自动绑定依赖 Provider 的邮箱验证策略。
+    # GitHub /user API 仅返回已验证的公开邮箱，风险可控。
+    # 新增 Provider 时需评估其邮箱可信度。
     email = user_info.get("email")
     if email:
         user = (await db.execute(
@@ -291,9 +308,10 @@ async def _find_or_create_user(
 
     # 3. 创建新用户
     username = user_info.get("login", user_info.get("name", f"oauth_{provider}_{provider_user_id}"))
-    # 确保唯一性
+    # 确保唯一性（最多重试 100 次）
     base_username = username
     counter = 0
+    max_attempts = 100
     while True:
         check = (await db.execute(
             select(User).where(User.username == username)
@@ -301,6 +319,8 @@ async def _find_or_create_user(
         if check is None:
             break
         counter += 1
+        if counter >= max_attempts:
+            raise ConflictError(f"无法生成唯一用户名（尝试了 {max_attempts} 次）")
         username = f"{base_username}_{counter}"
 
     new_user = User(
