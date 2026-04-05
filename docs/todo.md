@@ -248,7 +248,7 @@
 | A1 | ~~**OAuth 2.0 / OIDC 框架**~~ | P1 | ✅ 已完成（OAuthProviderConfig + oauth_service + Redis CSRF state + Fernet token 加密 + 6 API + Migration 0036 + 21 测试） |
 | A2 | ~~**GitHub OAuth**~~ | P1 | ✅ 已完成（GitHub Authorization Code Flow + 前端 OAuth 跳转 + Token 交换 + 登录页 GitHub 按钮） |
 | A3 | **企业微信/钉钉/飞书扫码登录** | P1 | 国内企业 SSO 必备，与多渠道接入协同。已有 OAuth 框架，新增 Provider 即可 |
-| A4 | **Keycloak / Casdoor 集成** | P2 | 私有化部署 IdP，企业级 SSO + SAML + LDAP |
+| A4 | ~~**Keycloak / Casdoor 集成**~~ | P2 | ✅ 已完成（OIDC Discovery + 标准 token 交换 + UserInfo 字段映射 + 20 测试） |
 | A5 | **Google OAuth** | P3 | 海外用户场景 |
 
 **已实现架构**：Backend 统一 OAuth 2.0 回调端点 `/api/v1/auth/oauth/{provider}/callback`，前端 OAuth 跳转 + Token 交换，`user_oauth_connections` 表记录 Provider 绑定关系。
@@ -334,7 +334,7 @@ CkyClaw Framework 的核心设计（Agent 数据类、Runner 循环、Handoff、
 | # | 方案 | 优先级 | 依赖 | 预计工作量 |
 |---|------|:------:|------|-----------|
 | ~~A3~~ | ~~企微/钉钉/飞书扫码登录~~ | ~~P1~~ | — | ✅ 已完成（三种 Provider 的 token 交换 + 用户信息获取 + 授权 URL 构建 + 分发表架构 + 52 测试） |
-| A4 | Keycloak / Casdoor 集成 | P2 | 私有化 IdP 实例 | 中（标准 OIDC，需配置 well-known） |
+| ~~A4~~ | ~~Keycloak / Casdoor 集成~~ | ~~P2~~ | — | ✅ 已完成（OIDC Discovery + well-known 端点自动发现 + 20 测试） |
 | A5 | Google OAuth | P3 | Google Cloud Console 凭证 | 低（标准 OAuth 2.0 流程） |
 
 ### 10.3 其它待完成

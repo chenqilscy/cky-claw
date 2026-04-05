@@ -2,8 +2,13 @@
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
-from typing import Callable
+from typing import Any, Callable
+
+import httpx
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -96,12 +101,76 @@ def get_feishu_provider() -> OAuthProviderConfig | None:
     )
 
 
+# OIDC Discovery 缓存（模块级，进程生命周期有效）
+_oidc_discovery_cache: dict[str, Any] | None = None
+
+
+def _discover_oidc_endpoints(issuer: str) -> dict[str, Any] | None:
+    """执行 OIDC Discovery，获取 well-known 配置并缓存。
+
+    通过 {issuer}/.well-known/openid-configuration 自动发现端点。
+    结果缓存在模块级变量中，重启服务刷新。
+    """
+    global _oidc_discovery_cache
+    if _oidc_discovery_cache is not None:
+        return _oidc_discovery_cache
+
+    discovery_url = f"{issuer.rstrip('/')}/.well-known/openid-configuration"
+    try:
+        resp = httpx.get(discovery_url, timeout=10.0)
+        if resp.status_code != 200:
+            logger.error("OIDC Discovery 失败: status=%d url=%s", resp.status_code, discovery_url)
+            return None
+
+        data = resp.json()
+        # 验证必需字段
+        required = ("authorization_endpoint", "token_endpoint")
+        for key in required:
+            if key not in data:
+                logger.error("OIDC Discovery 响应缺少必需字段: %s", key)
+                return None
+
+        _oidc_discovery_cache = data
+        return data
+    except (httpx.HTTPError, ValueError) as exc:
+        logger.error("OIDC Discovery 网络异常: %s", exc)
+        return None
+
+
+def get_oidc_provider() -> OAuthProviderConfig | None:
+    """获取通用 OIDC Provider 配置（支持 Keycloak / Casdoor 等）。
+
+    自动从 OIDC Issuer 的 .well-known/openid-configuration 发现端点。
+    未配置或 Discovery 失败时返回 None。
+    """
+    from app.core.config import settings
+
+    if not settings.oauth_oidc_issuer or not settings.oauth_oidc_client_id:
+        return None
+
+    discovery = _discover_oidc_endpoints(settings.oauth_oidc_issuer)
+    if discovery is None:
+        return None
+
+    return OAuthProviderConfig(
+        name="oidc",
+        authorize_url=discovery["authorization_endpoint"],
+        token_url=discovery["token_endpoint"],
+        userinfo_url=discovery.get("userinfo_endpoint", f"{settings.oauth_oidc_issuer}/userinfo"),
+        client_id=settings.oauth_oidc_client_id,
+        client_secret=settings.oauth_oidc_client_secret,
+        scope=settings.oauth_oidc_scope,
+        redirect_uri=f"{settings.oauth_redirect_base_url}/oauth/callback/oidc",
+    )
+
+
 # Provider 注册表：名称 → 配置获取函数
 _PROVIDER_FACTORIES: dict[str, Callable[[], OAuthProviderConfig | None]] = {
     "github": get_github_provider,
     "wecom": get_wecom_provider,
     "dingtalk": get_dingtalk_provider,
     "feishu": get_feishu_provider,
+    "oidc": get_oidc_provider,
 }
 
 

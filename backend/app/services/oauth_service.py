@@ -471,24 +471,84 @@ async def _fetch_user_info_feishu(
     }
 
 
+# ------ OIDC (Keycloak / Casdoor / 通用) ------
+
+
+def _build_authorize_url_oidc(config: OAuthProviderConfig, state: str) -> str:
+    """构建标准 OIDC 授权 URL。
+
+    OIDC 授权端点需要 response_type=code 参数（默认 OAuth 构建缺少此参数）。
+    """
+    params = urlencode({
+        "client_id": config.client_id,
+        "redirect_uri": config.redirect_uri,
+        "scope": config.scope,
+        "state": state,
+        "response_type": "code",
+    })
+    return f"{config.authorize_url}?{params}"
+
+
+async def _fetch_user_info_oidc(
+    config: OAuthProviderConfig, access_token: str, code: str
+) -> dict[str, Any]:
+    """OIDC 标准 UserInfo 端点 → 映射为内部用户信息格式。
+
+    OIDC 标准字段映射：
+    - sub → id
+    - preferred_username → login
+    - name → name
+    - email → email
+    - picture → avatar_url
+    """
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            resp = await client.get(
+                config.userinfo_url,
+                headers={
+                    "Authorization": f"Bearer {access_token}",
+                    "Accept": "application/json",
+                },
+            )
+    except httpx.HTTPError as exc:
+        logger.error("获取 OIDC 用户信息网络异常: %s", exc)
+        raise AuthenticationError("获取 OIDC 用户信息失败，请稍后重试") from exc
+
+    if resp.status_code != 200:
+        logger.error("获取 OIDC 用户信息失败: status=%d", resp.status_code)
+        raise AuthenticationError("获取 OIDC 用户信息失败")
+
+    data = resp.json()
+    return {
+        "id": data.get("sub", ""),
+        "login": data.get("preferred_username", data.get("name", "")),
+        "name": data.get("name", data.get("preferred_username", "")),
+        "email": data.get("email", ""),
+        "avatar_url": data.get("picture", ""),
+    }
+
+
 # ------ 注册分发表 ------
 
 _CUSTOM_AUTHORIZE_BUILDERS.update({
     "wecom": _build_authorize_url_wecom,
     "dingtalk": _build_authorize_url_dingtalk,
     "feishu": _build_authorize_url_feishu,
+    "oidc": _build_authorize_url_oidc,
 })
 
 _CUSTOM_TOKEN_EXCHANGERS.update({
     "wecom": _exchange_code_for_token_wecom,
     "dingtalk": _exchange_code_for_token_dingtalk,
     "feishu": _exchange_code_for_token_feishu,
+    # OIDC 使用默认标准 OAuth 2.0 form-encoded 流程，无需自定义
 })
 
 _CUSTOM_USERINFO_FETCHERS.update({
     "wecom": _fetch_user_info_wecom,
     "dingtalk": _fetch_user_info_dingtalk,
     "feishu": _fetch_user_info_feishu,
+    "oidc": _fetch_user_info_oidc,
 })
 
 

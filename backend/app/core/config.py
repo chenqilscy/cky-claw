@@ -48,6 +48,12 @@ class Settings(BaseSettings):
     oauth_feishu_app_id: str = ""
     oauth_feishu_app_secret: str = ""
 
+    # OAuth 2.0 — OIDC (Keycloak / Casdoor / 通用 OIDC Provider)
+    oauth_oidc_issuer: str = ""
+    oauth_oidc_client_id: str = ""
+    oauth_oidc_client_secret: str = ""
+    oauth_oidc_scope: str = "openid profile email"
+
     model_config = {"env_prefix": "CKYCLAW_", "env_file": ".env", "extra": "ignore"}
 
 

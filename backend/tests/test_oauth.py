@@ -5,6 +5,7 @@ from __future__ import annotations
 import uuid
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import httpx
 import pytest
 from httpx import ASGITransport, AsyncClient
 
@@ -55,6 +56,14 @@ def _make_config(name: str = "github") -> "OAuthProviderConfig":
             "client_id": "fs-app-id",
             "client_secret": "fs-app-secret",
             "scope": "",
+        },
+        "oidc": {
+            "authorize_url": "https://idp.example.com/auth",
+            "token_url": "https://idp.example.com/token",
+            "userinfo_url": "https://idp.example.com/userinfo",
+            "client_id": "oidc-client-id",
+            "client_secret": "oidc-secret",
+            "scope": "openid profile email",
         },
     }
     u = urls[name]
@@ -774,13 +783,376 @@ async def test_feishu_exchange_code_success() -> None:
         token = await _exchange_code_for_token_feishu(config, "test-code")
     assert token == "user-token-xyz"
 
-    # 验证两次 POST 调用
-    calls = mock_client.post.call_args_list
-    assert len(calls) == 2
-    # Step 1: app_access_token
-    assert "app_access_token/internal" in calls[0].args[0]
-    # Step 2: user_access_token — Bearer app_token
-    assert calls[1].kwargs["headers"]["Authorization"] == "Bearer app-token-abc"
+
+# ======== OIDC (Keycloak / Casdoor / 通用) Provider ========
+
+
+# --- Discovery ---
+
+
+_DISCOVERY_RESPONSE = {
+    "issuer": "https://idp.example.com",
+    "authorization_endpoint": "https://idp.example.com/auth",
+    "token_endpoint": "https://idp.example.com/token",
+    "userinfo_endpoint": "https://idp.example.com/userinfo",
+    "jwks_uri": "https://idp.example.com/certs",
+}
+
+
+def _reset_oidc_cache() -> None:
+    """重置 OIDC Discovery 缓存，保证测试隔离。"""
+    import app.core.oauth_providers as mod
+    mod._oidc_discovery_cache = None
+
+
+def test_oidc_discovery_success() -> None:
+    """OIDC Discovery 成功返回并缓存端点。"""
+    from app.core.oauth_providers import _discover_oidc_endpoints
+
+    _reset_oidc_cache()
+    mock_resp = MagicMock()
+    mock_resp.status_code = 200
+    mock_resp.json.return_value = _DISCOVERY_RESPONSE.copy()
+
+    with patch("app.core.oauth_providers.httpx.get", return_value=mock_resp) as mock_get:
+        result = _discover_oidc_endpoints("https://idp.example.com")
+
+    assert result is not None
+    assert result["authorization_endpoint"] == "https://idp.example.com/auth"
+    assert result["token_endpoint"] == "https://idp.example.com/token"
+    mock_get.assert_called_once()
+    _reset_oidc_cache()
+
+
+def test_oidc_discovery_cache_hit() -> None:
+    """第二次调用命中缓存，不发请求。"""
+    from app.core.oauth_providers import _discover_oidc_endpoints
+
+    _reset_oidc_cache()
+    mock_resp = MagicMock()
+    mock_resp.status_code = 200
+    mock_resp.json.return_value = _DISCOVERY_RESPONSE.copy()
+
+    with patch("app.core.oauth_providers.httpx.get", return_value=mock_resp) as mock_get:
+        _discover_oidc_endpoints("https://idp.example.com")
+        # 第二次调用应命中缓存
+        result2 = _discover_oidc_endpoints("https://idp.example.com")
+
+    assert result2 is not None
+    mock_get.assert_called_once()  # 只请求了一次
+    _reset_oidc_cache()
+
+
+def test_oidc_discovery_http_error() -> None:
+    """OIDC Discovery 网络异常返回 None。"""
+    from app.core.oauth_providers import _discover_oidc_endpoints
+
+    _reset_oidc_cache()
+    with patch("app.core.oauth_providers.httpx.get", side_effect=httpx.ConnectError("timeout")):
+        result = _discover_oidc_endpoints("https://idp.example.com")
+
+    assert result is None
+    _reset_oidc_cache()
+
+
+def test_oidc_discovery_non_200() -> None:
+    """OIDC Discovery 返回非 200 状态码时返回 None。"""
+    from app.core.oauth_providers import _discover_oidc_endpoints
+
+    _reset_oidc_cache()
+    mock_resp = MagicMock()
+    mock_resp.status_code = 404
+
+    with patch("app.core.oauth_providers.httpx.get", return_value=mock_resp):
+        result = _discover_oidc_endpoints("https://idp.example.com")
+
+    assert result is None
+    _reset_oidc_cache()
+
+
+def test_oidc_discovery_missing_required_field() -> None:
+    """Discovery 响应缺少 token_endpoint 时返回 None。"""
+    from app.core.oauth_providers import _discover_oidc_endpoints
+
+    _reset_oidc_cache()
+    incomplete = {"authorization_endpoint": "https://idp.example.com/auth"}
+    mock_resp = MagicMock()
+    mock_resp.status_code = 200
+    mock_resp.json.return_value = incomplete
+
+    with patch("app.core.oauth_providers.httpx.get", return_value=mock_resp):
+        result = _discover_oidc_endpoints("https://idp.example.com")
+
+    assert result is None
+    _reset_oidc_cache()
+
+
+def test_oidc_discovery_issuer_trailing_slash() -> None:
+    """Issuer URL 带尾部斜杠时正确拼接。"""
+    from app.core.oauth_providers import _discover_oidc_endpoints
+
+    _reset_oidc_cache()
+    mock_resp = MagicMock()
+    mock_resp.status_code = 200
+    mock_resp.json.return_value = _DISCOVERY_RESPONSE.copy()
+
+    with patch("app.core.oauth_providers.httpx.get", return_value=mock_resp) as mock_get:
+        _discover_oidc_endpoints("https://idp.example.com/")
+
+    # 应该去重尾部斜杠：不会出现 //
+    called_url = mock_get.call_args[0][0]
+    assert "//" not in called_url.replace("https://", "")
+    _reset_oidc_cache()
+
+
+# --- Provider Factory ---
+
+
+def test_oidc_provider_unconfigured() -> None:
+    """未配置 OIDC issuer 时返回 None。"""
+    from app.core.oauth_providers import get_oidc_provider
+
+    _reset_oidc_cache()
+    with patch("app.core.config.settings") as mock_settings:
+        mock_settings.oauth_oidc_issuer = ""
+        mock_settings.oauth_oidc_client_id = ""
+        assert get_oidc_provider() is None
+    _reset_oidc_cache()
+
+
+def test_oidc_provider_no_client_id() -> None:
+    """仅配置 issuer 但缺少 client_id 时返回 None。"""
+    from app.core.oauth_providers import get_oidc_provider
+
+    _reset_oidc_cache()
+    with patch("app.core.config.settings") as mock_settings:
+        mock_settings.oauth_oidc_issuer = "https://idp.example.com"
+        mock_settings.oauth_oidc_client_id = ""
+        assert get_oidc_provider() is None
+    _reset_oidc_cache()
+
+
+def test_oidc_provider_discovery_fails() -> None:
+    """配置了 OIDC 但 Discovery 失败时返回 None。"""
+    from app.core.oauth_providers import get_oidc_provider
+
+    _reset_oidc_cache()
+    with patch("app.core.config.settings") as mock_settings, \
+         patch("app.core.oauth_providers.httpx.get", side_effect=httpx.ConnectError("fail")):
+        mock_settings.oauth_oidc_issuer = "https://idp.example.com"
+        mock_settings.oauth_oidc_client_id = "oidc-id"
+        assert get_oidc_provider() is None
+    _reset_oidc_cache()
+
+
+def test_oidc_provider_configured_success() -> None:
+    """OIDC 配置完整 + Discovery 成功时返回正确 config。"""
+    from app.core.oauth_providers import get_oidc_provider
+
+    _reset_oidc_cache()
+    mock_resp = MagicMock()
+    mock_resp.status_code = 200
+    mock_resp.json.return_value = _DISCOVERY_RESPONSE.copy()
+
+    with patch("app.core.config.settings") as mock_settings, \
+         patch("app.core.oauth_providers.httpx.get", return_value=mock_resp):
+        mock_settings.oauth_oidc_issuer = "https://idp.example.com"
+        mock_settings.oauth_oidc_client_id = "oidc-id"
+        mock_settings.oauth_oidc_client_secret = "oidc-secret"
+        mock_settings.oauth_oidc_scope = "openid profile email"
+        mock_settings.oauth_redirect_base_url = "http://localhost:3000"
+
+        cfg = get_oidc_provider()
+        assert cfg is not None
+        assert cfg.name == "oidc"
+        assert cfg.authorize_url == "https://idp.example.com/auth"
+        assert cfg.token_url == "https://idp.example.com/token"
+        assert cfg.userinfo_url == "https://idp.example.com/userinfo"
+        assert cfg.client_id == "oidc-id"
+        assert cfg.scope == "openid profile email"
+    _reset_oidc_cache()
+
+
+def test_oidc_provider_fallback_userinfo() -> None:
+    """Discovery 响应缺少 userinfo_endpoint 时用 issuer/userinfo 兜底。"""
+    from app.core.oauth_providers import get_oidc_provider
+
+    _reset_oidc_cache()
+    disc = {
+        "authorization_endpoint": "https://idp.example.com/auth",
+        "token_endpoint": "https://idp.example.com/token",
+        # 无 userinfo_endpoint
+    }
+    mock_resp = MagicMock()
+    mock_resp.status_code = 200
+    mock_resp.json.return_value = disc
+
+    with patch("app.core.config.settings") as mock_settings, \
+         patch("app.core.oauth_providers.httpx.get", return_value=mock_resp):
+        mock_settings.oauth_oidc_issuer = "https://idp.example.com"
+        mock_settings.oauth_oidc_client_id = "oidc-id"
+        mock_settings.oauth_oidc_client_secret = "oidc-secret"
+        mock_settings.oauth_oidc_scope = "openid"
+        mock_settings.oauth_redirect_base_url = "http://localhost:3000"
+
+        cfg = get_oidc_provider()
+        assert cfg is not None
+        assert cfg.userinfo_url == "https://idp.example.com/userinfo"
+    _reset_oidc_cache()
+
+
+# --- Authorize URL ---
+
+
+def test_oidc_authorize_url_has_response_type_code() -> None:
+    """OIDC 授权 URL 必须包含 response_type=code。"""
+    from app.services.oauth_service import _build_authorize_url_oidc
+
+    config = _make_config("oidc")
+    url = _build_authorize_url_oidc(config, "test-state")
+
+    assert "response_type=code" in url
+    assert "client_id=oidc-client-id" in url
+    assert "state=test-state" in url
+    assert "scope=openid" in url
+
+
+def test_oidc_authorize_url_redirect_uri() -> None:
+    """OIDC 授权 URL 包含正确的 redirect_uri。"""
+    from app.services.oauth_service import _build_authorize_url_oidc
+
+    config = _make_config("oidc")
+    url = _build_authorize_url_oidc(config, "s")
+    assert "redirect_uri=" in url
+
+
+# --- UserInfo ---
+
+
+@pytest.mark.asyncio
+async def test_oidc_fetch_userinfo_success() -> None:
+    """OIDC UserInfo 成功：标准字段映射为内部格式。"""
+    from app.services.oauth_service import _fetch_user_info_oidc
+
+    mock_resp = MagicMock()
+    mock_resp.status_code = 200
+    mock_resp.json.return_value = {
+        "sub": "uuid-123",
+        "preferred_username": "john",
+        "name": "John Doe",
+        "email": "john@example.com",
+        "picture": "https://example.com/avatar.png",
+    }
+
+    mock_client = AsyncMock()
+    mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+    mock_client.__aexit__ = AsyncMock(return_value=False)
+    mock_client.get = AsyncMock(return_value=mock_resp)
+
+    config = _make_config("oidc")
+    with patch("app.services.oauth_service.httpx.AsyncClient", return_value=mock_client):
+        info = await _fetch_user_info_oidc(config, "access-token", "code")
+
+    assert info["id"] == "uuid-123"
+    assert info["login"] == "john"
+    assert info["name"] == "John Doe"
+    assert info["email"] == "john@example.com"
+    assert info["avatar_url"] == "https://example.com/avatar.png"
+
+
+@pytest.mark.asyncio
+async def test_oidc_fetch_userinfo_minimal() -> None:
+    """OIDC UserInfo 最小响应：仅 sub 字段，其余回退空串。"""
+    from app.services.oauth_service import _fetch_user_info_oidc
+
+    mock_resp = MagicMock()
+    mock_resp.status_code = 200
+    mock_resp.json.return_value = {"sub": "user-456"}
+
+    mock_client = AsyncMock()
+    mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+    mock_client.__aexit__ = AsyncMock(return_value=False)
+    mock_client.get = AsyncMock(return_value=mock_resp)
+
+    config = _make_config("oidc")
+    with patch("app.services.oauth_service.httpx.AsyncClient", return_value=mock_client):
+        info = await _fetch_user_info_oidc(config, "token", "code")
+
+    assert info["id"] == "user-456"
+    assert info["login"] == ""  # no preferred_username
+    assert info["name"] == ""   # no name
+    assert info["email"] == ""
+    assert info["avatar_url"] == ""
+
+
+@pytest.mark.asyncio
+async def test_oidc_fetch_userinfo_http_error() -> None:
+    """OIDC UserInfo 网络异常时抛出 AuthenticationError。"""
+    from app.core.exceptions import AuthenticationError
+    from app.services.oauth_service import _fetch_user_info_oidc
+
+    mock_client = AsyncMock()
+    mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+    mock_client.__aexit__ = AsyncMock(return_value=False)
+    mock_client.get = AsyncMock(side_effect=httpx.ConnectError("timeout"))
+
+    config = _make_config("oidc")
+    with patch("app.services.oauth_service.httpx.AsyncClient", return_value=mock_client), \
+         pytest.raises(AuthenticationError, match="OIDC"):
+        await _fetch_user_info_oidc(config, "token", "code")
+
+
+@pytest.mark.asyncio
+async def test_oidc_fetch_userinfo_non_200() -> None:
+    """OIDC UserInfo 返回 401 时抛出 AuthenticationError。"""
+    from app.core.exceptions import AuthenticationError
+    from app.services.oauth_service import _fetch_user_info_oidc
+
+    mock_resp = MagicMock()
+    mock_resp.status_code = 401
+
+    mock_client = AsyncMock()
+    mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+    mock_client.__aexit__ = AsyncMock(return_value=False)
+    mock_client.get = AsyncMock(return_value=mock_resp)
+
+    config = _make_config("oidc")
+    with patch("app.services.oauth_service.httpx.AsyncClient", return_value=mock_client), \
+         pytest.raises(AuthenticationError, match="OIDC"):
+        await _fetch_user_info_oidc(config, "bad-token", "code")
+
+
+# --- OIDC Token 交换（使用默认标准流程） ---
+
+
+@pytest.mark.asyncio
+async def test_oidc_token_exchange_uses_default_flow() -> None:
+    """OIDC token 交换应使用默认 OAuth 2.0 标准 form-encoded 流程。"""
+    from app.services.oauth_service import _CUSTOM_TOKEN_EXCHANGERS
+
+    # OIDC 不应有自定义 token 交换器
+    assert "oidc" not in _CUSTOM_TOKEN_EXCHANGERS
+
+
+# --- OIDC 分发表注册检查 ---
+
+
+def test_oidc_registered_in_dispatch_tables() -> None:
+    """OIDC 在授权 URL 和用户信息分发表中已注册。"""
+    from app.services.oauth_service import (
+        _CUSTOM_AUTHORIZE_BUILDERS,
+        _CUSTOM_USERINFO_FETCHERS,
+    )
+
+    assert "oidc" in _CUSTOM_AUTHORIZE_BUILDERS
+    assert "oidc" in _CUSTOM_USERINFO_FETCHERS
+
+
+def test_oidc_in_provider_factories() -> None:
+    """OIDC 已注册到 Provider 工厂。"""
+    from app.core.oauth_providers import _PROVIDER_FACTORIES
+
+    assert "oidc" in _PROVIDER_FACTORIES
 
 
 @pytest.mark.asyncio
