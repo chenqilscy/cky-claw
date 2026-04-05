@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi.responses import PlainTextResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
@@ -19,6 +21,9 @@ from app.schemas.im_channel import (
     IMChannelUpdate,
 )
 from app.services import im_channel as svc
+from app.services.channel_adapters import get_adapter
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/v1/im-channels", tags=["IM 渠道"])
 
@@ -103,15 +108,16 @@ async def delete_channel(
 # ── Webhook 接收 ──────────────────────────────────
 
 
-@router.post("/{channel_id}/webhook")
+@router.post("/{channel_id}/webhook", response_model=None)
 async def receive_webhook(
     channel_id: uuid.UUID,
     request: Request,
     db: AsyncSession = Depends(get_db),
-) -> dict[str, Any]:
+) -> dict[str, Any] | PlainTextResponse:
     """接收 IM 平台 Webhook 回调。
 
-    公开端点，通过签名验证安全性。
+    公开端点。按渠道类型使用对应 ChannelAdapter 处理签名验证和消息解析。
+    不支持的渠道类型回退到通用 HMAC-SHA256 验证。
     """
     channel = await svc.get_channel(db, channel_id)
     if channel is None:
@@ -120,6 +126,47 @@ async def receive_webhook(
         raise HTTPException(status_code=403, detail="IM 渠道已禁用")
 
     body = await request.body()
+    app_config: dict[str, Any] = channel.app_config or {}
+    adapter = get_adapter(channel.channel_type)
+
+    if adapter is not None:
+        # ---- 使用平台适配器 ----
+
+        # 构造 headers（包含 query params 供适配器使用）
+        adapter_headers = dict(request.headers)
+        for key, value in request.query_params.items():
+            adapter_headers[key] = value
+
+        # 1. URL 验证请求
+        query_params = dict(request.query_params)
+        verification_response = adapter.handle_verification(body, query_params, app_config)
+        if verification_response is not None:
+            return PlainTextResponse(content=verification_response)
+
+        # 2. 签名验证
+        if not adapter.verify_request(adapter_headers, body, app_config):
+            raise HTTPException(status_code=401, detail="签名验证失败")
+
+        # 3. 解析消息
+        message = adapter.parse_message(body, app_config)
+        if message is None:
+            # 非消息事件（事件确认等），返回成功
+            return {"status": "ignored", "reason": "non-message event"}
+
+        # 4. 路由到 Agent
+        result = await svc.route_message(
+            db, channel_id, sender_id=message.sender_id, content=message.content,
+        )
+
+        # 5. 如果有回复内容且 Agent 返回了响应，通过适配器推送
+        reply = result.get("reply")
+        if reply and message.sender_id:
+            sent = await adapter.send_message(app_config, message.sender_id, reply)
+            result["reply_sent"] = sent
+
+        return result
+
+    # ---- 回退：通用 Webhook 处理（原有逻辑） ----
 
     # 签名验证（如果配置了 webhook_secret）
     if channel.webhook_secret:
