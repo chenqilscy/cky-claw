@@ -62,6 +62,22 @@ class TestChannelAdapterBase:
         adapter = get_adapter("dingtalk")
         assert isinstance(adapter, DingTalkAdapter)
 
+    def test_get_adapter_feishu(self) -> None:
+        """get_adapter 返回 FeishuAdapter。"""
+        from app.services.channel_adapters import get_adapter
+        from app.services.channel_adapters.feishu import FeishuAdapter
+
+        adapter = get_adapter("feishu")
+        assert isinstance(adapter, FeishuAdapter)
+
+    def test_get_adapter_custom_webhook(self) -> None:
+        """get_adapter 返回 CustomWebhookAdapter。"""
+        from app.services.channel_adapters import get_adapter
+        from app.services.channel_adapters.custom_webhook import CustomWebhookAdapter
+
+        adapter = get_adapter("custom_webhook")
+        assert isinstance(adapter, CustomWebhookAdapter)
+
     def test_get_adapter_unknown(self) -> None:
         """未知渠道类型返回 None。"""
         from app.services.channel_adapters import get_adapter
@@ -74,7 +90,9 @@ class TestChannelAdapterBase:
         from app.services.channel_adapters import (
             ChannelAdapter,
             ChannelMessage,
+            CustomWebhookAdapter,
             DingTalkAdapter,
+            FeishuAdapter,
             WeComAdapter,
             get_adapter,
         )
@@ -541,3 +559,367 @@ class TestWeComCrypto:
 
         result = _decrypt_message("not-valid-base64!!!", _WECOM_AES_KEY, _WECOM_CORPID)
         assert result is None
+
+
+# ========== 飞书适配器测试 ==========
+
+_FEISHU_CONFIG: dict[str, Any] = {
+    "verification_token": "test_verify_token",
+    "encrypt_key": "test_encrypt_key_123",
+    "app_id": "cli_test_app_id",
+    "app_secret": "test_app_secret",
+}
+
+
+def _feishu_sign(timestamp: str, nonce: str, encrypt_key: str, body: str) -> str:
+    """计算飞书签名。"""
+    content = timestamp + nonce + encrypt_key + body
+    return hashlib.sha256(content.encode("utf-8")).hexdigest()
+
+
+class TestFeishuAdapter:
+    """飞书适配器测试。"""
+
+    def _get_adapter(self):
+        from app.services.channel_adapters.feishu import FeishuAdapter
+        return FeishuAdapter()
+
+    def test_verify_request_valid(self) -> None:
+        """有效签名验证通过。"""
+        adapter = self._get_adapter()
+        body = '{"event": {}}'
+        ts = "1234567890"
+        nonce = "abc123"
+        sig = _feishu_sign(ts, nonce, _FEISHU_CONFIG["encrypt_key"], body)
+        headers = {
+            "x-lark-request-timestamp": ts,
+            "x-lark-request-nonce": nonce,
+            "x-lark-signature": sig,
+        }
+        assert adapter.verify_request(headers, body.encode(), _FEISHU_CONFIG) is True
+
+    def test_verify_request_invalid(self) -> None:
+        """无效签名验证失败。"""
+        adapter = self._get_adapter()
+        headers = {
+            "x-lark-request-timestamp": "123",
+            "x-lark-request-nonce": "abc",
+            "x-lark-signature": "wrong_signature",
+        }
+        assert adapter.verify_request(headers, b'{}', _FEISHU_CONFIG) is False
+
+    def test_verify_request_missing_headers(self) -> None:
+        """缺少签名头验证失败。"""
+        adapter = self._get_adapter()
+        assert adapter.verify_request({}, b'{}', _FEISHU_CONFIG) is False
+
+    def test_verify_request_no_encrypt_key(self) -> None:
+        """无 encrypt_key 时跳过验证。"""
+        adapter = self._get_adapter()
+        config = {"verification_token": "tok"}
+        assert adapter.verify_request({}, b'{}', config) is True
+
+    def test_parse_message_text(self) -> None:
+        """解析飞书文本消息。"""
+        adapter = self._get_adapter()
+        body = json.dumps({
+            "schema": "2.0",
+            "header": {"event_type": "im.message.receive_v1"},
+            "event": {
+                "sender": {"sender_id": {"open_id": "ou_test_user"}},
+                "message": {
+                    "message_type": "text",
+                    "content": json.dumps({"text": "你好"})
+                }
+            }
+        }).encode()
+        msg = adapter.parse_message(body, _FEISHU_CONFIG)
+        assert msg is not None
+        assert msg.sender_id == "ou_test_user"
+        assert msg.content == "你好"
+        assert msg.message_type == "text"
+
+    def test_parse_message_challenge(self) -> None:
+        """challenge 请求返回 None。"""
+        adapter = self._get_adapter()
+        body = json.dumps({"challenge": "abc", "type": "url_verification"}).encode()
+        assert adapter.parse_message(body, _FEISHU_CONFIG) is None
+
+    def test_parse_message_non_message_event(self) -> None:
+        """非消息事件返回 None。"""
+        adapter = self._get_adapter()
+        body = json.dumps({
+            "header": {"event_type": "contact.user.created_v3"},
+            "event": {}
+        }).encode()
+        assert adapter.parse_message(body, _FEISHU_CONFIG) is None
+
+    def test_parse_message_no_sender(self) -> None:
+        """无发送者返回 None。"""
+        adapter = self._get_adapter()
+        body = json.dumps({
+            "header": {"event_type": "im.message.receive_v1"},
+            "event": {
+                "sender": {"sender_id": {}},
+                "message": {"content": '{"text":"hi"}'}
+            }
+        }).encode()
+        assert adapter.parse_message(body, _FEISHU_CONFIG) is None
+
+    def test_parse_message_invalid_json(self) -> None:
+        """无效 JSON 返回 None。"""
+        adapter = self._get_adapter()
+        assert adapter.parse_message(b"not json", _FEISHU_CONFIG) is None
+
+    def test_handle_verification_success(self) -> None:
+        """URL 验证成功。"""
+        adapter = self._get_adapter()
+        body = json.dumps({
+            "challenge": "test_challenge_123",
+            "token": _FEISHU_CONFIG["verification_token"],
+            "type": "url_verification"
+        }).encode()
+        result = adapter.handle_verification(body, {}, _FEISHU_CONFIG)
+        assert result is not None
+        data = json.loads(result)
+        assert data["challenge"] == "test_challenge_123"
+
+    def test_handle_verification_wrong_token(self) -> None:
+        """token 不匹配返回 None。"""
+        adapter = self._get_adapter()
+        body = json.dumps({
+            "challenge": "abc",
+            "token": "wrong_token",
+            "type": "url_verification"
+        }).encode()
+        assert adapter.handle_verification(body, {}, _FEISHU_CONFIG) is None
+
+    def test_handle_verification_not_verification_type(self) -> None:
+        """非验证类型返回 None。"""
+        adapter = self._get_adapter()
+        body = json.dumps({"type": "event", "event": {}}).encode()
+        assert adapter.handle_verification(body, {}, _FEISHU_CONFIG) is None
+
+    @pytest.mark.asyncio
+    async def test_send_message_success(self) -> None:
+        """飞书消息发送成功。"""
+        adapter = self._get_adapter()
+
+        mock_token_resp = MagicMock()
+        mock_token_resp.json.return_value = {"code": 0, "tenant_access_token": "t-xxx"}
+
+        mock_send_resp = MagicMock()
+        mock_send_resp.json.return_value = {"code": 0, "msg": "success"}
+
+        mock_client = AsyncMock()
+        mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+        mock_client.__aexit__ = AsyncMock(return_value=False)
+        mock_client.post = AsyncMock(side_effect=[mock_token_resp, mock_send_resp])
+
+        with patch("app.services.channel_adapters.feishu.httpx.AsyncClient", return_value=mock_client):
+            result = await adapter.send_message(_FEISHU_CONFIG, "ou_user", "hello")
+        assert result is True
+
+    @pytest.mark.asyncio
+    async def test_send_message_no_app_id(self) -> None:
+        """缺少 app_id 发送失败。"""
+        adapter = self._get_adapter()
+        result = await adapter.send_message({}, "ou_user", "hello")
+        assert result is False
+
+    @pytest.mark.asyncio
+    async def test_send_message_token_error(self) -> None:
+        """获取 token 失败时发送失败。"""
+        adapter = self._get_adapter()
+
+        mock_resp = MagicMock()
+        mock_resp.json.return_value = {"code": 99991, "msg": "invalid app_id"}
+
+        mock_client = AsyncMock()
+        mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+        mock_client.__aexit__ = AsyncMock(return_value=False)
+        mock_client.post = AsyncMock(return_value=mock_resp)
+
+        with patch("app.services.channel_adapters.feishu.httpx.AsyncClient", return_value=mock_client):
+            result = await adapter.send_message(_FEISHU_CONFIG, "ou_user", "hello")
+        assert result is False
+
+    @pytest.mark.asyncio
+    async def test_send_message_api_error(self) -> None:
+        """飞书发送 API 返回错误。"""
+        adapter = self._get_adapter()
+
+        mock_token_resp = MagicMock()
+        mock_token_resp.json.return_value = {"code": 0, "tenant_access_token": "t-xxx"}
+
+        mock_send_resp = MagicMock()
+        mock_send_resp.json.return_value = {"code": 230001, "msg": "no permission"}
+
+        mock_client = AsyncMock()
+        mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+        mock_client.__aexit__ = AsyncMock(return_value=False)
+        mock_client.post = AsyncMock(side_effect=[mock_token_resp, mock_send_resp])
+
+        with patch("app.services.channel_adapters.feishu.httpx.AsyncClient", return_value=mock_client):
+            result = await adapter.send_message(_FEISHU_CONFIG, "ou_user", "hello")
+        assert result is False
+
+
+# ========== 自定义 Webhook 适配器测试 ==========
+
+_CUSTOM_WEBHOOK_CONFIG: dict[str, Any] = {
+    "secret": "my_webhook_secret",
+    "sign_algorithm": "sha256",
+    "sign_header": "x-signature",
+    "sender_field": "user.id",
+    "content_field": "message.text",
+    "type_field": "message.type",
+    "webhook_url": "https://example.com/webhook/push",
+}
+
+
+class TestCustomWebhookAdapter:
+    """自定义 Webhook 适配器测试。"""
+
+    def _get_adapter(self):
+        from app.services.channel_adapters.custom_webhook import CustomWebhookAdapter
+        return CustomWebhookAdapter()
+
+    def test_verify_request_valid(self) -> None:
+        """有效 HMAC 签名验证通过。"""
+        adapter = self._get_adapter()
+        body = b'{"user": {"id": "u1"}, "message": {"text": "hi"}}'
+        sig = hmac.new(
+            _CUSTOM_WEBHOOK_CONFIG["secret"].encode(),
+            body,
+            hashlib.sha256
+        ).hexdigest()
+        headers = {"X-Signature": sig}
+        assert adapter.verify_request(headers, body, _CUSTOM_WEBHOOK_CONFIG) is True
+
+    def test_verify_request_invalid(self) -> None:
+        """无效签名验证失败。"""
+        adapter = self._get_adapter()
+        headers = {"X-Signature": "wrong_sig"}
+        assert adapter.verify_request(headers, b'{}', _CUSTOM_WEBHOOK_CONFIG) is False
+
+    def test_verify_request_no_secret(self) -> None:
+        """无 secret 跳过签名验证。"""
+        adapter = self._get_adapter()
+        assert adapter.verify_request({}, b'{}', {}) is True
+
+    def test_verify_request_missing_header(self) -> None:
+        """缺少签名头验证失败。"""
+        adapter = self._get_adapter()
+        assert adapter.verify_request({}, b'{}', _CUSTOM_WEBHOOK_CONFIG) is False
+
+    def test_verify_request_sha1(self) -> None:
+        """SHA1 签名算法。"""
+        adapter = self._get_adapter()
+        config = {**_CUSTOM_WEBHOOK_CONFIG, "sign_algorithm": "sha1"}
+        body = b'{"data": true}'
+        sig = hmac.new(config["secret"].encode(), body, hashlib.sha1).hexdigest()
+        assert adapter.verify_request({"X-Signature": sig}, body, config) is True
+
+    def test_parse_message_nested_fields(self) -> None:
+        """解析嵌套字段路径的消息。"""
+        adapter = self._get_adapter()
+        body = json.dumps({
+            "user": {"id": "u123"},
+            "message": {"text": "hello world", "type": "text"}
+        }).encode()
+        msg = adapter.parse_message(body, _CUSTOM_WEBHOOK_CONFIG)
+        assert msg is not None
+        assert msg.sender_id == "u123"
+        assert msg.content == "hello world"
+        assert msg.message_type == "text"
+
+    def test_parse_message_flat_fields(self) -> None:
+        """解析扁平字段路径的消息。"""
+        adapter = self._get_adapter()
+        config = {"sender_field": "from", "content_field": "body"}
+        body = json.dumps({"from": "user1", "body": "test msg"}).encode()
+        msg = adapter.parse_message(body, config)
+        assert msg is not None
+        assert msg.sender_id == "user1"
+        assert msg.content == "test msg"
+        assert msg.message_type == "text"  # 默认
+
+    def test_parse_message_missing_sender(self) -> None:
+        """缺少发送者返回 None。"""
+        adapter = self._get_adapter()
+        body = json.dumps({"message": {"text": "hi"}}).encode()
+        assert adapter.parse_message(body, _CUSTOM_WEBHOOK_CONFIG) is None
+
+    def test_parse_message_invalid_json(self) -> None:
+        """无效 JSON 返回 None。"""
+        adapter = self._get_adapter()
+        assert adapter.parse_message(b"not json", _CUSTOM_WEBHOOK_CONFIG) is None
+
+    def test_handle_verification(self) -> None:
+        """自定义 Webhook 不需要 URL 验证。"""
+        adapter = self._get_adapter()
+        assert adapter.handle_verification(b"", {}, _CUSTOM_WEBHOOK_CONFIG) is None
+
+    @pytest.mark.asyncio
+    async def test_send_message_success(self) -> None:
+        """推送消息成功。"""
+        adapter = self._get_adapter()
+
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+
+        mock_client = AsyncMock()
+        mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+        mock_client.__aexit__ = AsyncMock(return_value=False)
+        mock_client.post = AsyncMock(return_value=mock_resp)
+
+        with patch("app.services.channel_adapters.custom_webhook.httpx.AsyncClient", return_value=mock_client):
+            result = await adapter.send_message(_CUSTOM_WEBHOOK_CONFIG, "user1", "hello")
+        assert result is True
+
+    @pytest.mark.asyncio
+    async def test_send_message_no_url(self) -> None:
+        """未配置 webhook_url 发送失败。"""
+        adapter = self._get_adapter()
+        result = await adapter.send_message({}, "user1", "hello")
+        assert result is False
+
+    @pytest.mark.asyncio
+    async def test_send_message_http_error(self) -> None:
+        """HTTP 请求异常。"""
+        adapter = self._get_adapter()
+
+        mock_resp = MagicMock()
+        mock_resp.status_code = 500
+        mock_resp.text = "Internal Server Error"
+
+        mock_client = AsyncMock()
+        mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+        mock_client.__aexit__ = AsyncMock(return_value=False)
+        mock_client.post = AsyncMock(return_value=mock_resp)
+
+        with patch("app.services.channel_adapters.custom_webhook.httpx.AsyncClient", return_value=mock_client):
+            result = await adapter.send_message(_CUSTOM_WEBHOOK_CONFIG, "user1", "hello")
+        assert result is False
+
+    @pytest.mark.asyncio
+    async def test_send_message_with_sign(self) -> None:
+        """带签名的消息推送。"""
+        adapter = self._get_adapter()
+
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+
+        mock_client = AsyncMock()
+        mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+        mock_client.__aexit__ = AsyncMock(return_value=False)
+        mock_client.post = AsyncMock(return_value=mock_resp)
+
+        with patch("app.services.channel_adapters.custom_webhook.httpx.AsyncClient", return_value=mock_client):
+            result = await adapter.send_message(_CUSTOM_WEBHOOK_CONFIG, "user1", "hello")
+        assert result is True
+        # 验证签名头
+        call_args = mock_client.post.call_args
+        headers = call_args[1].get("headers", {})
+        assert "x-signature" in headers

@@ -3,13 +3,17 @@
 from __future__ import annotations
 
 from .base import ChannelAdapter, ChannelMessage
+from .custom_webhook import CustomWebhookAdapter
 from .dingtalk import DingTalkAdapter
+from .feishu import FeishuAdapter
 from .wecom import WeComAdapter
 
 # 适配器注册表：channel_type → Adapter 实例
 _ADAPTER_REGISTRY: dict[str, ChannelAdapter] = {
     "wecom": WeComAdapter(),
     "dingtalk": DingTalkAdapter(),
+    "feishu": FeishuAdapter(),
+    "custom_webhook": CustomWebhookAdapter(),
 }
 
 
@@ -21,7 +25,9 @@ def get_adapter(channel_type: str) -> ChannelAdapter | None:
 __all__ = [
     "ChannelAdapter",
     "ChannelMessage",
-    "WeComAdapter",
+    "CustomWebhookAdapter",
     "DingTalkAdapter",
+    "FeishuAdapter",
+    "WeComAdapter",
     "get_adapter",
 ]
