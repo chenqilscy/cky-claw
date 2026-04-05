@@ -228,14 +228,14 @@
 
 | # | 渠道 | 优先级 | 复杂度 | 说明 |
 |---|------|:------:|:------:|------|
-| C1 | **企业微信** | P1 | 中 | 国内企业首选。需对接回调验证、消息加解密、应用消息推送 |
-| C2 | **钉钉** | P1 | 中 | 阿里系企业标配。需对接机器人 Webhook + Stream 模式 |
+| C1 | ~~**企业微信**~~ | P1 | 中 | ✅ 已完成（WeComAdapter：签名验证 + AES-256-CBC 消息加解密 + XML 解析 + 应用消息推送 + 19 测试） |
+| C2 | ~~**钉钉**~~ | P1 | 中 | ✅ 已完成（DingTalkAdapter：HMAC-SHA256 签名验证 + JSON 解析 + Webhook 推送 + 15 测试） |
 | C3 | **飞书** | P2 | 中 | 字节系企业使用广泛。需对接事件订阅 + 消息卡片 |
 | C4 | **微信公众号/服务号** | P2 | 高 | 面向 C 端客服场景。需微信认证 + 模板消息 + 客服接口 |
 | C5 | **Slack** | P3 | 低 | 海外企业标配。Bolt SDK 成熟 |
 | C6 | **自定义 Webhook** | P3 | 低 | 通用 HTTP 回调，已有基础框架支持 |
 
-**实现方案**：在现有 `IMChannel` 框架基础上，为每个平台实现 `ChannelAdapter`（消息格式转换 + 签名验证 + API 调用）。
+**已实现架构**：`ChannelAdapter` 抽象基类 + `WeComAdapter` / `DingTalkAdapter` 子类 + 适配器注册表 + Webhook 端点集成，位于 `backend/app/services/channel_adapters/`。
 
 ### 用户认证
 
@@ -306,7 +306,7 @@ CkyClaw Framework 的核心设计（Agent 数据类、Runner 循环、Handoff、
 
 | 指标 | 数值 |
 |------|------|
-| 测试总数 | **2404**（Backend 1206 + Framework 1134 + Frontend 64） |
+| 测试总数 | **2446**（Backend 1248 + Framework 1134 + Frontend 64） |
 | 测试覆盖率 | Backend **95%** · Framework **100%** |
 | Alembic 迁移 | **35** 个（0001–0035） |
 | API 路由模块 | **30** 个 |
