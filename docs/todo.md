@@ -182,8 +182,6 @@
 
 ## 六、工作流引擎
 
-⏳ Phase 1（Framework DAG 引擎）+ Phase 2（Backend 持久化 + CRUD API）已完成。
-
 | Phase | 状态 | 说明 |
 |-------|:----:|------|
 | Phase 1 — Framework DAG 引擎 | ✅ | 5 步骤类型 + 安全表达式求值 + DAG 验证 + 并行执行 + 64 测试 |
@@ -198,6 +196,13 @@
 ~~`config.py`中`Settings`类，相关中间件的配置信息，采用硬编码的方式。需要改为从配置文件中读取~~
 
 ✅ 已解决：Settings 使用 Pydantic v2 BaseSettings，全部通过 `CKYCLAW_` 前缀环境变量配置，无硬编码
+
+### 引用版本
+分析引用的框架、包、基础镜像等版本是否需要升级更新
+
+### 用户认证
+- 多种OAuth认证：github google keycloak tenant(qq/wechat) 等
+- 行业常见的优秀认证方案（）
 
 ### 本地启动/调试
 
