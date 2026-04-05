@@ -759,44 +759,81 @@ class TestWorkflowDeadlinePrecise:
 class TestDAGSkipContinuePrecise:
     """精确覆盖 engine.py line 191 — to_run 空 + ready 非空 → continue。
 
-    场景: ConditionalStep 无匹配 + 无默认 → ALL 后继 skipped。
-    被 skip 的步骤的后继 in_degree 推进后加入 ready（也在 skipped 中）。
-    to_run = []（全在 skipped），ready 非空 → continue。
+    拓扑设计（双 ConditionalStep 交叉跳过）:
+
+        cond1 (root) ─→ a1 ─→ a2          (cond1 无匹配 → skip a1, a2)
+        s1   (root)  ─→ cond2 ─→ b1 ─→ b2  (cond2 无匹配 → skip b1, b2)
+
+    执行流:
+        Iter1: ready=[cond1, s1]. 执行两者.
+               cond1 → skipped={a1,a2}. "更新後継": a1 in skipped → skip.
+               s1 → OK. cond2 not skipped → ready=[cond2].
+        Iter2: ready=[cond2]. to_run=[cond2]. clear().
+               newly_skipped={a1,a2}: adj[a1]=[a2], in_degree[a2]→0 → ready.append(a2).
+               执行 cond2 → skipped+={b1,b2}. "更新後継": b1 in skipped → skip.
+               ready=[a2].
+        Iter3: ready=[a2]. a2 in skipped → to_run=[]. clear().
+               newly_skipped={b1,b2}: adj[b1]=[b2], in_degree[b2]→0 → ready=[b2].
+               not to_run AND not ready=False → **continue (LINE 191)**!
+        Iter4: ready=[b2]. b2 in skipped → to_run=[].
+               newly_skipped={} → ready=[]. break.
     """
 
     @pytest.mark.asyncio
-    async def test_all_skipped_but_successors_added_to_ready(self) -> None:
-        """ConditionalStep 全 skip → to_run 空 + successors 进 ready → continue。"""
-        # cond1(root): 无匹配 + 无默认 → ALL 后继 (s2) 被 skip
-        # s2 → s3: s2 被 skip 后 newly_skipped 推进 s3 进 ready
+    async def test_dual_conditional_skip_triggers_continue(self) -> None:
+        """双 ConditionalStep 交叉跳过 → to_run 空 + ready 有值 → continue (line 191)。"""
+        # cond1: root, 无匹配 + 无默认 → skip a1 → subtree skip a2
         cond1 = ConditionalStep(
             id="cond1",
             branches=[
-                BranchCondition(label="never", condition="False", target_step_id="s2"),
+                BranchCondition(label="never", condition="False", target_step_id="a1"),
             ],
-            default_step_id=None,  # 无默认 → 全部跳过
+            default_step_id=None,
         )
-        s2 = AgentStep(id="s2", agent_name="a", prompt_template="s2")
-        s3 = AgentStep(id="s3", agent_name="a", prompt_template="s3")
+        a1 = AgentStep(id="a1", agent_name="a", prompt_template="a1")
+        a2 = AgentStep(id="a2", agent_name="a", prompt_template="a2")
+
+        # s1: root AgentStep, 执行后推进 cond2
+        s1 = AgentStep(id="s1", agent_name="a", prompt_template="s1")
+
+        # cond2: 无匹配 + 无默认 → skip b1 → subtree skip b2
+        cond2 = ConditionalStep(
+            id="cond2",
+            branches=[
+                BranchCondition(label="never", condition="False", target_step_id="b1"),
+            ],
+            default_step_id=None,
+        )
+        b1 = AgentStep(id="b1", agent_name="a", prompt_template="b1")
+        b2 = AgentStep(id="b2", agent_name="a", prompt_template="b2")
 
         workflow = Workflow(
             name="wf",
-            steps=[cond1, s2, s3],
+            steps=[cond1, a1, a2, s1, cond2, b1, b2],
             edges=[
-                Edge(id="e1", source_step_id="cond1", target_step_id="s2"),
-                Edge(id="e2", source_step_id="s2", target_step_id="s3"),
+                Edge(id="e1", source_step_id="cond1", target_step_id="a1"),
+                Edge(id="e2", source_step_id="a1", target_step_id="a2"),
+                Edge(id="e3", source_step_id="s1", target_step_id="cond2"),
+                Edge(id="e4", source_step_id="cond2", target_step_id="b1"),
+                Edge(id="e5", source_step_id="b1", target_step_id="b2"),
             ],
         )
+
+        mock_result = MagicMock(spec=["output", "token_usage"])
+        mock_result.output = "ok"
+        mock_result.token_usage = None
 
         async def resolver(name: str) -> Any:
             return MagicMock()
 
-        result = await WorkflowEngine.run(
-            workflow, context={}, agent_resolver=resolver,
-        )
+        with patch("ckyclaw_framework.workflow.engine.Runner") as MockRunner:
+            MockRunner.run = AsyncMock(return_value=mock_result)
+            result = await WorkflowEngine.run(
+                workflow, context={}, agent_resolver=resolver,
+            )
 
-        # cond1 执行（选不中） → s2, s3 全 skip → 流程完成
         assert result.status == WorkflowStatus.COMPLETED
-        # s2, s3 不应该被执行（全 skip）
-        if "s2" in result.step_results:
-            assert result.step_results["s2"].status == StepStatus.SKIPPED
+        # s1 和两个 ConditionalStep 执行，a1/a2/b1/b2 全部跳过
+        assert result.step_results["s1"].status == StepStatus.COMPLETED
+        assert result.step_results["cond1"].status == StepStatus.COMPLETED
+        assert result.step_results["cond2"].status == StepStatus.COMPLETED
