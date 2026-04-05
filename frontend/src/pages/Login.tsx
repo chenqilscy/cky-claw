@@ -1,7 +1,8 @@
-import { Button, Card, Form, Input, Typography, message } from 'antd';
-import { LockOutlined, UserOutlined } from '@ant-design/icons';
+import { Button, Card, Divider, Form, Input, Typography, message } from 'antd';
+import { GithubOutlined, LockOutlined, UserOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../stores/authStore';
+import { oauthService } from '../services/oauthService';
 
 const { Title } = Typography;
 
@@ -61,6 +62,22 @@ const LoginPage: React.FC = () => {
             </Button>
           </Form.Item>
         </Form>
+        <Divider plain>或</Divider>
+        <Button
+          icon={<GithubOutlined />}
+          block
+          size="large"
+          onClick={async () => {
+            try {
+              const { authorize_url } = await oauthService.authorize('github');
+              window.location.href = authorize_url;
+            } catch {
+              message.error('GitHub 登录暂不可用');
+            }
+          }}
+        >
+          GitHub 登录
+        </Button>
       </Card>
     </div>
   );

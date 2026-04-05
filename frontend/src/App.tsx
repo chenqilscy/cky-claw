@@ -38,6 +38,7 @@ const ScheduledTasksPage = lazy(() => import('./pages/scheduled-tasks/ScheduledT
 const ApmDashboardPage = lazy(() => import('./pages/apm/ApmDashboardPage'));
 const I18nSettingsPage = lazy(() => import('./pages/agents/I18nSettingsPage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
+const OAuthCallbackPage = lazy(() => import('./pages/oauth/OAuthCallbackPage'));
 
 const PageLoading = () => (
   <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 300 }}>
@@ -64,6 +65,7 @@ const App: React.FC = () => {
       <Suspense fallback={<PageLoading />}>
         <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/oauth/callback/:provider" element={<OAuthCallbackPage />} />
         <Route
           path="/"
           element={

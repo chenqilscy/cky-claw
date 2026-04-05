@@ -22,6 +22,7 @@ from app.api.agent_versions import router as agent_versions_router
 from app.api.approvals import router as approvals_router
 from app.api.audit_logs import router as audit_logs_router
 from app.api.auth import router as auth_router
+from app.api.oauth import router as oauth_router
 from app.api.evaluations import router as evaluations_router
 from app.api.health import router as health_router
 from app.api.providers import router as providers_router
@@ -109,6 +110,7 @@ def create_app() -> FastAPI:
     # 路由
     app.include_router(health_router)
     app.include_router(auth_router)
+    app.include_router(oauth_router)
     app.include_router(audit_logs_router)
     app.include_router(agents_router)
     app.include_router(agent_locales_router)

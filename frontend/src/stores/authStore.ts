@@ -16,6 +16,7 @@ interface AuthState {
   error: string | null;
 
   login: (username: string, password: string) => Promise<void>;
+  setToken: (token: string) => void;
   logout: () => void;
   fetchMe: () => Promise<void>;
   clearError: () => void;
@@ -48,6 +49,11 @@ const useAuthStore = create<AuthState>((set) => ({
       set({ loading: false, error: message });
       throw err;
     }
+  },
+
+  setToken: (token: string) => {
+    localStorage.setItem('ckyclaw_token', token);
+    set({ token, error: null });
   },
 
   logout: () => {

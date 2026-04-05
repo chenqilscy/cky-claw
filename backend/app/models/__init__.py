@@ -24,6 +24,7 @@ from app.models.token_usage import TokenUsageLog
 from app.models.tool_group import ToolGroupConfig
 from app.models.trace import SpanRecord, TraceRecord
 from app.models.user import User
+from app.models.user_oauth import UserOAuthConnection
 
 __all__ = [
     "AgentConfig",
@@ -51,5 +52,6 @@ __all__ = [
     "ToolGroupConfig",
     "TraceRecord",
     "User",
+    "UserOAuthConnection",
     "WorkflowDefinition",
 ]

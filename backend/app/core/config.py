@@ -30,6 +30,11 @@ class Settings(BaseSettings):
     otel_service_name: str = "ckyclaw-backend"
     otel_exporter_endpoint: str = "http://localhost:4317"
 
+    # OAuth 2.0
+    oauth_github_client_id: str = ""
+    oauth_github_client_secret: str = ""
+    oauth_redirect_base_url: str = "http://localhost:3000"
+
     model_config = {"env_prefix": "CKYCLAW_", "env_file": ".env", "extra": "ignore"}
 
 

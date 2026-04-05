@@ -30,6 +30,7 @@ def _make_user(**overrides) -> MagicMock:
         "role": "user",
         "role_id": None,
         "is_active": True,
+        "avatar_url": None,
         "created_at": now,
         "updated_at": now,
     }
