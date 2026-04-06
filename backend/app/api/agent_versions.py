@@ -20,7 +20,11 @@ from app.services import agent_version as version_service
 router = APIRouter(prefix="/api/v1/agents", tags=["agent-versions"])
 
 
-@router.get("/{agent_id}/versions", response_model=AgentVersionListResponse, dependencies=[Depends(require_permission("agents", "read"))])
+@router.get(
+    "/{agent_id}/versions",
+    response_model=AgentVersionListResponse,
+    dependencies=[Depends(require_permission("agents", "read"))],
+)
 async def list_versions(
     agent_id: uuid.UUID,
     limit: int = Query(20, ge=1, le=100, description="分页大小"),
@@ -40,7 +44,11 @@ async def list_versions(
     )
 
 
-@router.get("/{agent_id}/versions/diff", response_model=AgentVersionDiffResponse, dependencies=[Depends(require_permission("agents", "read"))])
+@router.get(
+    "/{agent_id}/versions/diff",
+    response_model=AgentVersionDiffResponse,
+    dependencies=[Depends(require_permission("agents", "read"))],
+)
 async def diff_versions(
     agent_id: uuid.UUID,
     v1: int = Query(..., ge=1, description="版本 A"),
@@ -60,7 +68,11 @@ async def diff_versions(
     )
 
 
-@router.get("/{agent_id}/versions/{version}", response_model=AgentVersionResponse, dependencies=[Depends(require_permission("agents", "read"))])
+@router.get(
+    "/{agent_id}/versions/{version}",
+    response_model=AgentVersionResponse,
+    dependencies=[Depends(require_permission("agents", "read"))],
+)
 async def get_version(
     agent_id: uuid.UUID,
     version: int,
@@ -73,7 +85,12 @@ async def get_version(
     return AgentVersionResponse.model_validate(ver)
 
 
-@router.post("/{agent_id}/versions/{version}/rollback", response_model=AgentVersionResponse, status_code=201, dependencies=[Depends(require_permission("agents", "write"))])
+@router.post(
+    "/{agent_id}/versions/{version}/rollback",
+    response_model=AgentVersionResponse,
+    status_code=201,
+    dependencies=[Depends(require_permission("agents", "write"))],
+)
 async def rollback_to_version(
     agent_id: uuid.UUID,
     version: int,

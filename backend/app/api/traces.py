@@ -101,7 +101,11 @@ async def list_traces(
     return TraceListResponse(data=items, total=total, limit=limit, offset=offset)
 
 
-@router.get("/{trace_id}", response_model=TraceDetailResponse, dependencies=[Depends(require_permission("traces", "read"))])
+@router.get(
+    "/{trace_id}",
+    response_model=TraceDetailResponse,
+    dependencies=[Depends(require_permission("traces", "read"))],
+)
 async def get_trace_detail(
     trace_id: str,
     db: AsyncSession = Depends(get_db),

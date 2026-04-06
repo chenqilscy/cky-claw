@@ -868,3 +868,136 @@ class TestE2ENewEndpoints:
             assert resp.status_code == 422
         finally:
             _app.dependency_overrides.pop(get_current_user, None)
+
+    # ---- agent activity trend ----
+
+    def test_agent_activity_trend(self, client: "TestClient") -> None:
+        """Agent 活动趋势 API 返回正确结构。"""
+        from app.core.deps import get_current_user, get_db
+        from app.main import app as _app
+
+        mock_db = self._mock_db()
+        mock_db.execute = AsyncMock(
+            return_value=MagicMock(all=MagicMock(return_value=[]))
+        )
+
+        fake_user = MagicMock()
+        fake_user.role_id = None
+        fake_user.role = "admin"
+
+        _app.dependency_overrides[get_db] = lambda: mock_db
+        _app.dependency_overrides[get_current_user] = lambda: fake_user
+        try:
+            resp = client.get(
+                "/api/v1/agents/activity-trend",
+                params={"hours": 1, "interval": 5},
+            )
+            assert resp.status_code == 200
+            body = resp.json()
+            assert "data" in body
+            assert body["hours"] == 1
+            assert body["interval"] == 5
+            assert isinstance(body["data"], list)
+        finally:
+            _app.dependency_overrides.pop(get_db, None)
+            _app.dependency_overrides.pop(get_current_user, None)
+
+    def test_agent_activity_trend_invalid_hours(self, client: "TestClient") -> None:
+        """hours 超范围返回 422。"""
+        from app.core.deps import get_current_user
+        from app.main import app as _app
+
+        fake_user = MagicMock()
+        fake_user.role_id = None
+        fake_user.role = "admin"
+
+        _app.dependency_overrides[get_current_user] = lambda: fake_user
+        try:
+            resp = client.get(
+                "/api/v1/agents/activity-trend",
+                params={"hours": 100},
+            )
+            assert resp.status_code == 422
+        finally:
+            _app.dependency_overrides.pop(get_current_user, None)
+
+    # ---- template instantiate ----
+
+    def test_template_instantiate(self, client: "TestClient") -> None:
+        """模板实例化 API 返回合并后的配置。"""
+        import uuid
+        from app.core.deps import get_current_user, get_db
+        from app.main import app as _app
+
+        mock_db = self._mock_db()
+        template = MagicMock()
+        template.id = uuid.uuid4()
+        template.name = "test-tpl"
+        template.display_name = "测试模板"
+        template.description = "测试描述"
+        template.category = "general"
+        template.is_deleted = False
+        template.config = {"instructions": "默认指令", "tools": []}
+
+        mock_db.execute = AsyncMock(
+            return_value=MagicMock(scalar_one_or_none=MagicMock(return_value=template))
+        )
+
+        fake_user = MagicMock()
+        fake_user.role_id = None
+        fake_user.role = "admin"
+
+        _app.dependency_overrides[get_db] = lambda: mock_db
+        _app.dependency_overrides[get_current_user] = lambda: fake_user
+        try:
+            resp = client.post(
+                f"/api/v1/agent-templates/{template.id}/instantiate",
+                json={"instructions": "自定义指令"},
+            )
+            assert resp.status_code == 200
+            body = resp.json()
+            assert body["template_name"] == "test-tpl"
+            assert body["config"]["instructions"] == "自定义指令"
+        finally:
+            _app.dependency_overrides.pop(get_db, None)
+            _app.dependency_overrides.pop(get_current_user, None)
+
+    def test_template_instantiate_no_overrides(self, client: "TestClient") -> None:
+        """无覆盖参数实例化返回原始配置。"""
+        import uuid
+        from app.core.deps import get_current_user, get_db
+        from app.main import app as _app
+
+        mock_db = self._mock_db()
+        template = MagicMock()
+        template.id = uuid.uuid4()
+        template.name = "test-tpl2"
+        template.display_name = "测试模板2"
+        template.description = "描述2"
+        template.category = "analytics"
+        template.is_deleted = False
+        template.config = {"instructions": "原始指令", "handoffs": ["a"]}
+
+        mock_db.execute = AsyncMock(
+            return_value=MagicMock(scalar_one_or_none=MagicMock(return_value=template))
+        )
+
+        fake_user = MagicMock()
+        fake_user.role_id = None
+        fake_user.role = "admin"
+
+        _app.dependency_overrides[get_db] = lambda: mock_db
+        _app.dependency_overrides[get_current_user] = lambda: fake_user
+        try:
+            resp = client.post(
+                f"/api/v1/agent-templates/{template.id}/instantiate",
+                content="null",
+                headers={"Content-Type": "application/json"},
+            )
+            assert resp.status_code == 200
+            body = resp.json()
+            assert body["config"]["instructions"] == "原始指令"
+            assert body["config"]["handoffs"] == ["a"]
+        finally:
+            _app.dependency_overrides.pop(get_db, None)
+            _app.dependency_overrides.pop(get_current_user, None)

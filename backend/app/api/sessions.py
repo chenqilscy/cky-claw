@@ -25,7 +25,12 @@ from app.services import session as session_service
 router = APIRouter(prefix="/api/v1/sessions", tags=["sessions"])
 
 
-@router.post("", response_model=SessionResponse, status_code=201, dependencies=[Depends(require_permission("sessions", "write"))])
+@router.post(
+    "",
+    response_model=SessionResponse,
+    status_code=201,
+    dependencies=[Depends(require_permission("sessions", "write"))],
+)
 async def create_session(
     data: SessionCreate,
     db: AsyncSession = Depends(get_db),
@@ -58,7 +63,11 @@ async def list_sessions(
     )
 
 
-@router.get("/{session_id}", response_model=SessionResponse, dependencies=[Depends(require_permission("sessions", "read"))])
+@router.get(
+    "/{session_id}",
+    response_model=SessionResponse,
+    dependencies=[Depends(require_permission("sessions", "read"))],
+)
 async def get_session(
     session_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
@@ -68,7 +77,10 @@ async def get_session(
     return SessionResponse.model_validate(session)
 
 
-@router.delete("/{session_id}", dependencies=[Depends(require_permission("sessions", "delete"))])
+@router.delete(
+    "/{session_id}",
+    dependencies=[Depends(require_permission("sessions", "delete"))],
+)
 async def delete_session(
     session_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
@@ -78,7 +90,11 @@ async def delete_session(
     return {"message": "Session 已删除"}
 
 
-@router.post("/{session_id}/run", response_model=None, dependencies=[Depends(require_permission("sessions", "execute"))])
+@router.post(
+    "/{session_id}/run",
+    response_model=None,
+    dependencies=[Depends(require_permission("sessions", "execute"))],
+)
 async def run_session(
     session_id: uuid.UUID,
     data: RunRequest,
@@ -103,7 +119,11 @@ async def run_session(
         return await session_service.execute_run(db, session_id, data)
 
 
-@router.get("/{session_id}/messages", response_model=SessionMessagesResponse, dependencies=[Depends(require_permission("sessions", "read"))])
+@router.get(
+    "/{session_id}/messages",
+    response_model=SessionMessagesResponse,
+    dependencies=[Depends(require_permission("sessions", "read"))],
+)
 async def get_session_messages(
     session_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),

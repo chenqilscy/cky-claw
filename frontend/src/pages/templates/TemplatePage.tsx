@@ -1,5 +1,8 @@
 import { useState, useCallback, useEffect } from 'react';
-import { Card, Row, Col, Tag, Button, Modal, Typography, Space, message, Empty, Spin, Input, Select } from 'antd';
+import {
+  Card, Row, Col, Tag, Button, Modal, Typography, Space, message,
+  Empty, Spin, Input, Select, Form,
+} from 'antd';
 import {
   RobotOutlined,
   BranchesOutlined,
@@ -16,7 +19,13 @@ import {
   SyncOutlined,
   EyeOutlined,
 } from '@ant-design/icons';
-import { agentTemplateService, type AgentTemplateItem } from '../../services/agentTemplateService';
+import { useNavigate } from 'react-router-dom';
+import {
+  agentTemplateService,
+  type AgentTemplateItem,
+  type TemplateInstantiateResult,
+} from '../../services/agentTemplateService';
+import { agentService } from '../../services/agentService';
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -55,12 +64,20 @@ const categoryLabelMap: Record<string, string> = {
 };
 
 const TemplatePage: React.FC = () => {
+  const navigate = useNavigate();
   const [templates, setTemplates] = useState<AgentTemplateItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [currentTemplate, setCurrentTemplate] = useState<AgentTemplateItem | null>(null);
   const [searchText, setSearchText] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string | undefined>(undefined);
+
+  /* 导入向导状态 */
+  const [wizardOpen, setWizardOpen] = useState(false);
+  const [wizardTemplate, setWizardTemplate] = useState<AgentTemplateItem | null>(null);
+  const [wizardPreview, setWizardPreview] = useState<TemplateInstantiateResult | null>(null);
+  const [wizardLoading, setWizardLoading] = useState(false);
+  const [form] = Form.useForm();
 
   const loadTemplates = useCallback(async () => {
     setLoading(true);
@@ -81,6 +98,48 @@ const TemplatePage: React.FC = () => {
       loadTemplates();
     } else {
       message.info('内置模板已是最新');
+    }
+  };
+
+  /* 打开导入向导 */
+  const openWizard = async (tpl: AgentTemplateItem) => {
+    setWizardTemplate(tpl);
+    setWizardOpen(true);
+    setWizardLoading(true);
+    try {
+      const preview = await agentTemplateService.instantiate(tpl.id);
+      setWizardPreview(preview);
+      form.setFieldsValue({
+        name: `${tpl.name}-${Date.now().toString(36)}`,
+        description: tpl.description,
+        instructions: (preview.config.instructions as string) ?? '',
+      });
+    } finally {
+      setWizardLoading(false);
+    }
+  };
+
+  /* 确认创建 Agent */
+  const handleCreateFromTemplate = async () => {
+    if (!wizardTemplate || !wizardPreview) return;
+    try {
+      const values = await form.validateFields();
+      const config = { ...wizardPreview.config };
+      if (values.instructions) config.instructions = values.instructions;
+
+      await agentService.create({
+        name: values.name,
+        description: values.description || wizardTemplate.description,
+        instructions: (config.instructions as string) ?? '',
+        tool_groups: (config.tools as string[]) ?? [],
+        handoffs: (config.handoffs as string[]) ?? [],
+      });
+      message.success(`Agent "${values.name}" 创建成功`);
+      setWizardOpen(false);
+      form.resetFields();
+      navigate('/agents');
+    } catch (err) {
+      if (err instanceof Error) message.error(err.message);
     }
   };
 
@@ -139,7 +198,7 @@ const TemplatePage: React.FC = () => {
                   <span key="preview" onClick={() => { setCurrentTemplate(tpl); setPreviewOpen(true); }}>
                     <EyeOutlined /> 查看
                   </span>,
-                  <span key="create" onClick={() => message.info(`TODO: 从模板 "${tpl.display_name}" 创建 Agent`)}>
+                  <span key="create" onClick={() => openWizard(tpl)}>
                     <PlusOutlined /> 使用
                   </span>,
                 ]}
@@ -187,7 +246,7 @@ const TemplatePage: React.FC = () => {
             key="use"
             type="primary"
             icon={<PlusOutlined />}
-            onClick={() => message.info('TODO: 从模板创建 Agent')}
+            onClick={() => { setPreviewOpen(false); if (currentTemplate) openWizard(currentTemplate); }}
           >
             使用此模板
           </Button>,
@@ -224,6 +283,53 @@ const TemplatePage: React.FC = () => {
             </pre>
           </div>
         )}
+      </Modal>
+
+      {/* 导入向导弹窗 */}
+      <Modal
+        title={`从模板创建 Agent — ${wizardTemplate?.display_name ?? ''}`}
+        open={wizardOpen}
+        onCancel={() => { setWizardOpen(false); form.resetFields(); }}
+        onOk={handleCreateFromTemplate}
+        okText="创建 Agent"
+        confirmLoading={wizardLoading}
+        width={640}
+      >
+        <Spin spinning={wizardLoading}>
+          <Form form={form} layout="vertical" style={{ marginTop: 16 }}>
+            <Form.Item
+              name="name"
+              label="Agent 名称"
+              rules={[
+                { required: true, message: '请输入 Agent 名称' },
+                { min: 3, max: 64, message: '名称长度 3-64 字符' },
+              ]}
+            >
+              <Input placeholder="输入唯一名称" />
+            </Form.Item>
+            <Form.Item name="description" label="描述">
+              <Input.TextArea rows={2} placeholder="Agent 描述" />
+            </Form.Item>
+            <Form.Item name="instructions" label="指令（可自定义）">
+              <Input.TextArea rows={4} placeholder="Agent 行为指令" />
+            </Form.Item>
+          </Form>
+          {wizardPreview && (
+            <div>
+              <Title level={5}>模板配置预览</Title>
+              <pre style={{
+                background: '#f5f5f5',
+                padding: 12,
+                borderRadius: 8,
+                maxHeight: 200,
+                overflow: 'auto',
+                fontSize: 12,
+              }}>
+                {JSON.stringify(wizardPreview.config, null, 2)}
+              </pre>
+            </div>
+          )}
+        </Spin>
       </Modal>
     </div>
   );

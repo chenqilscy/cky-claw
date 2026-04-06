@@ -22,7 +22,12 @@ from app.services import skill as skill_service
 router = APIRouter(prefix="/api/v1/skills", tags=["skills"])
 
 
-@router.post("", response_model=SkillResponse, status_code=201, dependencies=[Depends(require_permission("skills", "write"))])
+@router.post(
+    "",
+    response_model=SkillResponse,
+    status_code=201,
+    dependencies=[Depends(require_permission("skills", "write"))],
+)
 async def create_skill(
     data: SkillCreate,
     db: AsyncSession = Depends(get_db),
@@ -55,7 +60,11 @@ async def list_skills(
     )
 
 
-@router.get("/for-agent/{agent_name}", response_model=list[SkillResponse], dependencies=[Depends(require_permission("skills", "read"))])
+@router.get(
+    "/for-agent/{agent_name}",
+    response_model=list[SkillResponse],
+    dependencies=[Depends(require_permission("skills", "read"))],
+)
 async def find_skills_for_agent(
     agent_name: str,
     db: AsyncSession = Depends(get_db),
@@ -95,7 +104,11 @@ async def delete_skill(
     await skill_service.delete_skill(db, skill_id)
 
 
-@router.post("/search", response_model=list[SkillResponse], dependencies=[Depends(require_permission("skills", "read"))])
+@router.post(
+    "/search",
+    response_model=list[SkillResponse],
+    dependencies=[Depends(require_permission("skills", "read"))],
+)
 async def search_skills(
     data: SkillSearchRequest,
     db: AsyncSession = Depends(get_db),

@@ -30,6 +30,22 @@ async def get_agents_realtime_status(
     return {"data": agents, "minutes": minutes, "total": len(agents)}
 
 
+@router.get(
+    "/activity-trend",
+    dependencies=[Depends(require_permission("agents", "read"))],
+)
+async def get_agents_activity_trend(
+    hours: int = Query(1, ge=1, le=24, description="最近 N 小时"),
+    interval: int = Query(5, ge=1, le=60, description="时间桶粒度（分钟）"),
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, Any]:
+    """获取 Agent 活动趋势数据（按时间桶聚合）。"""
+    data = await agent_service.get_agent_activity_trend(
+        db, hours=hours, interval_minutes=interval
+    )
+    return {"data": data, "hours": hours, "interval": interval}
+
+
 @router.get("", response_model=AgentListResponse, dependencies=[Depends(require_permission("agents", "read"))])
 async def list_agents(
     search: str | None = Query(None, description="按名称/描述模糊搜索"),
@@ -48,7 +64,12 @@ async def list_agents(
     )
 
 
-@router.post("", response_model=AgentResponse, status_code=201, dependencies=[Depends(require_permission("agents", "write"))])
+@router.post(
+    "",
+    response_model=AgentResponse,
+    status_code=201,
+    dependencies=[Depends(require_permission("agents", "write"))],
+)
 async def create_agent(
     data: AgentCreate,
     db: AsyncSession = Depends(get_db),
@@ -128,7 +149,12 @@ async def export_agent(
         )
 
 
-@router.post("/import", response_model=AgentResponse, status_code=201, dependencies=[Depends(require_permission("agents", "write"))])
+@router.post(
+    "/import",
+    response_model=AgentResponse,
+    status_code=201,
+    dependencies=[Depends(require_permission("agents", "write"))],
+)
 async def import_agent(
     file: UploadFile,
     db: AsyncSession = Depends(get_db),

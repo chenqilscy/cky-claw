@@ -306,15 +306,16 @@ CkyClaw Framework 的核心设计（Agent 数据类、Runner 循环、Handoff、
 
 | 指标 | 数值 |
 |------|------|
-| 测试总数 | **3514**（Backend 1604 + Framework 1289 + Frontend 381 + E2E 27 + Channel 53 ignored） |
+| 测试总数 | **3520**（Backend 1608 + Framework 1289 + Frontend 383 + E2E 31 + Channel 53 ignored） |
 | 测试覆盖率 | Backend **98%** · Framework **100%** |
-| Alembic 迁移 | **43** 个（0001–0043） |
+| Alembic 迁移 | **44** 个（0001–0044） |
 | API 路由模块 | **34** 个 |
 | 前端页面 | **29** 个（React.lazy 懒加载 + Vendor 分包 + MarkdownRenderer 动态加载） |
 | CI Job | **5** 个 GitHub Actions + **5** Stage Jenkinsfile |
 | TypeScript 错误 | **0**（含测试文件） |
 | Backend mypy | **0** 错误（166 源文件） |
 | Framework mypy | **0** 错误（92 源文件） |
+| Backend ruff E501 | **0** 错误（51 个行宽全修复） |
 
 ---
 
@@ -390,10 +391,14 @@ CkyClaw Framework 的核心设计（Agent 数据类、Runner 循环、Handoff、
 - ~~Harness Engineering 架构优化~~ ✅ 已完成（深度健康检查 /health/deep + DB/Redis 探测 + Token 趋势 API GET /trend + Dashboard Token 趋势折线图 + 审计 shutdown flush + M8P2 状态确认 + Framework mypy 92源文件0错误）
 - ~~Agent 实时状态监控~~ ✅ 已完成（GET /api/v1/agents/realtime-status 基于 TraceRecord 聚合 + case 表达式错误计数 + Dashboard Agent 状态卡片 + 2 E2E 测试 + 1 前端测试）
 - ~~代码质量冲刺~~ ✅ 已完成（Backend ruff F401/F841 修复 + mypy 166源文件0错误 + Frontend TypeScript 0错误含测试 + 清理无用导入/变量/死代码）
+- ~~代码质量优化 (E501 + 复合索引)~~ ✅ 已完成（51 个 E501 行宽修复 + Alembic 0044 traces (agent_name, start_time) 复合索引）
+- ~~Dashboard 自动刷新 + Agent 活动趋势图~~ ✅ 已完成（Switch 自动刷新 30s + GET /activity-trend 时间桶聚合 + ECharts 折线图 + 8 前端测试）
+- ~~模板导入向导~~ ✅ 已完成（POST /agent-templates/{id}/instantiate 参数覆盖 + TemplatePage 导入向导弹窗 + Form 自定义参数 + 创建 Agent 直达）
+- ~~性能基准测试~~ ✅ 已完成（scripts/locustfile.py 12 个 @task + 10+ API 端点覆盖 + login 认证 + Dashboard 组合场景）
 
 
 ---
 
-*文档版本：v2.5.0*
-*生成日期：2026-07-05*
-*基于：PRD v2.0.9 / M0–M7 + v2.1–v2.6 全部完成 + M8P1 完成 + M8P2 完成 + OAuth 2.0 + ChannelAdapter + 覆盖率冲刺 + 代码质量冲刺*
+*文档版本：v2.6.0*
+*生成日期：2026-07-06*
+*基于：PRD v2.0.9 / M0–M7 + v2.1–v2.6 全部完成 + M8P1 完成 + M8P2 完成 + OAuth 2.0 + ChannelAdapter + 覆盖率冲刺 + 代码质量冲刺 + 前端体验优化 + 模板导入向导 + 性能基准测试*

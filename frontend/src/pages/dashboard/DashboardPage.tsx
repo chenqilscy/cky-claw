@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Card,
   Col,
@@ -9,6 +9,7 @@ import {
   Space,
   Typography,
   Spin,
+  Switch,
   message,
 } from 'antd';
 import ReactECharts from 'echarts-for-react';
@@ -20,10 +21,11 @@ import {
   SafetyCertificateOutlined,
   WarningOutlined,
   DashboardOutlined,
+  ReloadOutlined,
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { agentService } from '../../services/agentService';
-import type { AgentRealtimeStatusItem } from '../../services/agentService';
+import type { AgentRealtimeStatusItem, AgentActivityTrendItem } from '../../services/agentService';
 import { chatService } from '../../services/chatService';
 import { traceService } from '../../services/traceService';
 import type { TraceStatsResponse } from '../../services/traceService';
@@ -49,6 +51,9 @@ const DashboardPage: React.FC = () => {
   const [tokenByModel, setTokenByModel] = useState<TokenUsageByModelItem[]>([]);
   const [tokenTrend, setTokenTrend] = useState<TokenUsageTrendItem[]>([]);
   const [agentStatus, setAgentStatus] = useState<AgentRealtimeStatusItem[]>([]);
+  const [activityTrend, setActivityTrend] = useState<AgentActivityTrendItem[]>([]);
+  const [autoRefresh, setAutoRefresh] = useState(false);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -59,6 +64,7 @@ const DashboardPage: React.FC = () => {
       tokenUsageService.summary({ group_by: 'model' }),
       tokenUsageService.trend({ days: 7 }),
       agentService.realtimeStatus({ minutes: 5 }),
+      agentService.activityTrend({ hours: 1, interval: 5 }),
     ]);
 
     if (results[0].status === 'fulfilled') {
@@ -79,6 +85,9 @@ const DashboardPage: React.FC = () => {
     if (results[5].status === 'fulfilled') {
       setAgentStatus(results[5].value.data);
     }
+    if (results[6].status === 'fulfilled') {
+      setActivityTrend(results[6].value.data);
+    }
 
     const failedCount = results.filter((r) => r.status === 'rejected').length;
     if (failedCount > 0) {
@@ -91,6 +100,21 @@ const DashboardPage: React.FC = () => {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  /* 自动刷新（30 秒间隔） */
+  useEffect(() => {
+    if (autoRefresh) {
+      intervalRef.current = setInterval(() => {
+        fetchData();
+      }, 30_000);
+    }
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
+  }, [autoRefresh, fetchData]);
 
   const totalTokens = traceStats?.total_tokens.total_tokens ?? 0;
 
@@ -135,9 +159,28 @@ const DashboardPage: React.FC = () => {
     <Spin spinning={loading}>
       <Space direction="vertical" size={16} style={{ width: '100%' }}>
         {/* Header */}
-        <Title level={4} style={{ margin: 0 }}>
-          <DashboardOutlined /> 平台概览
-        </Title>
+        <Row justify="space-between" align="middle">
+          <Col>
+            <Title level={4} style={{ margin: 0 }}>
+              <DashboardOutlined /> 平台概览
+            </Title>
+          </Col>
+          <Col>
+            <Space>
+              <ReloadOutlined
+                style={{ cursor: 'pointer', fontSize: 16 }}
+                spin={loading}
+                onClick={() => fetchData()}
+              />
+              <Switch
+                checkedChildren="自动刷新"
+                unCheckedChildren="手动"
+                checked={autoRefresh}
+                onChange={setAutoRefresh}
+              />
+            </Space>
+          </Col>
+        </Row>
 
         {/* Row 1: Key Metrics */}
         <Row gutter={16}>
@@ -403,7 +446,53 @@ const DashboardPage: React.FC = () => {
           </Col>
         </Row>
 
-        {/* Row 4: Token Trend Chart */}
+        {/* Row 4: Agent Activity Trend */}
+        <Row gutter={16}>
+          <Col span={24}>
+            <Card title="Agent 活动趋势（近 1 小时）" size="small">
+              {activityTrend.length > 0 ? (
+                <ReactECharts
+                  style={{ height: 260 }}
+                  option={{
+                    tooltip: { trigger: 'axis' },
+                    legend: { data: ['运行次数', '错误次数'], top: 0 },
+                    grid: { left: 50, right: 30, bottom: 30, top: 40 },
+                    xAxis: {
+                      type: 'category',
+                      data: activityTrend.map((d) => {
+                        const t = new Date(d.time);
+                        return `${String(t.getHours()).padStart(2, '0')}:${String(t.getMinutes()).padStart(2, '0')}`;
+                      }),
+                      axisLabel: { fontSize: 11 },
+                    },
+                    yAxis: { type: 'value', name: '次数', minInterval: 1 },
+                    series: [
+                      {
+                        name: '运行次数',
+                        type: 'line',
+                        data: activityTrend.map((d) => d.run_count),
+                        smooth: true,
+                        areaStyle: { opacity: 0.15 },
+                        itemStyle: { color: '#1677ff' },
+                      },
+                      {
+                        name: '错误次数',
+                        type: 'line',
+                        data: activityTrend.map((d) => d.error_count),
+                        smooth: true,
+                        itemStyle: { color: '#f5222d' },
+                      },
+                    ],
+                  }}
+                />
+              ) : (
+                <Text type="secondary">暂无趋势数据</Text>
+              )}
+            </Card>
+          </Col>
+        </Row>
+
+        {/* Row 5: Token Trend Chart */}
         <Row gutter={16}>
           <Col span={24}>
             <Card title="Token 消耗趋势（近 7 天）" size="small">

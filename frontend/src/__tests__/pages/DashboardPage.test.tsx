@@ -13,6 +13,14 @@ vi.mock('../../services/agentService', () => ({
       minutes: 5,
       total: 1,
     }),
+    activityTrend: vi.fn().mockResolvedValue({
+      data: [
+        { time: '2026-07-02T09:55:00Z', run_count: 5, error_count: 0 },
+        { time: '2026-07-02T10:00:00Z', run_count: 3, error_count: 1 },
+      ],
+      hours: 1,
+      interval: 5,
+    }),
   },
 }));
 
@@ -119,6 +127,28 @@ describe('DashboardPage', () => {
     );
     await waitFor(() => {
       expect(container.textContent).toContain('Agent 实时状态');
+    });
+  });
+
+  it('renders agent activity trend card', async () => {
+    const { container } = render(
+      <MemoryRouter>
+        <DashboardPage />
+      </MemoryRouter>,
+    );
+    await waitFor(() => {
+      expect(container.textContent).toContain('Agent 活动趋势');
+    });
+  });
+
+  it('shows auto-refresh switch', async () => {
+    const { container } = render(
+      <MemoryRouter>
+        <DashboardPage />
+      </MemoryRouter>,
+    );
+    await waitFor(() => {
+      expect(container.textContent).toContain('手动');
     });
   });
 });

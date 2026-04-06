@@ -29,7 +29,9 @@ class AgentCreate(BaseModel):
     description: str = Field(default="", description="功能描述")
     instructions: str = Field(default="", description="Agent 行为指令")
     model: str | None = Field(default=None, description="LLM 模型标识")
-    provider_name: str | None = Field(default=None, max_length=64, description="模型厂商名称（对应 ProviderConfig.name）")
+    provider_name: str | None = Field(
+        default=None, max_length=64, description="模型厂商名称（对应 ProviderConfig.name）",
+    )
     model_settings: dict[str, Any] | None = Field(default=None, description="模型参数")
     tool_groups: list[str] = Field(default_factory=list, description="工具组名称列表")
     handoffs: list[str] = Field(default_factory=list, description="可 Handoff 的目标 Agent")

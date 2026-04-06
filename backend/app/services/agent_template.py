@@ -438,3 +438,38 @@ async def seed_builtin_templates(db: AsyncSession) -> int:
         await db.commit()
     logger.info("内置模板初始化完成：新增 %d 个", created)
     return created
+
+
+async def instantiate_template(
+    db: AsyncSession,
+    template_id: uuid.UUID,
+    *,
+    overrides: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """将模板实例化为 Agent 配置数据。
+
+    模板的 config 字段作为基础配置，overrides 可覆盖其中允许的字段。
+    返回合并后的 Agent 创建数据（不含 name，由调用方提供）。
+    """
+    _ALLOWED_OVERRIDE_KEYS = {
+        "instructions", "description", "model", "temperature",
+        "max_tokens", "top_p", "system_prompt",
+    }
+
+    record = await get_template(db, template_id)
+    config: dict[str, Any] = dict(record.config) if record.config else {}
+
+    if overrides:
+        for key, value in overrides.items():
+            if key not in _ALLOWED_OVERRIDE_KEYS:
+                continue
+            if value is not None:
+                config[key] = value
+
+    return {
+        "template_name": record.name,
+        "display_name": record.display_name,
+        "description": record.description,
+        "category": record.category,
+        "config": config,
+    }

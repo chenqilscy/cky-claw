@@ -29,7 +29,11 @@ async def list_organizations(
 
     count_stmt = select(func.count()).select_from(base.subquery())
     total = (await db.execute(count_stmt)).scalar() or 0
-    items = (await db.execute(base.order_by(Organization.created_at.desc()).limit(limit).offset(offset))).scalars().all()
+    items = (
+        await db.execute(
+            base.order_by(Organization.created_at.desc()).limit(limit).offset(offset)
+        )
+    ).scalars().all()
     return list(items), total
 
 

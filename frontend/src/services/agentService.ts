@@ -71,6 +71,18 @@ export interface AgentRealtimeStatusResponse {
   total: number;
 }
 
+export interface AgentActivityTrendItem {
+  time: string;
+  run_count: number;
+  error_count: number;
+}
+
+export interface AgentActivityTrendResponse {
+  data: AgentActivityTrendItem[];
+  hours: number;
+  interval: number;
+}
+
 export const agentService = {
   list: (params?: { search?: string; limit?: number; offset?: number }) =>
     api.get<AgentListResponse>('/agents', params),
@@ -105,6 +117,9 @@ export const agentService = {
 
   realtimeStatus: (params?: { minutes?: number }) =>
     api.get<AgentRealtimeStatusResponse>('/agents/realtime-status', params),
+
+  activityTrend: (params?: { hours?: number; interval?: number }) =>
+    api.get<AgentActivityTrendResponse>('/agents/activity-trend', params),
 
   importAgent: async (file: File): Promise<AgentConfig> => {
     const token = getToken();

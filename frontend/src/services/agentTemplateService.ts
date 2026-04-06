@@ -38,6 +38,14 @@ export interface AgentTemplateUpdateParams {
   metadata?: Record<string, unknown>;
 }
 
+export interface TemplateInstantiateResult {
+  template_name: string;
+  display_name: string;
+  description: string;
+  category: string;
+  config: Record<string, unknown>;
+}
+
 export const agentTemplateService = {
   async list(params?: Record<string, string | number | boolean | undefined>): Promise<AgentTemplateListResponse> {
     const cleanParams: Record<string, string | number | undefined> = {};
@@ -67,5 +75,15 @@ export const agentTemplateService = {
 
   async seedBuiltin(): Promise<{ created: number }> {
     return api.post<{ created: number }>('/agent-templates/seed', {});
+  },
+
+  async instantiate(
+    id: string,
+    overrides?: Record<string, unknown> | null,
+  ): Promise<TemplateInstantiateResult> {
+    return api.post<TemplateInstantiateResult>(
+      `/agent-templates/${id}/instantiate`,
+      overrides ?? null,
+    );
   },
 };

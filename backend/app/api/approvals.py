@@ -40,7 +40,11 @@ async def list_approvals(
     )
 
 
-@router.get("/{approval_id}", response_model=ApprovalResponse, dependencies=[Depends(require_permission("approvals", "read"))])
+@router.get(
+    "/{approval_id}",
+    response_model=ApprovalResponse,
+    dependencies=[Depends(require_permission("approvals", "read"))],
+)
 async def get_approval(
     approval_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
@@ -50,7 +54,11 @@ async def get_approval(
     return ApprovalResponse.model_validate(record)
 
 
-@router.post("/{approval_id}/resolve", response_model=ApprovalResponse, dependencies=[Depends(require_permission("approvals", "execute"))])
+@router.post(
+    "/{approval_id}/resolve",
+    response_model=ApprovalResponse,
+    dependencies=[Depends(require_permission("approvals", "execute"))],
+)
 async def resolve_approval(
     approval_id: uuid.UUID,
     body: ApprovalResolveRequest,

@@ -20,7 +20,12 @@ from app.services import guardrail as guardrail_service
 router = APIRouter(prefix="/api/v1/guardrails", tags=["guardrails"])
 
 
-@router.post("", response_model=GuardrailRuleResponse, status_code=201, dependencies=[Depends(require_permission("guardrails", "write"))])
+@router.post(
+    "",
+    response_model=GuardrailRuleResponse,
+    status_code=201,
+    dependencies=[Depends(require_permission("guardrails", "write"))],
+)
 async def create_guardrail_rule(
     body: GuardrailRuleCreate,
     db: AsyncSession = Depends(get_db),
@@ -40,7 +45,11 @@ async def create_guardrail_rule(
     return GuardrailRuleResponse.model_validate(rule)
 
 
-@router.get("", response_model=GuardrailRuleListResponse, dependencies=[Depends(require_permission("guardrails", "read"))])
+@router.get(
+    "",
+    response_model=GuardrailRuleListResponse,
+    dependencies=[Depends(require_permission("guardrails", "read"))],
+)
 async def list_guardrail_rules(
     type: str | None = Query(None, description="按类型筛选"),
     mode: str | None = Query(None, description="按模式筛选"),
@@ -64,7 +73,11 @@ async def list_guardrail_rules(
     return GuardrailRuleListResponse(data=items, total=total, limit=limit, offset=offset)
 
 
-@router.get("/{rule_id}", response_model=GuardrailRuleResponse, dependencies=[Depends(require_permission("guardrails", "read"))])
+@router.get(
+    "/{rule_id}",
+    response_model=GuardrailRuleResponse,
+    dependencies=[Depends(require_permission("guardrails", "read"))],
+)
 async def get_guardrail_rule(
     rule_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
@@ -74,7 +87,11 @@ async def get_guardrail_rule(
     return GuardrailRuleResponse.model_validate(rule)
 
 
-@router.put("/{rule_id}", response_model=GuardrailRuleResponse, dependencies=[Depends(require_permission("guardrails", "write"))])
+@router.put(
+    "/{rule_id}",
+    response_model=GuardrailRuleResponse,
+    dependencies=[Depends(require_permission("guardrails", "write"))],
+)
 async def update_guardrail_rule(
     rule_id: uuid.UUID,
     body: GuardrailRuleUpdate,

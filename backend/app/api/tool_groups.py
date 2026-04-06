@@ -34,7 +34,11 @@ async def list_tool_groups(
     )
 
 
-@router.get("/{name}", response_model=ToolGroupResponse, dependencies=[Depends(require_permission("tool_groups", "read"))])
+@router.get(
+    "/{name}",
+    response_model=ToolGroupResponse,
+    dependencies=[Depends(require_permission("tool_groups", "read"))],
+)
 async def get_tool_group(
     name: str,
     db: AsyncSession = Depends(get_db),
@@ -44,7 +48,12 @@ async def get_tool_group(
     return ToolGroupResponse.model_validate(tg)
 
 
-@router.post("", response_model=ToolGroupResponse, status_code=201, dependencies=[Depends(require_permission("tool_groups", "write"))])
+@router.post(
+    "",
+    response_model=ToolGroupResponse,
+    status_code=201,
+    dependencies=[Depends(require_permission("tool_groups", "write"))],
+)
 async def create_tool_group(
     data: ToolGroupCreate,
     db: AsyncSession = Depends(get_db),
@@ -56,7 +65,11 @@ async def create_tool_group(
     return ToolGroupResponse.model_validate(tg)
 
 
-@router.put("/{name}", response_model=ToolGroupResponse, dependencies=[Depends(require_permission("tool_groups", "write"))])
+@router.put(
+    "/{name}",
+    response_model=ToolGroupResponse,
+    dependencies=[Depends(require_permission("tool_groups", "write"))],
+)
 async def update_tool_group(
     name: str,
     data: ToolGroupUpdate,

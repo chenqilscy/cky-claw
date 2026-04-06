@@ -43,7 +43,11 @@ async def list_audit_logs(
     )
 
 
-@router.get("/{log_id}", response_model=AuditLogResponse, dependencies=[Depends(require_permission("audit_logs", "read"))])
+@router.get(
+    "/{log_id}",
+    response_model=AuditLogResponse,
+    dependencies=[Depends(require_permission("audit_logs", "read"))],
+)
 async def get_audit_log(
     log_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),

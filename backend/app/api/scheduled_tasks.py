@@ -50,7 +50,12 @@ async def get_task(
     return ScheduledTaskResponse.model_validate(task)
 
 
-@router.post("", response_model=ScheduledTaskResponse, status_code=status.HTTP_201_CREATED, dependencies=[Depends(require_admin)])
+@router.post(
+    "",
+    response_model=ScheduledTaskResponse,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_admin)],
+)
 async def create_task(
     data: ScheduledTaskCreate,
     db: AsyncSession = Depends(get_db),

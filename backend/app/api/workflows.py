@@ -22,7 +22,12 @@ from app.services import workflow as workflow_service
 router = APIRouter(prefix="/api/v1/workflows", tags=["workflows"])
 
 
-@router.post("", response_model=WorkflowResponse, status_code=201, dependencies=[Depends(require_permission("workflows", "write"))])
+@router.post(
+    "",
+    response_model=WorkflowResponse,
+    status_code=201,
+    dependencies=[Depends(require_permission("workflows", "write"))],
+)
 async def create_workflow(
     data: WorkflowCreate,
     db: AsyncSession = Depends(get_db),
@@ -34,7 +39,11 @@ async def create_workflow(
     return WorkflowResponse.model_validate(record)
 
 
-@router.get("", response_model=WorkflowListResponse, dependencies=[Depends(require_permission("workflows", "read"))])
+@router.get(
+    "",
+    response_model=WorkflowListResponse,
+    dependencies=[Depends(require_permission("workflows", "read"))],
+)
 async def list_workflows(
     limit: int = Query(20, ge=1, le=100, description="分页大小"),
     offset: int = Query(0, ge=0, description="分页偏移"),
@@ -51,7 +60,11 @@ async def list_workflows(
     )
 
 
-@router.get("/{workflow_id}", response_model=WorkflowResponse, dependencies=[Depends(require_permission("workflows", "read"))])
+@router.get(
+    "/{workflow_id}",
+    response_model=WorkflowResponse,
+    dependencies=[Depends(require_permission("workflows", "read"))],
+)
 async def get_workflow(
     workflow_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
@@ -61,7 +74,11 @@ async def get_workflow(
     return WorkflowResponse.model_validate(record)
 
 
-@router.put("/{workflow_id}", response_model=WorkflowResponse, dependencies=[Depends(require_permission("workflows", "write"))])
+@router.put(
+    "/{workflow_id}",
+    response_model=WorkflowResponse,
+    dependencies=[Depends(require_permission("workflows", "write"))],
+)
 async def update_workflow(
     workflow_id: uuid.UUID,
     data: WorkflowUpdate,
@@ -72,7 +89,11 @@ async def update_workflow(
     return WorkflowResponse.model_validate(record)
 
 
-@router.delete("/{workflow_id}", status_code=204, dependencies=[Depends(require_permission("workflows", "delete"))])
+@router.delete(
+    "/{workflow_id}",
+    status_code=204,
+    dependencies=[Depends(require_permission("workflows", "delete"))],
+)
 async def delete_workflow(
     workflow_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
@@ -81,7 +102,11 @@ async def delete_workflow(
     await workflow_service.delete_workflow(db, workflow_id)
 
 
-@router.post("/validate", response_model=WorkflowValidateResponse, dependencies=[Depends(require_permission("workflows", "read"))])
+@router.post(
+    "/validate",
+    response_model=WorkflowValidateResponse,
+    dependencies=[Depends(require_permission("workflows", "read"))],
+)
 async def validate_workflow(
     data: WorkflowCreate,
 ) -> WorkflowValidateResponse:

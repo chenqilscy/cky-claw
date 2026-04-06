@@ -21,7 +21,12 @@ from app.services import team as team_service
 router = APIRouter(prefix="/api/v1/teams", tags=["teams"])
 
 
-@router.post("", response_model=TeamConfigResponse, status_code=201, dependencies=[Depends(require_permission("teams", "write"))])
+@router.post(
+    "",
+    response_model=TeamConfigResponse,
+    status_code=201,
+    dependencies=[Depends(require_permission("teams", "write"))],
+)
 async def create_team(
     data: TeamConfigCreate,
     db: AsyncSession = Depends(get_db),
@@ -51,7 +56,11 @@ async def list_teams(
     )
 
 
-@router.get("/{team_id}", response_model=TeamConfigResponse, dependencies=[Depends(require_permission("teams", "read"))])
+@router.get(
+    "/{team_id}",
+    response_model=TeamConfigResponse,
+    dependencies=[Depends(require_permission("teams", "read"))],
+)
 async def get_team(
     team_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
@@ -61,7 +70,11 @@ async def get_team(
     return TeamConfigResponse.model_validate(record)
 
 
-@router.put("/{team_id}", response_model=TeamConfigResponse, dependencies=[Depends(require_permission("teams", "write"))])
+@router.put(
+    "/{team_id}",
+    response_model=TeamConfigResponse,
+    dependencies=[Depends(require_permission("teams", "write"))],
+)
 async def update_team(
     team_id: uuid.UUID,
     data: TeamConfigUpdate,

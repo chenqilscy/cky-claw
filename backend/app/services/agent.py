@@ -180,3 +180,45 @@ async def get_agent_realtime_status(
             "status": "active" if row.run_count > row.error_count else "error",
         })
     return agents
+
+
+async def get_agent_activity_trend(
+    db: AsyncSession,
+    hours: int = 1,
+    interval_minutes: int = 5,
+) -> list[dict[str, Any]]:
+    """获取 Agent 活动趋势数据（按时间桶聚合）。"""
+    from sqlalchemy import case as sa_case, text
+
+    from app.models.trace import TraceRecord
+
+    cutoff = datetime.now(timezone.utc) - timedelta(hours=hours)
+    error_expr = func.sum(sa_case((TraceRecord.status == "error", 1), else_=0))
+
+    # 向下截断到指定时间间隔的桶
+    time_bucket = func.to_timestamp(
+        func.floor(
+            func.extract("epoch", TraceRecord.start_time) / (interval_minutes * 60)
+        ) * (interval_minutes * 60)
+    ).label("time_bucket")
+
+    stmt = (
+        select(
+            time_bucket,
+            func.count().label("run_count"),
+            error_expr.label("error_count"),
+        )
+        .where(TraceRecord.start_time >= cutoff)
+        .where(TraceRecord.agent_name.isnot(None))
+        .group_by(text("1"))
+        .order_by(text("1"))
+    )
+    result = await db.execute(stmt)
+    return [
+        {
+            "time": row.time_bucket.isoformat() if row.time_bucket else None,
+            "run_count": row.run_count,
+            "error_count": row.error_count or 0,
+        }
+        for row in result.all()
+    ]
