@@ -114,8 +114,19 @@ async def update_proposal(
             # 应用建议到 Agent 配置（内部处理状态变更和快照）
             record.status = "approved"  # 先设为 approved 以满足 apply 前置条件
             await db.flush()
-            await apply_proposal_to_agent(db, record.id)
-            await db.refresh(record)
+            result = await apply_proposal_to_agent(db, record.id)
+            # apply_proposal_to_agent 已经 commit + refresh，
+            # 若还有 eval_before/eval_after/metadata 更新，需要额外处理
+            if "eval_before" in update_data:
+                result.eval_before = update_data["eval_before"]
+            if "eval_after" in update_data:
+                result.eval_after = update_data["eval_after"]
+            if "metadata" in update_data and update_data["metadata"] is not None:
+                result.metadata_ = update_data["metadata"]
+            if any(k in update_data for k in ("eval_before", "eval_after", "metadata")):
+                await db.commit()
+                await db.refresh(result)
+            return result
         else:
             record.status = new_status
             if new_status == "rolled_back":

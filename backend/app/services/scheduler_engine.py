@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 import asyncio
+import json
 import logging
 import uuid
 from datetime import datetime, timezone
@@ -77,11 +78,10 @@ async def execute_task(db: AsyncSession, task: ScheduledTask, triggered_by: str 
 
 async def _execute_agent_run(db: AsyncSession, task: ScheduledTask) -> str:
     """执行 agent_run 类型的定时任务。"""
-    from sqlalchemy import select as sa_select
     from app.models.agent import AgentConfig
 
     result = await db.execute(
-        sa_select(AgentConfig).where(AgentConfig.id == task.agent_id)
+        select(AgentConfig).where(AgentConfig.id == task.agent_id)
     )
     agent_config = result.scalar_one_or_none()
     if agent_config is None:
@@ -95,12 +95,11 @@ async def _execute_evolution_analyze(db: AsyncSession, task: ScheduledTask) -> s
 
     读取信号 → 策略引擎生成建议 → 可选自动应用。
     """
-    from sqlalchemy import select as sa_select
     from app.models.agent import AgentConfig
     from app.services import evolution as evo_svc
 
     result = await db.execute(
-        sa_select(AgentConfig).where(AgentConfig.id == task.agent_id)
+        select(AgentConfig).where(AgentConfig.id == task.agent_id)
     )
     agent_config = result.scalar_one_or_none()
     if agent_config is None:
@@ -114,17 +113,19 @@ async def _execute_evolution_analyze(db: AsyncSession, task: ScheduledTask) -> s
     auto_apply = False
     min_confidence = 0.8
     try:
-        import json
         meta = json.loads(task.input_text) if task.input_text else {}
-        auto_apply = meta.get("auto_apply", False)
-        min_confidence = meta.get("min_confidence", 0.8)
-    except (json.JSONDecodeError, TypeError):
+        auto_apply = bool(meta.get("auto_apply", False))
+        raw_conf = meta.get("min_confidence", 0.8)
+        # 限制 min_confidence 在合理范围内
+        min_confidence = max(0.0, min(1.0, float(raw_conf)))
+    except (json.JSONDecodeError, TypeError, ValueError):
         pass
 
     applied_count = 0
     if auto_apply:
         for proposal in proposals:
-            if proposal.confidence_score >= min_confidence:
+            score = proposal.confidence_score or 0.0
+            if score >= min_confidence:
                 await evo_svc.apply_proposal_to_agent(db, proposal.id)
                 applied_count += 1
 
