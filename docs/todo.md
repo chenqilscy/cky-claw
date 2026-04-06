@@ -381,6 +381,7 @@ CkyClaw Framework 的核心设计（Agent 数据类、Runner 循环、Handoff、
 - 成本路由优化器：四级复杂度分流，用最合适的模型做最茶杯的任务，小模型（SIMPLE）、中模型（MODERATE）、大模型（COMPLEX）、推理模型（REASONING），还有多模态模型。系统中添加的模型同时也需要标记其有哪些能力，归属于哪种模型。 这里应该如何设计？
 - 大模型API密钥安全托管机制：加密存储
 - 用户审批机制：通过IM渠道通知用户审批
+- checkerpoint机制
 
 
 ---

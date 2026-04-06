@@ -47,6 +47,8 @@ def _make_provider(**overrides) -> MagicMock:  # type: ignore[no-untyped-def]
         "rate_limit_rpm": None,
         "rate_limit_tpm": None,
         "is_enabled": True,
+        "model_tier": "moderate",
+        "capabilities": [],
         "org_id": None,
         "last_health_check": None,
         "health_status": "unknown",
@@ -157,7 +159,8 @@ class TestProviderSchemas:
             base_url="https://x.com", api_key_set=True,
             auth_type="api_key", auth_config={},
             rate_limit_rpm=None, rate_limit_tpm=None,
-            is_enabled=True, org_id=None,
+            is_enabled=True, model_tier="moderate", capabilities=[],
+            org_id=None,
             last_health_check=None, health_status="unknown",
             created_at=_NOW, updated_at=_NOW,
         )

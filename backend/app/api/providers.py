@@ -36,6 +36,8 @@ def _to_response(p) -> ProviderResponse:  # type: ignore[no-untyped-def]
         rate_limit_rpm=p.rate_limit_rpm,
         rate_limit_tpm=p.rate_limit_tpm,
         is_enabled=p.is_enabled,
+        model_tier=p.model_tier,
+        capabilities=p.capabilities,
         org_id=p.org_id,
         last_health_check=p.last_health_check,
         health_status=p.health_status,

@@ -7,7 +7,22 @@ from typing import Any
 import uuid
 from datetime import datetime
 
+from enum import Enum
+
 from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+
+class ModelTierEnum(str, Enum):
+    """模型层级枚举。"""
+
+    SIMPLE = "simple"
+    MODERATE = "moderate"
+    COMPLEX = "complex"
+    REASONING = "reasoning"
+    MULTIMODAL = "multimodal"
+
+
+_VALID_CAPABILITIES = {"text", "code", "vision", "reasoning", "function_calling"}
 
 _VALID_PROVIDER_TYPES = {
     "openai", "anthropic", "azure", "deepseek", "qwen",
@@ -28,6 +43,8 @@ class ProviderCreate(BaseModel):
     auth_config: dict[str, Any] = Field(default_factory=dict, description="额外认证参数")
     rate_limit_rpm: int | None = Field(default=None, ge=0, description="每分钟请求数上限")
     rate_limit_tpm: int | None = Field(default=None, ge=0, description="每分钟 Token 数上限")
+    model_tier: ModelTierEnum = Field(default=ModelTierEnum.MODERATE, description="模型层级")
+    capabilities: list[str] = Field(default_factory=list, description="模型能力标签")
 
     @field_validator("provider_type")
     @classmethod
@@ -43,6 +60,15 @@ class ProviderCreate(BaseModel):
             raise ValueError(f"auth_type 必须是 {_VALID_AUTH_TYPES} 之一")
         return v
 
+    @field_validator("capabilities")
+    @classmethod
+    def validate_capabilities(cls, v: list[str]) -> list[str]:
+        """校验能力标签合法性。"""
+        invalid = set(v) - _VALID_CAPABILITIES
+        if invalid:
+            raise ValueError(f"capabilities 包含无效值 {invalid}，合法值: {_VALID_CAPABILITIES}")
+        return v
+
 
 class ProviderUpdate(BaseModel):
     """更新 Provider 请求体（PATCH 语义，所有字段可选）。"""
@@ -55,6 +81,8 @@ class ProviderUpdate(BaseModel):
     auth_config: dict[str, Any] | None = None
     rate_limit_rpm: int | None = Field(default=None, ge=0)
     rate_limit_tpm: int | None = Field(default=None, ge=0)
+    model_tier: ModelTierEnum | None = None
+    capabilities: list[str] | None = None
 
     @field_validator("provider_type")
     @classmethod
@@ -68,6 +96,16 @@ class ProviderUpdate(BaseModel):
     def validate_auth_type(cls, v: str | None) -> str | None:
         if v is not None and v not in _VALID_AUTH_TYPES:
             raise ValueError(f"auth_type 必须是 {_VALID_AUTH_TYPES} 之一")
+        return v
+
+    @field_validator("capabilities")
+    @classmethod
+    def validate_capabilities(cls, v: list[str] | None) -> list[str] | None:
+        """校验能力标签合法性。"""
+        if v is not None:
+            invalid = set(v) - _VALID_CAPABILITIES
+            if invalid:
+                raise ValueError(f"capabilities 包含无效值 {invalid}，合法值: {_VALID_CAPABILITIES}")
         return v
 
 
@@ -92,6 +130,8 @@ class ProviderResponse(BaseModel):
     rate_limit_rpm: int | None
     rate_limit_tpm: int | None
     is_enabled: bool
+    model_tier: str
+    capabilities: list[str]
     org_id: uuid.UUID | None
     last_health_check: datetime | None
     health_status: str

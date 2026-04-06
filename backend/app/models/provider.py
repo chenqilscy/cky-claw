@@ -49,6 +49,14 @@ class ProviderConfig(SoftDeleteMixin, Base):
     is_enabled: Mapped[bool] = mapped_column(
         Boolean, nullable=False, server_default=text("true")
     )
+    model_tier: Mapped[str] = mapped_column(
+        String(16), nullable=False, server_default=text("'moderate'"),
+        comment="模型层级: simple / moderate / complex / reasoning / multimodal",
+    )
+    capabilities: Mapped[list[str]] = mapped_column(
+        JSONB, nullable=False, server_default=text("'[]'::jsonb"),
+        comment="模型能力标签: text / code / vision / reasoning / function_calling",
+    )
     org_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), nullable=True, index=True
     )
