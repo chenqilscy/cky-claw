@@ -306,11 +306,11 @@ CkyClaw Framework 的核心设计（Agent 数据类、Runner 循环、Handoff、
 
 | 指标 | 数值 |
 |------|------|
-| 测试总数 | **2901**（Backend 1586 + Framework 1134 + Frontend 181） |
+| 测试总数 | **2991**（Backend 1619 + Framework 1184 + Frontend 188） |
 | 测试覆盖率 | Backend **98%** · Framework **100%** |
-| Alembic 迁移 | **36** 个（0001–0036） |
-| API 路由模块 | **30** 个 |
-| 前端页面 | **25** 个（React.lazy 懒加载） |
+| Alembic 迁移 | **37** 个（0001–0037） |
+| API 路由模块 | **31** 个 |
+| 前端页面 | **26** 个（React.lazy 懒加载） |
 | CI Job | **5** 个 GitHub Actions + **5** Stage Jenkinsfile |
 | TypeScript 错误 | **0** |
 
