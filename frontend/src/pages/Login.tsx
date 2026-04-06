@@ -1,10 +1,21 @@
-import { Button, Card, Divider, Form, Input, Typography, message } from 'antd';
-import { GithubOutlined, LockOutlined, UserOutlined } from '@ant-design/icons';
+import { useEffect, useState } from 'react';
+import { Button, Card, Divider, Form, Input, Space, Typography, message } from 'antd';
+import { GithubOutlined, GoogleOutlined, LockOutlined, SafetyOutlined, UserOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../stores/authStore';
 import { oauthService } from '../services/oauthService';
 
 const { Title } = Typography;
+
+/** Provider 元数据：中文名称 + 图标 + 颜色 */
+const PROVIDER_META: Record<string, { label: string; icon: React.ReactNode; color?: string }> = {
+  github: { label: 'GitHub', icon: <GithubOutlined />, color: '#24292e' },
+  wecom: { label: '企业微信', icon: <SafetyOutlined />, color: '#07c160' },
+  dingtalk: { label: '钉钉', icon: <SafetyOutlined />, color: '#0089ff' },
+  feishu: { label: '飞书', icon: <SafetyOutlined />, color: '#3370ff' },
+  google: { label: 'Google', icon: <GoogleOutlined />, color: '#4285f4' },
+  oidc: { label: 'SSO', icon: <SafetyOutlined />, color: '#722ed1' },
+};
 
 interface LoginFormValues {
   username: string;
@@ -14,6 +25,13 @@ interface LoginFormValues {
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const { login, loading, error, clearError } = useAuthStore();
+  const [providers, setProviders] = useState<string[]>([]);
+
+  useEffect(() => {
+    oauthService.getProviders()
+      .then((resp) => setProviders(resp.providers))
+      .catch(() => { /* Provider 列表获取失败时静默处理，仅显示密码登录 */ });
+  }, []);
 
   const onFinish = async (values: LoginFormValues) => {
     clearError();
@@ -23,6 +41,18 @@ const LoginPage: React.FC = () => {
       navigate('/chat');
     } catch {
       // error 已由 store 处理
+    }
+  };
+
+  /** 发起 OAuth 登录跳转 */
+  const handleOAuthLogin = async (provider: string) => {
+    const meta = PROVIDER_META[provider];
+    const label = meta?.label ?? provider;
+    try {
+      const { authorize_url } = await oauthService.authorize(provider);
+      window.location.href = authorize_url;
+    } catch {
+      message.error(`${label} 登录暂不可用`);
     }
   };
 
@@ -62,22 +92,29 @@ const LoginPage: React.FC = () => {
             </Button>
           </Form.Item>
         </Form>
-        <Divider plain>或</Divider>
-        <Button
-          icon={<GithubOutlined />}
-          block
-          size="large"
-          onClick={async () => {
-            try {
-              const { authorize_url } = await oauthService.authorize('github');
-              window.location.href = authorize_url;
-            } catch {
-              message.error('GitHub 登录暂不可用');
-            }
-          }}
-        >
-          GitHub 登录
-        </Button>
+        {providers.length > 0 && (
+          <>
+            <Divider plain>或</Divider>
+            <Space direction="vertical" style={{ width: '100%' }} size="middle">
+              {providers.map((provider) => {
+                const meta = PROVIDER_META[provider] ?? { label: provider, icon: <SafetyOutlined /> };
+                return (
+                  <Button
+                    key={provider}
+                    icon={meta.icon}
+                    block
+                    size="large"
+                    style={meta.color ? { borderColor: meta.color, color: meta.color } : undefined}
+                    onClick={() => handleOAuthLogin(provider)}
+                    data-provider={provider}
+                  >
+                    {meta.label} 登录
+                  </Button>
+                );
+              })}
+            </Space>
+          </>
+        )}
       </Card>
     </div>
   );
