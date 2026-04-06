@@ -2,7 +2,7 @@
 
 > 本文件基于 PRD v2.0 与 mvp-progress.md 的差距分析生成，记录所有未完成功能、待优化项和未来演进方向。
 >
-> 最后更新：2026-04-05
+> 最后更新：2026-07-03
 
 ---
 
@@ -72,7 +72,7 @@
 | ~~O3~~ | ~~ECharts 图表~~ | P3 | ✅ 已完成（Dashboard Guardrail 拦截率改为 ECharts Gauge + Span 类型分布改为 ECharts 饼图） |
 | ~~O4~~ | ~~响应式布局~~ | P3 | ✅ 已完成（BasicLayout 添加 Grid.useBreakpoint + ProLayout breakpoint="md" 移动端折叠侧边栏） |
 | O5 | ~~暗色模式~~ | P3 | ✅ 已完成（themeStore + ConfigProvider 主题切换） |
-| O6 | ~~前端测试覆盖~~ | P1 | ✅ 已完成（64 个 Vitest 测试：API/AgentService/AuthStore/SkillService/TemplateService/WorkflowService/TeamService/AuditLogService/RoleService） |
+| O6 | ~~前端测试覆盖~~ | P1 | ✅ 已完成（181 个 Vitest 测试：31 个测试文件，覆盖18 个 Service + 4 个 Store + API 层 + Smoke） |
 | O7 | ~~对话页体验优化~~ | P1 | ✅ 已完成（MarkdownRenderer + Prism 代码高亮 + 复制按钮 + React.memo 优化） |
 
 ### 3.2 后端优化
@@ -109,7 +109,7 @@
 | output_type 结构化输出 | #8 | ✅ | Agent.output_type + Runner JSON 解析 + 前端 JSON Schema 编辑器 |
 | Session 历史裁剪 | #14 | ✅ | HistoryTrimmer 集成（滑动窗口 + Token 预算） |
 | WebSocket 审批 | #1 | ✅ | WebSocket + Redis pub/sub + 前端 WS 客户端 + 10 测试 |
-| 前端测试覆盖 | O6 | ✅ | 47 个 Vitest 测试 |
+| 前端测试覆盖 | O6 | ✅ | 181 个 Vitest 测试（31 文件） |
 | 对话页体验优化 | O7 | ✅ | MarkdownRenderer + Prism 代码高亮 + 复制按钮 |
 
 ### v2.2 — Memory & Skill ✅ 全部完成
@@ -302,12 +302,12 @@ CkyClaw Framework 的核心设计（Agent 数据类、Runner 循环、Handoff、
 
 ## 九、当前关键指标
 
-> 更新日期：2026-04-05
+> 更新日期：2026-07-03
 
 | 指标 | 数值 |
 |------|------|
-| 测试总数 | **2504**（Backend 1370 + Framework 1134 + Frontend 64） |
-| 测试覆盖率 | Backend **95%** · Framework **100%** |
+| 测试总数 | **2901**（Backend 1586 + Framework 1134 + Frontend 181） |
+| 测试覆盖率 | Backend **98%** · Framework **100%** |
 | Alembic 迁移 | **36** 个（0001–0036） |
 | API 路由模块 | **30** 个 |
 | 前端页面 | **25** 个（React.lazy 懒加载） |
