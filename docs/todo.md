@@ -2,7 +2,7 @@
 
 > 本文件基于 PRD v2.0 与 mvp-progress.md 的差距分析生成，记录所有未完成功能、待优化项和未来演进方向。
 >
-> 最后更新：2026-07-03
+> 最后更新：2026-07-04
 
 ---
 
@@ -72,7 +72,7 @@
 | ~~O3~~ | ~~ECharts 图表~~ | P3 | ✅ 已完成（Dashboard Guardrail 拦截率改为 ECharts Gauge + Span 类型分布改为 ECharts 饼图） |
 | ~~O4~~ | ~~响应式布局~~ | P3 | ✅ 已完成（BasicLayout 添加 Grid.useBreakpoint + ProLayout breakpoint="md" 移动端折叠侧边栏） |
 | O5 | ~~暗色模式~~ | P3 | ✅ 已完成（themeStore + ConfigProvider 主题切换） |
-| O6 | ~~前端测试覆盖~~ | P1 | ✅ 已完成（181 个 Vitest 测试：31 个测试文件，覆盖18 个 Service + 4 个 Store + API 层 + Smoke） |
+| O6 | ~~前端测试覆盖~~ | P1 | ✅ 已完成（213 个 Vitest 测试：36 个测试文件，覆盖18 Service + 4 Store + 4 Page + API + Smoke） |
 | O7 | ~~对话页体验优化~~ | P1 | ✅ 已完成（MarkdownRenderer + Prism 代码高亮 + 复制按钮 + React.memo 优化） |
 
 ### 3.2 后端优化
@@ -247,7 +247,7 @@
 |---|------|:------:|------|
 | A1 | ~~**OAuth 2.0 / OIDC 框架**~~ | P1 | ✅ 已完成（OAuthProviderConfig + oauth_service + Redis CSRF state + Fernet token 加密 + 6 API + Migration 0036 + 21 测试） |
 | A2 | ~~**GitHub OAuth**~~ | P1 | ✅ 已完成（GitHub Authorization Code Flow + 前端 OAuth 跳转 + Token 交换 + 登录页 GitHub 按钮） |
-| A3 | **企业微信/钉钉/飞书扫码登录** | P1 | 国内企业 SSO 必备，与多渠道接入协同。已有 OAuth 框架，新增 Provider 即可 |
+| ~~A3~~ | ~~**企业微信/钉钉/飞书扫码登录**~~ | ~~P1~~ | ✅ 已完成（Backend 3 Provider 完整实现 + Frontend LoginPage 动态 Provider 按钮 + 12 页面测试） |
 | A4 | ~~**Keycloak / Casdoor 集成**~~ | P2 | ✅ 已完成（OIDC Discovery + 标准 token 交换 + UserInfo 字段映射 + 20 测试） |
 | A5 | ~~**Google OAuth**~~ | P3 | ✅ 已完成（标准 OAuth 2.0 + authorize builder + userinfo fetcher + 11 测试） |
 
@@ -306,7 +306,7 @@ CkyClaw Framework 的核心设计（Agent 数据类、Runner 循环、Handoff、
 
 | 指标 | 数值 |
 |------|------|
-| 测试总数 | **2991**（Backend 1619 + Framework 1184 + Frontend 188） |
+| 测试总数 | **3016**（Backend 1619 + Framework 1184 + Frontend 213） |
 | 测试覆盖率 | Backend **98%** · Framework **100%** |
 | Alembic 迁移 | **37** 个（0001–0037） |
 | API 路由模块 | **31** 个 |
@@ -347,6 +347,28 @@ CkyClaw Framework 的核心设计（Agent 数据类、Runner 循环、Handoff、
 
 ---
 
-*文档版本：v2.2.0*
+## 十一、自动进化机制（M8）
+
+> 2026-07-04 新增
+
+### M8P1 — Evolution 基础设施 ✅ 已完成
+
+| 层 | 交付物 | 测试 |
+|---|---|---|
+| **Framework** | `evolution/` 模块：EvolutionConfig、SignalCollector、EvolutionProposal 状态机、StrategyEngine 策略引擎 | 50 |
+| **Backend** | EvolutionProposalRecord ORM + Schema + Service + 5 API + Migration 0037 | 33 |
+| **Frontend** | EvolutionPage 管理 UI + evolutionService + 服务测试 | 7 |
+
+### M8P2 — 自动信号采集与策略执行（计划中）
+
+| 功能 | 说明 | 状态 |
+|---|---|:---:|
+| 信号自动采集 | Runner/Trace hooks 自动发射 EvolutionSignal | ⚠️ |
+| 策略引擎定时运行 | 基于采集的信号生成 Proposal | ⚠️ |
+| 建议自动应用 | 审批后自动修改 Agent 配置 | ⚠️ |
+
+---
+
+*文档版本：v2.3.0*
 *生成日期：2026-04-05*
 *基于：PRD v2.0.9 / M0–M7 + v2.1–v2.6 全部完成 + OAuth 2.0 + ChannelAdapter + 覆盖率冲刺*
