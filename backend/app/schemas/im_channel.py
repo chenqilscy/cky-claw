@@ -36,6 +36,8 @@ class IMChannelCreate(BaseModel):
     app_config: dict[str, Any] = Field(default_factory=dict, description="渠道应用配置（app_id、token 等）")
     agent_id: uuid.UUID | None = Field(default=None, description="绑定的 Agent ID")
     is_enabled: bool = Field(default=True, description="是否启用")
+    notify_approvals: bool = Field(default=False, description="是否接收审批通知")
+    approval_recipient_id: str | None = Field(default=None, max_length=128, description="审批通知接收方 ID")
 
     @field_validator("channel_type")
     @classmethod
@@ -55,6 +57,8 @@ class IMChannelUpdate(BaseModel):
     app_config: dict[str, Any] | None = None
     agent_id: uuid.UUID | None = None
     is_enabled: bool | None = None
+    notify_approvals: bool | None = None
+    approval_recipient_id: str | None = None
 
     @field_validator("channel_type")
     @classmethod
@@ -78,6 +82,8 @@ class IMChannelResponse(BaseModel):
     app_config: dict[str, Any]
     agent_id: uuid.UUID | None
     is_enabled: bool
+    notify_approvals: bool
+    approval_recipient_id: str | None
     created_at: datetime
     updated_at: datetime
 

@@ -519,3 +519,264 @@ class TestApprovalServiceValidation:
         )
         with pytest.raises(NotFoundError):
             await resolve_approval_request(mock_db, uuid.uuid4(), action="approve")
+
+
+# ═══════════════════════════════════════════════════════════════════
+# IM 审批通知 (ApprovalNotifier) 测试
+# ═══════════════════════════════════════════════════════════════════
+
+
+def _make_im_channel(**overrides: Any) -> MagicMock:
+    """构造模拟 IMChannel ORM 对象。"""
+    defaults = {
+        "id": uuid.uuid4(),
+        "name": "test-wecom",
+        "channel_type": "wecom",
+        "is_enabled": True,
+        "is_deleted": False,
+        "notify_approvals": True,
+        "approval_recipient_id": "user001",
+        "app_config": {"corpid": "corp1", "corpsecret": "sec", "token": "tok", "encoding_aes_key": "key", "agent_id": "100"},
+    }
+    defaults.update(overrides)
+    mock = MagicMock()
+    for k, v in defaults.items():
+        setattr(mock, k, v)
+    return mock
+
+
+class TestApprovalNotifier:
+    """IM 审批通知服务单元测试。"""
+
+    def test_format_message_basic(self) -> None:
+        """基本消息格式化。"""
+        from app.services.approval_notifier import _format_approval_message
+
+        msg = _format_approval_message(
+            agent_name="my-agent",
+            trigger="tool_call",
+            content={"tool_name": "send_email", "arguments": {"to": "a@b.com"}},
+            approval_id="abc-123",
+        )
+        assert "CkyClaw 审批通知" in msg
+        assert "my-agent" in msg
+        assert "send_email" in msg
+        assert "abc-123" in msg
+        assert "tool_call" in msg
+
+    def test_format_message_long_arguments(self) -> None:
+        """超长参数截断。"""
+        from app.services.approval_notifier import _format_approval_message
+
+        long_args = {"data": "x" * 300}
+        msg = _format_approval_message(
+            agent_name="a", trigger="tool_call",
+            content={"tool_name": "t", "arguments": long_args},
+            approval_id="id1",
+        )
+        assert "..." in msg
+
+    def test_format_message_no_tool_name(self) -> None:
+        """content 中无 tool_name 时显示未知工具。"""
+        from app.services.approval_notifier import _format_approval_message
+
+        msg = _format_approval_message(
+            agent_name="a", trigger="output",
+            content={},
+            approval_id="id2",
+        )
+        assert "未知工具" in msg
+
+    @pytest.mark.asyncio
+    async def test_notify_no_channels(self) -> None:
+        """无启用审批通知的渠道时返回 0。"""
+        from app.services.approval_notifier import notify_approval_via_im
+
+        mock_db = AsyncMock()
+        mock_db.execute = AsyncMock(
+            return_value=MagicMock(scalars=MagicMock(return_value=MagicMock(all=MagicMock(return_value=[]))))
+        )
+        count = await notify_approval_via_im(
+            mock_db,
+            agent_name="a", trigger="tool_call",
+            content={"tool_name": "t"}, approval_id="id1",
+        )
+        assert count == 0
+
+    @pytest.mark.asyncio
+    async def test_notify_single_channel_success(self) -> None:
+        """单渠道成功发送。"""
+        from app.services.approval_notifier import notify_approval_via_im
+
+        channel = _make_im_channel()
+        mock_db = AsyncMock()
+        mock_db.execute = AsyncMock(
+            return_value=MagicMock(scalars=MagicMock(return_value=MagicMock(all=MagicMock(return_value=[channel]))))
+        )
+
+        mock_adapter = AsyncMock()
+        mock_adapter.send_message = AsyncMock(return_value=True)
+
+        with patch("app.services.approval_notifier.get_adapter", return_value=mock_adapter):
+            count = await notify_approval_via_im(
+                mock_db,
+                agent_name="test-agent", trigger="tool_call",
+                content={"tool_name": "exec_cmd", "arguments": {"cmd": "ls"}},
+                approval_id="ap-001",
+            )
+        assert count == 1
+        mock_adapter.send_message.assert_awaited_once()
+        call_args = mock_adapter.send_message.call_args
+        assert call_args[0][1] == "user001"  # recipient_id
+        assert "CkyClaw 审批通知" in call_args[0][2]  # message content
+
+    @pytest.mark.asyncio
+    async def test_notify_send_failure(self) -> None:
+        """发送失败不抛异常，返回 0。"""
+        from app.services.approval_notifier import notify_approval_via_im
+
+        channel = _make_im_channel()
+        mock_db = AsyncMock()
+        mock_db.execute = AsyncMock(
+            return_value=MagicMock(scalars=MagicMock(return_value=MagicMock(all=MagicMock(return_value=[channel]))))
+        )
+
+        mock_adapter = AsyncMock()
+        mock_adapter.send_message = AsyncMock(side_effect=Exception("network error"))
+
+        with patch("app.services.approval_notifier.get_adapter", return_value=mock_adapter):
+            count = await notify_approval_via_im(
+                mock_db,
+                agent_name="a", trigger="tool_call",
+                content={"tool_name": "t"}, approval_id="id1",
+            )
+        assert count == 0
+
+    @pytest.mark.asyncio
+    async def test_notify_no_recipient_id(self) -> None:
+        """未配置 recipient_id 的渠道跳过。"""
+        from app.services.approval_notifier import notify_approval_via_im
+
+        channel = _make_im_channel(approval_recipient_id=None)
+        mock_db = AsyncMock()
+        mock_db.execute = AsyncMock(
+            return_value=MagicMock(scalars=MagicMock(return_value=MagicMock(all=MagicMock(return_value=[channel]))))
+        )
+        count = await notify_approval_via_im(
+            mock_db,
+            agent_name="a", trigger="tool_call",
+            content={"tool_name": "t"}, approval_id="id1",
+        )
+        assert count == 0
+
+    @pytest.mark.asyncio
+    async def test_notify_unknown_adapter(self) -> None:
+        """未知 channel_type 跳过。"""
+        from app.services.approval_notifier import notify_approval_via_im
+
+        channel = _make_im_channel(channel_type="unknown_platform")
+        mock_db = AsyncMock()
+        mock_db.execute = AsyncMock(
+            return_value=MagicMock(scalars=MagicMock(return_value=MagicMock(all=MagicMock(return_value=[channel]))))
+        )
+
+        with patch("app.services.approval_notifier.get_adapter", return_value=None):
+            count = await notify_approval_via_im(
+                mock_db,
+                agent_name="a", trigger="tool_call",
+                content={"tool_name": "t"}, approval_id="id1",
+            )
+        assert count == 0
+
+    @pytest.mark.asyncio
+    async def test_notify_multiple_channels(self) -> None:
+        """多渠道并发通知。"""
+        from app.services.approval_notifier import notify_approval_via_im
+
+        ch1 = _make_im_channel(name="wecom-1", approval_recipient_id="u1")
+        ch2 = _make_im_channel(name="dingtalk-1", channel_type="dingtalk", approval_recipient_id="u2")
+        mock_db = AsyncMock()
+        mock_db.execute = AsyncMock(
+            return_value=MagicMock(scalars=MagicMock(return_value=MagicMock(all=MagicMock(return_value=[ch1, ch2]))))
+        )
+
+        mock_adapter = AsyncMock()
+        mock_adapter.send_message = AsyncMock(return_value=True)
+
+        with patch("app.services.approval_notifier.get_adapter", return_value=mock_adapter):
+            count = await notify_approval_via_im(
+                mock_db,
+                agent_name="a", trigger="tool_call",
+                content={"tool_name": "t"}, approval_id="id1",
+            )
+        assert count == 2
+        assert mock_adapter.send_message.await_count == 2
+
+    @pytest.mark.asyncio
+    async def test_notify_partial_failure(self) -> None:
+        """部分渠道失败、部分成功。"""
+        from app.services.approval_notifier import notify_approval_via_im
+
+        ch1 = _make_im_channel(name="ok-channel", approval_recipient_id="u1")
+        ch2 = _make_im_channel(name="fail-channel", approval_recipient_id="u2")
+        mock_db = AsyncMock()
+        mock_db.execute = AsyncMock(
+            return_value=MagicMock(scalars=MagicMock(return_value=MagicMock(all=MagicMock(return_value=[ch1, ch2]))))
+        )
+
+        mock_adapter = AsyncMock()
+        mock_adapter.send_message = AsyncMock(side_effect=[True, False])
+
+        with patch("app.services.approval_notifier.get_adapter", return_value=mock_adapter):
+            count = await notify_approval_via_im(
+                mock_db,
+                agent_name="a", trigger="tool_call",
+                content={"tool_name": "t"}, approval_id="id1",
+            )
+        assert count == 1
+
+
+class TestIMChannelApprovalSchema:
+    """IMChannel Schema 审批通知字段。"""
+
+    def test_create_default_notify_false(self) -> None:
+        """创建 Schema 默认 notify_approvals=False。"""
+        from app.schemas.im_channel import IMChannelCreate
+
+        ch = IMChannelCreate(name="test", channel_type="wecom")
+        assert ch.notify_approvals is False
+        assert ch.approval_recipient_id is None
+
+    def test_create_with_notify(self) -> None:
+        """创建 Schema 可设置 notify_approvals=True。"""
+        from app.schemas.im_channel import IMChannelCreate
+
+        ch = IMChannelCreate(
+            name="test", channel_type="wecom",
+            notify_approvals=True, approval_recipient_id="admin-001",
+        )
+        assert ch.notify_approvals is True
+        assert ch.approval_recipient_id == "admin-001"
+
+    def test_update_notify_fields(self) -> None:
+        """更新 Schema 可设置审批通知字段。"""
+        from app.schemas.im_channel import IMChannelUpdate
+
+        upd = IMChannelUpdate(notify_approvals=True, approval_recipient_id="u123")
+        assert upd.notify_approvals is True
+        assert upd.approval_recipient_id == "u123"
+
+    def test_response_includes_notify_fields(self) -> None:
+        """响应 Schema 包含审批通知字段。"""
+        from app.schemas.im_channel import IMChannelResponse
+
+        mock = _make_im_channel(
+            description="测试渠道",
+            webhook_url=None, webhook_secret=None,
+            agent_id=None, org_id=None,
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
+        )
+        resp = IMChannelResponse.model_validate(mock, from_attributes=True)
+        assert resp.notify_approvals is True
+        assert resp.approval_recipient_id == "user001"

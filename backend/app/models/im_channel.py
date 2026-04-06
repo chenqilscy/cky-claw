@@ -40,6 +40,14 @@ class IMChannel(SoftDeleteMixin, Base):
     is_enabled: Mapped[bool] = mapped_column(
         Boolean, nullable=False, server_default=text("true")
     )
+    notify_approvals: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, server_default=text("false"),
+        comment="是否接收审批通知",
+    )
+    approval_recipient_id: Mapped[str | None] = mapped_column(
+        String(128), nullable=True,
+        comment="审批通知接收方 ID（IM 平台用户/群组标识）",
+    )
     org_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("organizations.id"), nullable=True, index=True
     )

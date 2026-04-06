@@ -1015,6 +1015,8 @@ class TestIMChannelSchemaR2:
             channel_type="webhook",
             webhook_url=None,
             is_enabled=True,
+            notify_approvals=False,
+            approval_recipient_id=None,
             webhook_secret="my_secret",
             app_config={"token": "secret123", "webhook_url": "http://test"},
             agent_id=None,

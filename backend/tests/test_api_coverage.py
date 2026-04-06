@@ -1143,7 +1143,8 @@ class TestIMChannelsAPI:
             channel_type="webhook", webhook_url="https://example.com/wh",
             webhook_secret="secret-123",
             app_config={"token": "tok-123"}, agent_id=None,
-            is_enabled=True, is_deleted=False, org_id=None,
+            is_enabled=True, notify_approvals=False, approval_recipient_id=None,
+            is_deleted=False, org_id=None,
             created_at=_now(), updated_at=_now(),
         )
         defaults.update(extra)

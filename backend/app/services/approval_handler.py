@@ -92,6 +92,21 @@ class HttpApprovalHandler(ApprovalHandler):  # type: ignore[misc]
             "status": "pending",
         })
 
+        # 1.6. 通过 IM 渠道发送审批通知（非阻塞）
+        try:
+            from app.services.approval_notifier import notify_approval_via_im
+
+            async with async_session_factory() as notify_db:
+                await notify_approval_via_im(
+                    notify_db,
+                    agent_name=self._agent_name,
+                    trigger=action_type,
+                    content=action_detail,
+                    approval_id=str(approval_id),
+                )
+        except Exception:
+            logger.exception("IM 审批通知发送失败（不影响审批流程）")
+
         # 2. 注册事件 & 等待
         manager.register(approval_id)
         decision = await manager.wait_for_decision(approval_id, timeout=timeout)
