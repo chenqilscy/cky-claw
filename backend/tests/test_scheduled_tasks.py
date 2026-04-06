@@ -38,6 +38,7 @@ def _make_task(**overrides: Any) -> MagicMock:
         "agent_id": uuid.uuid4(),
         "cron_expr": "0 9 * * *",
         "input_text": "生成今日报告",
+        "task_type": "agent_run",
         "is_enabled": True,
         "last_run_at": None,
         "next_run_at": now,

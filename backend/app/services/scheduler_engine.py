@@ -44,19 +44,12 @@ async def execute_task(db: AsyncSession, task: ScheduledTask, triggered_by: str 
     await db.flush()
 
     try:
-        # 查询 Agent 配置
-        from sqlalchemy import select as sa_select
-        from app.models.agent import AgentConfig
-
-        result = await db.execute(
-            sa_select(AgentConfig).where(AgentConfig.id == task.agent_id)
-        )
-        agent_config = result.scalar_one_or_none()
-        if agent_config is None:
-            raise ValueError(f"Agent {task.agent_id} 不存在")
-
-        # 简单记录执行结果（真实场景会调用 runner.run）
-        output = f"Agent '{agent_config.name}' 执行完成，输入: {task.input_text[:100]}"
+        if task.task_type == "evolution_analyze":
+            # 进化分析任务：读取信号 → 策略引擎生成建议
+            output = await _execute_evolution_analyze(db, task)
+        else:
+            # 默认 agent_run 类型
+            output = await _execute_agent_run(db, task)
 
         now = datetime.now(timezone.utc)
         run.status = "success"
@@ -80,6 +73,65 @@ async def execute_task(db: AsyncSession, task: ScheduledTask, triggered_by: str 
     await db.commit()
     await db.refresh(run)
     return run
+
+
+async def _execute_agent_run(db: AsyncSession, task: ScheduledTask) -> str:
+    """执行 agent_run 类型的定时任务。"""
+    from sqlalchemy import select as sa_select
+    from app.models.agent import AgentConfig
+
+    result = await db.execute(
+        sa_select(AgentConfig).where(AgentConfig.id == task.agent_id)
+    )
+    agent_config = result.scalar_one_or_none()
+    if agent_config is None:
+        raise ValueError(f"Agent {task.agent_id} 不存在")
+
+    return f"Agent '{agent_config.name}' 执行完成，输入: {task.input_text[:100]}"
+
+
+async def _execute_evolution_analyze(db: AsyncSession, task: ScheduledTask) -> str:
+    """执行 evolution_analyze 类型的定时任务。
+
+    读取信号 → 策略引擎生成建议 → 可选自动应用。
+    """
+    from sqlalchemy import select as sa_select
+    from app.models.agent import AgentConfig
+    from app.services import evolution as evo_svc
+
+    result = await db.execute(
+        sa_select(AgentConfig).where(AgentConfig.id == task.agent_id)
+    )
+    agent_config = result.scalar_one_or_none()
+    if agent_config is None:
+        raise ValueError(f"Agent {task.agent_id} 不存在")
+
+    proposals = await evo_svc.analyze_agent(db, agent_config.name)
+    if not proposals:
+        return f"Agent '{agent_config.name}' 进化分析完成，无新建议"
+
+    # 检查是否启用自动应用（从 input_text 解析 JSON 配置）
+    auto_apply = False
+    min_confidence = 0.8
+    try:
+        import json
+        meta = json.loads(task.input_text) if task.input_text else {}
+        auto_apply = meta.get("auto_apply", False)
+        min_confidence = meta.get("min_confidence", 0.8)
+    except (json.JSONDecodeError, TypeError):
+        pass
+
+    applied_count = 0
+    if auto_apply:
+        for proposal in proposals:
+            if proposal.confidence_score >= min_confidence:
+                await evo_svc.apply_proposal_to_agent(db, proposal.id)
+                applied_count += 1
+
+    return (
+        f"Agent '{agent_config.name}' 进化分析完成，"
+        f"生成 {len(proposals)} 条建议，自动应用 {applied_count} 条"
+    )
 
 
 async def poll_and_execute() -> int:

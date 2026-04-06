@@ -27,6 +27,10 @@ class ScheduledTask(SoftDeleteMixin, Base):
     )
     cron_expr: Mapped[str] = mapped_column(String(128), nullable=False)
     input_text: Mapped[str] = mapped_column(Text, server_default="", nullable=False)
+    task_type: Mapped[str] = mapped_column(
+        String(32), server_default="agent_run", nullable=False,
+        comment="任务类型: agent_run / evolution_analyze",
+    )
     is_enabled: Mapped[bool] = mapped_column(Boolean, server_default="true", nullable=False)
     last_run_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     next_run_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

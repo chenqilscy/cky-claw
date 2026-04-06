@@ -359,6 +359,7 @@ class TestScheduledTasksAPI:
         defaults = dict(
             id=uuid.uuid4(), name="daily-scan", description="Daily scan task",
             agent_id=uuid.uuid4(), cron_expr="0 0 * * *", input_text="scan",
+            task_type="agent_run",
             is_enabled=True, last_run_at=None, next_run_at=None,
             created_at=_now(), updated_at=_now(),
         )

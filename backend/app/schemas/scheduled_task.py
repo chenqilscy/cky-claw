@@ -18,6 +18,11 @@ class ScheduledTaskCreate(BaseModel):
     agent_id: uuid.UUID = Field(..., description="关联 Agent ID")
     cron_expr: str = Field(..., min_length=1, max_length=128, description="Cron 表达式")
     input_text: str = Field(default="", description="Agent 输入文本")
+    task_type: str = Field(
+        default="agent_run",
+        pattern="^(agent_run|evolution_analyze)$",
+        description="任务类型: agent_run / evolution_analyze",
+    )
 
     @field_validator("cron_expr")
     @classmethod
@@ -55,6 +60,7 @@ class ScheduledTaskResponse(BaseModel):
     agent_id: uuid.UUID
     cron_expr: str
     input_text: str
+    task_type: str
     is_enabled: bool
     last_run_at: datetime | None
     next_run_at: datetime | None

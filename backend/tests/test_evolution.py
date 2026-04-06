@@ -1129,3 +1129,397 @@ class TestEvolutionAnalyzeAPI:
         body = resp.json()
         assert body["proposals_created"] == 0
         assert body["proposals"] == []
+
+
+# ---------------------------------------------------------------------------
+# M8P2: 建议应用 & 策略引擎定时运行 测试
+# ---------------------------------------------------------------------------
+
+
+class TestApplyProposalToAgent:
+    """apply_proposal_to_agent() 测试。"""
+
+    @pytest.mark.anyio()
+    async def test_apply_instructions_proposal(self) -> None:
+        """将 instructions 类型建议应用到 Agent 配置。"""
+        mock_db = AsyncMock()
+        proposal_id = uuid.uuid4()
+        agent_id = uuid.uuid4()
+
+        # mock proposal record
+        proposal = _make_proposal(
+            id=proposal_id,
+            status="approved",
+            proposal_type="instructions",
+            proposed_value={"instructions": "优化后的指令"},
+            agent_name="bot",
+        )
+
+        # mock agent record
+        agent_mock = MagicMock()
+        agent_mock.id = agent_id
+        agent_mock.name = "bot"
+        agent_mock.model = "gpt-4"
+        agent_mock.instructions = "旧指令"
+
+        # mock version record
+        version_result = MagicMock()
+        version_result.scalar.return_value = 2
+
+        # Setup db.execute chain
+        execute_results = [
+            # get_proposal query
+            MagicMock(scalar_one_or_none=MagicMock(return_value=proposal)),
+            # agent query
+            MagicMock(scalar_one_or_none=MagicMock(return_value=agent_mock)),
+            # max version query
+            MagicMock(scalar=MagicMock(return_value=2)),
+        ]
+        mock_db.execute = AsyncMock(side_effect=execute_results)
+
+        from app.services.evolution import apply_proposal_to_agent
+
+        result = await apply_proposal_to_agent(mock_db, proposal_id)
+
+        # 验证 Agent instructions 被修改
+        assert agent_mock.instructions == "优化后的指令"
+        # 验证 proposal 状态推进
+        assert proposal.status == "applied"
+        assert proposal.applied_at is not None
+        mock_db.commit.assert_awaited()
+
+    @pytest.mark.anyio()
+    async def test_apply_model_proposal(self) -> None:
+        """将 model 类型建议应用到 Agent。"""
+        mock_db = AsyncMock()
+        proposal_id = uuid.uuid4()
+        agent_id = uuid.uuid4()
+
+        proposal = _make_proposal(
+            id=proposal_id,
+            status="approved",
+            proposal_type="model",
+            proposed_value={"model": "gpt-4o"},
+        )
+
+        agent_mock = MagicMock()
+        agent_mock.id = agent_id
+        agent_mock.name = "bot"
+        agent_mock.model = "gpt-3.5-turbo"
+        agent_mock.instructions = ""
+
+        execute_results = [
+            MagicMock(scalar_one_or_none=MagicMock(return_value=proposal)),
+            MagicMock(scalar_one_or_none=MagicMock(return_value=agent_mock)),
+            MagicMock(scalar=MagicMock(return_value=0)),
+        ]
+        mock_db.execute = AsyncMock(side_effect=execute_results)
+
+        from app.services.evolution import apply_proposal_to_agent
+
+        await apply_proposal_to_agent(mock_db, proposal_id)
+        assert agent_mock.model == "gpt-4o"
+        assert proposal.status == "applied"
+
+    @pytest.mark.anyio()
+    async def test_apply_pending_auto_promotes_to_approved(self) -> None:
+        """pending 状态建议可自动推进到 approved 再 applied（auto-apply 场景）。"""
+        mock_db = AsyncMock()
+        proposal_id = uuid.uuid4()
+
+        proposal = _make_proposal(
+            id=proposal_id,
+            status="pending",
+            proposal_type="instructions",
+            proposed_value={"instructions": "新指令"},
+        )
+
+        agent_mock = MagicMock()
+        agent_mock.id = uuid.uuid4()
+        agent_mock.name = "bot"
+        agent_mock.model = "gpt-4"
+        agent_mock.instructions = "旧"
+
+        execute_results = [
+            MagicMock(scalar_one_or_none=MagicMock(return_value=proposal)),
+            MagicMock(scalar_one_or_none=MagicMock(return_value=agent_mock)),
+            MagicMock(scalar=MagicMock(return_value=0)),
+        ]
+        mock_db.execute = AsyncMock(side_effect=execute_results)
+
+        from app.services.evolution import apply_proposal_to_agent
+
+        await apply_proposal_to_agent(mock_db, proposal_id)
+        assert proposal.status == "applied"
+
+    @pytest.mark.anyio()
+    async def test_apply_rejected_raises(self) -> None:
+        """rejected 状态不允许应用。"""
+        mock_db = AsyncMock()
+        proposal_id = uuid.uuid4()
+
+        proposal = _make_proposal(id=proposal_id, status="rejected")
+        mock_db.execute = AsyncMock(
+            return_value=MagicMock(
+                scalar_one_or_none=MagicMock(return_value=proposal)
+            )
+        )
+
+        from app.services.evolution import apply_proposal_to_agent
+
+        with pytest.raises(ValidationError, match="只能应用 approved"):
+            await apply_proposal_to_agent(mock_db, proposal_id)
+
+    @pytest.mark.anyio()
+    async def test_apply_agent_not_found(self) -> None:
+        """目标 Agent 不存在时抛错。"""
+        mock_db = AsyncMock()
+        proposal_id = uuid.uuid4()
+
+        proposal = _make_proposal(id=proposal_id, status="approved")
+        execute_results = [
+            MagicMock(scalar_one_or_none=MagicMock(return_value=proposal)),
+            MagicMock(scalar_one_or_none=MagicMock(return_value=None)),
+        ]
+        mock_db.execute = AsyncMock(side_effect=execute_results)
+
+        from app.services.evolution import apply_proposal_to_agent
+
+        with pytest.raises(NotFoundError, match="不存在"):
+            await apply_proposal_to_agent(mock_db, proposal_id)
+
+
+class TestApplyValueToAgent:
+    """_apply_value_to_agent() 单元测试。"""
+
+    def test_instructions(self) -> None:
+        """instructions 类型正确修改。"""
+        from app.services.evolution import _apply_value_to_agent
+
+        mock_agent = MagicMock()
+        mock_agent.instructions = "旧"
+        _apply_value_to_agent(mock_agent, "instructions", {"instructions": "新指令"})
+        assert mock_agent.instructions == "新指令"
+
+    def test_model(self) -> None:
+        """model 类型正确修改。"""
+        from app.services.evolution import _apply_value_to_agent
+
+        mock_agent = MagicMock()
+        mock_agent.model = "old"
+        _apply_value_to_agent(mock_agent, "model", {"model": "gpt-4o"})
+        assert mock_agent.model == "gpt-4o"
+
+    def test_tools(self) -> None:
+        """tools 类型正确修改。"""
+        from app.services.evolution import _apply_value_to_agent
+
+        mock_agent = MagicMock()
+        mock_agent.tool_names = ["old"]
+        _apply_value_to_agent(mock_agent, "tools", {"tool_names": ["new1", "new2"]})
+        assert mock_agent.tool_names == ["new1", "new2"]
+
+    def test_guardrails(self) -> None:
+        """guardrails 类型正确修改。"""
+        from app.services.evolution import _apply_value_to_agent
+
+        mock_agent = MagicMock()
+        mock_agent.guardrail_ids = []
+        _apply_value_to_agent(mock_agent, "guardrails", {"guardrail_ids": ["g1"]})
+        assert mock_agent.guardrail_ids == ["g1"]
+
+    def test_empty_proposed_no_change(self) -> None:
+        """空 proposed_value 不修改。"""
+        from app.services.evolution import _apply_value_to_agent
+
+        mock_agent = MagicMock()
+        mock_agent.instructions = "不变"
+        _apply_value_to_agent(mock_agent, "instructions", {})
+        assert mock_agent.instructions == "不变"
+
+    def test_unknown_type_no_error(self) -> None:
+        """未知 type 不报错也不修改。"""
+        from app.services.evolution import _apply_value_to_agent
+
+        mock_agent = MagicMock()
+        _apply_value_to_agent(mock_agent, "unknown", {"foo": "bar"})
+
+
+class TestSchedulerEvolutionAnalyze:
+    """scheduler_engine 的 evolution_analyze 任务类型测试。"""
+
+    @pytest.mark.anyio()
+    async def test_evolution_analyze_no_proposals(self) -> None:
+        """无建议时输出正确信息。"""
+        mock_db = AsyncMock()
+        agent_mock = MagicMock()
+        agent_mock.name = "bot"
+
+        task = MagicMock()
+        task.agent_id = uuid.uuid4()
+        task.task_type = "evolution_analyze"
+        task.input_text = ""
+
+        execute_results = [
+            MagicMock(scalar_one_or_none=MagicMock(return_value=agent_mock)),
+        ]
+        mock_db.execute = AsyncMock(side_effect=execute_results)
+
+        with patch(
+            "app.services.evolution.analyze_agent",
+            new_callable=AsyncMock,
+            return_value=[],
+        ):
+            from app.services.scheduler_engine import _execute_evolution_analyze
+
+            result = await _execute_evolution_analyze(mock_db, task)
+        assert "无新建议" in result
+
+    @pytest.mark.anyio()
+    async def test_evolution_analyze_with_auto_apply(self) -> None:
+        """auto_apply=true 且置信度达标时自动应用。"""
+        import json
+
+        mock_db = AsyncMock()
+        agent_mock = MagicMock()
+        agent_mock.name = "bot"
+
+        task = MagicMock()
+        task.agent_id = uuid.uuid4()
+        task.task_type = "evolution_analyze"
+        task.input_text = json.dumps({"auto_apply": True, "min_confidence": 0.7})
+
+        proposal1 = _make_proposal(
+            id=uuid.uuid4(), confidence_score=0.9, status="pending"
+        )
+        proposal2 = _make_proposal(
+            id=uuid.uuid4(), confidence_score=0.5, status="pending"
+        )
+
+        mock_db.execute = AsyncMock(
+            return_value=MagicMock(
+                scalar_one_or_none=MagicMock(return_value=agent_mock)
+            )
+        )
+
+        with (
+            patch(
+                "app.services.evolution.analyze_agent",
+                new_callable=AsyncMock,
+                return_value=[proposal1, proposal2],
+            ),
+            patch(
+                "app.services.evolution.apply_proposal_to_agent",
+                new_callable=AsyncMock,
+            ) as mock_apply,
+        ):
+            from app.services.scheduler_engine import _execute_evolution_analyze
+
+            result = await _execute_evolution_analyze(mock_db, task)
+
+        # 只有 confidence_score >= 0.7 的才被应用
+        mock_apply.assert_awaited_once()
+        assert "自动应用 1 条" in result
+        assert "生成 2 条" in result
+
+    @pytest.mark.anyio()
+    async def test_evolution_analyze_auto_apply_disabled(self) -> None:
+        """auto_apply=false 时不自动应用。"""
+        import json
+
+        mock_db = AsyncMock()
+        agent_mock = MagicMock()
+        agent_mock.name = "bot"
+
+        task = MagicMock()
+        task.agent_id = uuid.uuid4()
+        task.task_type = "evolution_analyze"
+        task.input_text = json.dumps({"auto_apply": False})
+
+        proposal = _make_proposal(
+            id=uuid.uuid4(), confidence_score=0.9, status="pending"
+        )
+
+        mock_db.execute = AsyncMock(
+            return_value=MagicMock(
+                scalar_one_or_none=MagicMock(return_value=agent_mock)
+            )
+        )
+
+        with (
+            patch(
+                "app.services.evolution.analyze_agent",
+                new_callable=AsyncMock,
+                return_value=[proposal],
+            ),
+            patch(
+                "app.services.evolution.apply_proposal_to_agent",
+                new_callable=AsyncMock,
+            ) as mock_apply,
+        ):
+            from app.services.scheduler_engine import _execute_evolution_analyze
+
+            result = await _execute_evolution_analyze(mock_db, task)
+
+        mock_apply.assert_not_awaited()
+        assert "自动应用 0 条" in result
+
+
+class TestScheduledTaskType:
+    """task_type 字段相关测试。"""
+
+    def test_schema_default_type(self) -> None:
+        """ScheduledTaskCreate 默认 task_type 为 agent_run。"""
+        from app.schemas.scheduled_task import ScheduledTaskCreate
+
+        data = ScheduledTaskCreate(
+            name="test",
+            agent_id=uuid.uuid4(),
+            cron_expr="0 0 * * *",
+        )
+        assert data.task_type == "agent_run"
+
+    def test_schema_evolution_type(self) -> None:
+        """task_type = evolution_analyze 有效。"""
+        from app.schemas.scheduled_task import ScheduledTaskCreate
+
+        data = ScheduledTaskCreate(
+            name="进化分析",
+            agent_id=uuid.uuid4(),
+            cron_expr="0 */6 * * *",
+            task_type="evolution_analyze",
+        )
+        assert data.task_type == "evolution_analyze"
+
+    def test_schema_invalid_type(self) -> None:
+        """无效 task_type 被拒绝。"""
+        from app.schemas.scheduled_task import ScheduledTaskCreate
+
+        with pytest.raises(ValueError):
+            ScheduledTaskCreate(
+                name="bad",
+                agent_id=uuid.uuid4(),
+                cron_expr="0 0 * * *",
+                task_type="invalid_type",
+            )
+
+    def test_response_includes_task_type(self) -> None:
+        """ScheduledTaskResponse 包含 task_type 字段。"""
+        from app.schemas.scheduled_task import ScheduledTaskResponse
+
+        now = datetime.now(timezone.utc)
+        resp = ScheduledTaskResponse(
+            id=uuid.uuid4(),
+            name="test",
+            description="",
+            agent_id=uuid.uuid4(),
+            cron_expr="0 0 * * *",
+            input_text="",
+            task_type="evolution_analyze",
+            is_enabled=True,
+            last_run_at=None,
+            next_run_at=None,
+            created_at=now,
+            updated_at=now,
+        )
+        assert resp.task_type == "evolution_analyze"
