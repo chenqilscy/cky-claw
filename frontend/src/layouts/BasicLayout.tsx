@@ -28,6 +28,7 @@ import {
   LineChartOutlined,
   GlobalOutlined,
   ExperimentOutlined,
+  ThunderboltOutlined,
 } from '@ant-design/icons';
 import useThemeStore from '../stores/themeStore';
 
@@ -152,6 +153,11 @@ const menuRoutes = {
       path: '/apm',
       name: 'APM 仪表盘',
       icon: <LineChartOutlined />,
+    },
+    {
+      path: '/cost-router',
+      name: '成本路由',
+      icon: <ThunderboltOutlined />,
     },
     {
       path: '/i18n',
