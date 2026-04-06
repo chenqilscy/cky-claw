@@ -7,6 +7,7 @@ import json
 import logging
 from datetime import datetime, timezone
 from typing import Any, AsyncIterator
+from uuid import uuid4
 
 from ckyclaw_framework.agent.agent import Agent
 from ckyclaw_framework.approval.handler import ApprovalHandler
@@ -15,6 +16,7 @@ from ckyclaw_framework.guardrails.input_guardrail import InputGuardrail
 from ckyclaw_framework.guardrails.output_guardrail import OutputGuardrail
 from ckyclaw_framework.guardrails.result import GuardrailResult, InputGuardrailTripwireError, OutputGuardrailTripwireError
 from ckyclaw_framework.guardrails.tool_guardrail import ToolGuardrail
+from ckyclaw_framework.checkpoint import Checkpoint, CheckpointBackend
 from ckyclaw_framework.handoff.handoff import Handoff
 from ckyclaw_framework.model._converter import (
     messages_to_litellm,
@@ -871,6 +873,20 @@ class _TracingCtx:
             await p.on_span_end(span)
 
 
+def _find_agent_by_name(root: Agent, name: str) -> Agent | None:
+    """在 Agent 及其 handoff 链中递归查找指定名称的 Agent。"""
+    if root.name == name:
+        return root
+    for handoff in root.handoffs:
+        if isinstance(handoff, Handoff) and handoff.agent.name == name:
+            return handoff.agent
+        elif isinstance(handoff, Handoff):
+            found = _find_agent_by_name(handoff.agent, name)
+            if found is not None:
+                return found
+    return None
+
+
 class Runner:
     """Agent 执行引擎。驱动 Agent Loop 完成推理和工具调用。"""
 
@@ -883,6 +899,7 @@ class Runner:
         config: RunConfig | None = None,
         context: dict[str, Any] | None = None,
         max_turns: int = 10,
+        resume_from: str | None = None,
     ) -> RunResult:
         """异步运行 Agent，返回最终结果。
 
@@ -894,6 +911,7 @@ class Runner:
         5. 若检测到 Handoff → 切换 Agent → 回到步骤 1
 
         若提供 session，自动加载历史消息并在结束后保存新增消息。
+        若提供 resume_from（run_id），从最近的 checkpoint 恢复执行状态。
         """
         config = config or RunConfig()
         provider = _resolve_provider(config)
@@ -910,6 +928,31 @@ class Runner:
         messages = _normalize_input(input)
         current_agent = agent
         turn_count = 0
+
+        # Checkpoint: 从上次中断处恢复
+        _checkpoint_backend = config.checkpoint_backend
+        _checkpoint_interval = config.checkpoint_interval
+        _run_id = resume_from or uuid4().hex
+        if resume_from and _checkpoint_backend is not None:
+            cp = await _checkpoint_backend.load_latest(resume_from)
+            if cp is not None:
+                messages = cp.messages
+                turn_count = cp.turn_count
+                _accumulate_usage(total_usage, TokenUsage(
+                    prompt_tokens=cp.token_usage.get("prompt_tokens", 0),
+                    completion_tokens=cp.token_usage.get("completion_tokens", 0),
+                    total_tokens=cp.token_usage.get("total_tokens", 0),
+                ))
+                # 恢复当前 Agent（通过 handoff 链查找）
+                restored = _find_agent_by_name(agent, cp.current_agent_name)
+                if restored is not None:
+                    current_agent = restored
+                if cp.context:
+                    context = {**(context or {}), **cp.context}
+                logger.info(
+                    "Resumed from checkpoint: run_id=%s turn=%d agent=%s",
+                    resume_from, cp.turn_count, cp.current_agent_name,
+                )
 
         # Session: 加载历史消息
         history_offset = 0
@@ -1043,6 +1086,7 @@ class Runner:
                     token_usage=total_usage,
                     turn_count=turn_count,
                     trace=trace,
+                    run_id=_run_id,
                 )
                 # Hooks: on_run_end
                 if hooks:
@@ -1104,6 +1148,7 @@ class Runner:
                     token_usage=total_usage,
                     turn_count=turn_count,
                     trace=trace,
+                    run_id=_run_id,
                 )
                 # Hooks: on_run_end
                 if hooks:
@@ -1138,6 +1183,25 @@ class Runner:
             elif agent_span:
                 await tracing.end_span(agent_span)
 
+            # Checkpoint: turn 结束后保存中间状态
+            if _checkpoint_backend is not None and turn_count % _checkpoint_interval == 0:
+                cp = Checkpoint(
+                    run_id=_run_id,
+                    turn_count=turn_count,
+                    current_agent_name=current_agent.name,
+                    messages=list(messages),
+                    token_usage={
+                        "prompt_tokens": total_usage.prompt_tokens,
+                        "completion_tokens": total_usage.completion_tokens,
+                        "total_tokens": total_usage.total_tokens,
+                    },
+                    context=context or {},
+                )
+                try:
+                    await _checkpoint_backend.save(cp)
+                except Exception:
+                    logger.warning("Failed to save checkpoint at turn %d", turn_count, exc_info=True)
+
         # 超过 max_turns
         logger.warning("Agent loop exceeded max_turns=%d", max_turns)
         last_content = ""
@@ -1159,6 +1223,7 @@ class Runner:
             token_usage=total_usage,
             turn_count=turn_count,
             trace=trace,
+            run_id=_run_id,
         )
         # Hooks: on_run_end
         if hooks:

@@ -77,6 +77,9 @@ from ckyclaw_framework.sandbox.config import SandboxConfig
 from ckyclaw_framework.sandbox.executor import SandboxExecutor, SandboxResult
 from ckyclaw_framework.sandbox.local_sandbox import LocalSandbox
 
+# === Checkpoint ===
+from ckyclaw_framework.checkpoint import Checkpoint, CheckpointBackend, InMemoryCheckpointBackend
+
 # === Model ===
 from ckyclaw_framework.model.provider import ModelProvider, ToolCall, ToolCallChunk
 from ckyclaw_framework.model.cost_router import CostRouter, ModelTier, ProviderCandidate, classify_complexity
@@ -212,6 +215,10 @@ __all__ = [
     "SandboxExecutor",
     "SandboxResult",
     "LocalSandbox",
+    # Checkpoint
+    "Checkpoint",
+    "CheckpointBackend",
+    "InMemoryCheckpointBackend",
 ]
 
 __version__ = "0.1.0"

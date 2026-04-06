@@ -33,6 +33,9 @@ class RunResult:
     turn_count: int = 0
     """实际执行轮次"""
 
+    run_id: str | None = None
+    """运行 ID（用于 checkpoint 恢复）"""
+
 
 class StreamEventType(str, Enum):
     """流式事件类型。"""

@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any, Callable
 if TYPE_CHECKING:
     from ckyclaw_framework.approval.handler import ApprovalHandler
     from ckyclaw_framework.approval.mode import ApprovalMode
+    from ckyclaw_framework.checkpoint import CheckpointBackend
     from ckyclaw_framework.guardrails.input_guardrail import InputGuardrail
     from ckyclaw_framework.guardrails.output_guardrail import OutputGuardrail
     from ckyclaw_framework.guardrails.tool_guardrail import ToolGuardrail
@@ -94,3 +95,9 @@ class RunConfig:
 
     retry_delay: float = 1.0
     """重试间隔基数（秒）。实际延迟 = retry_delay * 2^(attempt-1)（指数退避）。"""
+
+    checkpoint_backend: CheckpointBackend | None = None
+    """Checkpoint 存储后端。配置后 Runner 在每个 turn 结束时自动保存中间状态。"""
+
+    checkpoint_interval: int = 1
+    """每 N 个 turn 保存一次 checkpoint。默认每轮都保存。"""
