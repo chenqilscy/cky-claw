@@ -72,7 +72,7 @@
 | ~~O3~~ | ~~ECharts 图表~~ | P3 | ✅ 已完成（Dashboard Guardrail 拦截率改为 ECharts Gauge + Span 类型分布改为 ECharts 饼图） |
 | ~~O4~~ | ~~响应式布局~~ | P3 | ✅ 已完成（BasicLayout 添加 Grid.useBreakpoint + ProLayout breakpoint="md" 移动端折叠侧边栏） |
 | O5 | ~~暗色模式~~ | P3 | ✅ 已完成（themeStore + ConfigProvider 主题切换） |
-| O6 | ~~前端测试覆盖~~ | P1 | ✅ 已完成（213 个 Vitest 测试：36 个测试文件，覆盖18 Service + 4 Store + 4 Page + API + Smoke） |
+| O6 | ~~前端测试覆盖~~ | P1 | ✅ 已完成（235 个 Vitest 测试：41 个测试文件，覆盖18 Service + 4 Store + 9 Page + API + Smoke） |
 | O7 | ~~对话页体验优化~~ | P1 | ✅ 已完成（MarkdownRenderer + Prism 代码高亮 + 复制按钮 + React.memo 优化） |
 
 ### 3.2 后端优化
@@ -306,7 +306,7 @@ CkyClaw Framework 的核心设计（Agent 数据类、Runner 循环、Handoff、
 
 | 指标 | 数值 |
 |------|------|
-| 测试总数 | **3016**（Backend 1619 + Framework 1184 + Frontend 213） |
+| 测试总数 | **3038**（Backend 1619 + Framework 1184 + Frontend 235） |
 | 测试覆盖率 | Backend **98%** · Framework **100%** |
 | Alembic 迁移 | **37** 个（0001–0037） |
 | API 路由模块 | **31** 个 |
