@@ -72,7 +72,7 @@
 | ~~O3~~ | ~~ECharts 图表~~ | P3 | ✅ 已完成（Dashboard Guardrail 拦截率改为 ECharts Gauge + Span 类型分布改为 ECharts 饼图） |
 | ~~O4~~ | ~~响应式布局~~ | P3 | ✅ 已完成（BasicLayout 添加 Grid.useBreakpoint + ProLayout breakpoint="md" 移动端折叠侧边栏） |
 | O5 | ~~暗色模式~~ | P3 | ✅ 已完成（themeStore + ConfigProvider 主题切换） |
-| O6 | ~~前端测试覆盖~~ | P1 | ✅ 已完成（284 个 Vitest 测试：53 个测试文件，覆盖18 Service + 4 Store + 21 Page + API + Smoke） |
+| O6 | ~~前端测试覆盖~~ | P1 | ✅ 已完成（335 个 Vitest 测试：65 个测试文件，覆盖18 Service + 4 Store + 33 Page + API + Smoke） |
 | O7 | ~~对话页体验优化~~ | P1 | ✅ 已完成（MarkdownRenderer + Prism 代码高亮 + 复制按钮 + React.memo 优化） |
 
 ### 3.2 后端优化
@@ -306,7 +306,7 @@ CkyClaw Framework 的核心设计（Agent 数据类、Runner 循环、Handoff、
 
 | 指标 | 数值 |
 |------|------|
-| 测试总数 | **3135**（Backend 1654 + Framework 1197 + Frontend 284） |
+| 测试总数 | **3186**（Backend 1654 + Framework 1197 + Frontend 335） |
 | 测试覆盖率 | Backend **98%** · Framework **100%** |
 | Alembic 迁移 | **38** 个（0001–0038） |
 | API 路由模块 | **31** 个 |
@@ -380,7 +380,7 @@ CkyClaw Framework 的核心设计（Agent 数据类、Runner 循环、Handoff、
 - Agent 意图检测、意图飘移处理
 - 成本路由优化器：四级复杂度分流，用最合适的模型做最茶杯的任务，小模型（SIMPLE）、中模型（MODERATE）、大模型（COMPLEX）、推理模型（REASONING），还有多模态模型。系统中添加的模型同时也需要标记其有哪些能力，归属于哪种模型。 这里应该如何设计？
 - 大模型API密钥安全托管机制：加密存储
-- 
+- 用户审批机制：通过IM渠道通知用户审批
 
 
 ---
