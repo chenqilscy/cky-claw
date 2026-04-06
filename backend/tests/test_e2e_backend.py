@@ -822,3 +822,49 @@ class TestE2ENewEndpoints:
         finally:
             _app.dependency_overrides.pop(get_db, None)
             _app.dependency_overrides.pop(get_current_user, None)
+
+    # ---- agent realtime status ----
+
+    def test_agent_realtime_status(self, client: "TestClient") -> None:
+        """Agent 实时状态 API 返回正确结构。"""
+        from app.core.deps import get_current_user, get_db
+        from app.main import app as _app
+
+        mock_db = self._mock_db()
+        mock_db.execute = AsyncMock(
+            return_value=MagicMock(all=MagicMock(return_value=[]))
+        )
+
+        fake_user = MagicMock()
+        fake_user.role_id = None
+        fake_user.role = "admin"
+
+        _app.dependency_overrides[get_db] = lambda: mock_db
+        _app.dependency_overrides[get_current_user] = lambda: fake_user
+        try:
+            resp = client.get("/api/v1/agents/realtime-status", params={"minutes": 5})
+            assert resp.status_code == 200
+            body = resp.json()
+            assert "data" in body
+            assert "minutes" in body
+            assert body["minutes"] == 5
+            assert isinstance(body["data"], list)
+        finally:
+            _app.dependency_overrides.pop(get_db, None)
+            _app.dependency_overrides.pop(get_current_user, None)
+
+    def test_agent_realtime_status_invalid_minutes(self, client: "TestClient") -> None:
+        """minutes 超范围返回 422。"""
+        from app.core.deps import get_current_user
+        from app.main import app as _app
+
+        fake_user = MagicMock()
+        fake_user.role_id = None
+        fake_user.role = "admin"
+
+        _app.dependency_overrides[get_current_user] = lambda: fake_user
+        try:
+            resp = client.get("/api/v1/agents/realtime-status", params={"minutes": 100})
+            assert resp.status_code == 422
+        finally:
+            _app.dependency_overrides.pop(get_current_user, None)

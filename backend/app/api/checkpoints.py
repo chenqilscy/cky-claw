@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -34,7 +36,7 @@ async def list_checkpoints(
     limit: int = Query(20, ge=1, le=100),
     offset: int = Query(0, ge=0),
     db: AsyncSession = Depends(get_db),
-    _user=Depends(require_permission("runs", "read")),
+    _user: Any = Depends(require_permission("runs", "read")),
 ) -> CheckpointListResponse:
     """列出指定 run_id 的所有 checkpoint。"""
     base = select(CheckpointRecord).where(CheckpointRecord.run_id == run_id)
@@ -54,7 +56,7 @@ async def list_checkpoints(
 async def get_latest_checkpoint(
     run_id: str = Query(..., min_length=1, description="运行 ID"),
     db: AsyncSession = Depends(get_db),
-    _user=Depends(require_permission("runs", "read")),
+    _user: Any = Depends(require_permission("runs", "read")),
 ) -> CheckpointResponse | None:
     """获取指定 run_id 的最新 checkpoint。"""
     backend = PostgresCheckpointBackend(db)
@@ -75,7 +77,7 @@ async def get_latest_checkpoint(
 async def delete_checkpoints(
     run_id: str,
     db: AsyncSession = Depends(get_db),
-    _user=Depends(require_permission("runs", "write")),
+    _user: Any = Depends(require_permission("runs", "write")),
 ) -> None:
     """删除指定 run_id 的全部 checkpoint。"""
     backend = PostgresCheckpointBackend(db)

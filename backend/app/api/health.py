@@ -37,7 +37,7 @@ async def _probe_redis() -> dict[str, Any]:
         from app.core.redis import get_redis
 
         redis = await get_redis()
-        pong = await redis.ping()
+        pong: bool = await redis.ping()  # type: ignore[misc]
         info = await redis.info("server")
         latency_ms = round((time.monotonic() - start) * 1000, 1)
         return {

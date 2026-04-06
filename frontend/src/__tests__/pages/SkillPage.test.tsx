@@ -21,7 +21,7 @@ vi.mock('@ant-design/pro-components', () => ({
         <div>{headerTitle}</div>
         {typeof toolBarRender === 'function' && <div data-testid="toolbar">{toolBarRender()}</div>}
         <div data-testid="row-count">{items.length}</div>
-        {items.map((item: Record<string, unknown>, i: number) => (
+        {(items as Record<string, unknown>[]).map((item, i: number) => (
           <div key={i} data-testid="row">{(item as { name?: string }).name}</div>
         ))}
       </div>

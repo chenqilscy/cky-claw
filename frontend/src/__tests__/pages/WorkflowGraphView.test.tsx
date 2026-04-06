@@ -11,15 +11,16 @@ vi.mock('@xyflow/react', () => ({
 }));
 
 import WorkflowGraphView from '../../pages/workflows/WorkflowGraphView';
+import type { StepSchema, EdgeSchema } from '../../services/workflowService';
 
 describe('WorkflowGraphView', () => {
   const steps = [
     { id: 's1', name: 'step-1', type: 'agent', agent_name: 'bot-1' },
     { id: 's2', name: 'step-2', type: 'parallel', agent_name: '' },
-  ];
+  ] as unknown as StepSchema[];
   const edges = [
     { source: 's1', target: 's2' },
-  ];
+  ] as unknown as EdgeSchema[];
 
   it('渲染 ReactFlow 画布', () => {
     const { container } = render(<WorkflowGraphView steps={steps} edges={edges} />);

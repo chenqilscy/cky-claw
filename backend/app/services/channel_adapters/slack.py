@@ -177,7 +177,7 @@ class SlackAdapter(ChannelAdapter):
         if data.get("type") != "url_verification":
             return None
 
-        return data.get("challenge")
+        return data.get("challenge")  # type: ignore[no-any-return]
 
     async def send_message(
         self, app_config: dict[str, Any], recipient_id: str, content: str

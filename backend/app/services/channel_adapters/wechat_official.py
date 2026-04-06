@@ -354,7 +354,7 @@ async def _get_access_token(appid: str, appsecret: str) -> str | None:
         if "access_token" not in data:
             logger.error("获取微信 access_token 失败: %s", data.get("errmsg", ""))
             return None
-        return data["access_token"]
+        return data["access_token"]  # type: ignore[no-any-return]
     except httpx.HTTPError as exc:
         logger.error("获取微信 access_token 网络异常: %s", exc)
         return None

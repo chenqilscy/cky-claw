@@ -2,16 +2,13 @@
 
 from __future__ import annotations
 
-from typing import Any
 
 import uuid
-from collections.abc import Callable
 
 from fastapi import Depends, HTTPException, status
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.database import get_db
 from app.core.deps import get_current_user
 from app.models.organization import Organization
 from app.models.user import User
@@ -117,9 +114,6 @@ async def check_quota(
 
     # 统计当前数量
     table_name = _QUOTA_TABLE_MAP[resource_key]
-    count_stmt = select(func.count()).select_from(
-        func.table_literal(table_name)
-    )
 
     # 使用原生 SQL 统计，因为不同表的 soft delete 列不同
     from sqlalchemy import text as sa_text

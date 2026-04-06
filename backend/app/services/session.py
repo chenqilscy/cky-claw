@@ -16,7 +16,7 @@ from app.core.exceptions import NotFoundError
 from app.models.agent import AgentConfig
 from app.models.session import SessionRecord
 from app.models.token_usage import TokenUsageLog
-from app.schemas.session import MessageItem, RunRequest, RunResponse, SessionCreate, TokenUsageResponse
+from app.schemas.session import RunRequest, RunResponse, SessionCreate, TokenUsageResponse
 
 logger = logging.getLogger(__name__)
 

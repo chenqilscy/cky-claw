@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime, timezone
+from typing import Any
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -405,7 +406,7 @@ async def apply_proposal_to_agent(
 def _apply_value_to_agent(
     agent: object,
     proposal_type: str,
-    proposed: dict,
+    proposed: dict[str, Any],
 ) -> None:
     """根据建议类型将 proposed_value 写入 Agent 对应字段。"""
     if proposal_type == "instructions":

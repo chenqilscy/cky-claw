@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
+from typing import Any
 
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
@@ -142,3 +143,40 @@ async def delete_agent(db: AsyncSession, name: str) -> None:
     agent.deleted_at = datetime.now(timezone.utc)
     agent.updated_at = datetime.now(timezone.utc)
     await db.commit()
+
+
+async def get_agent_realtime_status(
+    db: AsyncSession,
+    minutes: int = 5,
+) -> list[dict[str, Any]]:
+    """查询各 Agent 最近 N 分钟的运行状态（基于 Trace 数据聚合）。"""
+    from sqlalchemy import case as sa_case
+
+    from app.models.trace import TraceRecord
+
+    cutoff = datetime.now(timezone.utc) - timedelta(minutes=minutes)
+    error_count_expr = func.sum(sa_case((TraceRecord.status == "error", 1), else_=0))
+    stmt = (
+        select(
+            TraceRecord.agent_name,
+            func.count().label("run_count"),
+            func.max(TraceRecord.start_time).label("last_active_at"),
+            error_count_expr.label("error_count"),
+        )
+        .where(TraceRecord.start_time >= cutoff)
+        .where(TraceRecord.agent_name.isnot(None))
+        .group_by(TraceRecord.agent_name)
+        .order_by(func.count().desc())
+    )
+    result = await db.execute(stmt)
+    rows = result.all()
+    agents: list[dict[str, Any]] = []
+    for row in rows:
+        agents.append({
+            "agent_name": row.agent_name,
+            "run_count": row.run_count,
+            "last_active_at": row.last_active_at.isoformat() if row.last_active_at else None,
+            "error_count": row.error_count or 0,
+            "status": "active" if row.run_count > row.error_count else "error",
+        })
+    return agents

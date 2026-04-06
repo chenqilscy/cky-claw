@@ -17,7 +17,6 @@ from app.schemas.role import (
     RoleListResponse,
     RoleResponse,
     RoleUpdate,
-    UserRoleAssign,
 )
 from app.services import role as role_service
 

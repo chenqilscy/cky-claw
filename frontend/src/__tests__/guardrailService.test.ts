@@ -50,7 +50,7 @@ describe('guardrailService', () => {
   });
 
   it('create 调用 POST /guardrails', async () => {
-    const input = { name: 'new', guardrail_type: 'input', config: {} };
+    const input = { name: 'new', type: 'regex', mode: 'input', config: {} };
     mockApi.post.mockResolvedValue({ id: '1', ...input });
     const result = await guardrailService.create(input);
     expect(mockApi.post).toHaveBeenCalledWith('/guardrails', input);
@@ -58,7 +58,7 @@ describe('guardrailService', () => {
   });
 
   it('update 调用 PUT /guardrails/:id', async () => {
-    const update = { name: 'updated' };
+    const update = { config: { pattern: '.*' } };
     mockApi.put.mockResolvedValue({ id: '1', ...update });
     await guardrailService.update('1', update);
     expect(mockApi.put).toHaveBeenCalledWith('/guardrails/1', update);

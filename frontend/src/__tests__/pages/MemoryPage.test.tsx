@@ -8,7 +8,7 @@ vi.mock('@ant-design/pro-components', () => ({
     <div data-testid="pro-table">
       <div>{headerTitle}</div>
       <div data-testid="row-count">{Array.isArray(dataSource) ? dataSource.length : 0}</div>
-      {Array.isArray(dataSource) && dataSource.map((item: Record<string, unknown>, i: number) => (
+      {Array.isArray(dataSource) && (dataSource as Record<string, unknown>[]).map((item, i: number) => (
         <div key={i} data-testid="row">{(item as { content?: string }).content}</div>
       ))}
     </div>

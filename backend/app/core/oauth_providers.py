@@ -131,7 +131,7 @@ def _discover_oidc_endpoints(issuer: str) -> dict[str, Any] | None:
                 return None
 
         _oidc_discovery_cache = data
-        return data
+        return data  # type: ignore[no-any-return]
     except (httpx.HTTPError, ValueError) as exc:
         logger.error("OIDC Discovery 网络异常: %s", exc)
         return None

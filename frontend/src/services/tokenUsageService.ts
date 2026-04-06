@@ -100,5 +100,5 @@ export const tokenUsageService = {
 
   /** 按日聚合 Token 消耗趋势 */
   trend: (params?: TokenUsageTrendParams) =>
-    api.get<TokenUsageTrendResponse>('/token-usage/trend', params ? { ...params } : undefined),
+    api.get<TokenUsageTrendResponse>('/token-usage/trend', params ? { ...params, group_by_model: params.group_by_model ? 'true' : undefined } as Record<string, string | number | undefined> : undefined),
 };

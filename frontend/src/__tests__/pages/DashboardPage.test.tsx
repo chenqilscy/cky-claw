@@ -6,6 +6,13 @@ import { MemoryRouter } from 'react-router-dom';
 vi.mock('../../services/agentService', () => ({
   agentService: {
     list: vi.fn().mockResolvedValue({ data: [], total: 5, limit: 1, offset: 0 }),
+    realtimeStatus: vi.fn().mockResolvedValue({
+      data: [
+        { agent_name: 'bot-1', run_count: 3, last_active_at: '2026-07-02T10:00:00Z', error_count: 0, status: 'active' },
+      ],
+      minutes: 5,
+      total: 1,
+    }),
   },
 }));
 
@@ -101,6 +108,17 @@ describe('DashboardPage', () => {
     );
     await waitFor(() => {
       expect(container.textContent).toContain('Token 消耗趋势');
+    });
+  });
+
+  it('renders agent realtime status card', async () => {
+    const { container } = render(
+      <MemoryRouter>
+        <DashboardPage />
+      </MemoryRouter>,
+    );
+    await waitFor(() => {
+      expect(container.textContent).toContain('Agent 实时状态');
     });
   });
 });

@@ -49,7 +49,7 @@ describe('providerService', () => {
   });
 
   it('create 调用 POST /providers', async () => {
-    const input = { name: 'new', provider_type: 'openai', config: {} };
+    const input = { name: 'new', provider_type: 'openai', config: {}, base_url: 'https://api.openai.com', api_key: 'sk-xxx' };
     const created = { id: '1', ...input };
     mockApi.post.mockResolvedValue(created);
     const result = await providerService.create(input);

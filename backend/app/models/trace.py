@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime
 
 from sqlalchemy import DateTime, String, text
 from sqlalchemy.dialects.postgresql import JSONB, UUID

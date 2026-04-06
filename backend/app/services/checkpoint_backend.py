@@ -11,7 +11,7 @@ from ckyclaw_framework.model.message import Message
 from app.models.checkpoint import CheckpointRecord
 
 
-class PostgresCheckpointBackend(CheckpointBackend):
+class PostgresCheckpointBackend(CheckpointBackend):  # type: ignore[misc]
     """基于 PostgreSQL + SQLAlchemy 的 Checkpoint 持久化后端。"""
 
     def __init__(self, db: AsyncSession) -> None:

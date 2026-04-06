@@ -218,7 +218,7 @@ class FeishuAdapter(ChannelAdapter):
                         result.get("msg", "unknown"),
                     )
                     return None
-                return result.get("tenant_access_token")
+                return result.get("tenant_access_token")  # type: ignore[no-any-return]
         except httpx.HTTPError as exc:
             logger.error("获取飞书 token 网络错误: %s", exc)
             return None

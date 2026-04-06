@@ -53,8 +53,8 @@ describe('IntentDetectionPage', () => {
     const { container } = renderPage();
 
     const textareas = container.querySelectorAll('textarea');
-    fireEvent.change(textareas[0], { target: { value: 'test original' } });
-    fireEvent.change(textareas[1], { target: { value: 'test current' } });
+    fireEvent.change(textareas[0]!, { target: { value: 'test original' } });
+    fireEvent.change(textareas[1]!, { target: { value: 'test current' } });
 
     fireEvent.click(screen.getByRole('button', { name: /检测飘移/ }));
 
@@ -76,8 +76,8 @@ describe('IntentDetectionPage', () => {
     const { container } = renderPage();
 
     const textareas = container.querySelectorAll('textarea');
-    fireEvent.change(textareas[0], { target: { value: 'a' } });
-    fireEvent.change(textareas[1], { target: { value: 'b' } });
+    fireEvent.change(textareas[0]!, { target: { value: 'a' } });
+    fireEvent.change(textareas[1]!, { target: { value: 'b' } });
 
     fireEvent.click(screen.getByRole('button', { name: /检测飘移/ }));
 
@@ -91,8 +91,8 @@ describe('IntentDetectionPage', () => {
     const { container } = renderPage();
 
     const textareas = container.querySelectorAll('textarea');
-    fireEvent.change(textareas[0], { target: { value: 'x' } });
-    fireEvent.change(textareas[1], { target: { value: 'y' } });
+    fireEvent.change(textareas[0]!, { target: { value: 'x' } });
+    fireEvent.change(textareas[1]!, { target: { value: 'y' } });
 
     fireEvent.click(screen.getByRole('button', { name: /检测飘移/ }));
 

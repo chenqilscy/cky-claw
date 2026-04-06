@@ -302,17 +302,19 @@ CkyClaw Framework 的核心设计（Agent 数据类、Runner 循环、Handoff、
 
 ## 九、当前关键指标
 
-> 更新日期：2026-07-04
+> 更新日期：2026-07-05
 
 | 指标 | 数值 |
 |------|------|
-| 测试总数 | **3482**（Backend 1743 + Framework 1289 + Frontend 385 + E2E 12 + Channel 53 ignored） |
+| 测试总数 | **3514**（Backend 1604 + Framework 1289 + Frontend 381 + E2E 27 + Channel 53 ignored） |
 | 测试覆盖率 | Backend **98%** · Framework **100%** |
 | Alembic 迁移 | **43** 个（0001–0043） |
 | API 路由模块 | **34** 个 |
 | 前端页面 | **29** 个（React.lazy 懒加载 + Vendor 分包 + MarkdownRenderer 动态加载） |
 | CI Job | **5** 个 GitHub Actions + **5** Stage Jenkinsfile |
-| TypeScript 错误 | **0** |
+| TypeScript 错误 | **0**（含测试文件） |
+| Backend mypy | **0** 错误（166 源文件） |
+| Framework mypy | **0** 错误（92 源文件） |
 
 ---
 
@@ -386,10 +388,12 @@ CkyClaw Framework 的核心设计（Agent 数据类、Runner 循环、Handoff、
 - ~~性能优化 — Vite 分包 + ChatPage 拆包 + 连接池可配置化 + 审计中间件批量刷写~~ ✅ 已完成（manualChunks 5路分包 + MarkdownRenderer 动态导入 + ChatPage 808KB→5.91KB + db_pool_size/db_max_overflow 可配置 + AuditLogMiddleware 内存缓冲批量写入）
 - ~~Intent Detection 后端 API~~ ✅ 已完成（POST /api/v1/intent/detect + KeywordIntentDetector 集成 + 3 E2E 测试）
 - ~~Harness Engineering 架构优化~~ ✅ 已完成（深度健康检查 /health/deep + DB/Redis 探测 + Token 趋势 API GET /trend + Dashboard Token 趋势折线图 + 审计 shutdown flush + M8P2 状态确认 + Framework mypy 92源文件0错误）
+- ~~Agent 实时状态监控~~ ✅ 已完成（GET /api/v1/agents/realtime-status 基于 TraceRecord 聚合 + case 表达式错误计数 + Dashboard Agent 状态卡片 + 2 E2E 测试 + 1 前端测试）
+- ~~代码质量冲刺~~ ✅ 已完成（Backend ruff F401/F841 修复 + mypy 166源文件0错误 + Frontend TypeScript 0错误含测试 + 清理无用导入/变量/死代码）
 
 
 ---
 
-*文档版本：v2.4.0*
-*生成日期：2026-07-04*
-*基于：PRD v2.0.9 / M0–M7 + v2.1–v2.6 全部完成 + M8P1 完成 + M8P2 进行中 + OAuth 2.0 + ChannelAdapter + 覆盖率冲刺*
+*文档版本：v2.5.0*
+*生成日期：2026-07-05*
+*基于：PRD v2.0.9 / M0–M7 + v2.1–v2.6 全部完成 + M8P1 完成 + M8P2 完成 + OAuth 2.0 + ChannelAdapter + 覆盖率冲刺 + 代码质量冲刺*

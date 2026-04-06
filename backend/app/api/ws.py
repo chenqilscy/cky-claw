@@ -13,7 +13,6 @@ import json
 import logging
 from contextlib import suppress
 
-import redis.asyncio as aioredis
 from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect
 
 from app.core.auth import decode_access_token

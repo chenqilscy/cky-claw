@@ -23,6 +23,7 @@ import {
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { agentService } from '../../services/agentService';
+import type { AgentRealtimeStatusItem } from '../../services/agentService';
 import { chatService } from '../../services/chatService';
 import { traceService } from '../../services/traceService';
 import type { TraceStatsResponse } from '../../services/traceService';
@@ -47,6 +48,7 @@ const DashboardPage: React.FC = () => {
   const [traceStats, setTraceStats] = useState<TraceStatsResponse | null>(null);
   const [tokenByModel, setTokenByModel] = useState<TokenUsageByModelItem[]>([]);
   const [tokenTrend, setTokenTrend] = useState<TokenUsageTrendItem[]>([]);
+  const [agentStatus, setAgentStatus] = useState<AgentRealtimeStatusItem[]>([]);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -56,6 +58,7 @@ const DashboardPage: React.FC = () => {
       traceService.stats(),
       tokenUsageService.summary({ group_by: 'model' }),
       tokenUsageService.trend({ days: 7 }),
+      agentService.realtimeStatus({ minutes: 5 }),
     ]);
 
     if (results[0].status === 'fulfilled') {
@@ -72,6 +75,9 @@ const DashboardPage: React.FC = () => {
     }
     if (results[4].status === 'fulfilled') {
       setTokenTrend(results[4].value.data);
+    }
+    if (results[5].status === 'fulfilled') {
+      setAgentStatus(results[5].value.data);
     }
 
     const failedCount = results.filter((r) => r.status === 'rejected').length;
@@ -346,7 +352,58 @@ const DashboardPage: React.FC = () => {
           </Col>
         </Row>
 
-        {/* Row 3: Token Trend Chart */}
+        {/* Row 3: Agent Realtime Status */}
+        <Row gutter={16}>
+          <Col span={24}>
+            <Card title="Agent 实时状态（近 5 分钟）" size="small">
+              {agentStatus.length > 0 ? (
+                <Table
+                  dataSource={agentStatus}
+                  rowKey="agent_name"
+                  size="small"
+                  pagination={false}
+                  locale={{ emptyText: '暂无活跃 Agent' }}
+                  columns={[
+                    {
+                      title: 'Agent',
+                      dataIndex: 'agent_name',
+                      key: 'agent_name',
+                      render: (v: string) => <Tag color="blue">{v}</Tag>,
+                    },
+                    {
+                      title: '运行次数',
+                      dataIndex: 'run_count',
+                      key: 'run_count',
+                      sorter: (a: AgentRealtimeStatusItem, b: AgentRealtimeStatusItem) => a.run_count - b.run_count,
+                    },
+                    {
+                      title: '错误次数',
+                      dataIndex: 'error_count',
+                      key: 'error_count',
+                      render: (v: number) => v > 0 ? <Text type="danger">{v}</Text> : v,
+                    },
+                    {
+                      title: '最近活跃',
+                      dataIndex: 'last_active_at',
+                      key: 'last_active_at',
+                      render: (v: string | null) => v ? new Date(v).toLocaleString() : '-',
+                    },
+                    {
+                      title: '状态',
+                      dataIndex: 'status',
+                      key: 'status',
+                      render: (v: string) => <Tag color={v === 'active' ? 'green' : 'red'}>{v === 'active' ? '正常' : '异常'}</Tag>,
+                    },
+                  ]}
+                />
+              ) : (
+                <Text type="secondary">暂无活跃 Agent</Text>
+              )}
+            </Card>
+          </Col>
+        </Row>
+
+        {/* Row 4: Token Trend Chart */}
         <Row gutter={16}>
           <Col span={24}>
             <Card title="Token 消耗趋势（近 7 天）" size="small">

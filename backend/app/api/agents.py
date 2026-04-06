@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import uuid
+from typing import Any
 
 import yaml
 from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile
@@ -17,6 +18,16 @@ from app.schemas.agent import AgentCreate, AgentListResponse, AgentResponse, Age
 from app.services import agent as agent_service
 
 router = APIRouter(prefix="/api/v1/agents", tags=["agents"])
+
+
+@router.get("/realtime-status", dependencies=[Depends(require_permission("agents", "read"))])
+async def get_agents_realtime_status(
+    minutes: int = Query(5, ge=1, le=60, description="最近 N 分钟"),
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, Any]:
+    """查询各 Agent 最近 N 分钟的运行状态（基于 Trace 数据聚合）。"""
+    agents = await agent_service.get_agent_realtime_status(db, minutes=minutes)
+    return {"data": agents, "minutes": minutes, "total": len(agents)}
 
 
 @router.get("", response_model=AgentListResponse, dependencies=[Depends(require_permission("agents", "read"))])

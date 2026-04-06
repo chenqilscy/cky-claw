@@ -8,7 +8,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import Any, cast
 
-from sqlalchemy import delete, func, select, update
+from sqlalchemy import func, select, update
 from sqlalchemy.engine import CursorResult
 from sqlalchemy.ext.asyncio import AsyncSession
 

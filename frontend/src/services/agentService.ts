@@ -57,6 +57,20 @@ export interface AgentCreateInput {
 
 export type AgentUpdateInput = Partial<AgentCreateInput>;
 
+export interface AgentRealtimeStatusItem {
+  agent_name: string;
+  run_count: number;
+  last_active_at: string | null;
+  error_count: number;
+  status: 'active' | 'error';
+}
+
+export interface AgentRealtimeStatusResponse {
+  data: AgentRealtimeStatusItem[];
+  minutes: number;
+  total: number;
+}
+
 export const agentService = {
   list: (params?: { search?: string; limit?: number; offset?: number }) =>
     api.get<AgentListResponse>('/agents', params),
@@ -88,6 +102,9 @@ export const agentService = {
     a.click();
     URL.revokeObjectURL(url);
   },
+
+  realtimeStatus: (params?: { minutes?: number }) =>
+    api.get<AgentRealtimeStatusResponse>('/agents/realtime-status', params),
 
   importAgent: async (file: File): Promise<AgentConfig> => {
     const token = getToken();

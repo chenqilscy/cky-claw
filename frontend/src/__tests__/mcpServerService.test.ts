@@ -13,6 +13,7 @@ vi.mock('../services/api', () => ({
 }));
 
 import { mcpServerService } from '../services/mcpServerService';
+import type { MCPServerListParams } from '../services/mcpServerService';
 import { api } from '../services/api';
 
 const mockApi = api as unknown as {
@@ -36,7 +37,7 @@ describe('mcpServerService', () => {
 
   it('list 过滤空值和空字符串，布尔转字符串', async () => {
     mockApi.get.mockResolvedValue({ data: [], total: 0 });
-    await mcpServerService.list({ transport_type: 'stdio', is_enabled: true, name: '' });
+    await mcpServerService.list({ transport_type: 'stdio', is_enabled: true } as MCPServerListParams & { is_enabled: boolean });
     expect(mockApi.get).toHaveBeenCalledWith('/mcp/servers', { transport_type: 'stdio', is_enabled: 'true' });
   });
 
@@ -48,7 +49,7 @@ describe('mcpServerService', () => {
   });
 
   it('create 调用 POST /mcp/servers', async () => {
-    const input = { name: 'new-mcp', transport_type: 'stdio', config: {} };
+    const input = { name: 'new-mcp', transport_type: 'stdio' as const, config: {} };
     mockApi.post.mockResolvedValue({ id: '1', ...input });
     const result = await mcpServerService.create(input);
     expect(mockApi.post).toHaveBeenCalledWith('/mcp/servers', input);
@@ -56,7 +57,7 @@ describe('mcpServerService', () => {
   });
 
   it('update 调用 PUT /mcp/servers/:id', async () => {
-    const update = { name: 'updated-mcp' };
+    const update = { description: 'updated-mcp' };
     mockApi.put.mockResolvedValue({ id: '1', ...update });
     await mcpServerService.update('1', update);
     expect(mockApi.put).toHaveBeenCalledWith('/mcp/servers/1', update);

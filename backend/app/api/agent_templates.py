@@ -16,7 +16,6 @@ from app.schemas.agent_template import (
     AgentTemplateListResponse,
     AgentTemplateResponse,
     AgentTemplateUpdate,
-    CreateAgentFromTemplate,
 )
 from app.services import agent_template as template_service
 

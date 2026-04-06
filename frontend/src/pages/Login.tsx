@@ -97,7 +97,8 @@ const LoginPage: React.FC = () => {
             <Divider plain>或</Divider>
             <Space direction="vertical" style={{ width: '100%' }} size="middle">
               {providers.map((provider) => {
-                const meta = PROVIDER_META[provider] ?? { label: provider, icon: <SafetyOutlined /> };
+                const meta: { label: string; icon: React.ReactNode; color?: string } =
+                  PROVIDER_META[provider] ?? { label: provider, icon: <SafetyOutlined /> };
                 return (
                   <Button
                     key={provider}

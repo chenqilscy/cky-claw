@@ -45,7 +45,7 @@ describe('traceService', () => {
   it('stats 调用 GET /traces/stats', async () => {
     const stats = { total_traces: 100 };
     mockApi.get.mockResolvedValue(stats);
-    const result = await traceService.stats({ days: 7 });
+    const result = await traceService.stats({ days: 7 } as Record<string, unknown>);
     expect(mockApi.get).toHaveBeenCalledWith('/traces/stats', { days: 7 });
     expect(result).toEqual(stats);
   });
