@@ -378,11 +378,10 @@ CkyClaw Framework 的核心设计（Agent 数据类、Runner 循环、Handoff、
 
 ## 十二、优化项
 - Agent 意图检测、意图飘移处理
-- ~~成本路由优化器~~：✅ Phase 1 已完成（ModelTierEnum + Provider model_tier/capabilities 字段 + Migration 0040）
+- ~~成本路由优化器~~：✅ Phase 1 + Phase 2 已完成（ModelTierEnum + Provider model_tier/capabilities + CostRouter 规则分类器 + /classify + /recommend API + Migration 0040 + 41 tests）
 - 大模型API密钥安全托管机制：加密存储
 - ~~用户审批机制：通过IM渠道通知用户审批~~ ✅ 已完成（ApprovalNotifier + IMChannel notify_approvals + Migration 0041 + 14 tests）
-- checkerpoint机制
-- checkerpoint机制
+- ~~checkpoint机制~~ ✅ 已完成（Checkpoint/CheckpointBackend/InMemoryCheckpointBackend + Runner resume_from + 20 tests）
 
 
 ---
