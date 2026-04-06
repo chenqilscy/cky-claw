@@ -79,6 +79,7 @@ from ckyclaw_framework.sandbox.local_sandbox import LocalSandbox
 
 # === Model ===
 from ckyclaw_framework.model.provider import ModelProvider, ToolCall, ToolCallChunk
+from ckyclaw_framework.model.cost_router import CostRouter, ModelTier, ProviderCandidate, classify_complexity
 
 # === Evolution ===
 from ckyclaw_framework.evolution.config import EvolutionConfig
@@ -196,6 +197,10 @@ __all__ = [
     "ToolCall",
     "ToolCallChunk",
     "LiteLLMProvider",
+    "CostRouter",
+    "ModelTier",
+    "ProviderCandidate",
+    "classify_complexity",
     # Team
     "Team",
     "TeamConfig",
