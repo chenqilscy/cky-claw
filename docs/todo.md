@@ -302,11 +302,11 @@ CkyClaw Framework 的核心设计（Agent 数据类、Runner 循环、Handoff、
 
 ## 九、当前关键指标
 
-> 更新日期：2026-07-03
+> 更新日期：2026-07-04
 
 | 指标 | 数值 |
 |------|------|
-| 测试总数 | **3186**（Backend 1654 + Framework 1197 + Frontend 335） |
+| 测试总数 | **3204**（Backend 1654 + Framework 1197 + Frontend 353） |
 | 测试覆盖率 | Backend **98%** · Framework **100%** |
 | Alembic 迁移 | **38** 个（0001–0038） |
 | API 路由模块 | **31** 个 |
