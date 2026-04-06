@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import uuid
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -14,6 +15,7 @@ from app.schemas.provider import (
     ProviderCreate,
     ProviderListResponse,
     ProviderResponse,
+    ProviderRotateKey,
     ProviderTestResult,
     ProviderToggle,
     ProviderUpdate,
@@ -41,6 +43,12 @@ def _to_response(p) -> ProviderResponse:  # type: ignore[no-untyped-def]
         org_id=p.org_id,
         last_health_check=p.last_health_check,
         health_status=p.health_status,
+        key_expires_at=p.key_expires_at,
+        key_last_rotated_at=p.key_last_rotated_at,
+        key_expired=(
+            p.key_expires_at is not None
+            and p.key_expires_at < datetime.now(timezone.utc)
+        ),
         created_at=p.created_at,
         updated_at=p.updated_at,
     )
@@ -133,3 +141,17 @@ async def test_provider_connection(
     """测试 Provider 连通性。"""
     result = await provider_service.test_connection(db, provider_id)
     return ProviderTestResult(**result)
+
+
+@router.post("/{provider_id}/rotate-key", response_model=ProviderResponse)
+async def rotate_provider_key(
+    provider_id: uuid.UUID,
+    data: ProviderRotateKey,
+    db: AsyncSession = Depends(get_db),
+    _user: User = Depends(require_admin),
+) -> ProviderResponse:
+    """轮换 Provider API Key。原子性替换密钥并记录轮换时间。"""
+    provider = await provider_service.rotate_key(
+        db, provider_id, data.new_api_key, key_expires_at=data.key_expires_at,
+    )
+    return _to_response(provider)

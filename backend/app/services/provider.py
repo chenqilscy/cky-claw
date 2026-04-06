@@ -66,6 +66,7 @@ async def create_provider(db: AsyncSession, data: ProviderCreate) -> ProviderCon
         auth_config=data.auth_config,
         rate_limit_rpm=data.rate_limit_rpm,
         rate_limit_tpm=data.rate_limit_tpm,
+        key_expires_at=data.key_expires_at,
     )
     db.add(provider)
     await db.commit()
@@ -80,11 +81,12 @@ async def update_provider(
     provider = await get_provider(db, provider_id)
 
     update_data = data.model_dump(exclude_unset=True)
-    # api_key 特殊处理：加密后存储到 api_key_encrypted
+    # api_key 特殊处理：加密后存储到 api_key_encrypted，同时更新轮换时间
     if "api_key" in update_data:
         new_key = update_data.pop("api_key")
         if new_key is not None:
             provider.api_key_encrypted = encrypt_api_key(new_key)
+            provider.key_last_rotated_at = datetime.now(timezone.utc)
 
     for field, value in update_data.items():
         setattr(provider, field, value)
@@ -109,6 +111,23 @@ async def toggle_provider(
     """启用/禁用 Provider。"""
     provider = await get_provider(db, provider_id)
     provider.is_enabled = is_enabled
+    provider.updated_at = datetime.now(timezone.utc)
+    await db.commit()
+    await db.refresh(provider)
+    return provider
+
+
+async def rotate_key(
+    db: AsyncSession,
+    provider_id: uuid.UUID,
+    new_api_key: str,
+    key_expires_at: datetime | None = None,
+) -> ProviderConfig:
+    """轮换 API Key — 原子性替换加密密钥并记录轮换时间。"""
+    provider = await get_provider(db, provider_id)
+    provider.api_key_encrypted = encrypt_api_key(new_api_key)
+    provider.key_expires_at = key_expires_at
+    provider.key_last_rotated_at = datetime.now(timezone.utc)
     provider.updated_at = datetime.now(timezone.utc)
     await db.commit()
     await db.refresh(provider)

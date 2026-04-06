@@ -45,6 +45,7 @@ class ProviderCreate(BaseModel):
     rate_limit_tpm: int | None = Field(default=None, ge=0, description="每分钟 Token 数上限")
     model_tier: ModelTierEnum = Field(default=ModelTierEnum.MODERATE, description="模型层级")
     capabilities: list[str] = Field(default_factory=list, description="模型能力标签")
+    key_expires_at: datetime | None = Field(default=None, description="API Key 过期时间，空表示永不过期")
 
     @field_validator("provider_type")
     @classmethod
@@ -83,6 +84,7 @@ class ProviderUpdate(BaseModel):
     rate_limit_tpm: int | None = Field(default=None, ge=0)
     model_tier: ModelTierEnum | None = None
     capabilities: list[str] | None = None
+    key_expires_at: datetime | None = None
 
     @field_validator("provider_type")
     @classmethod
@@ -136,6 +138,9 @@ class ProviderResponse(BaseModel):
     org_id: uuid.UUID | None
     last_health_check: datetime | None
     health_status: str
+    key_expires_at: datetime | None = None
+    key_last_rotated_at: datetime | None = None
+    key_expired: bool = Field(default=False, description="API Key 是否已过期")
     created_at: datetime
     updated_at: datetime
 
@@ -156,3 +161,10 @@ class ProviderTestResult(BaseModel):
     latency_ms: int = 0
     error: str | None = None
     model_used: str | None = None
+
+
+class ProviderRotateKey(BaseModel):
+    """轮换 API Key 请求体。"""
+
+    new_api_key: str = Field(..., min_length=1, description="新的 API Key（明文）")
+    key_expires_at: datetime | None = Field(default=None, description="新 Key 的过期时间")

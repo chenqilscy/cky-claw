@@ -66,6 +66,14 @@ class ProviderConfig(SoftDeleteMixin, Base):
     health_status: Mapped[str] = mapped_column(
         String(16), nullable=False, server_default=text("'unknown'")
     )
+    key_expires_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True,
+        comment="API Key 过期时间，NULL 表示永不过期",
+    )
+    key_last_rotated_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True,
+        comment="API Key 最近一次轮换时间",
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,

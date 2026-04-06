@@ -52,6 +52,8 @@ def _make_provider(**overrides) -> MagicMock:  # type: ignore[no-untyped-def]
         "org_id": None,
         "last_health_check": None,
         "health_status": "unknown",
+        "key_expires_at": None,
+        "key_last_rotated_at": None,
         "created_at": _NOW,
         "updated_at": _NOW,
     }
@@ -162,6 +164,7 @@ class TestProviderSchemas:
             is_enabled=True, model_tier="moderate", capabilities=[],
             org_id=None,
             last_health_check=None, health_status="unknown",
+            key_expires_at=None, key_last_rotated_at=None, key_expired=False,
             created_at=_NOW, updated_at=_NOW,
         )
         dumped = resp.model_dump()
@@ -722,3 +725,158 @@ class TestResolveProvider:
 
         with pytest.raises(NotFoundError, match="解密失败"):
             await _resolve_provider(mock_db, mock_config)
+
+
+# ---------------------------------------------------------------------------
+# API Key 安全托管 — rotate-key + key_expires_at 测试
+# ---------------------------------------------------------------------------
+
+
+class TestRotateKeyAPI:
+    """POST /providers/{id}/rotate-key 端点测试。"""
+
+    @patch("app.api.providers.provider_service")
+    def test_rotate_key_success(self, mock_svc: MagicMock, client: TestClient) -> None:
+        """成功轮换 API Key。"""
+        pid = uuid.uuid4()
+        now = datetime.now(timezone.utc)
+        p = _make_provider(id=pid, key_last_rotated_at=now)
+        mock_svc.rotate_key = AsyncMock(return_value=p)
+        _setup_overrides()
+        try:
+            resp = client.post(
+                f"/api/v1/providers/{pid}/rotate-key",
+                json={"new_api_key": "sk-new-key-12345"},
+            )
+        finally:
+            _clear_overrides()
+
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["id"] == str(pid)
+        mock_svc.rotate_key.assert_awaited_once()
+
+    @patch("app.api.providers.provider_service")
+    def test_rotate_key_with_expiry(self, mock_svc: MagicMock, client: TestClient) -> None:
+        """轮换 API Key 并设置过期时间。"""
+        pid = uuid.uuid4()
+        expires = datetime(2027, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+        p = _make_provider(id=pid, key_expires_at=expires, key_last_rotated_at=_NOW)
+        mock_svc.rotate_key = AsyncMock(return_value=p)
+        _setup_overrides()
+        try:
+            resp = client.post(
+                f"/api/v1/providers/{pid}/rotate-key",
+                json={
+                    "new_api_key": "sk-new-key-12345",
+                    "key_expires_at": "2027-01-01T00:00:00Z",
+                },
+            )
+        finally:
+            _clear_overrides()
+
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["key_expired"] is False
+
+    @patch("app.api.providers.provider_service")
+    def test_rotate_key_not_found(self, mock_svc: MagicMock, client: TestClient) -> None:
+        """轮换不存在的 Provider 应返回 404。"""
+        pid = uuid.uuid4()
+        mock_svc.rotate_key = AsyncMock(side_effect=NotFoundError(f"Provider '{pid}' 不存在"))
+        _setup_overrides()
+        try:
+            resp = client.post(
+                f"/api/v1/providers/{pid}/rotate-key",
+                json={"new_api_key": "sk-test"},
+            )
+        finally:
+            _clear_overrides()
+
+        assert resp.status_code == 404
+
+    def test_rotate_key_missing_body(self, client: TestClient) -> None:
+        """缺少请求体应返回 422。"""
+        pid = uuid.uuid4()
+        _setup_overrides()
+        try:
+            resp = client.post(f"/api/v1/providers/{pid}/rotate-key")
+        finally:
+            _clear_overrides()
+
+        assert resp.status_code == 422
+
+    def test_rotate_key_empty_key(self, client: TestClient) -> None:
+        """空字符串 new_api_key 应返回 422。"""
+        pid = uuid.uuid4()
+        _setup_overrides()
+        try:
+            resp = client.post(
+                f"/api/v1/providers/{pid}/rotate-key",
+                json={"new_api_key": ""},
+            )
+        finally:
+            _clear_overrides()
+
+        assert resp.status_code == 422
+
+
+class TestKeyExpiryLogic:
+    """key_expired 计算逻辑测试。"""
+
+    def test_key_expired_when_past(self) -> None:
+        """过期时间在过去 → key_expired=True。"""
+        past = datetime(2020, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+        p = _make_provider(key_expires_at=past)
+        from app.api.providers import _to_response
+        resp = _to_response(p)
+        assert resp.key_expired is True
+
+    def test_key_not_expired_when_future(self) -> None:
+        """过期时间在未来 → key_expired=False。"""
+        future = datetime(2099, 12, 31, 23, 59, 59, tzinfo=timezone.utc)
+        p = _make_provider(key_expires_at=future)
+        from app.api.providers import _to_response
+        resp = _to_response(p)
+        assert resp.key_expired is False
+
+    def test_key_not_expired_when_null(self) -> None:
+        """无过期时间 → key_expired=False。"""
+        p = _make_provider(key_expires_at=None)
+        from app.api.providers import _to_response
+        resp = _to_response(p)
+        assert resp.key_expired is False
+
+    def test_response_includes_rotation_timestamp(self) -> None:
+        """key_last_rotated_at 正确传递到 ProviderResponse。"""
+        rotated_at = datetime(2026, 6, 1, 12, 0, 0, tzinfo=timezone.utc)
+        p = _make_provider(key_last_rotated_at=rotated_at)
+        from app.api.providers import _to_response
+        resp = _to_response(p)
+        assert resp.key_last_rotated_at == rotated_at
+
+
+class TestProviderRotateKeySchema:
+    """ProviderRotateKey Schema 验证。"""
+
+    def test_valid_rotate_key(self) -> None:
+        from app.schemas.provider import ProviderRotateKey
+        data = ProviderRotateKey(new_api_key="sk-test-key-123")
+        assert data.new_api_key == "sk-test-key-123"
+        assert data.key_expires_at is None
+
+    def test_rotate_key_with_expiry(self) -> None:
+        from app.schemas.provider import ProviderRotateKey
+        data = ProviderRotateKey(
+            new_api_key="sk-test-key-123",
+            key_expires_at=datetime(2027, 6, 1, tzinfo=timezone.utc),
+        )
+        assert data.key_expires_at is not None
+
+
+class TestRouteRegistrationRotateKey:
+    """验证 rotate-key 路由已注册。"""
+
+    def test_rotate_key_route_registered(self) -> None:
+        paths = [route.path for route in app.routes]
+        assert "/api/v1/providers/{provider_id}/rotate-key" in paths

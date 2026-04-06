@@ -382,6 +382,7 @@ CkyClaw Framework 的核心设计（Agent 数据类、Runner 循环、Handoff、
 - 大模型API密钥安全托管机制：加密存储
 - ~~用户审批机制：通过IM渠道通知用户审批~~ ✅ 已完成（ApprovalNotifier + IMChannel notify_approvals + Migration 0041 + 14 tests）
 - ~~checkpoint机制~~ ✅ 已完成（Checkpoint/CheckpointBackend/InMemoryCheckpointBackend + Runner resume_from + 20 tests）
+- Harness Engineering 架构优化
 
 
 ---
