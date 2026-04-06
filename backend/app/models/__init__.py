@@ -7,6 +7,7 @@ from app.models.agent_version import AgentConfigVersion
 from app.models.approval import ApprovalRequest
 from app.models.audit_log import AuditLog
 from app.models.evaluation import RunEvaluation, RunFeedback
+from app.models.evolution import EvolutionProposalRecord
 from app.models.guardrail import GuardrailRule
 from app.models.im_channel import IMChannel
 from app.models.mcp_server import MCPServerConfig
@@ -33,6 +34,7 @@ __all__ = [
     "AgentTemplate",
     "ApprovalRequest",
     "AuditLog",
+    "EvolutionProposalRecord",
     "GuardrailRule",
     "IMChannel",
     "MCPServerConfig",
