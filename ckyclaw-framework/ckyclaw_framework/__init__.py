@@ -78,6 +78,19 @@ from ckyclaw_framework.sandbox.local_sandbox import LocalSandbox
 
 # === Model ===
 from ckyclaw_framework.model.provider import ModelProvider, ToolCall, ToolCallChunk
+
+# === Evolution ===
+from ckyclaw_framework.evolution.config import EvolutionConfig
+from ckyclaw_framework.evolution.proposal import EvolutionProposal, ProposalStatus, ProposalType
+from ckyclaw_framework.evolution.signals import (
+    EvolutionSignal,
+    FeedbackSignal,
+    MetricSignal,
+    SignalCollector,
+    SignalType,
+    ToolPerformanceSignal,
+)
+from ckyclaw_framework.evolution.strategy import EvolutionStrategy, StrategyEngine
 from ckyclaw_framework.model.settings import ModelSettings
 from ckyclaw_framework.model.message import Message, MessageRole, TokenUsage
 from ckyclaw_framework.model.litellm_provider import LiteLLMProvider
