@@ -226,3 +226,125 @@ class TestMemoryService:
         result = await create_memory(mock_db, data)
         assert mock_db.add.called
         assert mock_db.commit.called
+
+
+# ═══════════════════════════════════════════════════════════════════
+# M-Opt: Memory 优化 — 衰减模式 + Schema 测试
+# ═══════════════════════════════════════════════════════════════════
+
+
+class TestMemoryDecayModeSchema:
+    """DecayMode Schema 验证。"""
+
+    def test_default_mode_is_linear(self) -> None:
+        """默认衰减模式为 LINEAR。"""
+        from app.schemas.memory import MemoryDecayRequest
+
+        req = MemoryDecayRequest(
+            before=datetime.now(timezone.utc), rate=0.05
+        )
+        assert req.mode.value == "linear"
+
+    def test_exponential_mode(self) -> None:
+        """exponential 模式有效。"""
+        from app.schemas.memory import MemoryDecayModeEnum, MemoryDecayRequest
+
+        req = MemoryDecayRequest(
+            before=datetime.now(timezone.utc),
+            rate=0.1,
+            mode=MemoryDecayModeEnum.EXPONENTIAL,
+        )
+        assert req.mode == MemoryDecayModeEnum.EXPONENTIAL
+
+    def test_invalid_mode_rejected(self) -> None:
+        """无效模式被拒绝。"""
+        from app.schemas.memory import MemoryDecayRequest
+
+        with pytest.raises(ValueError):
+            MemoryDecayRequest(
+                before=datetime.now(timezone.utc), rate=0.05, mode="invalid"
+            )
+
+
+class TestMemoryDecayService:
+    """decay_memories 服务层指数衰减测试。"""
+
+    @pytest.mark.asyncio
+    async def test_linear_decay_uses_bulk_update(self) -> None:
+        """线性衰减使用批量 UPDATE。"""
+        from app.schemas.memory import MemoryDecayModeEnum, MemoryDecayRequest
+        from app.services.memory import decay_memories
+
+        mock_db = AsyncMock()
+        mock_result = MagicMock()
+        mock_result.rowcount = 5
+        mock_db.execute = AsyncMock(return_value=mock_result)
+
+        data = MemoryDecayRequest(
+            before=datetime.now(timezone.utc), rate=0.05
+        )
+        count = await decay_memories(mock_db, data)
+        assert count == 5
+        mock_db.commit.assert_awaited()
+
+    @pytest.mark.asyncio
+    async def test_exponential_decay_processes_records(self) -> None:
+        """指数衰减逐条处理记录。"""
+        from app.schemas.memory import MemoryDecayModeEnum, MemoryDecayRequest
+        from app.services.memory import decay_memories
+
+        # 创建 mock 记录
+        record1 = MagicMock()
+        record1.updated_at = datetime.now(timezone.utc) - __import__("datetime").timedelta(days=10)
+        record1.confidence = 1.0
+
+        record2 = MagicMock()
+        record2.updated_at = datetime.now(timezone.utc) - __import__("datetime").timedelta(days=30)
+        record2.confidence = 0.8
+
+        mock_scalars = MagicMock()
+        mock_scalars.all.return_value = [record1, record2]
+        mock_result = MagicMock()
+        mock_result.scalars.return_value = mock_scalars
+
+        mock_db = AsyncMock()
+        mock_db.execute = AsyncMock(return_value=mock_result)
+
+        data = MemoryDecayRequest(
+            before=datetime.now(timezone.utc),
+            rate=0.1,
+            mode=MemoryDecayModeEnum.EXPONENTIAL,
+        )
+        count = await decay_memories(mock_db, data)
+        assert count == 2
+        # record1: 10 days, λ=0.1 → 1.0 × e^(-1) ≈ 0.368
+        assert 0.3 < record1.confidence < 0.5
+        # record2: 30 days, λ=0.1 → 0.8 × e^(-3) ≈ 0.04
+        assert 0.0 < record2.confidence < 0.1
+        mock_db.commit.assert_awaited()
+
+
+class TestDecayAPIWithMode:
+    """衰减 API 端点 + 模式参数测试。"""
+
+    @patch("app.api.memories.require_permission")
+    @patch("app.api.memories.get_db")
+    @patch("app.api.memories.memory_service.decay_memories", new_callable=AsyncMock)
+    def test_decay_with_exponential_mode(
+        self, mock_decay: AsyncMock, mock_db: Any, mock_perm: Any
+    ) -> None:
+        """POST /api/v1/memories/decay 支持 exponential 模式。"""
+        mock_decay.return_value = 3
+        mock_db.return_value.__aenter__ = AsyncMock()
+        mock_db.return_value.__aexit__ = AsyncMock()
+
+        resp = client.post(
+            "/api/v1/memories/decay",
+            json={
+                "before": "2024-01-01T00:00:00Z",
+                "rate": 0.1,
+                "mode": "exponential",
+            },
+        )
+        assert resp.status_code == 200
+        assert resp.json()["affected"] == 3

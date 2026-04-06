@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import math
 import uuid
 from datetime import datetime, timezone
 from typing import Any, cast
@@ -13,7 +14,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import NotFoundError
 from app.models.memory import MemoryEntryRecord
-from app.schemas.memory import MemoryCreate, MemoryDecayRequest, MemorySearchRequest, MemoryUpdate
+from app.schemas.memory import (
+    MemoryCreate,
+    MemoryDecayModeEnum,
+    MemoryDecayRequest,
+    MemorySearchRequest,
+    MemoryUpdate,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -154,7 +161,16 @@ async def search_memories(
 
 
 async def decay_memories(db: AsyncSession, data: MemoryDecayRequest) -> int:
-    """对 updated_at < before 的条目降低 confidence。"""
+    """对 updated_at < before 的条目降低 confidence。
+
+    支持两种模式:
+    - LINEAR: new_confidence = max(0.0, confidence - rate)
+    - EXPONENTIAL: new_confidence = confidence × e^(-λ × days_since_update)
+    """
+    if data.mode == MemoryDecayModeEnum.EXPONENTIAL:
+        return await _decay_exponential(db, data)
+
+    # 线性衰减（原有逻辑）
     stmt = (
         update(MemoryEntryRecord)
         .where(MemoryEntryRecord.updated_at < data.before)
@@ -166,3 +182,29 @@ async def decay_memories(db: AsyncSession, data: MemoryDecayRequest) -> int:
     result = await db.execute(stmt)
     await db.commit()
     return cast(CursorResult[Any], result).rowcount
+
+
+async def _decay_exponential(db: AsyncSession, data: MemoryDecayRequest) -> int:
+    """指数衰减（艾宾浩斯遗忘曲线）。
+
+    逐条计算 new_confidence = confidence × e^(-λ × days)，因为 days 取决于
+    每条记录各自的 updated_at，无法用单条 SQL UPDATE 表达。
+    """
+    now = datetime.now(timezone.utc)
+    stmt = select(MemoryEntryRecord).where(
+        MemoryEntryRecord.updated_at < data.before,
+        MemoryEntryRecord.is_deleted == False,  # noqa: E712
+    )
+    rows = (await db.execute(stmt)).scalars().all()
+
+    count = 0
+    for record in rows:
+        days = (now - record.updated_at).total_seconds() / 86400
+        new_conf = max(0.0, record.confidence * math.exp(-data.rate * days))
+        if new_conf != record.confidence:
+            record.confidence = new_conf
+            count += 1
+
+    if count > 0:
+        await db.commit()
+    return count

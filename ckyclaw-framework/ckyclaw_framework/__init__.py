@@ -57,9 +57,10 @@ from ckyclaw_framework.workflow.validator import WorkflowValidationError, topolo
 from ckyclaw_framework.workflow.evaluator import UnsafeExpressionError, evaluate
 
 # === Memory ===
-from ckyclaw_framework.memory.memory import MemoryBackend, MemoryEntry, MemoryType
+from ckyclaw_framework.memory.memory import DecayMode, MemoryBackend, MemoryEntry, MemoryType, compute_exponential_decay
 from ckyclaw_framework.memory.in_memory import InMemoryMemoryBackend
 from ckyclaw_framework.memory.retriever import MemoryRetriever
+from ckyclaw_framework.memory.hooks import MemoryExtractionHook
 
 # === Skills ===
 from ckyclaw_framework.skills.skill import Skill, SkillCategory
@@ -172,11 +173,14 @@ __all__ = [
     "UnsafeExpressionError",
     "evaluate",
     # Memory
+    "DecayMode",
     "MemoryType",
     "MemoryEntry",
     "MemoryBackend",
     "InMemoryMemoryBackend",
     "MemoryRetriever",
+    "MemoryExtractionHook",
+    "compute_exponential_decay",
     # Skills
     "Skill",
     "SkillCategory",

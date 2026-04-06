@@ -53,11 +53,22 @@ class MemorySearchRequest(BaseModel):
     limit: int = Field(10, ge=1, le=100, description="返回上限")
 
 
+class MemoryDecayModeEnum(str, Enum):
+    """衰减模式。"""
+
+    LINEAR = "linear"
+    EXPONENTIAL = "exponential"
+
+
 class MemoryDecayRequest(BaseModel):
     """置信度衰减请求体。"""
 
     before: datetime = Field(..., description="仅影响此时间之前的条目")
-    rate: float = Field(0.01, gt=0.0, le=1.0, description="衰减量")
+    rate: float = Field(0.01, gt=0.0, le=1.0, description="衰减参数（线性:固定值, 指数:λ系数）")
+    mode: MemoryDecayModeEnum = Field(
+        MemoryDecayModeEnum.LINEAR,
+        description="衰减模式: linear（线性）/ exponential（指数-艾宾浩斯遗忘曲线）",
+    )
 
 
 # ---------------------------------------------------------------------------

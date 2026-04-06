@@ -5,7 +5,13 @@ from __future__ import annotations
 import asyncio
 from datetime import datetime, timezone
 
-from ckyclaw_framework.memory.memory import MemoryBackend, MemoryEntry, MemoryType
+from ckyclaw_framework.memory.memory import (
+    DecayMode,
+    MemoryBackend,
+    MemoryEntry,
+    MemoryType,
+    compute_exponential_decay,
+)
 
 
 class InMemoryMemoryBackend(MemoryBackend):
@@ -76,11 +82,25 @@ class InMemoryMemoryBackend(MemoryBackend):
                 del self._entries[eid]
             return len(to_delete)
 
-    async def decay(self, before: datetime, rate: float) -> int:
+    async def decay(
+        self,
+        before: datetime,
+        rate: float,
+        *,
+        mode: DecayMode = DecayMode.LINEAR,
+    ) -> int:
+        """对 updated_at < before 的条目降低 confidence。"""
+        now = datetime.now(timezone.utc)
         count = 0
         async with self._lock:
             for entry in self._entries.values():
                 if entry.updated_at < before:
-                    entry.confidence = max(0.0, entry.confidence - rate)
+                    if mode == DecayMode.EXPONENTIAL:
+                        days = (now - entry.updated_at).total_seconds() / 86400
+                        entry.confidence = compute_exponential_decay(
+                            entry.confidence, days, rate
+                        )
+                    else:
+                        entry.confidence = max(0.0, entry.confidence - rate)
                     count += 1
         return count

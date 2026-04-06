@@ -1,15 +1,24 @@
-"""Memory 模块测试 — MemoryEntry / InMemoryMemoryBackend / MemoryRetriever。"""
+"""Memory 模块测试 — MemoryEntry / InMemoryMemoryBackend / MemoryRetriever / DecayMode / Hooks。"""
 
 from __future__ import annotations
 
 import asyncio
+from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from ckyclaw_framework.memory.memory import MemoryBackend, MemoryEntry, MemoryType
+from ckyclaw_framework.memory.memory import (
+    DecayMode,
+    MemoryBackend,
+    MemoryEntry,
+    MemoryType,
+    compute_exponential_decay,
+)
 from ckyclaw_framework.memory.in_memory import InMemoryMemoryBackend
 from ckyclaw_framework.memory.retriever import MemoryRetriever
+from ckyclaw_framework.memory.hooks import MemoryExtractionHook
 
 
 # ---------------------------------------------------------------------------
@@ -340,9 +349,231 @@ class TestModuleExports:
             MemoryBackend,
             InMemoryMemoryBackend,
             MemoryRetriever,
+            DecayMode,
+            MemoryExtractionHook,
+            compute_exponential_decay,
         )
         assert MemoryType is not None
         assert MemoryEntry is not None
         assert MemoryBackend is not None
         assert InMemoryMemoryBackend is not None
         assert MemoryRetriever is not None
+        assert DecayMode is not None
+        assert MemoryExtractionHook is not None
+        assert compute_exponential_decay is not None
+
+
+# ---------------------------------------------------------------------------
+# DecayMode & 指数衰减
+# ---------------------------------------------------------------------------
+
+
+class TestDecayMode:
+    """DecayMode 枚举与指数衰减函数。"""
+
+    def test_enum_values(self) -> None:
+        assert DecayMode.LINEAR == "linear"
+        assert DecayMode.EXPONENTIAL == "exponential"
+        assert len(DecayMode) == 2
+
+    def test_compute_exponential_decay_positive(self) -> None:
+        """正常衰减：30 天后置信度应下降。"""
+        result = compute_exponential_decay(1.0, 30.0, 0.1)
+        assert 0.0 < result < 1.0
+        # e^(-0.1 * 30) ≈ 0.0498
+        assert abs(result - 0.0498) < 0.01
+
+    def test_compute_exponential_decay_zero_days(self) -> None:
+        """0 天不衰减。"""
+        assert compute_exponential_decay(0.8, 0.0, 0.1) == 0.8
+
+    def test_compute_exponential_decay_zero_lambda(self) -> None:
+        """λ=0 不衰减。"""
+        assert compute_exponential_decay(0.8, 30.0, 0.0) == 0.8
+
+    def test_compute_exponential_decay_negative_days(self) -> None:
+        """负天数不衰减。"""
+        assert compute_exponential_decay(0.8, -5.0, 0.1) == 0.8
+
+    def test_compute_exponential_decay_floor_zero(self) -> None:
+        """结果不低于 0.0。"""
+        result = compute_exponential_decay(0.01, 1000.0, 1.0)
+        assert result == 0.0
+
+
+class TestInMemoryExponentialDecay:
+    """InMemoryMemoryBackend 的指数衰减测试。"""
+
+    @pytest.mark.asyncio
+    async def test_decay_exponential_mode(self) -> None:
+        """exponential 模式下衰减值合理。"""
+        backend = InMemoryMemoryBackend()
+        old_time = datetime.now(timezone.utc) - timedelta(days=10)
+        await backend.store(
+            "u1",
+            MemoryEntry(id="e1", content="old fact", user_id="u1", confidence=1.0),
+        )
+        # 手动修改 updated_at 为 10 天前
+        backend._entries["e1"].updated_at = old_time
+
+        count = await backend.decay(
+            before=datetime.now(timezone.utc), rate=0.1, mode=DecayMode.EXPONENTIAL
+        )
+        assert count == 1
+        entry = await backend.get("e1")
+        assert entry is not None
+        # e^(-0.1 * 10) ≈ 0.368
+        assert 0.3 < entry.confidence < 0.5
+
+    @pytest.mark.asyncio
+    async def test_decay_linear_default(self) -> None:
+        """默认 LINEAR 模式兼容旧行为。"""
+        backend = InMemoryMemoryBackend()
+        old_time = datetime.now(timezone.utc) - timedelta(hours=1)
+        await backend.store(
+            "u1",
+            MemoryEntry(id="e1", content="fact", user_id="u1", confidence=0.8),
+        )
+        backend._entries["e1"].updated_at = old_time
+
+        count = await backend.decay(before=datetime.now(timezone.utc), rate=0.2)
+        assert count == 1
+        entry = await backend.get("e1")
+        assert entry is not None
+        assert abs(entry.confidence - 0.6) < 0.01
+
+    @pytest.mark.asyncio
+    async def test_decay_exponential_skips_recent(self) -> None:
+        """指数衰减不影响 before 之后的条目。"""
+        backend = InMemoryMemoryBackend()
+        await backend.store(
+            "u1",
+            MemoryEntry(id="e1", content="recent", user_id="u1", confidence=0.9),
+        )
+        # updated_at 默认是现在，before 设置为 1 小时前
+        count = await backend.decay(
+            before=datetime.now(timezone.utc) - timedelta(hours=1),
+            rate=0.1,
+            mode=DecayMode.EXPONENTIAL,
+        )
+        assert count == 0
+        entry = await backend.get("e1")
+        assert entry is not None
+        assert entry.confidence == 0.9
+
+
+# ---------------------------------------------------------------------------
+# MemoryExtractionHook
+# ---------------------------------------------------------------------------
+
+
+class TestMemoryExtractionHook:
+    """自动记忆提取钩子测试。"""
+
+    @pytest.mark.asyncio
+    async def test_extracts_on_run_end(self) -> None:
+        """Run 结束后自动提取记忆。"""
+        backend = InMemoryMemoryBackend()
+        hook = MemoryExtractionHook(
+            backend=backend, user_id="u1", min_output_length=10
+        )
+        hooks = hook.as_run_hooks()
+
+        # 模拟 RunContext
+        mock_ctx = MagicMock()
+        mock_ctx.agent.name = "test-agent"
+
+        # 模拟 RunResult
+        mock_result = MagicMock()
+        mock_result.output = "这是一段足够长的 Agent 输出内容，用于测试记忆提取。"
+        mock_result.last_agent_name = "test-agent"
+
+        # 触发 on_run_end
+        assert hooks.on_run_end is not None
+        await hooks.on_run_end(mock_ctx, mock_result)
+
+        entries = await backend.list_entries("u1")
+        assert len(entries) == 1
+        assert "Agent 输出内容" in entries[0].content
+        assert entries[0].agent_name == "test-agent"
+        assert entries[0].confidence == 0.7
+        assert hook.extracted_count == 1
+
+    @pytest.mark.asyncio
+    async def test_skips_short_output(self) -> None:
+        """输出太短时不提取。"""
+        backend = InMemoryMemoryBackend()
+        hook = MemoryExtractionHook(
+            backend=backend, user_id="u1", min_output_length=100
+        )
+        hooks = hook.as_run_hooks()
+
+        mock_ctx = MagicMock()
+        mock_ctx.agent.name = "bot"
+        mock_result = MagicMock()
+        mock_result.output = "短"
+        mock_result.last_agent_name = "bot"
+
+        assert hooks.on_run_end is not None
+        await hooks.on_run_end(mock_ctx, mock_result)
+
+        entries = await backend.list_entries("u1")
+        assert len(entries) == 0
+        assert hook.extracted_count == 0
+
+    @pytest.mark.asyncio
+    async def test_skips_empty_user_id(self) -> None:
+        """user_id 为空时不提取。"""
+        backend = InMemoryMemoryBackend()
+        hook = MemoryExtractionHook(backend=backend, user_id="")
+        hooks = hook.as_run_hooks()
+
+        mock_ctx = MagicMock()
+        mock_result = MagicMock()
+        mock_result.output = "x" * 200
+        mock_result.last_agent_name = "bot"
+
+        assert hooks.on_run_end is not None
+        await hooks.on_run_end(mock_ctx, mock_result)
+        assert hook.extracted_count == 0
+
+    @pytest.mark.asyncio
+    async def test_custom_extract_fn(self) -> None:
+        """自定义提取函数。"""
+        backend = InMemoryMemoryBackend()
+
+        def custom_extract(output: str, agent_name: str) -> list[str]:
+            return [f"[{agent_name}] 关键信息: {output[:50]}"]
+
+        hook = MemoryExtractionHook(
+            backend=backend,
+            user_id="u1",
+            min_output_length=10,
+            extract_fn=custom_extract,
+        )
+        hooks = hook.as_run_hooks()
+
+        mock_ctx = MagicMock()
+        mock_ctx.agent.name = "bot"
+        mock_result = MagicMock()
+        mock_result.output = "这是自定义提取测试的输出文本"
+        mock_result.last_agent_name = "bot"
+
+        assert hooks.on_run_end is not None
+        await hooks.on_run_end(mock_ctx, mock_result)
+
+        entries = await backend.list_entries("u1")
+        assert len(entries) == 1
+        assert "[bot] 关键信息:" in entries[0].content
+
+    @pytest.mark.asyncio
+    async def test_on_agent_start_tracks_name(self) -> None:
+        """on_agent_start 记录 Agent 名称。"""
+        backend = InMemoryMemoryBackend()
+        hook = MemoryExtractionHook(backend=backend, user_id="u1")
+        hooks = hook.as_run_hooks()
+
+        mock_ctx = MagicMock()
+        assert hooks.on_agent_start is not None
+        await hooks.on_agent_start(mock_ctx, "my-agent")
+        assert hook._agent_name == "my-agent"

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -21,6 +22,16 @@ class MemoryType(str, Enum):
 
     STRUCTURED_FACT = "structured_fact"
     """结构化事实 — Agent 执行中积累的事实数据。"""
+
+
+class DecayMode(str, Enum):
+    """记忆衰减模式。"""
+
+    LINEAR = "linear"
+    """线性衰减: new_confidence = max(0.0, confidence - rate)"""
+
+    EXPONENTIAL = "exponential"
+    """指数衰减（艾宾浩斯遗忘曲线）: new_confidence = confidence × e^(-λ × days)"""
 
 
 @dataclass
@@ -125,16 +136,45 @@ class MemoryBackend(ABC):
         ...
 
     @abstractmethod
-    async def decay(self, before: datetime, rate: float) -> int:
+    async def decay(
+        self,
+        before: datetime,
+        rate: float,
+        *,
+        mode: DecayMode = DecayMode.LINEAR,
+    ) -> int:
         """对 updated_at < before 的条目降低 confidence。
-
-        新 confidence = max(0.0, old_confidence - rate)。
 
         Args:
             before: 时间阈值，仅影响此时间之前的条目。
-            rate: 衰减量（如 0.01 表示降低 0.01）。
+            rate: 衰减参数——
+                LINEAR 模式: 每次降低的固定值（如 0.05）。
+                EXPONENTIAL 模式: λ 衰减系数（如 0.1），天数越大衰减越多。
+            mode: 衰减模式，默认 LINEAR。
 
         Returns:
             受影响的条目数量。
         """
         ...
+
+
+def compute_exponential_decay(
+    confidence: float,
+    days_since_update: float,
+    lambda_: float,
+) -> float:
+    """计算指数衰减后的置信度（艾宾浩斯遗忘曲线）。
+
+    公式: new_confidence = confidence × e^(-λ × days)
+
+    Args:
+        confidence: 原始置信度。
+        days_since_update: 距离最后更新的天数。
+        lambda_: 衰减速率系数（越大衰减越快，推荐 0.05~0.3）。
+
+    Returns:
+        衰减后的置信度，最小为 0.0。
+    """
+    if days_since_update <= 0 or lambda_ <= 0:
+        return confidence
+    return max(0.0, confidence * math.exp(-lambda_ * days_since_update))
