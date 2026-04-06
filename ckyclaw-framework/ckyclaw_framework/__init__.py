@@ -80,6 +80,9 @@ from ckyclaw_framework.sandbox.local_sandbox import LocalSandbox
 # === Checkpoint ===
 from ckyclaw_framework.checkpoint import Checkpoint, CheckpointBackend, InMemoryCheckpointBackend
 
+# === Intent Detection ===
+from ckyclaw_framework.intent import IntentDetector, IntentSignal, KeywordIntentDetector
+
 # === Model ===
 from ckyclaw_framework.model.provider import ModelProvider, ToolCall, ToolCallChunk
 from ckyclaw_framework.model.cost_router import CostRouter, ModelTier, ProviderCandidate, classify_complexity
@@ -219,6 +222,10 @@ __all__ = [
     "Checkpoint",
     "CheckpointBackend",
     "InMemoryCheckpointBackend",
+    # Intent Detection
+    "IntentDetector",
+    "IntentSignal",
+    "KeywordIntentDetector",
 ]
 
 __version__ = "0.1.0"

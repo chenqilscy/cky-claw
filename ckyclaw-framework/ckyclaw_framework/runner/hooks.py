@@ -63,6 +63,9 @@ class RunHooks:
     on_error: _AsyncHook | None = None
     """任何阶段异常时触发。签名: (ctx: RunContext, error: Exception) -> None"""
 
+    on_intent_drift: _AsyncHook | None = None
+    """意图飘移检测触发。签名: (ctx: RunContext, signal: IntentSignal) -> None"""
+
 
 async def _invoke_hook(hook: _AsyncHook | None, hook_name: str, *args: Any) -> None:
     """安全调用 Hook — 异常捕获 + 日志，不中断执行流。"""

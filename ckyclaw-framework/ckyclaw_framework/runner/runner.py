@@ -933,6 +933,11 @@ class Runner:
         _checkpoint_backend = config.checkpoint_backend
         _checkpoint_interval = config.checkpoint_interval
         _run_id = resume_from or uuid4().hex
+
+        # Intent Drift: 意图飘移检测
+        _intent_detector = config.intent_detector
+        _drift_threshold = config.drift_threshold
+
         if resume_from and _checkpoint_backend is not None:
             cp = await _checkpoint_backend.load_latest(resume_from)
             if cp is not None:
@@ -1106,6 +1111,19 @@ class Runner:
             # 将 LLM 回复追加到历史
             assistant_msg = model_response_to_assistant_message(response, current_agent.name)
             messages.append(assistant_msg)
+
+            # Intent Drift 检测：每次 LLM 回复后检测意图飘移
+            if _intent_detector is not None:
+                try:
+                    _signal = await _intent_detector.detect(
+                        messages, threshold=_drift_threshold,
+                    )
+                    if _signal.is_drifted and hooks:
+                        await _invoke_hook(
+                            hooks.on_intent_drift, "on_intent_drift", run_ctx, _signal,
+                        )
+                except Exception:
+                    logger.warning("Intent drift detection failed at turn %d", turn_count, exc_info=True)
 
             # 无工具调用 → 最终输出
             if not response.tool_calls:

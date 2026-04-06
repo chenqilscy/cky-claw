@@ -12,6 +12,7 @@ if TYPE_CHECKING:
     from ckyclaw_framework.guardrails.input_guardrail import InputGuardrail
     from ckyclaw_framework.guardrails.output_guardrail import OutputGuardrail
     from ckyclaw_framework.guardrails.tool_guardrail import ToolGuardrail
+    from ckyclaw_framework.intent import IntentDetector
     from ckyclaw_framework.model.provider import ModelProvider
     from ckyclaw_framework.model.settings import ModelSettings
     from ckyclaw_framework.runner.hooks import RunHooks
@@ -101,3 +102,9 @@ class RunConfig:
 
     checkpoint_interval: int = 1
     """每 N 个 turn 保存一次 checkpoint。默认每轮都保存。"""
+
+    intent_detector: IntentDetector | None = None
+    """意图飘移检测器。配置后 Runner 在每次 LLM 回复后自动检测飘移。"""
+
+    drift_threshold: float = 0.6
+    """意图飘移阈值（0~1）。drift_score >= 此值时触发 on_intent_drift Hook。"""
