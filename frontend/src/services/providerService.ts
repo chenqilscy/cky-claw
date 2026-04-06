@@ -24,8 +24,16 @@ export interface ProviderResponse {
   org_id: string | null;
   last_health_check: string | null;
   health_status: string;
+  key_expires_at: string | null;
+  key_last_rotated_at: string | null;
+  key_expired: boolean;
   created_at: string;
   updated_at: string;
+}
+
+export interface RotateKeyRequest {
+  new_api_key: string;
+  key_expires_at?: string | null;
 }
 
 export interface ProviderListResponse {
@@ -92,4 +100,7 @@ export const providerService = {
 
   testConnection: (id: string) =>
     api.post<ProviderTestResult>(`/providers/${id}/test`),
+
+  rotateKey: (id: string, data: RotateKeyRequest) =>
+    api.post<ProviderResponse>(`/providers/${id}/rotate-key`, data),
 };

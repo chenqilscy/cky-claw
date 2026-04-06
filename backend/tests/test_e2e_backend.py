@@ -558,3 +558,162 @@ class TestFindParentAgentName:
 
         result = _find_parent_agent_name([tool_span, llm_span], llm_span)
         assert result is None
+
+
+# ---------------------------------------------------------------------------
+# E2E — 新功能端点综合验证
+#   rotate-key / checkpoint CRUD / cost-router classify+recommend
+# ---------------------------------------------------------------------------
+
+
+class TestE2ENewEndpoints:
+    """跨 API 端到端验证——使用 TestClient + mock service/DB 层。"""
+
+    @pytest.fixture()
+    def client(self) -> "TestClient":
+        from fastapi.testclient import TestClient as TC
+
+        from app.main import app as _app
+
+        return TC(_app)
+
+    # ---- rotate-key ----
+
+    def test_rotate_key_flow(self, client: "TestClient") -> None:
+        """rotate-key → 响应包含更新后时间戳。"""
+        import uuid
+        from datetime import datetime, timezone
+
+        pid = uuid.uuid4()
+        now = datetime.now(timezone.utc)
+
+        p = MagicMock()
+        p.id = pid
+        p.name = "test"
+        p.provider_type = "openai"
+        p.base_url = "https://api.openai.com/v1"
+        p.api_key_encrypted = "enc"
+        p.auth_type = "api_key"
+        p.auth_config = {}
+        p.rate_limit_rpm = None
+        p.rate_limit_tpm = None
+        p.is_enabled = True
+        p.org_id = None
+        p.last_health_check = None
+        p.health_status = "unknown"
+        p.key_expires_at = None
+        p.key_last_rotated_at = now
+        p.model_tier = "moderate"
+        p.capabilities = []
+        p.created_at = now
+        p.updated_at = now
+
+        with patch("app.api.providers.provider_service.rotate_key", new_callable=AsyncMock, return_value=p):
+            resp = client.post(
+                f"/api/v1/providers/{pid}/rotate-key",
+                json={"new_api_key": "sk-new-key-12345"},
+            )
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["key_last_rotated_at"] is not None
+        assert body["key_expired"] is False
+
+    # ---- checkpoint CRUD (mock DB) ----
+
+    def _mock_db(self) -> AsyncMock:
+        """创建 mock AsyncSession。"""
+        db = AsyncMock()
+        return db
+
+    def test_checkpoint_list_empty(self, client: "TestClient") -> None:
+        """查询不存在的 run_id 返回空列表。"""
+        from app.core.deps import get_db
+
+        from app.main import app as _app
+
+        mock_db = self._mock_db()
+        # mock count = 0, rows = []
+        mock_db.execute = AsyncMock(side_effect=[
+            MagicMock(scalar_one=MagicMock(return_value=0)),  # count
+            MagicMock(scalars=MagicMock(return_value=MagicMock(all=MagicMock(return_value=[])))),  # data
+        ])
+
+        async def _fake_db():
+            yield mock_db
+
+        _app.dependency_overrides[get_db] = _fake_db
+        try:
+            resp = client.get("/api/v1/checkpoints?run_id=nonexistent")
+            assert resp.status_code == 200
+            body = resp.json()
+            assert body["data"] == []
+            assert body["total"] == 0
+        finally:
+            _app.dependency_overrides.pop(get_db, None)
+
+    def test_checkpoint_delete(self, client: "TestClient") -> None:
+        """删除检查点返回 204。"""
+        from app.core.deps import get_db
+
+        from app.main import app as _app
+
+        mock_db = self._mock_db()
+        # delete needs: PostgresCheckpointBackend constructor + delete + commit
+        mock_db.execute = AsyncMock(return_value=MagicMock())
+        mock_db.commit = AsyncMock()
+
+        async def _fake_db():
+            yield mock_db
+
+        _app.dependency_overrides[get_db] = _fake_db
+        try:
+            resp = client.delete("/api/v1/checkpoints/run-e2e")
+            assert resp.status_code == 204
+        finally:
+            _app.dependency_overrides.pop(get_db, None)
+
+    # ---- cost-router classify ----
+
+    def test_cost_router_classify(self, client: "TestClient") -> None:
+        """classify 端点返回分类层级。"""
+        with patch("app.api.cost_router.classify_complexity") as mock_classify:
+            from ckyclaw_framework.model.cost_router import ModelTier
+
+            mock_classify.return_value = ModelTier.MODERATE
+            resp = client.post(
+                "/api/v1/cost-router/classify",
+                json={"text": "帮我写一个 Python 排序算法"},
+            )
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["tier"] == "moderate"
+        assert body["text_length"] > 0
+
+    def test_cost_router_recommend(self, client: "TestClient") -> None:
+        """recommend 端点通过 DB 查询 Provider 并返回推荐。"""
+        from app.core.deps import get_db
+
+        from app.main import app as _app
+
+        mock_db = self._mock_db()
+        # mock: no providers in DB → recommend returns None
+        mock_result = MagicMock()
+        mock_result.scalars = MagicMock(return_value=MagicMock(all=MagicMock(return_value=[])))
+        mock_db.execute = AsyncMock(return_value=mock_result)
+
+        async def _fake_db():
+            yield mock_db
+
+        _app.dependency_overrides[get_db] = _fake_db
+        try:
+            resp = client.post(
+                "/api/v1/cost-router/recommend",
+                json={"text": "分析这张图片的内容"},
+            )
+            assert resp.status_code == 200
+            body = resp.json()
+            assert body["tier"] in ("simple", "moderate", "complex", "reasoning", "multimodal")
+            # 没有 providers → provider_name = null
+            assert body["provider_name"] is None
+        finally:
+            _app.dependency_overrides.pop(get_db, None)

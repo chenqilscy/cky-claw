@@ -306,11 +306,11 @@ CkyClaw Framework 的核心设计（Agent 数据类、Runner 循环、Handoff、
 
 | 指标 | 数值 |
 |------|------|
-| 测试总数 | **3253**（Backend 1689 + Framework 1211 + Frontend 353） |
+| 测试总数 | **3400**（Backend 1738 + Framework 1289 + Frontend 373） |
 | 测试覆盖率 | Backend **98%** · Framework **100%** |
-| Alembic 迁移 | **41** 个（0001–0041） |
-| API 路由模块 | **31** 个 |
-| 前端页面 | **26** 个（React.lazy 懒加载） |
+| Alembic 迁移 | **43** 个（0001–0043） |
+| API 路由模块 | **33** 个 |
+| 前端页面 | **28** 个（React.lazy 懒加载 + Vendor 分包） |
 | CI Job | **5** 个 GitHub Actions + **5** Stage Jenkinsfile |
 | TypeScript 错误 | **0** |
 
@@ -377,11 +377,11 @@ CkyClaw Framework 的核心设计（Agent 数据类、Runner 循环、Handoff、
 | **Backend** | EvolutionSignalRecord ORM + Signal Schema + Signal/Analyze Service + 4 API 端点 + Migration 0038 | +35 |
 
 ## 十二、优化项
-- Agent 意图检测、意图飘移处理
-- ~~成本路由优化器~~：✅ Phase 1 + Phase 2 已完成（ModelTierEnum + Provider model_tier/capabilities + CostRouter 规则分类器 + /classify + /recommend API + Migration 0040 + 41 tests）
-- 大模型API密钥安全托管机制：加密存储
+- ~~Agent 意图检测、意图飘移处理~~ ✅ 已完成（IntentDetector + KeywordIntentDetector + Runner 集成 + on_intent_drift Hook + 30 tests）
+- ~~成本路由优化器~~：✅ Phase 1 + Phase 2 已完成（ModelTierEnum + Provider model_tier/capabilities + CostRouter 规则分类器 + /classify + /recommend API + Migration 0040 + 41 tests + 前端 CostRouterPage 可视化 + 8 tests）
+- ~~大模型API密钥安全托管机制~~：✅ 已完成（key_expires_at + key_last_rotated_at + rotate-key API + Fernet 加密 + Migration 0042 + 12 tests）
 - ~~用户审批机制：通过IM渠道通知用户审批~~ ✅ 已完成（ApprovalNotifier + IMChannel notify_approvals + Migration 0041 + 14 tests）
-- ~~checkpoint机制~~ ✅ 已完成（Checkpoint/CheckpointBackend/InMemoryCheckpointBackend + Runner resume_from + 20 tests）
+- ~~checkpoint机制~~ ✅ 已完成（Checkpoint/CheckpointBackend/InMemoryCheckpointBackend + Runner resume_from + 20 tests + PostgresCheckpointBackend + Migration 0043 + 19 tests）
 - Harness Engineering 架构优化
 
 

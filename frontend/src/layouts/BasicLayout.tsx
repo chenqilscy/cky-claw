@@ -29,6 +29,7 @@ import {
   GlobalOutlined,
   ExperimentOutlined,
   ThunderboltOutlined,
+  HistoryOutlined,
 } from '@ant-design/icons';
 import useThemeStore from '../stores/themeStore';
 
@@ -158,6 +159,11 @@ const menuRoutes = {
       path: '/cost-router',
       name: '成本路由',
       icon: <ThunderboltOutlined />,
+    },
+    {
+      path: '/checkpoints',
+      name: '检查点',
+      icon: <HistoryOutlined />,
     },
     {
       path: '/i18n',

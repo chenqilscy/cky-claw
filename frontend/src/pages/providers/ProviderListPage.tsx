@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Button, message, Modal, Popconfirm, Switch, Tag, Space } from 'antd';
-import { PlusOutlined, ReloadOutlined, ThunderboltOutlined } from '@ant-design/icons';
+import { Button, DatePicker, Form, Input, message, Modal, Popconfirm, Switch, Tag, Space } from 'antd';
+import { KeyOutlined, PlusOutlined, ReloadOutlined, ThunderboltOutlined } from '@ant-design/icons';
 import { ProTable } from '@ant-design/pro-components';
 import type { ProColumns } from '@ant-design/pro-components';
 import { useNavigate } from 'react-router-dom';
@@ -59,6 +59,9 @@ const ProviderListPage: React.FC = () => {
   };
 
   const [testing, setTesting] = useState<string | null>(null);
+  const [rotateModalOpen, setRotateModalOpen] = useState(false);
+  const [rotateTarget, setRotateTarget] = useState<ProviderResponse | null>(null);
+  const [rotateForm] = Form.useForm();
 
   const handleTest = async (record: ProviderResponse) => {
     setTesting(record.id);
@@ -80,6 +83,29 @@ const ProviderListPage: React.FC = () => {
       message.error('测试请求失败');
     } finally {
       setTesting(null);
+    }
+  };
+
+  const openRotateModal = (record: ProviderResponse) => {
+    setRotateTarget(record);
+    rotateForm.resetFields();
+    setRotateModalOpen(true);
+  };
+
+  const handleRotateKey = async () => {
+    if (!rotateTarget) return;
+    try {
+      const values = await rotateForm.validateFields();
+      const expiresAt = values.key_expires_at ? values.key_expires_at.toISOString() : null;
+      await providerService.rotateKey(rotateTarget.id, {
+        new_api_key: values.new_api_key,
+        key_expires_at: expiresAt,
+      });
+      message.success('密钥轮换成功');
+      setRotateModalOpen(false);
+      fetchProviders();
+    } catch {
+      message.error('密钥轮换失败');
     }
   };
 
@@ -111,6 +137,17 @@ const ProviderListPage: React.FC = () => {
       render: (_, record) => record.api_key_set
         ? <Tag color="green">已设置</Tag>
         : <Tag color="red">未设置</Tag>,
+    },
+    {
+      title: '密钥状态',
+      dataIndex: 'key_expired',
+      width: 100,
+      render: (_, record) => {
+        if (!record.api_key_set) return <Tag color="default">无密钥</Tag>;
+        if (record.key_expired) return <Tag color="red">已过期</Tag>;
+        if (record.key_expires_at) return <Tag color="green">有效</Tag>;
+        return <Tag color="default">永久</Tag>;
+      },
     },
     {
       title: '认证方式',
@@ -146,10 +183,13 @@ const ProviderListPage: React.FC = () => {
     },
     {
       title: '操作',
-      width: 200,
+      width: 260,
       render: (_, record) => (
         <Space>
           <a onClick={() => navigate(`/providers/${record.id}/edit`)}>编辑</a>
+          <a onClick={() => openRotateModal(record)}>
+            <KeyOutlined /> 轮换
+          </a>
           <a
             onClick={() => handleTest(record)}
             style={{ color: testing === record.id ? '#999' : undefined }}
@@ -170,6 +210,7 @@ const ProviderListPage: React.FC = () => {
   ];
 
   return (
+    <>
     <ProTable<ProviderResponse>
       headerTitle="模型厂商管理"
       rowKey="id"
@@ -200,6 +241,30 @@ const ProviderListPage: React.FC = () => {
         />,
       ]}
     />
+
+    <Modal
+      title={`轮换密钥 — ${rotateTarget?.name ?? ''}`}
+      open={rotateModalOpen}
+      onOk={handleRotateKey}
+      onCancel={() => setRotateModalOpen(false)}
+      okText="确认轮换"
+      cancelText="取消"
+      destroyOnHidden
+    >
+      <Form form={rotateForm} layout="vertical">
+        <Form.Item
+          name="new_api_key"
+          label="新 API Key"
+          rules={[{ required: true, message: '请输入新 API Key' }]}
+        >
+          <Input.Password placeholder="请输入新的 API Key" />
+        </Form.Item>
+        <Form.Item name="key_expires_at" label="过期时间（可选）">
+          <DatePicker showTime style={{ width: '100%' }} placeholder="留空表示永不过期" />
+        </Form.Item>
+      </Form>
+    </Modal>
+  </>
   );
 };
 
