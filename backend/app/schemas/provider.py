@@ -63,11 +63,11 @@ class ProviderCreate(BaseModel):
     @field_validator("capabilities")
     @classmethod
     def validate_capabilities(cls, v: list[str]) -> list[str]:
-        """校验能力标签合法性。"""
+        """校验能力标签合法性并去重。"""
         invalid = set(v) - _VALID_CAPABILITIES
         if invalid:
             raise ValueError(f"capabilities 包含无效值 {invalid}，合法值: {_VALID_CAPABILITIES}")
-        return v
+        return list(dict.fromkeys(v))
 
 
 class ProviderUpdate(BaseModel):
@@ -101,11 +101,12 @@ class ProviderUpdate(BaseModel):
     @field_validator("capabilities")
     @classmethod
     def validate_capabilities(cls, v: list[str] | None) -> list[str] | None:
-        """校验能力标签合法性。"""
+        """校验能力标签合法性并去重。"""
         if v is not None:
             invalid = set(v) - _VALID_CAPABILITIES
             if invalid:
                 raise ValueError(f"capabilities 包含无效值 {invalid}，合法值: {_VALID_CAPABILITIES}")
+            return list(dict.fromkeys(v))
         return v
 
 
