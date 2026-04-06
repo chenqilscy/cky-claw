@@ -7,7 +7,7 @@ from typing import Any
 import uuid
 from datetime import datetime
 
-from sqlalchemy import func, select
+from sqlalchemy import cast, func, select, Date
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.token_usage import TokenUsageLog
@@ -16,6 +16,7 @@ from app.schemas.token_usage import (
     TokenUsageByModelItem,
     TokenUsageByUserItem,
     TokenUsageSummaryItem,
+    TokenUsageTrendItem,
 )
 
 
@@ -162,6 +163,55 @@ async def get_token_usage_summary(
             total_completion_cost=float(row.total_completion_cost or 0),
             total_cost=float(row.total_cost or 0),
             call_count=row.call_count,
+        )
+        for row in rows
+    ]
+
+
+async def get_token_usage_trend(
+    db: AsyncSession,
+    *,
+    days: int = 7,
+    group_by_model: bool = False,
+    agent_name: str | None = None,
+) -> list[TokenUsageTrendItem]:
+    """按日聚合 Token 消耗趋势。
+
+    Args:
+        db: 数据库会话
+        days: 最近天数（1-90）
+        group_by_model: 是否按模型维度分组
+        agent_name: 按 Agent 筛选
+    """
+    from datetime import timedelta, timezone
+
+    cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+    date_col = cast(TokenUsageLog.timestamp, Date).label("date")
+
+    group_cols: list[Any] = [date_col]
+    if group_by_model:
+        group_cols.append(TokenUsageLog.model)
+
+    stmt = select(
+        *group_cols,
+        func.sum(TokenUsageLog.total_tokens).label("total_tokens"),
+        func.sum(TokenUsageLog.total_cost).label("total_cost"),
+        func.count().label("call_count"),
+    ).where(TokenUsageLog.timestamp >= cutoff)
+
+    if agent_name:
+        stmt = stmt.where(TokenUsageLog.agent_name == agent_name)
+
+    stmt = stmt.group_by(*group_cols).order_by(date_col)
+    rows = (await db.execute(stmt)).all()
+
+    return [
+        TokenUsageTrendItem(
+            date=str(row.date),
+            total_tokens=row.total_tokens or 0,
+            total_cost=float(row.total_cost or 0),
+            call_count=row.call_count,
+            model=getattr(row, "model", None) if group_by_model else None,
         )
         for row in rows
     ]

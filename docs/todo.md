@@ -306,7 +306,7 @@ CkyClaw Framework 的核心设计（Agent 数据类、Runner 循环、Handoff、
 
 | 指标 | 数值 |
 |------|------|
-| 测试总数 | **3470**（Backend 1741 + Framework 1289 + Frontend 379 + E2E 8 + Channel 53 ignored） |
+| 测试总数 | **3482**（Backend 1743 + Framework 1289 + Frontend 385 + E2E 12 + Channel 53 ignored） |
 | 测试覆盖率 | Backend **98%** · Framework **100%** |
 | Alembic 迁移 | **43** 个（0001–0043） |
 | API 路由模块 | **34** 个 |
@@ -366,8 +366,8 @@ CkyClaw Framework 的核心设计（Agent 数据类、Runner 循环、Handoff、
 | EvolutionHook 信号采集 | Runner hooks（on_agent_start/tool_start/tool_end/error）自动发射 ToolPerformanceSignal + as_run_hooks() 转换 | ✅ |
 | Signal 持久化 API | POST/GET /signals + POST /signals/batch + EvolutionSignalRecord ORM + Migration 0038 | ✅ |
 | Analyze 策略分析 API | POST /analyze/{agent_name} 读取信号 → Framework StrategyEngine → 生成 Proposal 持久化 | ✅ |
-| 策略引擎定时运行 | 基于 ScheduledTask 定期触发 analyze | ⚠️ |
-| 建议自动应用 | 审批后自动修改 Agent 配置 | ⚠️ |
+| 策略引擎定时运行 | 基于 ScheduledTask 定期触发 analyze + evolution_analyze task_type | ✅ |
+| 建议自动应用 | apply_proposal_to_agent + auto_apply 参数 + min_confidence 阈值 | ✅ |
 
 **M8P2 交付物**：
 
@@ -385,7 +385,7 @@ CkyClaw Framework 的核心设计（Agent 数据类、Runner 循环、Handoff、
 - ~~前端补全 — 密钥轮换 + 检查点 + 意图检测~~ ✅ 已完成（ProviderListPage 密钥状态列/轮换弹窗 + CheckpointPage + IntentDetectionPage + intentService/checkpointService + 路由注册 + 24 前端测试 + 8 E2E 测试）
 - ~~性能优化 — Vite 分包 + ChatPage 拆包 + 连接池可配置化 + 审计中间件批量刷写~~ ✅ 已完成（manualChunks 5路分包 + MarkdownRenderer 动态导入 + ChatPage 808KB→5.91KB + db_pool_size/db_max_overflow 可配置 + AuditLogMiddleware 内存缓冲批量写入）
 - ~~Intent Detection 后端 API~~ ✅ 已完成（POST /api/v1/intent/detect + KeywordIntentDetector 集成 + 3 E2E 测试）
-- Harness Engineering 架构优化
+- ~~Harness Engineering 架构优化~~ ✅ 已完成（深度健康检查 /health/deep + DB/Redis 探测 + Token 趋势 API GET /trend + Dashboard Token 趋势折线图 + 审计 shutdown flush + M8P2 状态确认 + Framework mypy 92源文件0错误）
 
 
 ---

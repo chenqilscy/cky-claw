@@ -780,3 +780,45 @@ class TestE2ENewEndpoints:
             assert resp.status_code == 422
         finally:
             _app.dependency_overrides.pop(get_current_user, None)
+
+    # ---- deep health check ----
+
+    def test_deep_health_check(self, client: "TestClient") -> None:
+        """深度健康检查返回 components 结构。"""
+        resp = client.get("/health/deep")
+        assert resp.status_code == 200
+        body = resp.json()
+        assert "status" in body
+        assert "components" in body
+        assert "database" in body["components"]
+        assert "redis" in body["components"]
+
+    # ---- token usage trend ----
+
+    def test_token_usage_trend(self, client: "TestClient") -> None:
+        """Token 趋势 API 返回正确结构。"""
+        from app.core.deps import get_current_user, get_db
+        from app.main import app as _app
+
+        mock_db = self._mock_db()
+        mock_db.execute = AsyncMock(
+            return_value=MagicMock(all=MagicMock(return_value=[]))
+        )
+
+        # require_permission 需要 User 对象（role_id / role 属性）
+        fake_user = MagicMock()
+        fake_user.role_id = None
+        fake_user.role = "admin"
+
+        _app.dependency_overrides[get_db] = lambda: mock_db
+        _app.dependency_overrides[get_current_user] = lambda: fake_user
+        try:
+            resp = client.get("/api/v1/token-usage/trend", params={"days": 7})
+            assert resp.status_code == 200
+            body = resp.json()
+            assert "data" in body
+            assert "days" in body
+            assert body["days"] == 7
+        finally:
+            _app.dependency_overrides.pop(get_db, None)
+            _app.dependency_overrides.pop(get_current_user, None)

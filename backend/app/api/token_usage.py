@@ -15,6 +15,7 @@ from app.schemas.token_usage import (
     TokenUsageListResponse,
     TokenUsageLogResponse,
     TokenUsageSummaryResponse,
+    TokenUsageTrendResponse,
 )
 from app.services import token_usage as token_usage_service
 
@@ -74,3 +75,20 @@ async def get_token_usage_summary(
         group_by=group_by,
     )
     return TokenUsageSummaryResponse(data=items)
+
+
+@router.get("/trend", response_model=TokenUsageTrendResponse, dependencies=[Depends(require_permission("token_usage", "read"))])
+async def get_token_usage_trend(
+    days: int = Query(7, ge=1, le=90, description="最近天数"),
+    group_by_model: bool = Query(False, description="是否按模型分组"),
+    agent_name: str | None = Query(None, description="按 Agent 筛选"),
+    db: AsyncSession = Depends(get_db),
+) -> TokenUsageTrendResponse:
+    """查询 Token 消耗趋势（按日聚合）。"""
+    items = await token_usage_service.get_token_usage_trend(
+        db,
+        days=days,
+        group_by_model=group_by_model,
+        agent_name=agent_name,
+    )
+    return TokenUsageTrendResponse(data=items, days=days)

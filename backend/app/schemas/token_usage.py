@@ -91,3 +91,20 @@ class TokenUsageSummaryResponse(BaseModel):
     """Token 消耗汇总响应。"""
 
     data: list[TokenUsageSummaryItem | TokenUsageByUserItem | TokenUsageByModelItem]
+
+
+class TokenUsageTrendItem(BaseModel):
+    """Token 消耗趋势数据点（按日聚合）。"""
+
+    date: str = Field(description="日期 YYYY-MM-DD")
+    total_tokens: int = Field(description="当日总 Token")
+    total_cost: float = Field(default=0.0, description="当日总成本")
+    call_count: int = Field(description="当日调用次数")
+    model: str | None = Field(default=None, description="模型名（group_by=model 时）")
+
+
+class TokenUsageTrendResponse(BaseModel):
+    """Token 消耗趋势响应。"""
+
+    data: list[TokenUsageTrendItem]
+    days: int

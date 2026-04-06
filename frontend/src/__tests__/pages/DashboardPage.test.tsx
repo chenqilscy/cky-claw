@@ -29,6 +29,13 @@ vi.mock('../../services/traceService', () => ({
 vi.mock('../../services/tokenUsageService', () => ({
   tokenUsageService: {
     summary: vi.fn().mockResolvedValue({ data: [] }),
+    trend: vi.fn().mockResolvedValue({
+      data: [
+        { date: '2026-07-01', total_tokens: 1200, total_cost: 0.05, call_count: 10, model: null },
+        { date: '2026-07-02', total_tokens: 1800, total_cost: 0.08, call_count: 15, model: null },
+      ],
+      days: 7,
+    }),
   },
 }));
 
@@ -83,6 +90,17 @@ describe('DashboardPage', () => {
     );
     await waitFor(() => {
       expect(screen.getAllByTestId('mock-echarts').length).toBeGreaterThan(0);
+    });
+  });
+
+  it('renders token trend card title', async () => {
+    const { container } = render(
+      <MemoryRouter>
+        <DashboardPage />
+      </MemoryRouter>,
+    );
+    await waitFor(() => {
+      expect(container.textContent).toContain('Token 消耗趋势');
     });
   });
 });

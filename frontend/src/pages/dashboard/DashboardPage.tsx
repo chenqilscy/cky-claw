@@ -27,7 +27,7 @@ import { chatService } from '../../services/chatService';
 import { traceService } from '../../services/traceService';
 import type { TraceStatsResponse } from '../../services/traceService';
 import { tokenUsageService } from '../../services/tokenUsageService';
-import type { TokenUsageByModelItem } from '../../services/tokenUsageService';
+import type { TokenUsageByModelItem, TokenUsageTrendItem } from '../../services/tokenUsageService';
 
 const { Title, Text } = Typography;
 
@@ -46,6 +46,7 @@ const DashboardPage: React.FC = () => {
   const [sessionCount, setSessionCount] = useState(0);
   const [traceStats, setTraceStats] = useState<TraceStatsResponse | null>(null);
   const [tokenByModel, setTokenByModel] = useState<TokenUsageByModelItem[]>([]);
+  const [tokenTrend, setTokenTrend] = useState<TokenUsageTrendItem[]>([]);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -54,6 +55,7 @@ const DashboardPage: React.FC = () => {
       chatService.listSessions({ limit: 1, offset: 0 }),
       traceService.stats(),
       tokenUsageService.summary({ group_by: 'model' }),
+      tokenUsageService.trend({ days: 7 }),
     ]);
 
     if (results[0].status === 'fulfilled') {
@@ -67,6 +69,9 @@ const DashboardPage: React.FC = () => {
     }
     if (results[3].status === 'fulfilled') {
       setTokenByModel(results[3].value.data as TokenUsageByModelItem[]);
+    }
+    if (results[4].status === 'fulfilled') {
+      setTokenTrend(results[4].value.data);
     }
 
     const failedCount = results.filter((r) => r.status === 'rejected').length;
@@ -338,6 +343,57 @@ const DashboardPage: React.FC = () => {
                 )}
               </Card>
             </Space>
+          </Col>
+        </Row>
+
+        {/* Row 3: Token Trend Chart */}
+        <Row gutter={16}>
+          <Col span={24}>
+            <Card title="Token 消耗趋势（近 7 天）" size="small">
+              {tokenTrend.length > 0 ? (
+                <ReactECharts
+                  style={{ height: 280 }}
+                  option={{
+                    tooltip: {
+                      trigger: 'axis',
+                      formatter: (params: Array<{ name: string; value: number; seriesName: string }>) =>
+                        params.map((p) => `${p.seriesName}: ${p.value.toLocaleString()}`).join('<br/>'),
+                    },
+                    legend: { data: ['Token 消耗', '调用次数'], top: 0 },
+                    grid: { left: 60, right: 60, bottom: 30, top: 40 },
+                    xAxis: {
+                      type: 'category',
+                      data: tokenTrend.map((d) => d.date),
+                      axisLabel: { fontSize: 11 },
+                    },
+                    yAxis: [
+                      { type: 'value', name: 'Tokens', axisLabel: { formatter: (v: number) => v >= 1000 ? `${(v / 1000).toFixed(0)}k` : String(v) } },
+                      { type: 'value', name: '调用次数', splitLine: { show: false } },
+                    ],
+                    series: [
+                      {
+                        name: 'Token 消耗',
+                        type: 'line',
+                        data: tokenTrend.map((d) => d.total_tokens),
+                        smooth: true,
+                        areaStyle: { opacity: 0.15 },
+                        itemStyle: { color: '#1677ff' },
+                      },
+                      {
+                        name: '调用次数',
+                        type: 'bar',
+                        yAxisIndex: 1,
+                        data: tokenTrend.map((d) => d.call_count),
+                        itemStyle: { color: '#52c41a', opacity: 0.6 },
+                        barMaxWidth: 30,
+                      },
+                    ],
+                  }}
+                />
+              ) : (
+                <Text type="secondary">暂无趋势数据</Text>
+              )}
+            </Card>
           </Col>
         </Row>
       </Space>

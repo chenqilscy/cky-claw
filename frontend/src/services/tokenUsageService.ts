@@ -72,10 +72,33 @@ export interface TokenUsageSummaryParams {
   group_by?: SummaryGroupBy;
 }
 
+export interface TokenUsageTrendItem {
+  date: string;
+  total_tokens: number;
+  total_cost: number;
+  call_count: number;
+  model: string | null;
+}
+
+export interface TokenUsageTrendResponse {
+  data: TokenUsageTrendItem[];
+  days: number;
+}
+
+export interface TokenUsageTrendParams {
+  days?: number;
+  group_by_model?: boolean;
+  agent_name?: string;
+}
+
 export const tokenUsageService = {
   list: (params?: TokenUsageListParams) =>
     api.get<TokenUsageListResponse>('/token-usage', params ? { ...params } : undefined),
 
   summary: (params?: TokenUsageSummaryParams) =>
     api.get<TokenUsageSummaryResponse>('/token-usage/summary', params ? { ...params } : undefined),
+
+  /** 按日聚合 Token 消耗趋势 */
+  trend: (params?: TokenUsageTrendParams) =>
+    api.get<TokenUsageTrendResponse>('/token-usage/trend', params ? { ...params } : undefined),
 };
