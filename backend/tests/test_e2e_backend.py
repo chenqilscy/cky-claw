@@ -1158,3 +1158,169 @@ class TestE2ENewEndpoints:
 
         ws_routes = [r.path for r in _app.routes if hasattr(r, "path")]
         assert "/api/ws/events" in ws_routes
+
+    # ---- R16: Trace 回放时间轴 ----
+
+    def test_trace_replay_timeline(self, client: "TestClient") -> None:
+        """回放时间轴 API 返回正确的 timeline 结构。"""
+        import datetime as _dt
+
+        from app.core.deps import get_current_user, get_db
+        from app.main import app as _app
+
+        mock_db = self._mock_db()
+
+        now = _dt.datetime(2025, 1, 1, 12, 0, 0)
+        trace_obj = MagicMock()
+        trace_obj.id = "trace-replay-001"
+        trace_obj.duration_ms = 500
+
+        span_a = MagicMock()
+        span_a.id = "span-a"
+        span_a.parent_span_id = None
+        span_a.type = "agent"
+        span_a.name = "root-agent"
+        span_a.status = "completed"
+        span_a.start_time = now
+        span_a.end_time = now + _dt.timedelta(milliseconds=500)
+        span_a.duration_ms = 500
+        span_a.model = None
+        span_a.input_data = '{"msg":"hi"}'
+        span_a.output_data = '{"msg":"bye"}'
+
+        span_b = MagicMock()
+        span_b.id = "span-b"
+        span_b.parent_span_id = "span-a"
+        span_b.type = "llm"
+        span_b.name = "gpt-4o"
+        span_b.status = "completed"
+        span_b.start_time = now + _dt.timedelta(milliseconds=100)
+        span_b.end_time = now + _dt.timedelta(milliseconds=400)
+        span_b.duration_ms = 300
+        span_b.model = "gpt-4o"
+        span_b.input_data = None
+        span_b.output_data = "hello world"
+
+        call_count = [0]
+
+        def _mock_execute(*args: object, **kwargs: object) -> MagicMock:
+            call_count[0] += 1
+            result = MagicMock()
+            if call_count[0] == 1:
+                result.scalar_one_or_none = MagicMock(return_value=trace_obj)
+            else:
+                result.scalars = MagicMock(
+                    return_value=MagicMock(all=MagicMock(return_value=[span_a, span_b]))
+                )
+            return result
+
+        mock_db.execute = AsyncMock(side_effect=_mock_execute)
+
+        fake_user = MagicMock(role_id=None, role="admin")
+        _app.dependency_overrides[get_db] = lambda: mock_db
+        _app.dependency_overrides[get_current_user] = lambda: fake_user
+        try:
+            resp = client.get("/api/v1/traces/trace-replay-001/replay")
+            assert resp.status_code == 200
+            body = resp.json()
+            assert body["trace_id"] == "trace-replay-001"
+            assert body["total_duration_ms"] == 500
+            tl = body["timeline"]
+            assert len(tl) == 2
+            assert tl[0]["span_id"] == "span-a"
+            assert tl[0]["offset_ms"] == 0
+            assert tl[0]["type"] == "agent"
+            assert tl[1]["span_id"] == "span-b"
+            assert tl[1]["offset_ms"] == 100
+            assert tl[1]["type"] == "llm"
+            assert tl[1]["model"] == "gpt-4o"
+        finally:
+            _app.dependency_overrides.pop(get_db, None)
+            _app.dependency_overrides.pop(get_current_user, None)
+
+    def test_trace_replay_not_found(self, client: "TestClient") -> None:
+        """不存在的 Trace 回放返回 404。"""
+        from app.core.deps import get_current_user, get_db
+        from app.main import app as _app
+
+        mock_db = self._mock_db()
+        mock_db.execute = AsyncMock(
+            return_value=MagicMock(scalar_one_or_none=MagicMock(return_value=None))
+        )
+
+        fake_user = MagicMock(role_id=None, role="admin")
+        _app.dependency_overrides[get_db] = lambda: mock_db
+        _app.dependency_overrides[get_current_user] = lambda: fake_user
+        try:
+            resp = client.get("/api/v1/traces/nonexistent/replay")
+            assert resp.status_code == 404
+        finally:
+            _app.dependency_overrides.pop(get_db, None)
+            _app.dependency_overrides.pop(get_current_user, None)
+
+    # ---- R16: A/B 测试 ----
+
+    def test_ab_test_validation(self, client: "TestClient") -> None:
+        """A/B 测试模型数 <2 返回 422。"""
+        from app.core.deps import get_current_user, get_db
+        from app.main import app as _app
+
+        mock_db = self._mock_db()
+        fake_user = MagicMock(role_id=None, role="admin")
+        _app.dependency_overrides[get_db] = lambda: mock_db
+        _app.dependency_overrides[get_current_user] = lambda: fake_user
+        try:
+            resp = client.post(
+                "/api/v1/ab-test",
+                json={"prompt": "hello", "models": ["gpt-4o"]},
+            )
+            assert resp.status_code == 422
+        finally:
+            _app.dependency_overrides.pop(get_db, None)
+            _app.dependency_overrides.pop(get_current_user, None)
+
+    def test_ab_test_success(self, client: "TestClient") -> None:
+        """A/B 测试正常返回对比结果（mock LLM）。"""
+        from app.core.deps import get_current_user, get_db
+        from app.main import app as _app
+
+        mock_db = self._mock_db()
+        # _resolve_provider_kwargs: 不返回 provider
+        mock_db.execute = AsyncMock(
+            return_value=MagicMock(scalar_one_or_none=MagicMock(return_value=None))
+        )
+
+        fake_user = MagicMock(role_id=None, role="admin")
+        _app.dependency_overrides[get_db] = lambda: mock_db
+        _app.dependency_overrides[get_current_user] = lambda: fake_user
+
+        mock_response = MagicMock()
+        mock_response.content = "Hello from mock"
+        mock_usage = MagicMock()
+        mock_usage.prompt_tokens = 10
+        mock_usage.completion_tokens = 20
+        mock_usage.total_tokens = 30
+        mock_response.usage = mock_usage
+
+        try:
+            with patch(
+                "ckyclaw_framework.model.litellm_provider.LiteLLMProvider",
+            ) as MockProvider:
+                instance = MockProvider.return_value
+                instance.chat = AsyncMock(return_value=mock_response)
+                resp = client.post(
+                    "/api/v1/ab-test",
+                    json={"prompt": "你好", "models": ["gpt-4o", "claude-3"]},
+                )
+            assert resp.status_code == 200
+            body = resp.json()
+            assert body["prompt"] == "你好"
+            assert len(body["results"]) == 2
+            for r in body["results"]:
+                assert r["output"] == "Hello from mock"
+                assert r["latency_ms"] >= 0
+                assert r["token_usage"]["total_tokens"] == 30
+                assert r["error"] is None
+        finally:
+            _app.dependency_overrides.pop(get_db, None)
+            _app.dependency_overrides.pop(get_current_user, None)

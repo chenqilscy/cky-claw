@@ -8,6 +8,7 @@ import {
   Modal,
   Popconfirm,
   Space,
+  Switch,
   Tag,
   Input,
 } from 'antd';
@@ -32,6 +33,7 @@ const AgentVersionPage: React.FC = () => {
   const [diffData, setDiffData] = useState<AgentVersionDiffResponse | null>(null);
   const [diffLoading, setDiffLoading] = useState(false);
   const [selectedRows, setSelectedRows] = useState<AgentVersion[]>([]);
+  const [showOnlyChanges, setShowOnlyChanges] = useState(true);
 
   const fetchVersions = useCallback(async () => {
     if (!agentId) return;
@@ -87,8 +89,16 @@ const AgentVersionPage: React.FC = () => {
       ...Object.keys(diffData.snapshot_a),
       ...Object.keys(diffData.snapshot_b),
     ]);
-    return Array.from(allKeys).sort();
-  }, [diffData]);
+    const sorted = Array.from(allKeys).sort();
+    if (showOnlyChanges) {
+      return sorted.filter((key) => {
+        const valA = JSON.stringify(diffData.snapshot_a[key] ?? null);
+        const valB = JSON.stringify(diffData.snapshot_b[key] ?? null);
+        return valA !== valB;
+      });
+    }
+    return sorted;
+  }, [diffData, showOnlyChanges]);
 
   const columns: ProColumns<AgentVersion>[] = [
     {
@@ -215,37 +225,69 @@ const AgentVersionPage: React.FC = () => {
         width={960}
       >
         {diffData && (
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-              <thead>
-                <tr style={{ background: '#fafafa' }}>
-                  <th style={{ border: '1px solid #f0f0f0', padding: '8px 12px', textAlign: 'left', width: 160 }}>字段</th>
-                  <th style={{ border: '1px solid #f0f0f0', padding: '8px 12px', textAlign: 'left' }}>v{diffData.version_a}</th>
-                  <th style={{ border: '1px solid #f0f0f0', padding: '8px 12px', textAlign: 'left' }}>v{diffData.version_b}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {diffKeys.map((key) => {
-                  const valA = JSON.stringify(diffData.snapshot_a[key] ?? null);
-                  const valB = JSON.stringify(diffData.snapshot_b[key] ?? null);
-                  const changed = valA !== valB;
-                  return (
-                    <tr key={key} style={{ background: changed ? '#fff7e6' : 'transparent' }}>
-                      <td style={{ border: '1px solid #f0f0f0', padding: '6px 12px', fontWeight: changed ? 600 : 400 }}>
-                        {key}
-                        {changed && <Tag color="orange" style={{ marginLeft: 4 }}>变更</Tag>}
-                      </td>
-                      <td style={{ border: '1px solid #f0f0f0', padding: '6px 12px', fontFamily: 'monospace', fontSize: 12, whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
-                        {valA}
-                      </td>
-                      <td style={{ border: '1px solid #f0f0f0', padding: '6px 12px', fontFamily: 'monospace', fontSize: 12, whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
-                        {valB}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+          <div>
+            <div style={{ marginBottom: 12, display: 'flex', alignItems: 'center', gap: 12 }}>
+              <Switch
+                checked={showOnlyChanges}
+                onChange={setShowOnlyChanges}
+                checkedChildren="仅变更"
+                unCheckedChildren="全部字段"
+              />
+              <span style={{ fontSize: 12, color: '#999' }}>
+                共 {diffKeys.length} 个字段
+                {showOnlyChanges ? '（已变更）' : ''}
+              </span>
+            </div>
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                <thead>
+                  <tr style={{ background: '#fafafa' }}>
+                    <th style={{ border: '1px solid #f0f0f0', padding: '8px 12px', textAlign: 'left', width: 160 }}>字段</th>
+                    <th style={{ border: '1px solid #f0f0f0', padding: '8px 12px', textAlign: 'left', background: '#fef2f2' }}>v{diffData.version_a}（旧）</th>
+                    <th style={{ border: '1px solid #f0f0f0', padding: '8px 12px', textAlign: 'left', background: '#f0fdf4' }}>v{diffData.version_b}（新）</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {diffKeys.map((key) => {
+                    const valA = JSON.stringify(diffData.snapshot_a[key] ?? null, null, 2);
+                    const valB = JSON.stringify(diffData.snapshot_b[key] ?? null, null, 2);
+                    const changed = valA !== valB;
+                    return (
+                      <tr key={key}>
+                        <td style={{ border: '1px solid #f0f0f0', padding: '6px 12px', fontWeight: changed ? 600 : 400 }}>
+                          {key}
+                          {changed && <Tag color="orange" style={{ marginLeft: 4 }}>变更</Tag>}
+                        </td>
+                        <td style={{
+                          border: '1px solid #f0f0f0',
+                          padding: '6px 12px',
+                          fontFamily: 'monospace',
+                          fontSize: 12,
+                          whiteSpace: 'pre-wrap',
+                          wordBreak: 'break-all',
+                          background: changed ? '#fef2f2' : 'transparent',
+                          color: changed ? '#b91c1c' : 'inherit',
+                        }}>
+                          {valA}
+                        </td>
+                        <td style={{
+                          border: '1px solid #f0f0f0',
+                          padding: '6px 12px',
+                          fontFamily: 'monospace',
+                          fontSize: 12,
+                          whiteSpace: 'pre-wrap',
+                          wordBreak: 'break-all',
+                          background: changed ? '#f0fdf4' : 'transparent',
+                          color: changed ? '#15803d' : 'inherit',
+                        }}>
+                          {valB}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </Modal>

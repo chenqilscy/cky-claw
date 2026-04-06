@@ -30,15 +30,17 @@ import {
   WarningOutlined,
   DownloadOutlined,
   FireOutlined,
+  PlayCircleOutlined,
 } from '@ant-design/icons';
 import { ProTable } from '@ant-design/pro-components';
 import type { ProColumns } from '@ant-design/pro-components';
 import { traceService } from '../../services/traceService';
-import type { TraceItem, SpanItem, TraceStatsResponse, TraceListParams, FlameTreeResponse } from '../../services/traceService';
+import type { TraceItem, SpanItem, TraceStatsResponse, TraceListParams, FlameTreeResponse, ReplayTimelineResponse } from '../../services/traceService';
 import type { DataNode } from 'antd/es/tree';
 import type { Dayjs } from 'dayjs';
 import SpanWaterfall from './SpanWaterfall';
 import FlameChart from './FlameChart';
+import TraceReplayTimeline from './TraceReplayTimeline';
 
 const { Text } = Typography;
 const { RangePicker } = DatePicker;
@@ -137,6 +139,7 @@ const TracesPage: React.FC = () => {
   const [detailLoading, setDetailLoading] = useState(false);
   const [selectedSpan, setSelectedSpan] = useState<SpanItem | null>(null);
   const [flameData, setFlameData] = useState<FlameTreeResponse | null>(null);
+  const [replayData, setReplayData] = useState<ReplayTimelineResponse | null>(null);
 
   const fetchStats = useCallback(async () => {
     try {
@@ -185,10 +188,12 @@ const TracesPage: React.FC = () => {
     setDetailLoading(true);
     setSelectedSpan(null);
     setFlameData(null);
+    setReplayData(null);
     try {
-      const [detailRes, flameRes] = await Promise.allSettled([
+      const [detailRes, flameRes, replayRes] = await Promise.allSettled([
         traceService.detail(traceId),
         traceService.flame(traceId),
+        traceService.replay(traceId),
       ]);
       if (detailRes.status === 'fulfilled') {
         setDetailTrace(detailRes.value.trace);
@@ -196,6 +201,9 @@ const TracesPage: React.FC = () => {
       }
       if (flameRes.status === 'fulfilled') {
         setFlameData(flameRes.value);
+      }
+      if (replayRes.status === 'fulfilled') {
+        setReplayData(replayRes.value);
       }
     } catch {
       message.error('获取 Trace 详情失败');
@@ -505,6 +513,11 @@ const TracesPage: React.FC = () => {
                     ) : (
                       <div style={{ color: '#999', padding: 16 }}>加载中...</div>
                     ),
+                  },
+                  {
+                    key: 'replay',
+                    label: <span><PlayCircleOutlined /> 回放</span>,
+                    children: <TraceReplayTimeline data={replayData} />,
                   },
                 ]}
               />

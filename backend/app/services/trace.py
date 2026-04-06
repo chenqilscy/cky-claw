@@ -323,3 +323,61 @@ async def build_flame_tree(
         "root": roots[0] if len(roots) == 1 else roots,
         "total_spans": len(spans),
     }
+
+
+async def build_replay_timeline(
+    db: AsyncSession,
+    trace_id: str,
+) -> dict[str, Any]:
+    """构建 Trace 回放时间轴 — 按时间顺序排列所有 Span 事件。
+
+    每个事件包含 span 的 type、name、start/end、耗时、input/output 数据摘要。
+    """
+    trace_stmt = select(TraceRecord).where(TraceRecord.id == trace_id)
+    trace = (await db.execute(trace_stmt)).scalar_one_or_none()
+    if trace is None:
+        raise NotFoundError(f"Trace '{trace_id}' 不存在")
+
+    spans_stmt = (
+        select(SpanRecord)
+        .where(SpanRecord.trace_id == trace_id)
+        .order_by(SpanRecord.start_time.asc(), SpanRecord.id.asc())
+    )
+    spans = list((await db.execute(spans_stmt)).scalars().all())
+
+    if not spans:
+        return {"trace_id": trace_id, "timeline": [], "total_duration_ms": 0}
+
+    base_time = spans[0].start_time
+
+    def _truncate(data: Any, max_len: int = 200) -> str | None:
+        """截断 JSON 数据为可读摘要。"""
+        if data is None:
+            return None
+        text = str(data)
+        return text[:max_len] + "..." if len(text) > max_len else text
+
+    timeline: list[dict[str, Any]] = []
+    for s in spans:
+        offset_ms = int((s.start_time - base_time).total_seconds() * 1000) if s.start_time else 0
+        timeline.append({
+            "span_id": s.id,
+            "parent_span_id": s.parent_span_id,
+            "type": s.type,
+            "name": s.name,
+            "status": s.status,
+            "offset_ms": offset_ms,
+            "duration_ms": s.duration_ms,
+            "start_time": s.start_time.isoformat() if s.start_time else None,
+            "end_time": s.end_time.isoformat() if s.end_time else None,
+            "model": s.model,
+            "input_summary": _truncate(s.input_data),
+            "output_summary": _truncate(s.output_data),
+        })
+
+    total_duration = trace.duration_ms or 0
+    return {
+        "trace_id": trace_id,
+        "timeline": timeline,
+        "total_duration_ms": total_duration,
+    }

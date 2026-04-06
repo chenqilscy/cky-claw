@@ -401,10 +401,15 @@ CkyClaw Framework 的核心设计（Agent 数据类、Runner 循环、Handoff、
 - ~~Session 消息搜索~~ ✅ 已完成（get_session_messages search 参数 + LIKE 通配符转义 + 1 E2E 测试）
 - ~~Handoff 编排器边线标注~~ ✅ 已完成（HandoffEditorPage edges label/labelStyle/labelBgStyle 显示 → target 名称）
 - ~~慢查询告警阈值预设~~ ✅ 已完成（alertService SLOW_QUERY_PRESETS 3 条预设 + ApmDashboardPage 告警规则创建/展示）
+- ~~Trace 回放器~~ ✅ 已完成（build_replay_timeline 服务 + GET /traces/{id}/replay API + TraceReplayTimeline 组件 + TracesPage 回放 Tab + 2 E2E 测试）
+- ~~多模型 A/B 测试~~ ✅ 已完成（POST /api/v1/ab-test 并行调用 + ABTestPage 前端 + abTestService + 2 E2E 测试）
+- ~~Agent 版本 diff 增强~~ ✅ 已完成（AgentVersionPage 色彩编码对比 + 仅变更/全部字段切换开关）
+- ~~Playwright E2E 基础设施~~ ✅ 已完成（playwright.config.ts + e2e/smoke.spec.ts 6 测试 + vite.config 排除 e2e）
+- ~~pre-commit Linter 集成~~ ✅ 已完成（.pre-commit-config.yaml: ruff check+format + mypy + trailing-whitespace + detect-private-key 等 8 hooks）
 
 
 ---
 
-*文档版本：v2.7.0*
+*文档版本：v2.8.0*
 *生成日期：2026-07-06*
-*基于：PRD v2.0.9 / M0–M7 + v2.1–v2.6 全部完成 + M8P1 完成 + M8P2 完成 + OAuth 2.0 + ChannelAdapter + 覆盖率冲刺 + 代码质量冲刺 + 前端体验优化 + 模板导入向导 + 性能基准测试 + 多租户隔离加固 + WebSocket统一事件 + Span火焰图 + Session消息搜索 + 慢查询告警预设*
+*基于：PRD v2.0.9 / M0–M7 + v2.1–v2.6 全部完成 + M8P1 完成 + M8P2 完成 + OAuth 2.0 + ChannelAdapter + 覆盖率冲刺 + 代码质量冲刺 + 前端体验优化 + 模板导入向导 + 性能基准测试 + 多租户隔离加固 + WebSocket统一事件 + Span火焰图 + Session消息搜索 + 慢查询告警预设 + Trace回放器 + A/B模型测试 + Agent版本diff增强 + Playwright E2E + pre-commit Linter*

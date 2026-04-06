@@ -172,6 +172,11 @@ const menuRoutes = {
       icon: <AimOutlined />,
     },
     {
+      path: '/ab-test',
+      name: 'A/B 测试',
+      icon: <ExperimentOutlined />,
+    },
+    {
       path: '/i18n',
       name: '国际化设置',
       icon: <GlobalOutlined />,

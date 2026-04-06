@@ -121,6 +121,27 @@ export interface FlameTreeResponse {
   total_spans: number;
 }
 
+export interface ReplayEvent {
+  span_id: string;
+  parent_span_id: string | null;
+  type: string;
+  name: string;
+  status: string;
+  offset_ms: number;
+  duration_ms: number | null;
+  start_time: string | null;
+  end_time: string | null;
+  model: string | null;
+  input_summary: string | null;
+  output_summary: string | null;
+}
+
+export interface ReplayTimelineResponse {
+  trace_id: string;
+  timeline: ReplayEvent[];
+  total_duration_ms: number;
+}
+
 export const traceService = {
   list: (params?: TraceListParams) =>
     api.get<TraceListResponse>('/traces', params as Record<string, string | number | undefined>),
@@ -136,4 +157,7 @@ export const traceService = {
 
   flame: (traceId: string, maxDepth = 50) =>
     api.get<FlameTreeResponse>(`/traces/${traceId}/flame`, { max_depth: maxDepth }),
+
+  replay: (traceId: string) =>
+    api.get<ReplayTimelineResponse>(`/traces/${traceId}/replay`),
 };

@@ -49,6 +49,7 @@ from app.api.config_reload import router as config_reload_router
 from app.api.cost_router import router as cost_router_router
 from app.api.checkpoints import router as checkpoints_router
 from app.api.intent import router as intent_router
+from app.api.ab_test import router as ab_test_router
 
 
 @asynccontextmanager
@@ -152,6 +153,7 @@ def create_app() -> FastAPI:
     app.include_router(cost_router_router)
     app.include_router(checkpoints_router)
     app.include_router(intent_router)
+    app.include_router(ab_test_router)
 
     # OTel FastAPI 自动埋点（最后添加）
     instrument_fastapi(app)

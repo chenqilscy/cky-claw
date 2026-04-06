@@ -136,3 +136,15 @@ async def get_trace_flame(
 ) -> dict[str, Any]:
     """获取 Trace 火焰图树结构（嵌套 parent→children）。"""
     return await trace_service.build_flame_tree(db, trace_id, max_depth=max_depth)
+
+
+@router.get(
+    "/{trace_id}/replay",
+    dependencies=[Depends(require_permission("traces", "read"))],
+)
+async def get_trace_replay(
+    trace_id: str,
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, Any]:
+    """获取 Trace 回放时间轴 — 按时间顺序排列的 Span 事件序列。"""
+    return await trace_service.build_replay_timeline(db, trace_id)
