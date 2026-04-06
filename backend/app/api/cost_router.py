@@ -76,15 +76,19 @@ async def recommend_provider(
     result = await db.execute(stmt)
     providers = list(result.scalars().all())
 
-    candidates = [
-        ProviderCandidate(
+    candidates: list[ProviderCandidate] = []
+    for p in providers:
+        try:
+            tier_enum = ModelTier(p.model_tier)
+        except ValueError:
+            # 跳过层级值非法的 Provider（数据兼容性保护）
+            continue
+        candidates.append(ProviderCandidate(
             name=p.name,
-            model_tier=ModelTier(p.model_tier),
+            model_tier=tier_enum,
             capabilities=p.capabilities or [],
             is_enabled=True,
-        )
-        for p in providers
-    ]
+        ))
 
     # 2. 创建路由器并推荐
     router_instance = CostRouter(candidates=candidates)

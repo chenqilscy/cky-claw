@@ -43,6 +43,15 @@ _MULTIMODAL_KEYWORDS = frozenset({
 # 简单任务一般很短且无特殊关键词（中文字符信息密度高，阈值相应降低）
 _SIMPLE_MAX_LENGTH = 50
 
+# 层级优先级排序（数值越大层级越高）
+_TIER_ORDER: dict[ModelTier, int] = {
+    ModelTier.SIMPLE: 0,
+    ModelTier.MODERATE: 1,
+    ModelTier.COMPLEX: 2,
+    ModelTier.REASONING: 3,
+    ModelTier.MULTIMODAL: 4,
+}
+
 
 def classify_complexity(text: str) -> ModelTier:
     """基于关键词和文本长度的规则分类器。
@@ -140,14 +149,6 @@ class CostRouter:
         if exact:
             return exact[0]
 
-        # 向上升级：按层级优先级排序
-        _TIER_ORDER = {
-            ModelTier.SIMPLE: 0,
-            ModelTier.MODERATE: 1,
-            ModelTier.COMPLEX: 2,
-            ModelTier.REASONING: 3,
-            ModelTier.MULTIMODAL: 4,
-        }
         target_order = _TIER_ORDER.get(target_tier, 1)
 
         # 优先选择比目标层级高的（向上升级）
@@ -156,5 +157,6 @@ class CostRouter:
             higher.sort(key=lambda c: _TIER_ORDER.get(c.model_tier, 1))
             return higher[0]
 
-        # 实在没有，返回任意可用的
+        # 所有候选层级都低于目标 → 降级兜底，返回最高层级的候选
+        enabled.sort(key=lambda c: _TIER_ORDER.get(c.model_tier, 1), reverse=True)
         return enabled[0] if enabled else None
