@@ -306,9 +306,9 @@ CkyClaw Framework 的核心设计（Agent 数据类、Runner 循环、Handoff、
 
 | 指标 | 数值 |
 |------|------|
-| 测试总数 | **3520**（Backend 1608 + Framework 1289 + Frontend 383 + E2E 31 + Channel 53 ignored） |
+| 测试总数 | **3524**（Backend 1608 + Framework 1289 + Frontend 383 + E2E 35 + Channel 53 ignored） |
 | 测试覆盖率 | Backend **98%** · Framework **100%** |
-| Alembic 迁移 | **44** 个（0001–0044） |
+| Alembic 迁移 | **45** 个（0001–0045） |
 | API 路由模块 | **34** 个 |
 | 前端页面 | **29** 个（React.lazy 懒加载 + Vendor 分包 + MarkdownRenderer 动态加载） |
 | CI Job | **5** 个 GitHub Actions + **5** Stage Jenkinsfile |
@@ -395,10 +395,16 @@ CkyClaw Framework 的核心设计（Agent 数据类、Runner 循环、Handoff、
 - ~~Dashboard 自动刷新 + Agent 活动趋势图~~ ✅ 已完成（Switch 自动刷新 30s + GET /activity-trend 时间桶聚合 + ECharts 折线图 + 8 前端测试）
 - ~~模板导入向导~~ ✅ 已完成（POST /agent-templates/{id}/instantiate 参数覆盖 + TemplatePage 导入向导弹窗 + Form 自定义参数 + 创建 Agent 直达）
 - ~~性能基准测试~~ ✅ 已完成（scripts/locustfile.py 12 个 @task + 10+ API 端点覆盖 + login 认证 + Dashboard 组合场景）
+- ~~多租户数据隔离加固~~ ✅ 已完成（TraceRecord org_id 字段 + Alembic 0045 + traces/agents activity-trend org_id 过滤 + 1 E2E 测试）
+- ~~WebSocket 统一事件推送~~ ✅ 已完成（/api/ws/events 端点 + Redis EVENTS_CHANNEL + publish_event 通用接口 + trace.completed/trace.error 自动推送 + 1 E2E 测试）
+- ~~Span 火焰图~~ ✅ 已完成（build_flame_tree 嵌套 Span 树 + GET /traces/{id}/flame API + FlameChart ECharts 自定义系列 + TracesPage Tabs 集成 + 2 E2E 测试）
+- ~~Session 消息搜索~~ ✅ 已完成（get_session_messages search 参数 + LIKE 通配符转义 + 1 E2E 测试）
+- ~~Handoff 编排器边线标注~~ ✅ 已完成（HandoffEditorPage edges label/labelStyle/labelBgStyle 显示 → target 名称）
+- ~~慢查询告警阈值预设~~ ✅ 已完成（alertService SLOW_QUERY_PRESETS 3 条预设 + ApmDashboardPage 告警规则创建/展示）
 
 
 ---
 
-*文档版本：v2.6.0*
+*文档版本：v2.7.0*
 *生成日期：2026-07-06*
-*基于：PRD v2.0.9 / M0–M7 + v2.1–v2.6 全部完成 + M8P1 完成 + M8P2 完成 + OAuth 2.0 + ChannelAdapter + 覆盖率冲刺 + 代码质量冲刺 + 前端体验优化 + 模板导入向导 + 性能基准测试*
+*基于：PRD v2.0.9 / M0–M7 + v2.1–v2.6 全部完成 + M8P1 完成 + M8P2 完成 + OAuth 2.0 + ChannelAdapter + 覆盖率冲刺 + 代码质量冲刺 + 前端体验优化 + 模板导入向导 + 性能基准测试 + 多租户隔离加固 + WebSocket统一事件 + Span火焰图 + Session消息搜索 + 慢查询告警预设*

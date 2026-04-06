@@ -26,12 +26,15 @@ async def list_traces(
     min_duration_ms: int | None = None,
     max_duration_ms: int | None = None,
     has_guardrail_triggered: bool | None = None,
+    org_id: uuid.UUID | None = None,
     limit: int = 20,
     offset: int = 0,
 ) -> tuple[list[TraceRecord], int]:
-    """获取 Trace 列表（分页 + 多维筛选）。"""
+    """获取 Trace 列表（分页 + 多维筛选 + 租户隔离）。"""
     base = select(TraceRecord)
 
+    if org_id is not None:
+        base = base.where(TraceRecord.org_id == org_id)
     if session_id is not None:
         base = base.where(TraceRecord.session_id == session_id)
     if agent_name is not None:
@@ -107,6 +110,7 @@ async def get_trace_stats(
     agent_name: str | None = None,
     start_time: datetime | None = None,
     end_time: datetime | None = None,
+    org_id: uuid.UUID | None = None,
 ) -> dict[str, Any]:
     """获取 Trace 统计数据。默认最近 7 天。"""
     if start_time is None:
@@ -114,6 +118,8 @@ async def get_trace_stats(
 
     # ── Trace 级统计 ──
     trace_base = select(TraceRecord).where(TraceRecord.start_time >= start_time)
+    if org_id is not None:
+        trace_base = trace_base.where(TraceRecord.org_id == org_id)
     if end_time is not None:
         trace_base = trace_base.where(TraceRecord.start_time <= end_time)
     if session_id is not None:
@@ -229,8 +235,91 @@ async def save_trace(
     trace: TraceRecord,
     spans: list[SpanRecord],
 ) -> None:
-    """保存 Trace 及其所有 Span。"""
+    """保存 Trace 及其所有 Span，并发布 WebSocket 事件。"""
     db.add(trace)
     if spans:
         db.add_all(spans)
     await db.flush()
+
+    # 异步发布 Trace 事件到统一 WebSocket 频道
+    event_type = "trace.error" if trace.status == "error" else "trace.completed"
+    try:
+        from app.api.ws import publish_event
+
+        await publish_event(event_type, {
+            "trace_id": trace.id,
+            "agent_name": trace.agent_name,
+            "status": trace.status,
+            "duration_ms": trace.duration_ms,
+            "span_count": trace.span_count,
+        })
+    except Exception:
+        pass  # Redis 不可用时不影响 Trace 保存
+
+
+async def build_flame_tree(
+    db: AsyncSession,
+    trace_id: str,
+    *,
+    max_depth: int = 50,
+) -> dict[str, Any]:
+    """构建 Span 火焰图树结构（嵌套 children）。
+
+    返回以 root span 为顶层的嵌套字典，每个节点包含 children 列表。
+    """
+    trace_stmt = select(TraceRecord).where(TraceRecord.id == trace_id)
+    trace = (await db.execute(trace_stmt)).scalar_one_or_none()
+    if trace is None:
+        raise NotFoundError(f"Trace '{trace_id}' 不存在")
+
+    spans_stmt = (
+        select(SpanRecord)
+        .where(SpanRecord.trace_id == trace_id)
+        .order_by(SpanRecord.start_time.asc())
+    )
+    spans = list((await db.execute(spans_stmt)).scalars().all())
+
+    if not spans:
+        return {"trace_id": trace_id, "root": None, "total_spans": 0}
+
+    # 构建 parent → children 映射
+    span_map: dict[str, dict[str, Any]] = {}
+    for s in spans:
+        span_map[s.id] = {
+            "span_id": s.id,
+            "parent_span_id": s.parent_span_id,
+            "type": s.type,
+            "name": s.name,
+            "status": s.status,
+            "start_time": s.start_time.isoformat() if s.start_time else None,
+            "end_time": s.end_time.isoformat() if s.end_time else None,
+            "duration_ms": s.duration_ms,
+            "model": s.model,
+            "children": [],
+        }
+
+    # 关联 parent → children
+    roots: list[dict[str, Any]] = []
+    for node in span_map.values():
+        pid = node["parent_span_id"]
+        if pid and pid in span_map:
+            span_map[pid]["children"].append(node)
+        else:
+            roots.append(node)
+
+    # 深度限制裁剪
+    def _trim(node: dict[str, Any], depth: int) -> None:
+        if depth >= max_depth:
+            node["children"] = []
+            return
+        for child in node["children"]:
+            _trim(child, depth + 1)
+
+    for root in roots:
+        _trim(root, 0)
+
+    return {
+        "trace_id": trace_id,
+        "root": roots[0] if len(roots) == 1 else roots,
+        "total_spans": len(spans),
+    }

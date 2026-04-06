@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import uuid
 from datetime import datetime
 
@@ -9,6 +11,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.deps import get_db, require_permission
+from app.core.tenant import get_org_id
 from app.schemas.trace import (
     SpanListResponse,
     SpanResponse,
@@ -29,14 +32,16 @@ async def get_trace_stats(
     start_time: datetime | None = Query(None, description="起始时间（默认最近 7 天）"),
     end_time: datetime | None = Query(None, description="结束时间"),
     db: AsyncSession = Depends(get_db),
+    org_id: uuid.UUID | None = Depends(get_org_id),
 ) -> TraceStatsResponse:
-    """获取 Trace 统计数据。"""
+    """获取 Trace 统计数据（支持租户隔离）。"""
     stats = await trace_service.get_trace_stats(
         db,
         session_id=session_id,
         agent_name=agent_name,
         start_time=start_time,
         end_time=end_time,
+        org_id=org_id,
     )
     return TraceStatsResponse(**stats)
 
@@ -81,8 +86,9 @@ async def list_traces(
     limit: int = Query(20, ge=1, le=100, description="每页数量"),
     offset: int = Query(0, ge=0, description="偏移量"),
     db: AsyncSession = Depends(get_db),
+    org_id: uuid.UUID | None = Depends(get_org_id),
 ) -> TraceListResponse:
-    """获取 Trace 列表。"""
+    """获取 Trace 列表（支持租户隔离）。"""
     traces, total = await trace_service.list_traces(
         db,
         session_id=session_id,
@@ -94,6 +100,7 @@ async def list_traces(
         min_duration_ms=min_duration_ms,
         max_duration_ms=max_duration_ms,
         has_guardrail_triggered=has_guardrail_triggered,
+        org_id=org_id,
         limit=limit,
         offset=offset,
     )
@@ -116,3 +123,16 @@ async def get_trace_detail(
         trace=TraceResponse.model_validate(trace),
         spans=[SpanResponse.model_validate(s) for s in spans],
     )
+
+
+@router.get(
+    "/{trace_id}/flame",
+    dependencies=[Depends(require_permission("traces", "read"))],
+)
+async def get_trace_flame(
+    trace_id: str,
+    max_depth: int = Query(50, ge=1, le=100, description="最大嵌套深度"),
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, Any]:
+    """获取 Trace 火焰图树结构（嵌套 parent→children）。"""
+    return await trace_service.build_flame_tree(db, trace_id, max_depth=max_depth)

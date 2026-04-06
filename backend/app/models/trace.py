@@ -31,6 +31,9 @@ class TraceRecord(Base):
     session_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), nullable=True, index=True
     )
+    org_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), nullable=True, index=True
+    )
     agent_name: Mapped[str | None] = mapped_column(
         String(128), nullable=True, index=True
     )

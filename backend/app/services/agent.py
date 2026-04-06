@@ -186,8 +186,9 @@ async def get_agent_activity_trend(
     db: AsyncSession,
     hours: int = 1,
     interval_minutes: int = 5,
+    org_id: uuid.UUID | None = None,
 ) -> list[dict[str, Any]]:
-    """获取 Agent 活动趋势数据（按时间桶聚合）。"""
+    """获取 Agent 活动趋势数据（按时间桶聚合，支持租户隔离）。"""
     from sqlalchemy import case as sa_case, text
 
     from app.models.trace import TraceRecord
@@ -210,9 +211,10 @@ async def get_agent_activity_trend(
         )
         .where(TraceRecord.start_time >= cutoff)
         .where(TraceRecord.agent_name.isnot(None))
-        .group_by(text("1"))
-        .order_by(text("1"))
     )
+    if org_id is not None:
+        stmt = stmt.where(TraceRecord.org_id == org_id)
+    stmt = stmt.group_by(text("1")).order_by(text("1"))
     result = await db.execute(stmt)
     return [
         {

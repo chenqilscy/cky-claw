@@ -665,8 +665,10 @@ async def _save_trace_from_processor(
 async def get_session_messages(
     db: AsyncSession,
     session_id: uuid.UUID,
+    *,
+    search: str | None = None,
 ) -> list[Any]:
-    """获取会话的持久化消息列表。"""
+    """获取会话的持久化消息列表。支持按内容关键词搜索。"""
     from app.models.session_message import SessionMessage
 
     # 确保 session 存在
@@ -675,8 +677,11 @@ async def get_session_messages(
     stmt = (
         select(SessionMessage)
         .where(SessionMessage.session_id == str(session_id))
-        .order_by(SessionMessage.id)
     )
+    if search:
+        escaped = search.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+        stmt = stmt.where(SessionMessage.content.ilike(f"%{escaped}%"))
+    stmt = stmt.order_by(SessionMessage.id)
     rows = (await db.execute(stmt)).scalars().all()
     return list(rows)
 

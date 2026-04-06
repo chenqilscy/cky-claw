@@ -38,10 +38,11 @@ async def get_agents_activity_trend(
     hours: int = Query(1, ge=1, le=24, description="最近 N 小时"),
     interval: int = Query(5, ge=1, le=60, description="时间桶粒度（分钟）"),
     db: AsyncSession = Depends(get_db),
+    org_id: uuid.UUID | None = Depends(get_org_id),
 ) -> dict[str, Any]:
-    """获取 Agent 活动趋势数据（按时间桶聚合）。"""
+    """获取 Agent 活动趋势数据（按时间桶聚合，支持租户隔离）。"""
     data = await agent_service.get_agent_activity_trend(
-        db, hours=hours, interval_minutes=interval
+        db, hours=hours, interval_minutes=interval, org_id=org_id
     )
     return {"data": data, "hours": hours, "interval": interval}
 

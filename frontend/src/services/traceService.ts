@@ -102,6 +102,25 @@ export interface SpanListParams {
   offset?: number;
 }
 
+export interface FlameNode {
+  span_id: string;
+  parent_span_id: string | null;
+  type: string;
+  name: string;
+  status: string;
+  start_time: string | null;
+  end_time: string | null;
+  duration_ms: number | null;
+  model: string | null;
+  children: FlameNode[];
+}
+
+export interface FlameTreeResponse {
+  trace_id: string;
+  root: FlameNode | FlameNode[] | null;
+  total_spans: number;
+}
+
 export const traceService = {
   list: (params?: TraceListParams) =>
     api.get<TraceListResponse>('/traces', params as Record<string, string | number | undefined>),
@@ -114,4 +133,7 @@ export const traceService = {
 
   listSpans: (params?: SpanListParams) =>
     api.get<SpanListResponse>('/traces/spans', params as Record<string, string | number | undefined>),
+
+  flame: (traceId: string, maxDepth = 50) =>
+    api.get<FlameTreeResponse>(`/traces/${traceId}/flame`, { max_depth: maxDepth }),
 };

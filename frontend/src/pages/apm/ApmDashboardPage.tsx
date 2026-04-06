@@ -9,6 +9,9 @@ import {
   message,
   Select,
   Typography,
+  Button,
+  Tag,
+  Space,
 } from 'antd';
 import {
   DashboardOutlined,
@@ -17,6 +20,7 @@ import {
   ThunderboltOutlined,
   ClockCircleOutlined,
   WarningOutlined,
+  PlusOutlined,
 } from '@ant-design/icons';
 import ReactECharts from 'echarts-for-react';
 import type {
@@ -26,6 +30,7 @@ import type {
   ToolUsageItem,
 } from '../../services/apmService';
 import { apmService } from '../../services/apmService';
+import { alertService, SLOW_QUERY_PRESETS, type AlertRule } from '../../services/alertService';
 
 const { Title } = Typography;
 
@@ -34,6 +39,8 @@ export default function ApmDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [days, setDays] = useState(30);
+  const [alertRules, setAlertRules] = useState<AlertRule[]>([]);
+  const [alertLoading, setAlertLoading] = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -47,6 +54,36 @@ export default function ApmDashboardPage() {
       })
       .finally(() => setLoading(false));
   }, [days]);
+
+  /** 加载告警规则 */
+  const loadAlertRules = async () => {
+    try {
+      const res = await alertService.listRules({ limit: 100 });
+      setAlertRules(res.data);
+    } catch {
+      // 非关键，静默
+    }
+  };
+
+  useEffect(() => {
+    loadAlertRules();
+  }, []);
+
+  /** 一键创建预设告警规则 */
+  const createPresetAlert = async (presetIdx: number) => {
+    setAlertLoading(true);
+    try {
+      const preset = SLOW_QUERY_PRESETS[presetIdx];
+      if (!preset) return;
+      await alertService.createRule(preset);
+      message.success(`告警规则「${preset.name}」创建成功`);
+      await loadAlertRules();
+    } catch {
+      message.error('创建告警规则失败');
+    } finally {
+      setAlertLoading(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -254,6 +291,71 @@ export default function ApmDashboardPage() {
               pagination={false}
               size="small"
             />
+          </Card>
+        </Col>
+      </Row>
+
+      {/* 慢查询告警阈值配置 */}
+      <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
+        <Col span={24}>
+          <Card
+            title={<Space><WarningOutlined /> 告警规则预设</Space>}
+            extra={
+              <Space>
+                {SLOW_QUERY_PRESETS.map((preset, idx) => (
+                  <Button
+                    key={idx}
+                    size="small"
+                    icon={<PlusOutlined />}
+                    loading={alertLoading}
+                    onClick={() => createPresetAlert(idx)}
+                  >
+                    {preset.name}
+                  </Button>
+                ))}
+              </Space>
+            }
+          >
+            {alertRules.length > 0 ? (
+              <Table<AlertRule>
+                dataSource={alertRules}
+                rowKey="id"
+                pagination={false}
+                size="small"
+                columns={[
+                  { title: '规则名称', dataIndex: 'name', width: 200 },
+                  { title: '指标', dataIndex: 'metric', width: 150 },
+                  {
+                    title: '条件',
+                    width: 120,
+                    render: (_, r) => `${r.operator} ${r.threshold}`,
+                  },
+                  { title: '窗口', dataIndex: 'window_minutes', width: 80, render: (v: number) => `${v}min` },
+                  {
+                    title: '严重级别',
+                    dataIndex: 'severity',
+                    width: 100,
+                    render: (v: string) => (
+                      <Tag color={v === 'critical' ? 'red' : v === 'warning' ? 'orange' : 'blue'}>{v}</Tag>
+                    ),
+                  },
+                  {
+                    title: '状态',
+                    dataIndex: 'is_enabled',
+                    width: 80,
+                    render: (v: boolean) => <Tag color={v ? 'green' : 'default'}>{v ? '启用' : '禁用'}</Tag>,
+                  },
+                  {
+                    title: '最近触发',
+                    dataIndex: 'last_triggered_at',
+                    width: 180,
+                    render: (v: string | null) => v ? new Date(v).toLocaleString('zh-CN') : '-',
+                  },
+                ]}
+              />
+            ) : (
+              <Typography.Text type="secondary">暂无告警规则，点击上方按钮创建预设规则</Typography.Text>
+            )}
           </Card>
         </Col>
       </Row>

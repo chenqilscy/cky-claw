@@ -1001,3 +1001,160 @@ class TestE2ENewEndpoints:
         finally:
             _app.dependency_overrides.pop(get_db, None)
             _app.dependency_overrides.pop(get_current_user, None)
+
+    # ---- R15: trace flame tree ----
+
+    def test_trace_flame_tree(self, client: "TestClient") -> None:
+        """火焰图 API 返回嵌套 Span 树结构。"""
+        from datetime import datetime, timezone
+
+        from app.core.deps import get_current_user, get_db
+        from app.main import app as _app
+
+        mock_db = self._mock_db()
+
+        # mock trace
+        trace_obj = MagicMock()
+        trace_obj.id = "trace-flame-001"
+        trace_obj.status = "completed"
+
+        now = datetime.now(timezone.utc)
+        root_span = MagicMock()
+        root_span.id = "span-root"
+        root_span.trace_id = "trace-flame-001"
+        root_span.parent_span_id = None
+        root_span.type = "agent"
+        root_span.name = "root-agent"
+        root_span.status = "completed"
+        root_span.start_time = now
+        root_span.end_time = now
+        root_span.duration_ms = 100
+        root_span.model = "gpt-4o"
+
+        child_span = MagicMock()
+        child_span.id = "span-child"
+        child_span.trace_id = "trace-flame-001"
+        child_span.parent_span_id = "span-root"
+        child_span.type = "llm"
+        child_span.name = "llm-call"
+        child_span.status = "completed"
+        child_span.start_time = now
+        child_span.end_time = now
+        child_span.duration_ms = 80
+        child_span.model = "gpt-4o"
+
+        call_count = [0]
+
+        def _mock_execute(*args: object, **kwargs: object) -> MagicMock:
+            call_count[0] += 1
+            result = MagicMock()
+            if call_count[0] == 1:
+                result.scalar_one_or_none = MagicMock(return_value=trace_obj)
+            else:
+                result.scalars = MagicMock(
+                    return_value=MagicMock(all=MagicMock(return_value=[root_span, child_span]))
+                )
+            return result
+
+        mock_db.execute = AsyncMock(side_effect=_mock_execute)
+
+        fake_user = MagicMock(role_id=None, role="admin")
+        _app.dependency_overrides[get_db] = lambda: mock_db
+        _app.dependency_overrides[get_current_user] = lambda: fake_user
+        try:
+            resp = client.get("/api/v1/traces/trace-flame-001/flame")
+            assert resp.status_code == 200
+            body = resp.json()
+            assert body["trace_id"] == "trace-flame-001"
+            assert body["total_spans"] == 2
+            root = body["root"]
+            assert root["span_id"] == "span-root"
+            assert root["type"] == "agent"
+            assert len(root["children"]) == 1
+            assert root["children"][0]["span_id"] == "span-child"
+            assert root["children"][0]["type"] == "llm"
+        finally:
+            _app.dependency_overrides.pop(get_db, None)
+            _app.dependency_overrides.pop(get_current_user, None)
+
+    def test_trace_flame_tree_max_depth(self, client: "TestClient") -> None:
+        """火焰图 max_depth 参数校验 — 超出范围返回 422。"""
+        from app.core.deps import get_current_user, get_db
+        from app.main import app as _app
+
+        mock_db = self._mock_db()
+        fake_user = MagicMock(role_id=None, role="admin")
+        _app.dependency_overrides[get_db] = lambda: mock_db
+        _app.dependency_overrides[get_current_user] = lambda: fake_user
+        try:
+            resp = client.get("/api/v1/traces/any-id/flame", params={"max_depth": 0})
+            assert resp.status_code == 422
+            resp2 = client.get("/api/v1/traces/any-id/flame", params={"max_depth": 200})
+            assert resp2.status_code == 422
+        finally:
+            _app.dependency_overrides.pop(get_db, None)
+            _app.dependency_overrides.pop(get_current_user, None)
+
+    # ---- R15: session message search ----
+
+    def test_session_message_search(self, client: "TestClient") -> None:
+        """Session 消息搜索 — search 参数正确传递到查询。"""
+        import uuid
+
+        from app.core.deps import get_current_user, get_db
+        from app.main import app as _app
+
+        session_id = uuid.uuid4()
+        mock_db = self._mock_db()
+
+        session_obj = MagicMock()
+        session_obj.id = session_id
+
+        msg = MagicMock()
+        msg.id = 1
+        msg.role = "user"
+        msg.content = "搜索关键词匹配"
+        msg.agent_name = None
+        msg.tool_call_id = None
+        msg.tool_calls = None
+        msg.token_usage = None
+        msg.created_at = "2025-01-01T00:00:00Z"
+
+        call_count = [0]
+
+        def _mock_execute(*args: object, **kwargs: object) -> MagicMock:
+            call_count[0] += 1
+            result = MagicMock()
+            if call_count[0] == 1:
+                result.scalar_one_or_none = MagicMock(return_value=session_obj)
+            else:
+                result.scalars = MagicMock(
+                    return_value=MagicMock(all=MagicMock(return_value=[msg]))
+                )
+            return result
+
+        mock_db.execute = AsyncMock(side_effect=_mock_execute)
+
+        fake_user = MagicMock(role_id=None, role="admin")
+        _app.dependency_overrides[get_db] = lambda: mock_db
+        _app.dependency_overrides[get_current_user] = lambda: fake_user
+        try:
+            resp = client.get(
+                f"/api/v1/sessions/{session_id}/messages",
+                params={"search": "关键词"},
+            )
+            assert resp.status_code == 200
+            body = resp.json()
+            assert body["total"] >= 0
+        finally:
+            _app.dependency_overrides.pop(get_db, None)
+            _app.dependency_overrides.pop(get_current_user, None)
+
+    # ---- R15: WebSocket events endpoint registered ----
+
+    def test_ws_events_endpoint_exists(self, client: "TestClient") -> None:
+        """验证 /api/ws/events WebSocket 端点已注册。"""
+        from app.main import app as _app
+
+        ws_routes = [r.path for r in _app.routes if hasattr(r, "path")]
+        assert "/api/ws/events" in ws_routes

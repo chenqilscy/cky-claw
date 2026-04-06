@@ -126,10 +126,11 @@ async def run_session(
 )
 async def get_session_messages(
     session_id: uuid.UUID,
+    search: str | None = Query(None, description="按消息内容关键词搜索"),
     db: AsyncSession = Depends(get_db),
 ) -> SessionMessagesResponse:
-    """获取会话的持久化消息历史。"""
-    rows = await session_service.get_session_messages(db, session_id)
+    """获取会话的持久化消息历史，支持关键词搜索。"""
+    rows = await session_service.get_session_messages(db, session_id, search=search)
     items = [
         SessionMessageItem(
             id=row.id,

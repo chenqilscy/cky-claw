@@ -19,6 +19,7 @@ import {
   Switch,
   Button,
   Tooltip,
+  Tabs,
 } from 'antd';
 import {
   ApartmentOutlined,
@@ -28,14 +29,16 @@ import {
   ThunderboltOutlined,
   WarningOutlined,
   DownloadOutlined,
+  FireOutlined,
 } from '@ant-design/icons';
 import { ProTable } from '@ant-design/pro-components';
 import type { ProColumns } from '@ant-design/pro-components';
 import { traceService } from '../../services/traceService';
-import type { TraceItem, SpanItem, TraceStatsResponse, TraceListParams } from '../../services/traceService';
+import type { TraceItem, SpanItem, TraceStatsResponse, TraceListParams, FlameTreeResponse } from '../../services/traceService';
 import type { DataNode } from 'antd/es/tree';
 import type { Dayjs } from 'dayjs';
 import SpanWaterfall from './SpanWaterfall';
+import FlameChart from './FlameChart';
 
 const { Text } = Typography;
 const { RangePicker } = DatePicker;
@@ -133,6 +136,7 @@ const TracesPage: React.FC = () => {
   const [detailSpans, setDetailSpans] = useState<SpanItem[]>([]);
   const [detailLoading, setDetailLoading] = useState(false);
   const [selectedSpan, setSelectedSpan] = useState<SpanItem | null>(null);
+  const [flameData, setFlameData] = useState<FlameTreeResponse | null>(null);
 
   const fetchStats = useCallback(async () => {
     try {
@@ -180,10 +184,19 @@ const TracesPage: React.FC = () => {
     setDetailVisible(true);
     setDetailLoading(true);
     setSelectedSpan(null);
+    setFlameData(null);
     try {
-      const res = await traceService.detail(traceId);
-      setDetailTrace(res.trace);
-      setDetailSpans(res.spans);
+      const [detailRes, flameRes] = await Promise.allSettled([
+        traceService.detail(traceId),
+        traceService.flame(traceId),
+      ]);
+      if (detailRes.status === 'fulfilled') {
+        setDetailTrace(detailRes.value.trace);
+        setDetailSpans(detailRes.value.spans);
+      }
+      if (flameRes.status === 'fulfilled') {
+        setFlameData(flameRes.value);
+      }
     } catch {
       message.error('获取 Trace 详情失败');
     } finally {
@@ -469,11 +482,31 @@ const TracesPage: React.FC = () => {
               </Col>
             </Row>
 
-            <Card title="Span Waterfall 时间轴" size="small" style={{ marginBottom: 16 }}>
-              <SpanWaterfall
-                spans={detailSpans}
-                onSpanClick={(span) => setSelectedSpan(span)}
-                selectedSpanId={selectedSpan?.id}
+            <Card title="Span 可视化" size="small" style={{ marginBottom: 16 }}>
+              <Tabs
+                defaultActiveKey="waterfall"
+                items={[
+                  {
+                    key: 'waterfall',
+                    label: <span><ClockCircleOutlined /> Waterfall</span>,
+                    children: (
+                      <SpanWaterfall
+                        spans={detailSpans}
+                        onSpanClick={(span) => setSelectedSpan(span)}
+                        selectedSpanId={selectedSpan?.id}
+                      />
+                    ),
+                  },
+                  {
+                    key: 'flame',
+                    label: <span><FireOutlined /> 火焰图</span>,
+                    children: flameData ? (
+                      <FlameChart nodes={flameData.root} totalSpans={flameData.total_spans} />
+                    ) : (
+                      <div style={{ color: '#999', padding: 16 }}>加载中...</div>
+                    ),
+                  },
+                ]}
               />
             </Card>
 
