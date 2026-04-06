@@ -27,6 +27,7 @@ import {
   ClockCircleOutlined,
   LineChartOutlined,
   GlobalOutlined,
+  ExperimentOutlined,
 } from '@ant-design/icons';
 import useThemeStore from '../stores/themeStore';
 
@@ -131,6 +132,11 @@ const menuRoutes = {
       path: '/evaluations',
       name: 'Agent 评估',
       icon: <StarOutlined />,
+    },
+    {
+      path: '/evolution',
+      name: '自动进化',
+      icon: <ExperimentOutlined />,
     },
     {
       path: '/organizations',

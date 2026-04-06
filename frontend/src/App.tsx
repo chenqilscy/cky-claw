@@ -33,6 +33,7 @@ const AuditLogPage = lazy(() => import('./pages/audit-logs/AuditLogPage'));
 const RolePage = lazy(() => import('./pages/roles/RolePage'));
 const IMChannelPage = lazy(() => import('./pages/im-channels/IMChannelPage'));
 const EvaluationPage = lazy(() => import('./pages/evaluations/EvaluationPage'));
+const EvolutionPage = lazy(() => import('./pages/evolution/EvolutionPage'));
 const OrganizationPage = lazy(() => import('./pages/organizations/OrganizationPage'));
 const ScheduledTasksPage = lazy(() => import('./pages/scheduled-tasks/ScheduledTasksPage'));
 const ApmDashboardPage = lazy(() => import('./pages/apm/ApmDashboardPage'));
@@ -103,6 +104,7 @@ const App: React.FC = () => {
           <Route path="roles" element={<RolePage />} />
           <Route path="im-channels" element={<IMChannelPage />} />
           <Route path="evaluations" element={<EvaluationPage />} />
+          <Route path="evolution" element={<EvolutionPage />} />
           <Route path="organizations" element={<OrganizationPage />} />
           <Route path="scheduled-tasks" element={<ScheduledTasksPage />} />
           <Route path="apm" element={<ApmDashboardPage />} />
