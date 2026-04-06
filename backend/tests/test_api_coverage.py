@@ -1319,3 +1319,498 @@ class TestIMChannelsAPI:
             )
         assert resp.status_code == 200
         assert resp.json()["reply_sent"] is True
+
+    def test_webhook_generic_invalid_signature(self, client: TestClient) -> None:
+        """通用 Webhook 签名验证失败返回 401。"""
+        ch = self._channel_orm(webhook_secret="secret-123")
+        with patch("app.api.im_channels.svc.get_channel", new_callable=AsyncMock, return_value=ch), \
+             patch("app.api.im_channels.get_adapter", return_value=None), \
+             patch("app.api.im_channels.svc.verify_webhook_signature", return_value=False):
+            resp = client.post(
+                f"/api/v1/im-channels/{ch.id}/webhook",
+                json={"content": "hello"},
+                headers={"X-Signature": "bad-sig"},
+            )
+        assert resp.status_code == 401
+        assert "签名验证失败" in resp.json()["detail"]
+
+    def test_webhook_generic_invalid_json(self, client: TestClient) -> None:
+        """通用 Webhook 请求体非有效 JSON 返回 400。"""
+        ch = self._channel_orm(webhook_secret=None)
+        with patch("app.api.im_channels.svc.get_channel", new_callable=AsyncMock, return_value=ch), \
+             patch("app.api.im_channels.get_adapter", return_value=None):
+            resp = client.post(
+                f"/api/v1/im-channels/{ch.id}/webhook",
+                content=b"not-json{{{",
+                headers={"Content-Type": "application/json"},
+            )
+        assert resp.status_code == 400
+
+
+# ======================================================================
+# WebSocket ws.py — Redis pub/sub + 广播（~13 miss → 0）
+# ======================================================================
+
+
+class TestWSBroadcast:
+    """ws.py 广播 + subscriber 生命周期测试。"""
+
+    @pytest.mark.asyncio
+    async def test_publish_approval_event_success(self) -> None:
+        """publish_approval_event 成功发布到 Redis。"""
+        from app.api.ws import publish_approval_event
+
+        mock_redis = AsyncMock()
+        mock_get_redis = AsyncMock(return_value=mock_redis)
+        with patch("app.api.ws.get_redis", mock_get_redis):
+            await publish_approval_event("approval_created", {"id": "abc"})
+        mock_redis.publish.assert_awaited_once()
+
+    @pytest.mark.asyncio
+    async def test_publish_approval_event_redis_error(self) -> None:
+        """publish_approval_event Redis 异常不传播。"""
+        from app.api.ws import publish_approval_event
+
+        mock_get_redis = AsyncMock(side_effect=Exception("redis down"))
+        with patch("app.api.ws.get_redis", mock_get_redis):
+            # 不应抛异常
+            await publish_approval_event("approval_created", {"id": "abc"})
+
+    @pytest.mark.asyncio
+    async def test_broadcast_removes_dead_connections(self) -> None:
+        """_broadcast 移除死连接。"""
+        from app.api.ws import _broadcast, _active_connections
+
+        ws_ok = AsyncMock()
+        ws_dead = AsyncMock()
+        ws_dead.send_text.side_effect = Exception("connection closed")
+
+        _active_connections.clear()
+        _active_connections.add(ws_ok)
+        _active_connections.add(ws_dead)
+        try:
+            await _broadcast("test-message")
+            ws_ok.send_text.assert_awaited_once_with("test-message")
+            assert ws_dead not in _active_connections
+        finally:
+            _active_connections.clear()
+
+    @pytest.mark.asyncio
+    async def test_start_subscriber(self) -> None:
+        """start_subscriber 创建后台任务。"""
+        import app.api.ws as ws_module
+
+        old_task = ws_module._subscriber_task
+        ws_module._subscriber_task = None
+        try:
+            with patch("app.api.ws._redis_subscriber", new_callable=AsyncMock):
+                await ws_module.start_subscriber()
+            assert ws_module._subscriber_task is not None
+        finally:
+            if ws_module._subscriber_task and not ws_module._subscriber_task.done():
+                ws_module._subscriber_task.cancel()
+                import asyncio as _aio
+                from contextlib import suppress
+                with suppress(_aio.CancelledError):
+                    await ws_module._subscriber_task
+            ws_module._subscriber_task = old_task
+
+    @pytest.mark.asyncio
+    async def test_stop_subscriber(self) -> None:
+        """stop_subscriber 取消后台任务。"""
+        import asyncio
+        import app.api.ws as ws_module
+
+        async def _forever() -> None:
+            await asyncio.sleep(3600)
+
+        old_task = ws_module._subscriber_task
+        ws_module._subscriber_task = asyncio.create_task(_forever())
+        try:
+            await ws_module.stop_subscriber()
+            assert ws_module._subscriber_task is None
+        finally:
+            ws_module._subscriber_task = old_task
+
+
+# ======================================================================
+# Schema 验证器第二批（alert 5 + config_change_log 4 = 9 miss → 0）
+# ======================================================================
+
+
+class TestSchemaValidatorsR2:
+    """Pydantic 字段验证器覆盖 — 第二批。"""
+
+    def test_alert_rule_update_invalid_metric(self) -> None:
+        """AlertRuleUpdate 无效 metric。"""
+        from pydantic import ValidationError as PydanticValidationError
+        from app.schemas.alert import AlertRuleUpdate
+
+        with pytest.raises(PydanticValidationError, match="指标"):
+            AlertRuleUpdate(metric="invalid_metric")
+
+    def test_alert_rule_update_invalid_operator(self) -> None:
+        """AlertRuleUpdate 无效 operator。"""
+        from pydantic import ValidationError as PydanticValidationError
+        from app.schemas.alert import AlertRuleUpdate
+
+        with pytest.raises(PydanticValidationError, match="运算符"):
+            AlertRuleUpdate(operator="invalid_op")
+
+    def test_alert_rule_update_invalid_severity(self) -> None:
+        """AlertRuleUpdate 无效 severity。"""
+        from pydantic import ValidationError as PydanticValidationError
+        from app.schemas.alert import AlertRuleUpdate
+
+        with pytest.raises(PydanticValidationError, match="严重级别"):
+            AlertRuleUpdate(severity="invalid_sev")
+
+    def test_config_change_log_invalid_entity_type(self) -> None:
+        """ConfigChangeLogCreate 无效 entity_type。"""
+        from pydantic import ValidationError as PydanticValidationError
+        from app.schemas.config_change_log import ConfigChangeLogCreate
+
+        with pytest.raises(PydanticValidationError, match="实体类型"):
+            ConfigChangeLogCreate(
+                config_key="k", entity_type="invalid_type", entity_id="e",
+            )
+
+    def test_config_change_log_invalid_change_source(self) -> None:
+        """ConfigChangeLogCreate 无效 change_source。"""
+        from pydantic import ValidationError as PydanticValidationError
+        from app.schemas.config_change_log import ConfigChangeLogCreate
+
+        with pytest.raises(PydanticValidationError, match="变更来源"):
+            ConfigChangeLogCreate(
+                config_key="k", entity_type="agent", entity_id="e",
+                change_source="invalid_source",
+            )
+
+
+# ======================================================================
+# Channel Adapter 边界测试（wecom 12 + feishu 11 + dingtalk 5 + custom 6 = 34 miss）
+# ======================================================================
+
+
+class TestChannelAdapterEdgeCases:
+    """IM 渠道适配器未覆盖的边界条件。"""
+
+    @staticmethod
+    def _mock_httpx_client(*, post_return=None, post_side_effect=None, get_return=None, get_side_effect=None):
+        """创建 httpx.AsyncClient 异步上下文管理器 mock。
+
+        返回一个 mock 对象，当用作 `async with httpx.AsyncClient(...) as client:` 时
+        会正确返回内部 mock_client。
+        """
+        mock_client = AsyncMock()
+        if post_side_effect:
+            mock_client.post.side_effect = post_side_effect
+        elif post_return is not None:
+            mock_client.post.return_value = post_return
+        if get_side_effect:
+            mock_client.get.side_effect = get_side_effect
+        elif get_return is not None:
+            mock_client.get.return_value = get_return
+        cm = MagicMock()
+        cm.__aenter__ = AsyncMock(return_value=mock_client)
+        cm.__aexit__ = AsyncMock(return_value=False)
+        return cm
+
+    # --- WeComAdapter ---
+
+    @pytest.mark.asyncio
+    async def test_wecom_send_message_no_access_token(self) -> None:
+        """企微发送消息未获取到 access_token 返回 False。"""
+        from app.services.channel_adapters.wecom import WeComAdapter
+
+        adapter = WeComAdapter()
+        with patch("app.services.channel_adapters.wecom._get_access_token", new_callable=AsyncMock, return_value=None):
+            result = await adapter.send_message({"corpid": "c", "corpsecret": "s"}, "user1", "hi")
+        assert result is False
+
+    @pytest.mark.asyncio
+    async def test_wecom_send_message_api_error(self) -> None:
+        """企微发送消息 API 返回非 0 errcode。"""
+        from app.services.channel_adapters.wecom import WeComAdapter
+
+        adapter = WeComAdapter()
+        mock_resp = MagicMock()
+        mock_resp.json.return_value = {"errcode": 40001, "errmsg": "invalid token"}
+        cm = self._mock_httpx_client(post_return=mock_resp)
+
+        with patch("app.services.channel_adapters.wecom._get_access_token", new_callable=AsyncMock, return_value="tok"), \
+             patch("httpx.AsyncClient", return_value=cm):
+            result = await adapter.send_message({"corpid": "c", "corpsecret": "s"}, "user1", "hi")
+        assert result is False
+
+    @pytest.mark.asyncio
+    async def test_wecom_send_message_http_error(self) -> None:
+        """企微发送消息网络异常返回 False。"""
+        import httpx
+        from app.services.channel_adapters.wecom import WeComAdapter
+
+        adapter = WeComAdapter()
+        cm = self._mock_httpx_client(post_side_effect=httpx.HTTPError("network"))
+
+        with patch("app.services.channel_adapters.wecom._get_access_token", new_callable=AsyncMock, return_value="tok"), \
+             patch("httpx.AsyncClient", return_value=cm):
+            result = await adapter.send_message({"corpid": "c", "corpsecret": "s"}, "user1", "hi")
+        assert result is False
+
+    def test_wecom_handle_verification_no_echostr(self) -> None:
+        """企微 URL 验证缺少 echostr 返回 None。"""
+        from app.services.channel_adapters.wecom import WeComAdapter
+
+        adapter = WeComAdapter()
+        result = adapter.handle_verification(b"", {}, {"encoding_aes_key": "k", "corpid": "c"})
+        assert result is None
+
+    def test_wecom_handle_verification_decrypt_failure(self) -> None:
+        """企微 URL 验证 echostr 解密失败返回 None。"""
+        from app.services.channel_adapters.wecom import WeComAdapter
+
+        adapter = WeComAdapter()
+        with patch("app.services.channel_adapters.wecom._decrypt_message", return_value=None):
+            result = adapter.handle_verification(
+                b"", {"echostr": "encrypted_str"}, {"encoding_aes_key": "k", "corpid": "c"},
+            )
+        assert result is None
+
+    def test_wecom_parse_message_decrypt_failure(self) -> None:
+        """企微 parse_message 解密失败返回 None。"""
+        from app.services.channel_adapters.wecom import WeComAdapter
+
+        adapter = WeComAdapter()
+        # 构造一个带 Encrypt 节点的 XML，但解密会失败
+        xml_body = b"<xml><Encrypt>bad_encrypted_data</Encrypt></xml>"
+        result = adapter.parse_message(xml_body, {"encoding_aes_key": "k", "corpid": "c"})
+        assert result is None
+
+    @pytest.mark.asyncio
+    async def test_wecom_get_access_token_empty_corpid(self) -> None:
+        """企微 _get_access_token 空 corpid 返回 None。"""
+        from app.services.channel_adapters.wecom import _get_access_token
+
+        result = await _get_access_token("", "secret")
+        assert result is None
+
+    @pytest.mark.asyncio
+    async def test_wecom_get_access_token_api_error(self) -> None:
+        """企微 _get_access_token API 返回错误。"""
+        from app.services.channel_adapters.wecom import _get_access_token
+
+        mock_resp = MagicMock()
+        mock_resp.json.return_value = {"errcode": 40001, "errmsg": "invalid"}
+        cm = self._mock_httpx_client(get_return=mock_resp)
+
+        with patch("httpx.AsyncClient", return_value=cm):
+            result = await _get_access_token("corp", "secret")
+        assert result is None
+
+    @pytest.mark.asyncio
+    async def test_wecom_get_access_token_http_error(self) -> None:
+        """企微 _get_access_token 网络异常返回 None。"""
+        import httpx
+        from app.services.channel_adapters.wecom import _get_access_token
+
+        cm = self._mock_httpx_client(get_side_effect=httpx.HTTPError("network"))
+
+        with patch("httpx.AsyncClient", return_value=cm):
+            result = await _get_access_token("corp", "secret")
+        assert result is None
+
+    # --- FeishuAdapter ---
+
+    @pytest.mark.asyncio
+    async def test_feishu_send_message_no_token(self) -> None:
+        """飞书发送消息未获取到 token 返回 False。"""
+        from app.services.channel_adapters.feishu import FeishuAdapter
+
+        adapter = FeishuAdapter()
+        with patch.object(adapter, "_get_tenant_access_token", new_callable=AsyncMock, return_value=None):
+            result = await adapter.send_message({"app_id": "a", "app_secret": "s"}, "user1", "hi")
+        assert result is False
+
+    @pytest.mark.asyncio
+    async def test_feishu_send_message_api_error(self) -> None:
+        """飞书发送消息 API 返回非 0 code。"""
+        from app.services.channel_adapters.feishu import FeishuAdapter
+
+        adapter = FeishuAdapter()
+        mock_resp = MagicMock()
+        mock_resp.json.return_value = {"code": 99, "msg": "error"}
+        cm = self._mock_httpx_client(post_return=mock_resp)
+
+        with patch.object(adapter, "_get_tenant_access_token", new_callable=AsyncMock, return_value="tok"), \
+             patch("httpx.AsyncClient", return_value=cm):
+            result = await adapter.send_message({"app_id": "a", "app_secret": "s"}, "user1", "hi")
+        assert result is False
+
+    @pytest.mark.asyncio
+    async def test_feishu_send_message_http_error(self) -> None:
+        """飞书发送消息网络异常返回 False。"""
+        import httpx
+        from app.services.channel_adapters.feishu import FeishuAdapter
+
+        adapter = FeishuAdapter()
+        cm = self._mock_httpx_client(post_side_effect=httpx.HTTPError("network"))
+
+        with patch.object(adapter, "_get_tenant_access_token", new_callable=AsyncMock, return_value="tok"), \
+             patch("httpx.AsyncClient", return_value=cm):
+            result = await adapter.send_message({"app_id": "a", "app_secret": "s"}, "user1", "hi")
+        assert result is False
+
+    @pytest.mark.asyncio
+    async def test_feishu_get_token_http_error(self) -> None:
+        """飞书 _get_tenant_access_token 网络异常返回 None。"""
+        import httpx
+        from app.services.channel_adapters.feishu import FeishuAdapter
+
+        adapter = FeishuAdapter()
+        cm = self._mock_httpx_client(post_side_effect=httpx.HTTPError("network"))
+
+        with patch("httpx.AsyncClient", return_value=cm):
+            result = await adapter._get_tenant_access_token({"app_id": "a", "app_secret": "s"})
+        assert result is None
+
+    def test_feishu_handle_verification_invalid_json(self) -> None:
+        """飞书 URL 验证 body 非有效 JSON。"""
+        from app.services.channel_adapters.feishu import FeishuAdapter
+
+        adapter = FeishuAdapter()
+        result = adapter.handle_verification(b"not-json{", {}, {})
+        assert result is None
+
+    def test_feishu_handle_verification_empty_challenge(self) -> None:
+        """飞书 URL 验证 challenge 为空返回 None。"""
+        import json
+        from app.services.channel_adapters.feishu import FeishuAdapter
+
+        adapter = FeishuAdapter()
+        body = json.dumps({"type": "url_verification", "challenge": "", "token": "t"}).encode()
+        result = adapter.handle_verification(body, {}, {})
+        assert result is None
+
+    def test_feishu_handle_verification_token_mismatch(self) -> None:
+        """飞书 URL 验证 token 不匹配返回 None。"""
+        import json
+        from app.services.channel_adapters.feishu import FeishuAdapter
+
+        adapter = FeishuAdapter()
+        body = json.dumps({
+            "type": "url_verification", "challenge": "ch", "token": "wrong",
+        }).encode()
+        result = adapter.handle_verification(body, {}, {"verification_token": "correct"})
+        assert result is None
+
+    def test_feishu_parse_message_invalid_content_json(self) -> None:
+        """飞书消息 content 字段非有效 JSON 回退为文本。"""
+        import json
+        from app.services.channel_adapters.feishu import FeishuAdapter
+
+        adapter = FeishuAdapter()
+        body = json.dumps({
+            "header": {"event_type": "im.message.receive_v1"},
+            "event": {
+                "sender": {"sender_id": {"open_id": "u1"}},
+                "message": {
+                    "message_type": "text",
+                    "content": "not-json{{{",
+                },
+            },
+        }).encode()
+        result = adapter.parse_message(body, {})
+        assert result is not None
+        # content 回退为原始字符串
+        assert result.content == "not-json{{{"
+
+    # --- DingTalkAdapter ---
+
+    def test_dingtalk_verify_expired_timestamp(self) -> None:
+        """钉钉签名时间戳过期返回 False。"""
+        from app.services.channel_adapters.dingtalk import DingTalkAdapter
+
+        adapter = DingTalkAdapter()
+        # 设置一个很旧的时间戳
+        headers = {"timestamp": "1000000000000", "sign": "dummy"}
+        result = adapter.verify_request(headers, b"body", {"app_secret": "secret"})
+        assert result is False
+
+    def test_dingtalk_verify_invalid_timestamp(self) -> None:
+        """钉钉签名时间戳非数字触发 ValueError 返回 False。"""
+        from app.services.channel_adapters.dingtalk import DingTalkAdapter
+
+        adapter = DingTalkAdapter()
+        headers = {"timestamp": "not-a-number", "sign": "dummy"}
+        result = adapter.verify_request(headers, b"body", {"app_secret": "secret"})
+        assert result is False
+
+    @pytest.mark.asyncio
+    async def test_dingtalk_send_message_no_webhook_url(self) -> None:
+        """钉钉发送消息未配置 webhook_url 返回 False。"""
+        from app.services.channel_adapters.dingtalk import DingTalkAdapter
+
+        adapter = DingTalkAdapter()
+        result = await adapter.send_message({}, "user1", "hi")
+        assert result is False
+
+    @pytest.mark.asyncio
+    async def test_dingtalk_send_message_http_error(self) -> None:
+        """钉钉发送消息网络异常返回 False。"""
+        import httpx
+        from app.services.channel_adapters.dingtalk import DingTalkAdapter
+
+        adapter = DingTalkAdapter()
+        cm = self._mock_httpx_client(post_side_effect=httpx.HTTPError("network"))
+
+        with patch("httpx.AsyncClient", return_value=cm):
+            result = await adapter.send_message(
+                {"webhook_url": "https://oapi.dingtalk.com/robot/send?token=abc"},
+                "user1", "hi",
+            )
+        assert result is False
+
+    # --- CustomWebhookAdapter ---
+
+    def test_custom_webhook_verify_unsupported_algorithm(self) -> None:
+        """自定义 Webhook 不支持的签名算法返回 False。"""
+        from app.services.channel_adapters.custom_webhook import CustomWebhookAdapter
+
+        adapter = CustomWebhookAdapter()
+        result = adapter.verify_request(
+            {"X-Signature": "abc", "X-Sign-Algorithm": "unsupported_algo"},
+            b"body",
+            {"secret": "secret", "sign_algorithm": "unsupported_algo"},
+        )
+        assert result is False
+
+    @pytest.mark.asyncio
+    async def test_custom_webhook_send_no_url(self) -> None:
+        """自定义 Webhook 未配置 URL 返回 False。"""
+        from app.services.channel_adapters.custom_webhook import CustomWebhookAdapter
+
+        adapter = CustomWebhookAdapter()
+        result = await adapter.send_message({}, "user1", "hi")
+        assert result is False
+
+    @pytest.mark.asyncio
+    async def test_custom_webhook_send_http_error(self) -> None:
+        """自定义 Webhook 推送网络异常返回 False。"""
+        import httpx
+        from app.services.channel_adapters.custom_webhook import CustomWebhookAdapter
+
+        adapter = CustomWebhookAdapter()
+        cm = self._mock_httpx_client(post_side_effect=httpx.HTTPError("network"))
+
+        with patch("httpx.AsyncClient", return_value=cm):
+            result = await adapter.send_message(
+                {"webhook_url": "https://example.com/hook"}, "user1", "hi",
+            )
+        assert result is False
+
+    def test_custom_webhook_extract_field_non_dict(self) -> None:
+        """_extract_field 遇到非 dict 中间节点返回 None。"""
+        from app.services.channel_adapters.custom_webhook import _extract_field
+
+        result = _extract_field({"a": "string_not_dict"}, "a.b")
+        assert result is None
