@@ -1,4 +1,4 @@
-"""进化建议 API + Service + Schema 测试。
+"""进化建议 & 信号 API + Service + Schema 测试。
 
 使用 mock 方式测试，不依赖 PostgreSQL。
 """
@@ -19,6 +19,9 @@ from app.schemas.evolution import (
     EvolutionProposalListResponse,
     EvolutionProposalResponse,
     EvolutionProposalUpdate,
+    EvolutionSignalCreate,
+    EvolutionSignalListResponse,
+    EvolutionSignalResponse,
 )
 
 
@@ -547,3 +550,582 @@ class TestStatusTransitions:
             await update_proposal(
                 mock_db, existing.id, EvolutionProposalUpdate(status="rejected")
             )
+
+
+# ---------------------------------------------------------------------------
+# 信号 Schema 校验测试
+# ---------------------------------------------------------------------------
+
+
+def _make_signal(**overrides) -> MagicMock:
+    """构造一个模拟 EvolutionSignalRecord ORM 对象。"""
+    now = datetime.now(timezone.utc)
+    defaults = {
+        "id": uuid.uuid4(),
+        "agent_name": "bot",
+        "signal_type": "tool_performance",
+        "tool_name": "search",
+        "call_count": 10,
+        "success_count": 8,
+        "failure_count": 2,
+        "avg_duration_ms": 150.5,
+        "overall_score": None,
+        "negative_rate": None,
+        "metadata_": {},
+        "created_at": now,
+    }
+    defaults.update(overrides)
+    mock = MagicMock()
+    for k, v in defaults.items():
+        setattr(mock, k, v)
+    return mock
+
+
+class TestEvolutionSignalSchemas:
+    """信号 Pydantic Schema 校验。"""
+
+    def test_create_valid_tool_performance(self) -> None:
+        """有效的 tool_performance 信号。"""
+        data = EvolutionSignalCreate(
+            agent_name="bot",
+            signal_type="tool_performance",
+            tool_name="search",
+            call_count=10,
+            success_count=8,
+            failure_count=2,
+            avg_duration_ms=150.5,
+        )
+        assert data.signal_type == "tool_performance"
+        assert data.tool_name == "search"
+        assert data.call_count == 10
+
+    def test_create_valid_evaluation(self) -> None:
+        """有效的 evaluation 信号。"""
+        data = EvolutionSignalCreate(
+            agent_name="bot",
+            signal_type="evaluation",
+            overall_score=0.85,
+            call_count=100,
+        )
+        assert data.overall_score == 0.85
+
+    def test_create_valid_feedback(self) -> None:
+        """有效的 feedback 信号。"""
+        data = EvolutionSignalCreate(
+            agent_name="bot",
+            signal_type="feedback",
+            call_count=50,
+            success_count=40,
+            failure_count=10,
+            negative_rate=0.2,
+        )
+        assert data.negative_rate == 0.2
+
+    def test_create_all_signal_types(self) -> None:
+        """所有合法信号类型均可创建。"""
+        for t in ("evaluation", "feedback", "tool_performance", "guardrail", "token_usage"):
+            data = EvolutionSignalCreate(agent_name="bot", signal_type=t)
+            assert data.signal_type == t
+
+    def test_create_invalid_signal_type(self) -> None:
+        """无效 signal_type 被拒绝。"""
+        with pytest.raises(ValueError, match="signal_type 必须是"):
+            EvolutionSignalCreate(agent_name="bot", signal_type="bogus")
+
+    def test_create_agent_name_too_long(self) -> None:
+        """agent_name 超过 64 字符被拒绝。"""
+        with pytest.raises(ValueError):
+            EvolutionSignalCreate(agent_name="a" * 65, signal_type="evaluation")
+
+    def test_create_agent_name_empty(self) -> None:
+        """agent_name 为空被拒绝。"""
+        with pytest.raises(ValueError):
+            EvolutionSignalCreate(agent_name="", signal_type="evaluation")
+
+    def test_create_negative_call_count(self) -> None:
+        """call_count 负数被拒绝。"""
+        with pytest.raises(ValueError):
+            EvolutionSignalCreate(
+                agent_name="bot", signal_type="evaluation", call_count=-1
+            )
+
+    def test_create_overall_score_range(self) -> None:
+        """overall_score 超出 [0,1] 范围被拒绝。"""
+        with pytest.raises(ValueError):
+            EvolutionSignalCreate(
+                agent_name="bot", signal_type="evaluation", overall_score=1.5
+            )
+        with pytest.raises(ValueError):
+            EvolutionSignalCreate(
+                agent_name="bot", signal_type="evaluation", overall_score=-0.1
+            )
+
+    def test_create_defaults(self) -> None:
+        """默认值正确。"""
+        data = EvolutionSignalCreate(agent_name="bot", signal_type="evaluation")
+        assert data.tool_name is None
+        assert data.call_count == 0
+        assert data.success_count == 0
+        assert data.failure_count == 0
+        assert data.avg_duration_ms == 0.0
+        assert data.overall_score is None
+        assert data.negative_rate is None
+        assert data.metadata == {}
+
+    def test_response_from_orm(self) -> None:
+        """从 ORM 对象构造 EvolutionSignalResponse。"""
+        mock = _make_signal()
+        resp = EvolutionSignalResponse.model_validate(mock)
+        assert resp.agent_name == "bot"
+        assert resp.signal_type == "tool_performance"
+        assert resp.metadata == {}
+
+
+# ---------------------------------------------------------------------------
+# 信号 Service 层测试（mock DB）
+# ---------------------------------------------------------------------------
+
+
+class TestEvolutionSignalService:
+    """信号 Service 函数正确性。"""
+
+    @pytest.mark.anyio()
+    async def test_create_signal(self) -> None:
+        """create_signal 写入并返回记录。"""
+        mock_db = AsyncMock()
+
+        from app.services.evolution import create_signal
+
+        data = EvolutionSignalCreate(
+            agent_name="bot",
+            signal_type="tool_performance",
+            tool_name="search",
+            call_count=10,
+            success_count=8,
+            failure_count=2,
+            avg_duration_ms=200.0,
+        )
+        record = await create_signal(mock_db, data)
+        mock_db.add.assert_called_once()
+        mock_db.commit.assert_awaited_once()
+        mock_db.refresh.assert_awaited_once()
+
+    @pytest.mark.anyio()
+    async def test_create_signals_batch(self) -> None:
+        """create_signals_batch 批量写入。"""
+        mock_db = AsyncMock()
+
+        from app.services.evolution import create_signals_batch
+
+        signals = [
+            EvolutionSignalCreate(
+                agent_name="bot",
+                signal_type="tool_performance",
+                tool_name=f"tool_{i}",
+                call_count=i * 10,
+            )
+            for i in range(3)
+        ]
+        records = await create_signals_batch(mock_db, signals)
+        assert mock_db.add.call_count == 3
+        mock_db.commit.assert_awaited_once()
+        assert len(records) == 3
+
+    @pytest.mark.anyio()
+    async def test_create_signals_batch_empty(self) -> None:
+        """空批量写入不触发 commit（仅触发无害的 commit）。"""
+        mock_db = AsyncMock()
+
+        from app.services.evolution import create_signals_batch
+
+        records = await create_signals_batch(mock_db, [])
+        assert len(records) == 0
+
+    @pytest.mark.anyio()
+    async def test_list_signals(self) -> None:
+        """list_signals 构建正确查询。"""
+        mock_db = AsyncMock()
+        mock_result = MagicMock()
+        mock_result.scalar_one.return_value = 2
+        mock_result.scalars.return_value.all.return_value = [
+            _make_signal(),
+            _make_signal(),
+        ]
+        mock_db.execute = AsyncMock(return_value=mock_result)
+
+        from app.services.evolution import list_signals
+
+        rows, total = await list_signals(mock_db, limit=10, offset=0)
+        assert total == 2
+        assert len(rows) == 2
+
+    @pytest.mark.anyio()
+    async def test_list_signals_with_filters(self) -> None:
+        """list_signals 使用筛选参数。"""
+        mock_db = AsyncMock()
+        mock_result = MagicMock()
+        mock_result.scalar_one.return_value = 0
+        mock_result.scalars.return_value.all.return_value = []
+        mock_db.execute = AsyncMock(return_value=mock_result)
+
+        from app.services.evolution import list_signals
+
+        rows, total = await list_signals(
+            mock_db,
+            agent_name="bot",
+            signal_type="evaluation",
+            limit=5,
+            offset=0,
+        )
+        assert total == 0
+        assert len(rows) == 0
+        # 验证两次 execute 调用（count + data）
+        assert mock_db.execute.await_count == 2
+
+    @pytest.mark.anyio()
+    async def test_analyze_agent_no_signals(self) -> None:
+        """analyze_agent 无信号时返回空列表。"""
+        mock_db = AsyncMock()
+        mock_result = MagicMock()
+        mock_result.scalars.return_value.all.return_value = []
+        mock_db.execute = AsyncMock(return_value=mock_result)
+
+        from app.services.evolution import analyze_agent
+
+        proposals = await analyze_agent(mock_db, "bot")
+        assert proposals == []
+
+    @pytest.mark.anyio()
+    async def test_analyze_agent_with_tool_signals(self) -> None:
+        """analyze_agent 有 tool_performance 信号时调用 StrategyEngine。"""
+        # 创建模拟信号记录
+        signal_row = _make_signal(
+            signal_type="tool_performance",
+            agent_name="bot",
+            tool_name="bad_tool",
+            call_count=100,
+            success_count=20,
+            failure_count=80,
+            avg_duration_ms=5000.0,
+            overall_score=None,
+            created_at=datetime.now(timezone.utc),
+        )
+        mock_db = AsyncMock()
+        mock_result = MagicMock()
+        mock_result.scalars.return_value.all.return_value = [signal_row]
+        mock_db.execute = AsyncMock(return_value=mock_result)
+
+        # mock StrategyEngine.generate_proposals 返回空列表（策略可能不生成建议）
+        with patch(
+            "ckyclaw_framework.evolution.StrategyEngine"
+        ) as MockEngine:
+            engine_instance = MagicMock()
+            engine_instance.generate_proposals.return_value = []
+            MockEngine.return_value = engine_instance
+
+            from app.services.evolution import analyze_agent
+
+            proposals = await analyze_agent(mock_db, "bot")
+            assert proposals == []
+            engine_instance.generate_proposals.assert_called_once()
+
+    @pytest.mark.anyio()
+    async def test_analyze_agent_with_evaluation_signals(self) -> None:
+        """analyze_agent 转换 evaluation 信号。"""
+        signal_row = _make_signal(
+            signal_type="evaluation",
+            agent_name="bot",
+            tool_name=None,
+            call_count=50,
+            overall_score=0.4,
+            created_at=datetime.now(timezone.utc),
+        )
+        mock_db = AsyncMock()
+        mock_result = MagicMock()
+        mock_result.scalars.return_value.all.return_value = [signal_row]
+        mock_db.execute = AsyncMock(return_value=mock_result)
+
+        with patch("ckyclaw_framework.evolution.StrategyEngine") as MockEngine:
+            engine_instance = MagicMock()
+            engine_instance.generate_proposals.return_value = []
+            MockEngine.return_value = engine_instance
+
+            from app.services.evolution import analyze_agent
+
+            proposals = await analyze_agent(mock_db, "bot")
+            assert proposals == []
+            # 验证信号已传入
+            call_args = engine_instance.generate_proposals.call_args
+            assert call_args[0][0] == "bot"
+            assert len(call_args[0][1]) == 1
+
+    @pytest.mark.anyio()
+    async def test_analyze_agent_with_feedback_signals(self) -> None:
+        """analyze_agent 转换 feedback 信号。"""
+        signal_row = _make_signal(
+            signal_type="feedback",
+            agent_name="bot",
+            call_count=100,
+            success_count=30,
+            failure_count=70,
+            overall_score=None,
+            created_at=datetime.now(timezone.utc),
+        )
+        mock_db = AsyncMock()
+        mock_result = MagicMock()
+        mock_result.scalars.return_value.all.return_value = [signal_row]
+        mock_db.execute = AsyncMock(return_value=mock_result)
+
+        with patch("ckyclaw_framework.evolution.StrategyEngine") as MockEngine:
+            engine_instance = MagicMock()
+            engine_instance.generate_proposals.return_value = []
+            MockEngine.return_value = engine_instance
+
+            from app.services.evolution import analyze_agent
+
+            proposals = await analyze_agent(mock_db, "bot")
+            assert proposals == []
+            call_args = engine_instance.generate_proposals.call_args
+            assert len(call_args[0][1]) == 1
+
+    @pytest.mark.anyio()
+    async def test_analyze_agent_skips_unknown_signal_type(self) -> None:
+        """analyze_agent 忽略未知 signal_type 的记录。"""
+        signal_row = _make_signal(
+            signal_type="guardrail",
+            agent_name="bot",
+            created_at=datetime.now(timezone.utc),
+        )
+        mock_db = AsyncMock()
+        mock_result = MagicMock()
+        mock_result.scalars.return_value.all.return_value = [signal_row]
+        mock_db.execute = AsyncMock(return_value=mock_result)
+
+        # guardrail 类型的信号目前不转换，signals 列表为空 → 早期返回
+        from app.services.evolution import analyze_agent
+
+        proposals = await analyze_agent(mock_db, "bot")
+        assert proposals == []
+
+    @pytest.mark.anyio()
+    async def test_analyze_agent_persists_proposals(self) -> None:
+        """analyze_agent 将策略引擎生成的建议持久化到 DB。"""
+        signal_row = _make_signal(
+            signal_type="tool_performance",
+            agent_name="bot",
+            tool_name="slow_tool",
+            call_count=50,
+            success_count=10,
+            failure_count=40,
+            avg_duration_ms=3000.0,
+            created_at=datetime.now(timezone.utc),
+        )
+        mock_db = AsyncMock()
+        mock_result = MagicMock()
+        mock_result.scalars.return_value.all.return_value = [signal_row]
+        mock_db.execute = AsyncMock(return_value=mock_result)
+
+        # mock 策略引擎返回一个建议
+        mock_proposal = MagicMock()
+        mock_proposal.agent_name = "bot"
+        mock_proposal.proposal_type = MagicMock(value="tools")
+        mock_proposal.trigger_reason = "工具失败率 80% 超过阈值"
+        mock_proposal.current_value = None
+        mock_proposal.proposed_value = {"action": "disable"}
+        mock_proposal.confidence_score = 0.9
+        mock_proposal.metadata = {}
+
+        with patch("ckyclaw_framework.evolution.StrategyEngine") as MockEngine:
+            engine_instance = MagicMock()
+            engine_instance.generate_proposals.return_value = [mock_proposal]
+            MockEngine.return_value = engine_instance
+
+            from app.services.evolution import analyze_agent
+
+            proposals = await analyze_agent(mock_db, "bot")
+            assert len(proposals) == 1
+            mock_db.add.assert_called_once()
+            mock_db.commit.assert_awaited_once()
+
+
+# ---------------------------------------------------------------------------
+# 信号 API 路由测试（mock service 层）
+# ---------------------------------------------------------------------------
+
+
+class TestEvolutionSignalAPI:
+    """信号 API 端点测试。"""
+
+    def test_create_signal(self, client: TestClient) -> None:
+        """POST /api/v1/evolution/signals 创建信号。"""
+        mock_record = _make_signal()
+        with patch(
+            "app.services.evolution.create_signal",
+            new_callable=AsyncMock,
+            return_value=mock_record,
+        ):
+            resp = client.post(
+                "/api/v1/evolution/signals",
+                json={
+                    "agent_name": "bot",
+                    "signal_type": "tool_performance",
+                    "tool_name": "search",
+                    "call_count": 10,
+                    "success_count": 8,
+                    "failure_count": 2,
+                    "avg_duration_ms": 150.5,
+                },
+            )
+        assert resp.status_code == 201
+        body = resp.json()
+        assert body["signal_type"] == "tool_performance"
+        assert body["tool_name"] == "search"
+
+    def test_create_signal_invalid_type(self, client: TestClient) -> None:
+        """POST /api/v1/evolution/signals 非法类型返回 422。"""
+        resp = client.post(
+            "/api/v1/evolution/signals",
+            json={
+                "agent_name": "bot",
+                "signal_type": "bogus",
+            },
+        )
+        assert resp.status_code == 422
+
+    def test_create_signal_minimal(self, client: TestClient) -> None:
+        """POST /api/v1/evolution/signals 最小必填字段。"""
+        mock_record = _make_signal(
+            signal_type="evaluation",
+            tool_name=None,
+            call_count=0,
+            success_count=0,
+            failure_count=0,
+            avg_duration_ms=0.0,
+        )
+        with patch(
+            "app.services.evolution.create_signal",
+            new_callable=AsyncMock,
+            return_value=mock_record,
+        ):
+            resp = client.post(
+                "/api/v1/evolution/signals",
+                json={
+                    "agent_name": "bot",
+                    "signal_type": "evaluation",
+                },
+            )
+        assert resp.status_code == 201
+
+    def test_create_signals_batch(self, client: TestClient) -> None:
+        """POST /api/v1/evolution/signals/batch 批量创建。"""
+        mock_records = [_make_signal(), _make_signal()]
+        with patch(
+            "app.services.evolution.create_signals_batch",
+            new_callable=AsyncMock,
+            return_value=mock_records,
+        ):
+            resp = client.post(
+                "/api/v1/evolution/signals/batch",
+                json=[
+                    {"agent_name": "bot", "signal_type": "tool_performance", "tool_name": "a"},
+                    {"agent_name": "bot", "signal_type": "evaluation"},
+                ],
+            )
+        assert resp.status_code == 201
+        assert len(resp.json()) == 2
+
+    def test_create_signals_batch_empty(self, client: TestClient) -> None:
+        """POST /api/v1/evolution/signals/batch 空数组。"""
+        with patch(
+            "app.services.evolution.create_signals_batch",
+            new_callable=AsyncMock,
+            return_value=[],
+        ):
+            resp = client.post("/api/v1/evolution/signals/batch", json=[])
+        assert resp.status_code == 201
+        assert resp.json() == []
+
+    def test_create_signals_batch_invalid_item(self, client: TestClient) -> None:
+        """POST /api/v1/evolution/signals/batch 含非法项返回 422。"""
+        resp = client.post(
+            "/api/v1/evolution/signals/batch",
+            json=[
+                {"agent_name": "bot", "signal_type": "evaluation"},
+                {"agent_name": "bot", "signal_type": "invalid"},
+            ],
+        )
+        assert resp.status_code == 422
+
+    def test_list_signals(self, client: TestClient) -> None:
+        """GET /api/v1/evolution/signals 返回列表。"""
+        mock_record = _make_signal()
+        with patch(
+            "app.services.evolution.list_signals",
+            new_callable=AsyncMock,
+            return_value=([mock_record], 1),
+        ):
+            resp = client.get("/api/v1/evolution/signals")
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["total"] == 1
+        assert len(body["data"]) == 1
+
+    def test_list_signals_with_filters(self, client: TestClient) -> None:
+        """GET /api/v1/evolution/signals 支持筛选参数。"""
+        with patch(
+            "app.services.evolution.list_signals",
+            new_callable=AsyncMock,
+            return_value=([], 0),
+        ) as mock_svc:
+            resp = client.get(
+                "/api/v1/evolution/signals",
+                params={
+                    "agent_name": "bot",
+                    "signal_type": "tool_performance",
+                    "limit": 5,
+                    "offset": 10,
+                },
+            )
+        assert resp.status_code == 200
+        mock_svc.assert_awaited_once()
+        call_kwargs = mock_svc.call_args
+        assert call_kwargs.kwargs["agent_name"] == "bot"
+        assert call_kwargs.kwargs["signal_type"] == "tool_performance"
+        assert call_kwargs.kwargs["limit"] == 5
+        assert call_kwargs.kwargs["offset"] == 10
+
+
+# ---------------------------------------------------------------------------
+# Analyze API 测试
+# ---------------------------------------------------------------------------
+
+
+class TestEvolutionAnalyzeAPI:
+    """策略分析 API 端点测试。"""
+
+    def test_analyze_agent(self, client: TestClient) -> None:
+        """POST /api/v1/evolution/analyze/{agent_name} 返回分析结果。"""
+        mock_proposal = _make_proposal()
+        with patch(
+            "app.services.evolution.analyze_agent",
+            new_callable=AsyncMock,
+            return_value=[mock_proposal],
+        ):
+            resp = client.post("/api/v1/evolution/analyze/bot")
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["proposals_created"] == 1
+        assert len(body["proposals"]) == 1
+
+    def test_analyze_agent_no_proposals(self, client: TestClient) -> None:
+        """POST /api/v1/evolution/analyze/{agent_name} 无建议时返回空。"""
+        with patch(
+            "app.services.evolution.analyze_agent",
+            new_callable=AsyncMock,
+            return_value=[],
+        ):
+            resp = client.post("/api/v1/evolution/analyze/bot")
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["proposals_created"] == 0
+        assert body["proposals"] == []

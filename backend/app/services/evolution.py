@@ -1,4 +1,4 @@
-"""进化建议业务逻辑。"""
+"""进化建议 & 信号业务逻辑。"""
 
 from __future__ import annotations
 
@@ -9,8 +9,12 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import NotFoundError, ValidationError
-from app.models.evolution import EvolutionProposalRecord
-from app.schemas.evolution import EvolutionProposalCreate, EvolutionProposalUpdate
+from app.models.evolution import EvolutionProposalRecord, EvolutionSignalRecord
+from app.schemas.evolution import (
+    EvolutionProposalCreate,
+    EvolutionProposalUpdate,
+    EvolutionSignalCreate,
+)
 
 # 合法的状态转换矩阵
 _TRANSITIONS: dict[str, set[str]] = {
@@ -132,3 +136,190 @@ async def delete_proposal(
     record = await get_proposal(db, proposal_id)
     await db.delete(record)
     await db.commit()
+
+
+# ────────────────────────────────────────────────────────────────
+# 信号 CRUD
+# ────────────────────────────────────────────────────────────────
+
+
+async def create_signal(
+    db: AsyncSession,
+    data: EvolutionSignalCreate,
+) -> EvolutionSignalRecord:
+    """上报一条进化信号。"""
+    record = EvolutionSignalRecord(
+        agent_name=data.agent_name,
+        signal_type=data.signal_type,
+        tool_name=data.tool_name,
+        call_count=data.call_count,
+        success_count=data.success_count,
+        failure_count=data.failure_count,
+        avg_duration_ms=data.avg_duration_ms,
+        overall_score=data.overall_score,
+        negative_rate=data.negative_rate,
+        metadata_=data.metadata,
+    )
+    db.add(record)
+    await db.commit()
+    await db.refresh(record)
+    return record
+
+
+async def create_signals_batch(
+    db: AsyncSession,
+    signals: list[EvolutionSignalCreate],
+) -> list[EvolutionSignalRecord]:
+    """批量上报进化信号。"""
+    records = []
+    for data in signals:
+        record = EvolutionSignalRecord(
+            agent_name=data.agent_name,
+            signal_type=data.signal_type,
+            tool_name=data.tool_name,
+            call_count=data.call_count,
+            success_count=data.success_count,
+            failure_count=data.failure_count,
+            avg_duration_ms=data.avg_duration_ms,
+            overall_score=data.overall_score,
+            negative_rate=data.negative_rate,
+            metadata_=data.metadata,
+        )
+        db.add(record)
+        records.append(record)
+    await db.commit()
+    for r in records:
+        await db.refresh(r)
+    return records
+
+
+async def list_signals(
+    db: AsyncSession,
+    *,
+    agent_name: str | None = None,
+    signal_type: str | None = None,
+    limit: int = 100,
+    offset: int = 0,
+) -> tuple[list[EvolutionSignalRecord], int]:
+    """获取进化信号列表（分页 + 可选筛选）。"""
+    base = select(EvolutionSignalRecord)
+
+    if agent_name:
+        base = base.where(EvolutionSignalRecord.agent_name == agent_name)
+    if signal_type:
+        base = base.where(EvolutionSignalRecord.signal_type == signal_type)
+
+    count_stmt = select(func.count()).select_from(base.subquery())
+    total = (await db.execute(count_stmt)).scalar_one()
+
+    data_stmt = (
+        base.order_by(EvolutionSignalRecord.created_at.desc())
+        .limit(limit)
+        .offset(offset)
+    )
+    rows = (await db.execute(data_stmt)).scalars().all()
+
+    return list(rows), total
+
+
+async def analyze_agent(
+    db: AsyncSession,
+    agent_name: str,
+) -> list[EvolutionProposalRecord]:
+    """对指定 Agent 执行策略分析。
+
+    从数据库读取该 Agent 的所有信号，通过 Framework StrategyEngine 生成
+    优化建议，并将建议持久化到数据库。
+
+    Returns:
+        生成的建议列表。
+    """
+    from ckyclaw_framework.evolution import (
+        EvolutionConfig,
+        MetricSignal,
+        SignalType,
+        StrategyEngine,
+        ToolPerformanceSignal,
+    )
+
+    # 读取该 Agent 的所有信号
+    stmt = (
+        select(EvolutionSignalRecord)
+        .where(EvolutionSignalRecord.agent_name == agent_name)
+        .order_by(EvolutionSignalRecord.created_at.desc())
+        .limit(1000)
+    )
+    rows = (await db.execute(stmt)).scalars().all()
+
+    # 转换为 Framework EvolutionSignal
+    from ckyclaw_framework.evolution.signals import EvolutionSignal, FeedbackSignal
+
+    signals: list[EvolutionSignal] = []
+    for row in rows:
+        if row.signal_type == "tool_performance":
+            signals.append(
+                ToolPerformanceSignal(
+                    signal_type=SignalType.TOOL_PERFORMANCE,
+                    agent_name=row.agent_name,
+                    timestamp=row.created_at,
+                    tool_name=row.tool_name or "",
+                    call_count=row.call_count,
+                    success_count=row.success_count,
+                    failure_count=row.failure_count,
+                    avg_duration_ms=row.avg_duration_ms,
+                    metadata=row.metadata_,
+                )
+            )
+        elif row.signal_type == "evaluation":
+            signals.append(
+                MetricSignal(
+                    signal_type=SignalType.EVALUATION,
+                    agent_name=row.agent_name,
+                    timestamp=row.created_at,
+                    overall_score=row.overall_score or 0.0,
+                    sample_count=row.call_count,
+                    metadata=row.metadata_,
+                )
+            )
+        elif row.signal_type == "feedback":
+            signals.append(
+                FeedbackSignal(
+                    signal_type=SignalType.FEEDBACK,
+                    agent_name=row.agent_name,
+                    timestamp=row.created_at,
+                    positive_count=row.success_count,
+                    negative_count=row.failure_count,
+                    total_count=row.call_count,
+                    metadata=row.metadata_,
+                )
+            )
+
+    if not signals:
+        return []
+
+    # 运行策略引擎
+    config = EvolutionConfig(enabled=True)
+    engine = StrategyEngine(config=config)
+    proposals = engine.generate_proposals(agent_name, signals)
+
+    # 持久化建议到数据库
+    created: list[EvolutionProposalRecord] = []
+    for proposal in proposals:
+        record = EvolutionProposalRecord(
+            agent_name=proposal.agent_name,
+            proposal_type=proposal.proposal_type.value,
+            trigger_reason=proposal.trigger_reason,
+            current_value=proposal.current_value if isinstance(proposal.current_value, dict) else None,
+            proposed_value=proposal.proposed_value if isinstance(proposal.proposed_value, dict) else None,
+            confidence_score=proposal.confidence_score,
+            metadata_=proposal.metadata,
+        )
+        db.add(record)
+        created.append(record)
+
+    if created:
+        await db.commit()
+        for r in created:
+            await db.refresh(r)
+
+    return created

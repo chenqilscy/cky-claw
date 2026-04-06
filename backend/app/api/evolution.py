@@ -1,4 +1,4 @@
-"""进化建议 API。"""
+"""进化建议 & 信号 API。"""
 
 from __future__ import annotations
 
@@ -12,10 +12,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.core.deps import require_admin
 from app.schemas.evolution import (
+    EvolutionAnalyzeResponse,
     EvolutionProposalCreate,
     EvolutionProposalListResponse,
     EvolutionProposalResponse,
     EvolutionProposalUpdate,
+    EvolutionSignalCreate,
+    EvolutionSignalListResponse,
+    EvolutionSignalResponse,
 )
 from app.services import evolution as svc
 
@@ -91,3 +95,78 @@ async def delete_proposal(
 ) -> None:
     """删除进化建议。"""
     await svc.delete_proposal(db, proposal_id)
+
+
+# ────────────────────────────────────────────────────────────────
+# 信号 API
+# ────────────────────────────────────────────────────────────────
+
+
+@router.post("/signals", response_model=EvolutionSignalResponse, status_code=201)
+async def create_signal(
+    data: EvolutionSignalCreate,
+    db: AsyncSession = Depends(get_db),
+    _: dict[str, Any] = Depends(require_admin),
+) -> EvolutionSignalResponse:
+    """上报一条进化信号。"""
+    record = await svc.create_signal(db, data)
+    return EvolutionSignalResponse.model_validate(record)
+
+
+@router.post(
+    "/signals/batch",
+    response_model=list[EvolutionSignalResponse],
+    status_code=201,
+)
+async def create_signals_batch(
+    signals: list[EvolutionSignalCreate],
+    db: AsyncSession = Depends(get_db),
+    _: dict[str, Any] = Depends(require_admin),
+) -> list[EvolutionSignalResponse]:
+    """批量上报进化信号。"""
+    records = await svc.create_signals_batch(db, signals)
+    return [EvolutionSignalResponse.model_validate(r) for r in records]
+
+
+@router.get("/signals", response_model=EvolutionSignalListResponse)
+async def list_signals(
+    agent_name: str | None = None,
+    signal_type: str | None = None,
+    limit: int = 100,
+    offset: int = 0,
+    db: AsyncSession = Depends(get_db),
+    _: dict[str, Any] = Depends(require_admin),
+) -> EvolutionSignalListResponse:
+    """获取进化信号列表。"""
+    items, total = await svc.list_signals(
+        db,
+        agent_name=agent_name,
+        signal_type=signal_type,
+        limit=limit,
+        offset=offset,
+    )
+    return EvolutionSignalListResponse(
+        data=[EvolutionSignalResponse.model_validate(i) for i in items],
+        total=total,
+        limit=limit,
+        offset=offset,
+    )
+
+
+# ────────────────────────────────────────────────────────────────
+# 策略分析 API
+# ────────────────────────────────────────────────────────────────
+
+
+@router.post("/analyze/{agent_name}", response_model=EvolutionAnalyzeResponse)
+async def analyze_agent(
+    agent_name: str,
+    db: AsyncSession = Depends(get_db),
+    _: dict[str, Any] = Depends(require_admin),
+) -> EvolutionAnalyzeResponse:
+    """对指定 Agent 执行策略分析，生成优化建议。"""
+    proposals = await svc.analyze_agent(db, agent_name)
+    return EvolutionAnalyzeResponse(
+        proposals_created=len(proposals),
+        proposals=[EvolutionProposalResponse.model_validate(p) for p in proposals],
+    )

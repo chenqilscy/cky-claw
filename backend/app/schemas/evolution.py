@@ -81,3 +81,69 @@ class EvolutionProposalListResponse(BaseModel):
     total: int
     limit: int
     offset: int
+
+
+# ────────────────────────────────────────────────────────────────
+# 进化信号 Schema
+# ────────────────────────────────────────────────────────────────
+
+_VALID_SIGNAL_TYPES = {"evaluation", "feedback", "tool_performance", "guardrail", "token_usage"}
+
+
+class EvolutionSignalCreate(BaseModel):
+    """上报进化信号请求体。"""
+
+    agent_name: str = Field(..., min_length=1, max_length=64, description="Agent 名称")
+    signal_type: str = Field(..., description="信号类型")
+    tool_name: str | None = Field(default=None, max_length=128, description="工具名称")
+    call_count: int = Field(default=0, ge=0, description="调用次数")
+    success_count: int = Field(default=0, ge=0, description="成功次数")
+    failure_count: int = Field(default=0, ge=0, description="失败次数")
+    avg_duration_ms: float = Field(default=0.0, ge=0.0, description="平均耗时 ms")
+    overall_score: float | None = Field(default=None, ge=0.0, le=1.0, description="综合评分")
+    negative_rate: float | None = Field(default=None, ge=0.0, le=1.0, description="负反馈率")
+    metadata: dict[str, Any] = Field(default_factory=dict, description="附加元数据")
+
+    @field_validator("signal_type")
+    @classmethod
+    def validate_signal_type(cls, v: str) -> str:
+        """校验 signal_type 为合法枚举值。"""
+        if v not in _VALID_SIGNAL_TYPES:
+            msg = f"signal_type 必须是 {_VALID_SIGNAL_TYPES} 之一"
+            raise ValueError(msg)
+        return v
+
+
+class EvolutionSignalResponse(BaseModel):
+    """进化信号响应。"""
+
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
+
+    id: uuid.UUID
+    agent_name: str
+    signal_type: str
+    tool_name: str | None
+    call_count: int
+    success_count: int
+    failure_count: int
+    avg_duration_ms: float
+    overall_score: float | None
+    negative_rate: float | None
+    metadata: dict[str, Any] = Field(alias="metadata_")
+    created_at: datetime
+
+
+class EvolutionSignalListResponse(BaseModel):
+    """进化信号列表响应。"""
+
+    data: list[EvolutionSignalResponse]
+    total: int
+    limit: int
+    offset: int
+
+
+class EvolutionAnalyzeResponse(BaseModel):
+    """策略分析响应。"""
+
+    proposals_created: int = Field(description="生成的建议数量")
+    proposals: list[EvolutionProposalResponse] = Field(description="生成的建议列表")
