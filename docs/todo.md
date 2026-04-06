@@ -359,16 +359,25 @@ CkyClaw Framework 的核心设计（Agent 数据类、Runner 循环、Handoff、
 | **Backend** | EvolutionProposalRecord ORM + Schema + Service + 5 API + Migration 0037 | 33 |
 | **Frontend** | EvolutionPage 管理 UI + evolutionService + 服务测试 | 7 |
 
-### M8P2 — 自动信号采集与策略执行（计划中）
+### M8P2 — 自动信号采集与策略执行 🔄 进行中
 
 | 功能 | 说明 | 状态 |
 |---|---|:---:|
-| 信号自动采集 | Runner/Trace hooks 自动发射 EvolutionSignal | ⚠️ |
-| 策略引擎定时运行 | 基于采集的信号生成 Proposal | ⚠️ |
+| EvolutionHook 信号采集 | Runner hooks（on_agent_start/tool_start/tool_end/error）自动发射 ToolPerformanceSignal + as_run_hooks() 转换 | ✅ |
+| Signal 持久化 API | POST/GET /signals + POST /signals/batch + EvolutionSignalRecord ORM + Migration 0038 | ✅ |
+| Analyze 策略分析 API | POST /analyze/{agent_name} 读取信号 → Framework StrategyEngine → 生成 Proposal 持久化 | ✅ |
+| 策略引擎定时运行 | 基于 ScheduledTask 定期触发 analyze | ⚠️ |
 | 建议自动应用 | 审批后自动修改 Agent 配置 | ⚠️ |
+
+**M8P2 交付物**：
+
+| 层 | 交付物 | 测试 |
+|---|---|---|
+| **Framework** | `evolution/hooks.py` EvolutionHook 自动信号采集 | +13 |
+| **Backend** | EvolutionSignalRecord ORM + Signal Schema + Signal/Analyze Service + 4 API 端点 + Migration 0038 | +35 |
 
 ---
 
-*文档版本：v2.3.0*
-*生成日期：2026-04-05*
-*基于：PRD v2.0.9 / M0–M7 + v2.1–v2.6 全部完成 + OAuth 2.0 + ChannelAdapter + 覆盖率冲刺*
+*文档版本：v2.4.0*
+*生成日期：2026-07-04*
+*基于：PRD v2.0.9 / M0–M7 + v2.1–v2.6 全部完成 + M8P1 完成 + M8P2 进行中 + OAuth 2.0 + ChannelAdapter + 覆盖率冲刺*
