@@ -7,7 +7,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, fields
 from datetime import datetime, timezone
 from typing import Any
 from uuid import uuid4
@@ -55,7 +55,10 @@ class Checkpoint:
         created_at = data.get("created_at")
         if isinstance(created_at, str):
             data = {**data, "created_at": datetime.fromisoformat(created_at)}
-        return cls(**data)
+        # 过滤未知字段（向后兼容保护）
+        valid_fields = {f.name for f in fields(cls)}
+        filtered = {k: v for k, v in data.items() if k in valid_fields}
+        return cls(**filtered)
 
 
 class CheckpointBackend(ABC):

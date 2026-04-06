@@ -948,7 +948,7 @@ class Runner:
                 if restored is not None:
                     current_agent = restored
                 if cp.context:
-                    context = {**(context or {}), **cp.context}
+                    context = {**cp.context, **(context or {})}
                 logger.info(
                     "Resumed from checkpoint: run_id=%s turn=%d agent=%s",
                     resume_from, cp.turn_count, cp.current_agent_name,
