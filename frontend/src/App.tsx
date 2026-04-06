@@ -39,6 +39,7 @@ const ScheduledTasksPage = lazy(() => import('./pages/scheduled-tasks/ScheduledT
 const ApmDashboardPage = lazy(() => import('./pages/apm/ApmDashboardPage'));
 const CostRouterPage = lazy(() => import('./pages/cost-router/CostRouterPage'));
 const CheckpointPage = lazy(() => import('./pages/checkpoints/CheckpointPage'));
+const IntentDetectionPage = lazy(() => import('./pages/intent/IntentDetectionPage'));
 const I18nSettingsPage = lazy(() => import('./pages/agents/I18nSettingsPage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 const OAuthCallbackPage = lazy(() => import('./pages/oauth/OAuthCallbackPage'));
@@ -112,6 +113,7 @@ const App: React.FC = () => {
           <Route path="apm" element={<ApmDashboardPage />} />
           <Route path="cost-router" element={<CostRouterPage />} />
           <Route path="checkpoints" element={<CheckpointPage />} />
+          <Route path="intent" element={<IntentDetectionPage />} />
           <Route path="i18n" element={<I18nSettingsPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>

@@ -1,9 +1,11 @@
-"""审计日志中间件 — 自动记录所有写操作。"""
+"""审计日志中间件 — 自动记录所有写操作（批量刷写）。"""
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import re
+from collections import deque
 from typing import Any, Callable, cast
 
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -32,6 +34,19 @@ _METHOD_ACTION_MAP = {
     "DELETE": "DELETE",
 }
 
+# 批量刷写配置
+_FLUSH_INTERVAL_SECONDS = 2.0
+_FLUSH_BATCH_SIZE = 50
+
+# 模块级单例引用，供 shutdown 使用
+_instance: "AuditLogMiddleware | None" = None
+
+
+async def flush_audit_buffer() -> None:
+    """刷写审计缓冲区残留条目，供应用 shutdown 时调用。"""
+    if _instance is not None:
+        await _instance._flush()
+
 
 def _get_client_ip(request: Request) -> str:
     """提取客户端 IP，支持 X-Forwarded-For 代理头。"""
@@ -44,7 +59,16 @@ def _get_client_ip(request: Request) -> str:
 
 
 class AuditLogMiddleware(BaseHTTPMiddleware):
-    """审计日志中间件：自动记录 POST/PUT/PATCH/DELETE 操作。"""
+    """审计日志中间件：自动记录 POST/PUT/PATCH/DELETE 操作，批量刷写到数据库。"""
+
+    def __init__(self, app: Any) -> None:
+        super().__init__(app)
+        self._buffer: deque[dict[str, Any]] = deque()
+        self._flush_task: asyncio.Task[None] | None = None
+        self._lock = asyncio.Lock()
+        # 注册模块级引用，便于 lifespan shutdown 时 flush 残留条目
+        global _instance  # noqa: PLW0603
+        _instance = self
 
     async def dispatch(self, request: Request, call_next: Callable[..., Any]) -> Response:
         method = request.method.upper()
@@ -54,27 +78,33 @@ class AuditLogMiddleware(BaseHTTPMiddleware):
         if method not in _AUDIT_METHODS or path in _SKIP_PATHS:
             return cast(Response, await call_next(request))
 
+        # 确保后台刷写任务已启动
+        if self._flush_task is None or self._flush_task.done():
+            self._flush_task = asyncio.create_task(self._periodic_flush())
+
         # 执行请求
         response: Response = await call_next(request)
 
-        # Fire-and-forget: 独立 session 写审计日志
+        # 收集审计条目到缓冲区
         try:
-            await self._write_audit_log(request, response, method, path)
+            self._collect_entry(request, response, method, path)
         except Exception:
-            logger.exception("Failed to write audit log for %s %s", method, path)
+            logger.exception("Failed to collect audit entry for %s %s", method, path)
+
+        # 缓冲区满时立即触发刷写
+        if len(self._buffer) >= _FLUSH_BATCH_SIZE:
+            asyncio.create_task(self._flush())
 
         return response
 
-    async def _write_audit_log(
+    def _collect_entry(
         self,
         request: Request,
         response: Response,
         method: str,
         path: str,
     ) -> None:
-        """使用独立 DB session 写入审计日志。"""
-        from app.models.audit_log import AuditLog
-
+        """将审计条目加入内存缓冲区。"""
         match = _PATH_PATTERN.match(path)
         if not match:
             return
@@ -83,26 +113,43 @@ class AuditLogMiddleware(BaseHTTPMiddleware):
         resource_id = match.group(2)
         action = _METHOD_ACTION_MAP.get(method, method)
 
-        # 从 JWT 中提取 user_id（如果有认证）
         user_id: str | None = None
         if hasattr(request.state, "user_id"):
             user_id = str(request.state.user_id)
 
-        ip_address = _get_client_ip(request)
-        user_agent = request.headers.get("User-Agent", "")[:500]
-        request_id = getattr(request.state, "request_id", None)
+        self._buffer.append({
+            "user_id": user_id,
+            "action": action,
+            "resource_type": resource_type,
+            "resource_id": resource_id,
+            "detail": {"path": path, "method": method},
+            "ip_address": _get_client_ip(request),
+            "user_agent": request.headers.get("User-Agent", "")[:500],
+            "request_id": getattr(request.state, "request_id", None),
+            "status_code": response.status_code,
+        })
 
-        async with async_session_factory() as db:
-            record = AuditLog(
-                user_id=user_id,
-                action=action,
-                resource_type=resource_type,
-                resource_id=resource_id,
-                detail={"path": path, "method": method},
-                ip_address=ip_address,
-                user_agent=user_agent,
-                request_id=request_id,
-                status_code=response.status_code,
-            )
-            db.add(record)
-            await db.commit()
+    async def _periodic_flush(self) -> None:
+        """后台定期刷写任务。"""
+        while True:
+            await asyncio.sleep(_FLUSH_INTERVAL_SECONDS)
+            await self._flush()
+
+    async def _flush(self) -> None:
+        """将缓冲区中的审计条目批量写入数据库。"""
+        async with self._lock:
+            if not self._buffer:
+                return
+
+            entries = list(self._buffer)
+            self._buffer.clear()
+
+        try:
+            from app.models.audit_log import AuditLog
+
+            async with async_session_factory() as db:
+                for entry in entries:
+                    db.add(AuditLog(**entry))
+                await db.commit()
+        except Exception:
+            logger.exception("Failed to flush %d audit log entries", len(entries))

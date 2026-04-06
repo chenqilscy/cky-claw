@@ -14,6 +14,8 @@ class Settings(BaseSettings):
 
     # 数据库
     database_url: str = "postgresql+asyncpg://ckyclaw:ckyclaw_dev@localhost:5432/ckyclaw"
+    db_pool_size: int = 5
+    db_max_overflow: int = 10
 
     # Redis
     redis_url: str = "redis://localhost:6379/0"

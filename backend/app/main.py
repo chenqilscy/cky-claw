@@ -48,6 +48,7 @@ from app.api.ws import router as ws_router
 from app.api.config_reload import router as config_reload_router
 from app.api.cost_router import router as cost_router_router
 from app.api.checkpoints import router as checkpoints_router
+from app.api.intent import router as intent_router
 
 
 @asynccontextmanager
@@ -77,6 +78,10 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     # 停止调度器
     from app.services.scheduler_engine import stop_scheduler
     stop_scheduler()
+
+    # 刷写审计缓冲区残留条目
+    from app.core.audit_middleware import flush_audit_buffer
+    await flush_audit_buffer()
 
     await stop_subscriber()
     await close_redis()
@@ -146,6 +151,7 @@ def create_app() -> FastAPI:
     app.include_router(config_reload_router)
     app.include_router(cost_router_router)
     app.include_router(checkpoints_router)
+    app.include_router(intent_router)
 
     # OTel FastAPI 自动埋点（最后添加）
     instrument_fastapi(app)

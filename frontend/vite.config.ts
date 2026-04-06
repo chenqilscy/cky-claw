@@ -21,14 +21,15 @@ export default defineConfig({
       output: {
         manualChunks(id) {
           if (id.includes('node_modules')) {
-            if (id.includes('react-dom') || id.includes('react-router-dom')) {
-              return 'vendor-react';
-            }
-            if (id.includes('antd') || id.includes('@ant-design')) {
+            // antd 生态（含 @ant-design 所有子包）
+            if (id.includes('/antd/') || id.includes('/@ant-design/')) {
               return 'vendor-antd';
             }
             if (id.includes('echarts')) {
               return 'vendor-charts';
+            }
+            if (id.includes('react-syntax-highlighter') || id.includes('react-markdown') || id.includes('remark')) {
+              return 'vendor-markdown';
             }
             if (id.includes('@xyflow')) {
               return 'vendor-flow';

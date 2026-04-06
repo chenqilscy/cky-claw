@@ -717,3 +717,66 @@ class TestE2ENewEndpoints:
             assert body["provider_name"] is None
         finally:
             _app.dependency_overrides.pop(get_db, None)
+
+    # ---- intent detect ----
+
+    def test_intent_detect_no_drift(self, client: "TestClient") -> None:
+        """相同主题 → 飘移分数低，不飘移。"""
+        from app.core.deps import get_current_user
+        from app.main import app as _app
+
+        _app.dependency_overrides[get_current_user] = lambda: {"id": "test", "role": "admin"}
+        try:
+            resp = client.post(
+                "/api/v1/intent/detect",
+                json={
+                    "original_intent": "帮我写一个 Python 排序算法",
+                    "current_message": "用快速排序实现",
+                    "threshold": 0.6,
+                },
+            )
+            assert resp.status_code == 200
+            body = resp.json()
+            assert body["is_drifted"] is False
+            assert body["drift_score"] < 0.6
+            assert len(body["original_keywords"]) > 0
+            assert len(body["current_keywords"]) > 0
+        finally:
+            _app.dependency_overrides.pop(get_current_user, None)
+
+    def test_intent_detect_drifted(self, client: "TestClient") -> None:
+        """完全不同主题 → 飘移分数高，判定飘移。"""
+        from app.core.deps import get_current_user
+        from app.main import app as _app
+
+        _app.dependency_overrides[get_current_user] = lambda: {"id": "test", "role": "admin"}
+        try:
+            resp = client.post(
+                "/api/v1/intent/detect",
+                json={
+                    "original_intent": "帮我写一个 Python 排序算法",
+                    "current_message": "今天北京天气怎么样",
+                    "threshold": 0.3,
+                },
+            )
+            assert resp.status_code == 200
+            body = resp.json()
+            assert body["is_drifted"] is True
+            assert body["drift_score"] > 0.3
+        finally:
+            _app.dependency_overrides.pop(get_current_user, None)
+
+    def test_intent_detect_validation(self, client: "TestClient") -> None:
+        """缺少必填字段返回 422。"""
+        from app.core.deps import get_current_user
+        from app.main import app as _app
+
+        _app.dependency_overrides[get_current_user] = lambda: {"id": "test", "role": "admin"}
+        try:
+            resp = client.post(
+                "/api/v1/intent/detect",
+                json={"original_intent": "hello"},
+            )
+            assert resp.status_code == 422
+        finally:
+            _app.dependency_overrides.pop(get_current_user, None)

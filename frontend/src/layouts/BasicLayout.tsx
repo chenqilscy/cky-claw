@@ -30,6 +30,7 @@ import {
   ExperimentOutlined,
   ThunderboltOutlined,
   HistoryOutlined,
+  AimOutlined,
 } from '@ant-design/icons';
 import useThemeStore from '../stores/themeStore';
 
@@ -164,6 +165,11 @@ const menuRoutes = {
       path: '/checkpoints',
       name: '检查点',
       icon: <HistoryOutlined />,
+    },
+    {
+      path: '/intent',
+      name: '意图检测',
+      icon: <AimOutlined />,
     },
     {
       path: '/i18n',

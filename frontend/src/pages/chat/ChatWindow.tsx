@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { Button, Input, Space, Spin, Typography, message } from 'antd';
 import { SendOutlined } from '@ant-design/icons';
 import { chatService } from '../../services/chatService';
-import MarkdownRenderer from '../../components/MarkdownRenderer';
 import type { ChatMessage } from './ChatPage';
+
+const MarkdownRenderer = lazy(() => import('../../components/MarkdownRenderer'));
 
 const { Text } = Typography;
 
@@ -202,7 +203,9 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                 </Text>
               )}
               {msg.role === 'assistant' ? (
-                <MarkdownRenderer content={msg.content} />
+                <Suspense fallback={<Spin size="small" />}>
+                  <MarkdownRenderer content={msg.content} />
+                </Suspense>
               ) : (
                 msg.content
               )}
