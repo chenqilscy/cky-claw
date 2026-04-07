@@ -831,23 +831,23 @@ CkyClaw 采用 **CkyClaw Framework + CkyClaw 应用** 的分层架构。CkyClaw 
 
 #### C.1.1 MVP 功能边界
 
-| 功能模块 | MVP 范围（In） | MVP 排除（Out） |
-|---------|---------------|----------------|
-| **CkyClaw Framework** | Agent + Runner + 基础 Agent Loop | Memory 系统、Skills 系统、Sandbox 隔离（Docker / K8s） |
-| **Agent 管理** | CRUD、Instructions 编辑、模型选择 | 版本回滚、模板库、批量导入导出 |
-| **编排** | Handoff（单级）、Agent-as-Tool（单级） | 多级嵌套 Handoff、条件启用、Agent Team / Coordinator |
-| **对话** | Web 端实时对话、SSE 流式输出 | 文件上传、多模态、IM 渠道 |
-| **工具系统** | Function Tool 注册、2 个内置工具组（web-search、code-executor） | MCP 集成、Tool Namespace、ToolSearchTool、自定义工具组 |
-| **Session** | 基础会话持久化、历史加载 | 历史裁剪、跨设备同步 |
-| **Guardrails** | Input Guardrail（基础 Prompt 注入检测） | Output Guardrail、Tool Guardrail、自定义护栏 |
-| **监督** | 观察模式（只读查看对话）、基础审批（suggest 模式） | 干预/接管模式、审批规则配置、消息注入 |
-| **执行可视化** | 基础 Trace 展示（列表 + Span 详情） | 流程图渲染、实时更新、历史回放 |
-| **Tracing** | 自动采集 Agent/LLM/Tool Span、写入 PostgreSQL（MVP） | 自定义 Trace Processor、OTel 导出、敏感数据控制 |
-| **Token 审计** | 基础 TokenUsageLog 记录、按用户+模型统计 | 多维度仪表盘、导出、告警集成 |
-| **Model Provider** | 单厂商配置（OpenAI）、手动填写 API Key | 多厂商、连通性测试、模型热切换 |
-| **用户系统** | 管理员邀请注册、JWT 认证、2 个角色（Admin + User） | RBAC 完整角色体系、SSO、组织/团队 |
-| **前端** | 对话页、Agent 管理页、基础执行列表页、登录页 | APM 仪表盘、监督面板、Token 审计页 |
-| **部署** | Docker Compose 单机部署 | Kubernetes、高可用 |
+| 功能模块 | MVP 范围（In） | 已实现扩展（Post-MVP） | 未来规划（Out） |
+|---------|---------------|----------------------|----------------|
+| **CkyClaw Framework** | Agent + Runner + 基础 Agent Loop | Memory（v2.2）、Skills（v2.2）、Sandbox（v2.6）、Checkpoint（v2.6）、Intent Detection（v2.6）、Cost Router（v2.6）、Evolution（M8） | — |
+| **Agent 管理** | CRUD、Instructions 编辑、模型选择 | 版本管理+回滚（M6）、14 模板（v2.5）、YAML/JSON 导入导出、国际化（v2.4） | 批量操作 UI |
+| **编排** | Handoff（单级）、Agent-as-Tool（单级） | 多级 Handoff + 循环检测、条件启用（v2.1）、Agent Team + Coordinator（v2.3，8 协议） | — |
+| **对话** | Web 端实时对话、SSE 流式输出 | IM 6 渠道适配器（v2.5：企微/钉钉/飞书/Slack/Discord/Telegram） | 文件上传、多模态 |
+| **工具系统** | Function Tool 注册、2+ 内置工具组 | MCP 集成 stdio/sse/http（M6）、Tool Namespace、ToolSearchTool、ToolGroup + ToolRegistry | — |
+| **Session** | 基础会话持久化、历史加载 | HistoryTrimmer 裁剪（M6）、消息搜索（v2.7） | 跨设备同步 |
+| **Guardrails** | Input Guardrail（基础 Prompt 注入检测） | Output + Tool Guardrail（M5）、6 种护栏（Regex/Keyword/LLM × 3）、并行执行（v2.1） | 护栏编排器 |
+| **监督** | 观察模式（只读查看对话）、基础审批（suggest 模式） | 干预/接管模式（v2.3）、审批队列 UI、WebSocket 统一事件（v2.7） | 高级审批规则模板 |
+| **执行可视化** | 基础 Trace 展示（列表 + Span 详情） | ReactFlow 流程图（v2.3）、Span 火焰图（v2.7）、Trace 回放（v2.7） | 实时协作编辑 |
+| **Tracing** | 自动采集 Agent/LLM/Tool Span、写入 PostgreSQL（MVP） | OTel 集成 Jaeger/Prometheus（v2.3）、自定义 Trace Processor | 敏感数据脱敏 |
+| **Token 审计** | 基础 TokenUsageLog 记录、按用户+模型统计 | 多维仪表盘（v2.4）、趋势 API + 告警引擎（v2.4） | 实时流式统计、CSV 导出 |
+| **Model Provider** | 单厂商配置（OpenAI）、手动填写 API Key | 10+ 厂商 LiteLLM 适配（M6）、Fernet 加密、连通性测试、A/B 模型测试（v2.7） | 成本预测 |
+| **用户系统** | 管理员邀请注册、JWT 认证、2 个角色（Admin + User） | RBAC 多角色（v2.4）、Organization/多租户（v2.7）、OAuth 2.0 6 Provider（v2.4） | SSO SAML 2.0 |
+| **前端** | 对话页、Agent 管理页、基础执行列表页、登录页 | 38 页面全套（APM/监督/Token/Team/Workflow/A-B Test 等）、暗色模式、Vendor 5 路分包 | 移动端适配 |
+| **部署** | Docker Compose 单机部署 | 6 Job GitHub Actions CI + Jenkinsfile 5 Stage + Playwright E2E + Locust 压测 | Kubernetes、高可用 |
 
 #### C.1.2 技术路径验证目标MVP 需要验证以下关键技术假设：
 

@@ -2,7 +2,7 @@
 
 > 本文件记录 CkyClaw 项目的当前状态、未来演进方向和历史交付归档。
 >
-> 最后更新：2026-07-06 · 文档版本 v3.0.0
+> 最后更新：2026-07-07 · 文档版本 v3.1.0
 
 ---
 
@@ -10,30 +10,32 @@
 
 | 指标 | 数值 |
 |------|------|
-| 测试总数 | **2879+**（Backend 1590 + Framework 1289 + Frontend 77 测试文件） |
+| 测试通过 | **2958+**（Backend 1740 + Framework 1218） |
 | 测试覆盖率 | Backend **98%** · Framework **100%** |
 | Alembic 迁移 | **45** 个（0001–0045） |
 | API 路由模块 | **37** 个 |
 | 前端页面 | **38** 个（React.lazy 懒加载，含 29 菜单页 + 9 非菜单页） |
-| 前端测试文件 | **77** 个（35 service/store + 42 page） |
-| CI Job | **5** 个 GitHub Actions + **5** Stage Jenkinsfile |
+| 前端测试文件 | **74** 个 |
+| CI Job | **6** 个 GitHub Actions + **5** Stage Jenkinsfile |
 | TypeScript 错误 | **0** |
 | Backend mypy | **0** 错误（166 源文件） |
 | Framework mypy | **0** 错误（92 源文件） |
-| Backend ruff E501 | **0** |
+| ruff E501 | **0** |
 | Playwright E2E | **6** 个烟雾测试 |
 
 ---
 
 ## 二、已知问题与技术债务
 
-| # | 问题 | 优先级 | 说明 |
-|---|------|:------:|------|
-| D1 | `test_ws_approvals.py` 导入失败 | P2 | `_broadcast` 从 `app.api.ws` 重命名/移除后测试未同步更新 |
-| D2 | `test_api_coverage.py` 140 错误 | P3 | ChannelAdapter 边缘用例，不影响主流程 |
-| D3 | 4 个 Framework 集成测试失败 | P3 | 需要真实 LLM API Key，CI 中跳过 |
-| D4 | 前端 vitest 超长耗时 | P2 | 77 个测试文件 + `--pool forks` 需 >3 分钟，需优化 |
-| D5 | pre-commit hooks 未在 CI 中运行 | P3 | `.pre-commit-config.yaml` 已配置，CI 未集成 `pre-commit run` |
+| # | 问题 | 状态 | 说明 |
+|---|------|:----:|------|
+| D1 | `test_ws_approvals.py` 导入失败 | ✅ 已修复 | `_broadcast` → `_broadcast_to` 同步更新（commit `82490e9`） |
+| D2 | `test_api_coverage.py` 140 错误 | ✅ 已修复 | 审计中间件 mock + JWT 篡改 + 广播修复（commit `82490e9`） |
+| D3 | 4 个 Framework 集成测试需 LLM Key | ⏭️ 已知 | 需要真实 LLM API Key，CI 中 skip，非阻塞 |
+| D4 | 前端 vitest 超长耗时 | ✅ 已修复 | `css: false` + `include` 精确匹配，耗时大幅降低（commit `82490e9`） |
+| D5 | pre-commit hooks 未在 CI 中运行 | ✅ 已修复 | 新增 `pre-commit/action@v3.0.1` CI Job（commit `82490e9`） |
+
+> D1/D2/D4/D5 已在 R17 技术债务修复中全部解决。
 
 ---
 
