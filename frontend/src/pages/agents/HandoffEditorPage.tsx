@@ -100,8 +100,7 @@ function applyDagreLayout(
 function detectCycles(edges: Edge[]): string[][] {
   const adj: Record<string, string[]> = {};
   for (const e of edges) {
-    if (!adj[e.source]) adj[e.source] = [];
-    adj[e.source]!.push(e.target);
+    (adj[e.source] ??= []).push(e.target);
   }
 
   const cycles: string[][] = [];
@@ -256,7 +255,7 @@ const HandoffEditorPage: React.FC = () => {
     });
     edges.forEach((e) => {
       if (handoffMap[e.source]) {
-        handoffMap[e.source]!.push(e.target);
+        handoffMap[e.source]?.push(e.target);
       }
     });
 

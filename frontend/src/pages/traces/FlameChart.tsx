@@ -59,7 +59,7 @@ export default function FlameChart({ nodes, totalSpans }: FlameChartProps) {
     // 计算 baseTime
     const allStartTimes = rootNodes
       .filter((n) => n.start_time)
-      .map((n) => new Date(n.start_time!).getTime());
+      .map((n) => new Date(n.start_time as string).getTime());
     const baseTime = allStartTimes.length > 0 ? Math.min(...allStartTimes) : 0;
 
     // 展平

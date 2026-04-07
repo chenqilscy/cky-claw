@@ -17,7 +17,7 @@ export function useAgentList(params?: { search?: string; limit?: number; offset?
 export function useAgent(name: string | undefined) {
   return useQuery({
     queryKey: [...AGENTS_KEY, name],
-    queryFn: () => agentService.get(name!),
+    queryFn: () => agentService.get(name as string),
     enabled: !!name,
   });
 }

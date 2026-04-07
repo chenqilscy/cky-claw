@@ -129,7 +129,7 @@ describe('ProviderListPage — 密钥轮换与到期', () => {
     expect(rotateLink).toBeTruthy();
 
     await act(async () => {
-      fireEvent.click(rotateLink!);
+      fireEvent.click((rotateLink as HTMLElement));
     });
 
     // 等待弹窗渲染

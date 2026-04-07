@@ -108,8 +108,8 @@ function buildEdges(team: TeamConfig): Edge[] {
 
   if (team.protocol === 'SEQUENTIAL') {
     for (let i = 0; i < ids.length - 1; i++) {
-      const src = ids[i]!;
-      const tgt = ids[i + 1]!;
+      const src = ids[i] as string;
+      const tgt = ids[i + 1] as string;
       edges.push({
         id: `e-${src}-${tgt}`,
         source: src,

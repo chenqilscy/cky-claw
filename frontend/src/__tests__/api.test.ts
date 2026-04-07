@@ -52,7 +52,7 @@ describe('api.get / api.post / api.put / api.delete', () => {
     vi.stubGlobal('localStorage', {
       getItem: (key: string) => storage[key] ?? null,
       setItem: (key: string, val: string) => { storage[key] = val; },
-      removeItem: (key: string) => { delete storage[key]; },
+      removeItem: (key: string) => { Reflect.deleteProperty(storage, key); },
     });
   });
 

@@ -79,7 +79,7 @@ const IntentDetectionPage: React.FC = () => {
               <Progress
                 percent={Math.round(result.drift_score * 100)}
                 strokeColor={driftColor}
-                format={(_p) => `${(result.drift_score * 100).toFixed(1)}%`}
+                format={() => `${(result.drift_score * 100).toFixed(1)}%`}
                 style={{ marginTop: 8 }}
               />
             </Col>

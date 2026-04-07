@@ -51,7 +51,7 @@ const TraceReplayTimeline: React.FC<TraceReplayTimelineProps> = ({ data }) => {
       // 下一步的延迟基于 offset 差值（加速 10x，最小 100ms）
       const delay =
         next + 1 < timeline.length
-          ? Math.max(100, (timeline[next + 1]!.offset_ms - timeline[next]!.offset_ms) / 10)
+          ? Math.max(100, ((timeline[next + 1]?.offset_ms ?? 0) - (timeline[next]?.offset_ms ?? 0)) / 10)
           : 500;
       timerRef.current = setTimeout(playNext, delay);
       return next;

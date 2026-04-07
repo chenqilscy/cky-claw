@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { App as AntApp } from 'antd';
 
 // Mock 服务
 const mockGet = vi.fn();
@@ -11,6 +12,7 @@ vi.mock('../../services/providerService', () => ({
     update: vi.fn(),
   },
   PROVIDER_TYPES: ['openai', 'azure', 'anthropic'],
+  PROVIDER_BASE_URLS: { openai: 'https://api.openai.com/v1', azure: '', anthropic: 'https://api.anthropic.com/v1' },
   AUTH_TYPES: ['api_key', 'oauth'],
 }));
 
@@ -19,12 +21,14 @@ import ProviderEditPage from '../../pages/providers/ProviderEditPage';
 function renderWithRouter(id?: string) {
   const path = id ? `/providers/${id}/edit` : '/providers/new';
   return render(
-    <MemoryRouter initialEntries={[path]}>
-      <Routes>
-        <Route path="/providers/new" element={<ProviderEditPage />} />
-        <Route path="/providers/:id/edit" element={<ProviderEditPage />} />
-      </Routes>
-    </MemoryRouter>
+    <AntApp>
+      <MemoryRouter initialEntries={[path]}>
+        <Routes>
+          <Route path="/providers/new" element={<ProviderEditPage />} />
+          <Route path="/providers/:id/edit" element={<ProviderEditPage />} />
+        </Routes>
+      </MemoryRouter>
+    </AntApp>
   );
 }
 

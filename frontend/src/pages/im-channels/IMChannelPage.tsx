@@ -117,7 +117,8 @@ const IMChannelPage: React.FC = () => {
         is_enabled: values.is_enabled ?? true,
       };
       if (editRecord) {
-        const { name: _, ...updatePayload } = payload;
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { name: _name, ...updatePayload } = payload;
         await updateIMChannel(editRecord.id, updatePayload);
         message.success('更新成功');
       } else {

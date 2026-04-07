@@ -35,12 +35,12 @@ function buildWaterfallRows(spans: SpanItem[]): WaterfallRow[] {
   }
 
   function getDepth(span: SpanItem): number {
-    if (depthMap.has(span.id)) return depthMap.get(span.id)!;
+    if (depthMap.has(span.id)) return depthMap.get(span.id) as number;
     if (!span.parent_span_id || !spanMap.has(span.parent_span_id)) {
       depthMap.set(span.id, 0);
       return 0;
     }
-    const parentDepth = getDepth(spanMap.get(span.parent_span_id)!);
+    const parentDepth = getDepth(spanMap.get(span.parent_span_id) as SpanItem);
     const d = parentDepth + 1;
     depthMap.set(span.id, d);
     return d;

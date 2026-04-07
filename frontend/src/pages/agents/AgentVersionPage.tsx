@@ -73,7 +73,8 @@ const AgentVersionPage: React.FC = () => {
     const sorted = [...selectedRows].sort((a, b) => a.version - b.version);
     setDiffLoading(true);
     try {
-      const res = await agentVersionService.diff(agentId, sorted[0]!.version, sorted[1]!.version);
+      const [v1, v2] = sorted as [typeof sorted[0], typeof sorted[0]];
+      const res = await agentVersionService.diff(agentId, v1.version, v2.version);
       setDiffData(res);
     } catch {
       message.error('版本对比失败');
@@ -149,7 +150,7 @@ const AgentVersionPage: React.FC = () => {
             loading={diffLoading}
             onClick={handleDiff}
           >
-            对比 v{Math.min(selectedRows[0]!.version, selectedRows[1]!.version)} ↔ v{Math.max(selectedRows[0]!.version, selectedRows[1]!.version)}
+            对比 v{Math.min(selectedRows[0]?.version ?? 0, selectedRows[1]?.version ?? 0)} ↔ v{Math.max(selectedRows[0]?.version ?? 0, selectedRows[1]?.version ?? 0)}
           </Button>
         )}
       </Space>

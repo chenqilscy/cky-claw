@@ -8,7 +8,7 @@ const storage: Record<string, string> = {};
 vi.stubGlobal('localStorage', {
   getItem: (key: string) => storage[key] ?? null,
   setItem: (key: string, val: string) => { storage[key] = val; },
-  removeItem: (key: string) => { delete storage[key]; },
+  removeItem: (key: string) => { Reflect.deleteProperty(storage, key); },
 });
 
 // Mock api
@@ -45,7 +45,7 @@ describe('authStore', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // 清理 storage
-    Object.keys(storage).forEach(k => delete storage[k]);
+    Object.keys(storage).forEach(k => Reflect.deleteProperty(storage, k));
   });
 
   afterEach(() => {

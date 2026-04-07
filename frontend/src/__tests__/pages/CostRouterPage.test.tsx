@@ -55,18 +55,18 @@ describe('CostRouterPage', () => {
     const { container } = renderPage();
     const btn = container.querySelector('button');
     expect(btn).toBeTruthy();
-    expect(btn!.disabled).toBe(true);
+    expect((btn as HTMLButtonElement).disabled).toBe(true);
   });
 
   it('输入文本后点击分析按钮调用 classify 和 recommend', async () => {
     const { container } = renderPage();
-    const textarea = container.querySelector('textarea')!;
+    const textarea = container.querySelector('textarea') as HTMLTextAreaElement;
 
     await act(async () => {
       fireEvent.change(textarea, { target: { value: '帮我写一段代码' } });
     });
 
-    const btn = container.querySelector('button')!;
+    const btn = container.querySelector('button') as HTMLButtonElement;
     expect(btn.disabled).toBe(false);
 
     await act(async () => {
@@ -79,13 +79,13 @@ describe('CostRouterPage', () => {
 
   it('显示分类结果', async () => {
     const { container } = renderPage();
-    const textarea = container.querySelector('textarea')!;
+    const textarea = container.querySelector('textarea') as HTMLTextAreaElement;
 
     await act(async () => {
       fireEvent.change(textarea, { target: { value: '测试文本' } });
     });
     await act(async () => {
-      fireEvent.click(container.querySelector('button')!);
+      fireEvent.click(container.querySelector('button') as HTMLButtonElement);
     });
 
     // 等待 mutation 完成
@@ -101,13 +101,13 @@ describe('CostRouterPage', () => {
 
   it('显示 Provider 推荐', async () => {
     const { container } = renderPage();
-    const textarea = container.querySelector('textarea')!;
+    const textarea = container.querySelector('textarea') as HTMLTextAreaElement;
 
     await act(async () => {
       fireEvent.change(textarea, { target: { value: '测试文本' } });
     });
     await act(async () => {
-      fireEvent.click(container.querySelector('button')!);
+      fireEvent.click(container.querySelector('button') as HTMLButtonElement);
     });
     await act(async () => {
       await new Promise((r) => setTimeout(r, 50));
@@ -121,13 +121,13 @@ describe('CostRouterPage', () => {
   it('无匹配 Provider 时显示警告', async () => {
     mockRecommend.mockResolvedValueOnce(MOCK_RECOMMEND_EMPTY);
     const { container } = renderPage();
-    const textarea = container.querySelector('textarea')!;
+    const textarea = container.querySelector('textarea') as HTMLTextAreaElement;
 
     await act(async () => {
       fireEvent.change(textarea, { target: { value: '你好' } });
     });
     await act(async () => {
-      fireEvent.click(container.querySelector('button')!);
+      fireEvent.click(container.querySelector('button') as HTMLButtonElement);
     });
     await act(async () => {
       await new Promise((r) => setTimeout(r, 50));
@@ -140,13 +140,13 @@ describe('CostRouterPage', () => {
   it('classify 失败时显示错误提示', async () => {
     mockClassify.mockRejectedValueOnce(new Error('network error'));
     const { container } = renderPage();
-    const textarea = container.querySelector('textarea')!;
+    const textarea = container.querySelector('textarea') as HTMLTextAreaElement;
 
     await act(async () => {
       fireEvent.change(textarea, { target: { value: '出错测试' } });
     });
     await act(async () => {
-      fireEvent.click(container.querySelector('button')!);
+      fireEvent.click(container.querySelector('button') as HTMLButtonElement);
     });
     await act(async () => {
       await new Promise((r) => setTimeout(r, 50));

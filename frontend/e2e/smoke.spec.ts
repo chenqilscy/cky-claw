@@ -34,7 +34,6 @@ test.describe('认证后页面', () => {
   test('Dashboard 页面渲染标题', async ({ page }) => {
     await page.goto('/dashboard');
     // Dashboard 页面应包含 "仪表盘" 或 "Dashboard" 标题
-    const heading = page.locator('text=仪表盘');
     // 即使 API 调用失败，页面框架也应加载
     await expect(page.locator('#root')).toBeVisible({ timeout: 10_000 });
   });

@@ -17,7 +17,7 @@ export function useWorkflowList(params?: { limit?: number; offset?: number }) {
 export function useWorkflow(id: string | undefined) {
   return useQuery({
     queryKey: [...WORKFLOWS_KEY, id],
-    queryFn: () => workflowService.get(id!),
+    queryFn: () => workflowService.get(id as string),
     enabled: !!id,
   });
 }

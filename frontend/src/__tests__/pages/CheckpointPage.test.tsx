@@ -51,18 +51,18 @@ describe('CheckpointPage', () => {
     const { container } = render(<CheckpointPage />);
     const btn = container.querySelector('button');
     expect(btn).toBeTruthy();
-    expect(btn!.disabled).toBe(true);
+    expect((btn as HTMLButtonElement).disabled).toBe(true);
   });
 
   it('输入 Run ID 后点击查询调用 list 接口', async () => {
     const { container } = render(<CheckpointPage />);
-    const input = container.querySelector('input')!;
+    const input = container.querySelector('input') as HTMLInputElement;
 
     await act(async () => {
       fireEvent.change(input, { target: { value: 'run-1' } });
     });
 
-    const btn = container.querySelector('button')!;
+    const btn = container.querySelector('button') as HTMLButtonElement;
     expect(btn.disabled).toBe(false);
 
     await act(async () => {
@@ -74,13 +74,13 @@ describe('CheckpointPage', () => {
 
   it('显示检查点列表数据', async () => {
     const { container } = render(<CheckpointPage />);
-    const input = container.querySelector('input')!;
+    const input = container.querySelector('input') as HTMLInputElement;
 
     await act(async () => {
       fireEvent.change(input, { target: { value: 'run-1' } });
     });
     await act(async () => {
-      fireEvent.click(container.querySelector('button')!);
+      fireEvent.click(container.querySelector('button') as HTMLButtonElement);
     });
     await act(async () => {
       await new Promise((r) => setTimeout(r, 50));
@@ -94,13 +94,13 @@ describe('CheckpointPage', () => {
 
   it('显示消息数和 Token 使用', async () => {
     const { container } = render(<CheckpointPage />);
-    const input = container.querySelector('input')!;
+    const input = container.querySelector('input') as HTMLInputElement;
 
     await act(async () => {
       fireEvent.change(input, { target: { value: 'run-1' } });
     });
     await act(async () => {
-      fireEvent.click(container.querySelector('button')!);
+      fireEvent.click(container.querySelector('button') as HTMLButtonElement);
     });
     await act(async () => {
       await new Promise((r) => setTimeout(r, 50));

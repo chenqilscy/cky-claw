@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
+import { App as AntApp } from 'antd';
 
 // Mock authStore
 vi.mock('../../stores/authStore', () => ({
@@ -25,10 +26,7 @@ vi.mock('../../services/oauthService', () => ({
 }));
 
 // Mock message
-vi.mock('antd', async () => {
-  const actual = await vi.importActual<typeof import('antd')>('antd');
-  return { ...actual, message: { success: vi.fn(), error: vi.fn() } };
-});
+// antd App.useApp() 通过 AntApp 包裹即可工作
 
 import LoginPage from '../../pages/Login';
 
@@ -56,9 +54,8 @@ describe('LoginPage', () => {
 
   it('renders login form', () => {
     render(
-      <MemoryRouter>
-        <LoginPage />
-      </MemoryRouter>,
+      <AntApp><MemoryRouter><LoginPage />
+      </MemoryRouter></AntApp>,
     );
     expect(screen.getByText('CkyClaw')).toBeDefined();
     expect(screen.getByPlaceholderText('用户名')).toBeDefined();
@@ -67,9 +64,8 @@ describe('LoginPage', () => {
 
   it('renders login button', () => {
     render(
-      <MemoryRouter>
-        <LoginPage />
-      </MemoryRouter>,
+      <AntApp><MemoryRouter><LoginPage />
+      </MemoryRouter></AntApp>,
     );
     expect(screen.getByRole('button', { name: /登\s*录/ })).toBeDefined();
   });
@@ -87,9 +83,8 @@ describe('LoginPage', () => {
     });
 
     render(
-      <MemoryRouter>
-        <LoginPage />
-      </MemoryRouter>,
+      <AntApp><MemoryRouter><LoginPage />
+      </MemoryRouter></AntApp>,
     );
     expect(screen.getByText('密码错误')).toBeDefined();
   });
@@ -97,9 +92,8 @@ describe('LoginPage', () => {
   it('renders GitHub login button when provider is available', async () => {
     mockGetProviders.mockResolvedValue({ providers: ['github'] });
     render(
-      <MemoryRouter>
-        <LoginPage />
-      </MemoryRouter>,
+      <AntApp><MemoryRouter><LoginPage />
+      </MemoryRouter></AntApp>,
     );
     await waitFor(() => {
       expect(screen.getByRole('button', { name: /GitHub 登录/ })).toBeDefined();
@@ -109,9 +103,8 @@ describe('LoginPage', () => {
   it('renders wecom login button when provider is available', async () => {
     mockGetProviders.mockResolvedValue({ providers: ['wecom'] });
     render(
-      <MemoryRouter>
-        <LoginPage />
-      </MemoryRouter>,
+      <AntApp><MemoryRouter><LoginPage />
+      </MemoryRouter></AntApp>,
     );
     await waitFor(() => {
       expect(screen.getByRole('button', { name: /企业微信 登录/ })).toBeDefined();
@@ -121,9 +114,8 @@ describe('LoginPage', () => {
   it('renders dingtalk login button when provider is available', async () => {
     mockGetProviders.mockResolvedValue({ providers: ['dingtalk'] });
     render(
-      <MemoryRouter>
-        <LoginPage />
-      </MemoryRouter>,
+      <AntApp><MemoryRouter><LoginPage />
+      </MemoryRouter></AntApp>,
     );
     await waitFor(() => {
       expect(screen.getByRole('button', { name: /钉钉 登录/ })).toBeDefined();
@@ -133,9 +125,8 @@ describe('LoginPage', () => {
   it('renders feishu login button when provider is available', async () => {
     mockGetProviders.mockResolvedValue({ providers: ['feishu'] });
     render(
-      <MemoryRouter>
-        <LoginPage />
-      </MemoryRouter>,
+      <AntApp><MemoryRouter><LoginPage />
+      </MemoryRouter></AntApp>,
     );
     await waitFor(() => {
       expect(screen.getByRole('button', { name: /飞书 登录/ })).toBeDefined();
@@ -145,9 +136,8 @@ describe('LoginPage', () => {
   it('renders multiple OAuth providers together', async () => {
     mockGetProviders.mockResolvedValue({ providers: ['github', 'wecom', 'dingtalk', 'feishu'] });
     render(
-      <MemoryRouter>
-        <LoginPage />
-      </MemoryRouter>,
+      <AntApp><MemoryRouter><LoginPage />
+      </MemoryRouter></AntApp>,
     );
     await waitFor(() => {
       expect(screen.getByRole('button', { name: /GitHub 登录/ })).toBeDefined();
@@ -160,9 +150,8 @@ describe('LoginPage', () => {
   it('does not show divider when no providers available', () => {
     mockGetProviders.mockResolvedValue({ providers: [] });
     render(
-      <MemoryRouter>
-        <LoginPage />
-      </MemoryRouter>,
+      <AntApp><MemoryRouter><LoginPage />
+      </MemoryRouter></AntApp>,
     );
     // 密码登录按钮应该存在
     expect(screen.getByRole('button', { name: /登\s*录/ })).toBeDefined();
@@ -175,9 +164,8 @@ describe('LoginPage', () => {
     mockAuthorize.mockResolvedValue({ authorize_url: 'https://login.dingtalk.com/test', state: 'abc' });
 
     render(
-      <MemoryRouter>
-        <LoginPage />
-      </MemoryRouter>,
+      <AntApp><MemoryRouter><LoginPage />
+      </MemoryRouter></AntApp>,
     );
 
     await waitFor(() => {
@@ -197,9 +185,8 @@ describe('LoginPage', () => {
     mockAuthorize.mockRejectedValue(new Error('网络错误'));
 
     render(
-      <MemoryRouter>
-        <LoginPage />
-      </MemoryRouter>,
+      <AntApp><MemoryRouter><LoginPage />
+      </MemoryRouter></AntApp>,
     );
 
     await waitFor(() => {
@@ -209,18 +196,17 @@ describe('LoginPage', () => {
     const user = userEvent.setup();
     await user.click(screen.getByRole('button', { name: /企业微信 登录/ }));
 
-    const { message: antdMessage } = await import('antd');
+    // App.useApp() 的 message.error 会渲染到 DOM 中
     await waitFor(() => {
-      expect(antdMessage.error).toHaveBeenCalledWith('企业微信 登录暂不可用');
+      expect(document.body.textContent).toContain('企业微信 登录暂不可用');
     });
   });
 
   it('handles getProviders failure gracefully', async () => {
     mockGetProviders.mockRejectedValue(new Error('网络异常'));
     render(
-      <MemoryRouter>
-        <LoginPage />
-      </MemoryRouter>,
+      <AntApp><MemoryRouter><LoginPage />
+      </MemoryRouter></AntApp>,
     );
     // 应该依然能渲染密码登录表单
     expect(screen.getByPlaceholderText('用户名')).toBeDefined();

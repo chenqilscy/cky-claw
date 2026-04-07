@@ -109,7 +109,7 @@ function buildSpanTree(spans: SpanItem[]): SpanTreeNode[] {
     if (!node) continue;
 
     if (span.parent_span_id && map.has(span.parent_span_id)) {
-      const parent = map.get(span.parent_span_id)!;
+      const parent = map.get(span.parent_span_id) as SpanTreeNode;
       (parent.children as SpanTreeNode[]).push(node);
     } else {
       roots.push(node);

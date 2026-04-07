@@ -76,6 +76,6 @@ export const evolutionService = {
   },
 
   async delete(id: string): Promise<void> {
-    return api.delete<void>(`/evolution/proposals/${id}`);
+    await api.delete<undefined>(`/evolution/proposals/${id}`);
   },
 };
