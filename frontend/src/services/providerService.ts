@@ -5,6 +5,20 @@ export const PROVIDER_TYPES = [
   'doubao', 'zhipu', 'moonshot', 'minimax', 'custom',
 ] as const;
 
+/** 各厂商官方 API Base URL，azure/custom 需用户自行填写 */
+export const PROVIDER_BASE_URLS: Record<string, string> = {
+  openai: 'https://api.openai.com/v1',
+  anthropic: 'https://api.anthropic.com/v1',
+  azure: '',
+  deepseek: 'https://api.deepseek.com/v1',
+  qwen: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+  doubao: 'https://ark.cn-beijing.volces.com/api/v3',
+  zhipu: 'https://open.bigmodel.cn/api/paas/v4',
+  moonshot: 'https://api.moonshot.cn/v1',
+  minimax: 'https://api.minimax.chat/v1',
+  custom: '',
+};
+
 export const AUTH_TYPES = ['api_key', 'azure_ad', 'custom_header'] as const;
 
 export type ProviderType = typeof PROVIDER_TYPES[number];

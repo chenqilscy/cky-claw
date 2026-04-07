@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button, Card, Form, Input, InputNumber, Select, Space, App, Spin } from 'antd';
 import { ArrowLeftOutlined } from '@ant-design/icons';
-import { providerService, PROVIDER_TYPES, AUTH_TYPES } from '../../services/providerService';
+import { providerService, PROVIDER_TYPES, AUTH_TYPES, PROVIDER_BASE_URLS } from '../../services/providerService';
 import type { ProviderCreateRequest, ProviderUpdateRequest } from '../../services/providerService';
 
 const ProviderEditPage: React.FC = () => {
@@ -13,6 +13,15 @@ const ProviderEditPage: React.FC = () => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  /** 切换厂商类型时自动填写 Base URL（仅当 base_url 为空或匹配已知厂商 URL 时覆盖） */
+  const handleProviderTypeChange = (type: string) => {
+    const currentUrl = (form.getFieldValue('base_url') as string) ?? '';
+    const knownUrls = new Set(Object.values(PROVIDER_BASE_URLS).filter(Boolean));
+    if (!currentUrl || knownUrls.has(currentUrl)) {
+      form.setFieldValue('base_url', PROVIDER_BASE_URLS[type] ?? '');
+    }
+  };
 
   useEffect(() => {
     if (isEdit && id) {
@@ -85,7 +94,7 @@ const ProviderEditPage: React.FC = () => {
             form={form}
             layout="vertical"
             onFinish={onFinish}
-            initialValues={{ auth_type: 'api_key', provider_type: 'openai' }}
+            initialValues={{ auth_type: 'api_key', provider_type: 'openai', base_url: PROVIDER_BASE_URLS.openai }}
           >
             <Form.Item
               name="name"
@@ -103,6 +112,7 @@ const ProviderEditPage: React.FC = () => {
               <Select
                 options={PROVIDER_TYPES.map((t) => ({ label: t, value: t }))}
                 placeholder="选择厂商类型"
+                onChange={handleProviderTypeChange}
               />
             </Form.Item>
 
