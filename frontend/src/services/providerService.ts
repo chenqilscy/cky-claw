@@ -2,7 +2,7 @@ import { api } from './api';
 
 export const PROVIDER_TYPES = [
   'openai', 'anthropic', 'azure', 'deepseek', 'qwen',
-  'doubao', 'zhipu', 'moonshot', 'custom',
+  'doubao', 'zhipu', 'moonshot', 'minimax', 'custom',
 ] as const;
 
 export const AUTH_TYPES = ['api_key', 'azure_ad', 'custom_header'] as const;

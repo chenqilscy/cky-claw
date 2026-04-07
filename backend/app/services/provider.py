@@ -144,6 +144,7 @@ _DEFAULT_TEST_MODELS: dict[str, str] = {
     "doubao": "openai/doubao-lite-32k",
     "zhipu": "openai/glm-4-flash",
     "moonshot": "openai/moonshot-v1-8k",
+    "minimax": "openai/MiniMax-Text-01",
     "custom": "openai/default",
 }
 

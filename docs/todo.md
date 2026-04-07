@@ -47,13 +47,13 @@
 |---|------|------|
 | F1 | 全链路启动验证 | PG + Redis + Backend + Frontend 完整功能流程体验、修复 UI/API 缺陷 |
 | F2 | Kubernetes 部署 | Helm Chart / Kustomize + HPA + PDB + Ingress |
-| F3 | 日志聚合 | 结构化日志 + ELK/Loki 集成 |
+| F3 | 日志聚合 | 结构化日志 + ELK/Loki 集成 (开源免费方案优先) |
 
 ### 3.2 框架能力增强（P1）
 
 | # | 功能 | 说明 |
 |---|------|------|
-| F4 | Agents SDK 兼容层 | Adapter 允许 OpenAI Agents SDK 的 Agent 定义直接在 CkyClaw 上运行 |
+| F4 | Agents SDK 兼容层（优先级最低） | Adapter 允许 OpenAI Agents SDK 的 Agent 定义直接在 CkyClaw 上运行 |
 | F5 | 流式输出端到端优化 | Runner run_streamed 的 SSE/WebSocket 推送链路末端优化 |
 | F6 | Agent 自动评估 Pipeline | 基于 Evolution Signal + 评估维度的自动化质量评分 |
 
