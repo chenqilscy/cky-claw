@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react';
-import { Button, Input, Space, Spin, Typography, message } from 'antd';
+import { Button, Input, Space, Spin, Typography, App } from 'antd';
 import { SendOutlined } from '@ant-design/icons';
 import { chatService } from '../../services/chatService';
 import type { ChatMessage } from './ChatPage';
@@ -19,6 +19,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   agentName,
   onSessionCreated,
 }) => {
+  const { message } = App.useApp();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);

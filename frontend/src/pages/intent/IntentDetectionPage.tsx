@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button, Card, Col, Form, Input, message, Progress, Row, Slider, Space, Tag, Typography } from 'antd';
+import { Button, Card, Col, Form, Input, App, Progress, Row, Slider, Space, Tag, Typography } from 'antd';
 import { AimOutlined } from '@ant-design/icons';
 import { intentService } from '../../services/intentService';
 import type { IntentDetectResponse } from '../../services/intentService';
@@ -8,6 +8,7 @@ const { Title, Text, Paragraph } = Typography;
 const { TextArea } = Input;
 
 const IntentDetectionPage: React.FC = () => {
+  const { message } = App.useApp();
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<IntentDetectResponse | null>(null);

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Button, Card, Input, message, Popconfirm, Space, Tag, Typography } from 'antd';
+import { Button, Card, Input, App, Popconfirm, Space, Tag, Typography } from 'antd';
 import { DeleteOutlined, ReloadOutlined, SearchOutlined } from '@ant-design/icons';
 import { ProTable } from '@ant-design/pro-components';
 import type { ProColumns } from '@ant-design/pro-components';
@@ -9,6 +9,7 @@ import type { CheckpointResponse } from '../../services/checkpointService';
 const { Title, Text } = Typography;
 
 const CheckpointPage: React.FC = () => {
+  const { message } = App.useApp();
   const [runId, setRunId] = useState('');
   const [data, setData] = useState<CheckpointResponse[]>([]);
   const [total, setTotal] = useState(0);
@@ -28,7 +29,7 @@ const CheckpointPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [runId]);
+  }, [runId, message]);
 
   useEffect(() => {
     if (runId.trim()) {

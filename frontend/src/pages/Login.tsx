@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Button, Card, Divider, Form, Input, Space, Typography, message } from 'antd';
+import { Button, Card, Divider, Form, Input, Space, Typography, App } from 'antd';
 import { GithubOutlined, GoogleOutlined, LockOutlined, SafetyOutlined, UserOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../stores/authStore';
@@ -23,6 +23,7 @@ interface LoginFormValues {
 }
 
 const LoginPage: React.FC = () => {
+  const { message } = App.useApp();
   const navigate = useNavigate();
   const { login, loading, error, clearError } = useAuthStore();
   const [providers, setProviders] = useState<string[]>([]);

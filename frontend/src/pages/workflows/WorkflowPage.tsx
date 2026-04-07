@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Card, Button, Space, Modal, Form, Input, Tag, message, Popconfirm, Empty, Typography, Table, Badge, Tooltip, Tabs } from 'antd';
+import { Card, Button, Space, Modal, Form, Input, Tag, App, Popconfirm, Empty, Typography, Table, Badge, Tooltip, Tabs } from 'antd';
 import { PlusOutlined, ReloadOutlined, DeleteOutlined, EditOutlined, EyeOutlined, CheckCircleOutlined, BranchesOutlined, NodeIndexOutlined, PartitionOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import type { ColumnsType } from 'antd/es/table';
@@ -25,6 +25,7 @@ const stepTypeColor: Record<string, string> = {
 };
 
 const WorkflowPage: React.FC = () => {
+  const { message } = App.useApp();
   const navigate = useNavigate();
   const [createOpen, setCreateOpen] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);

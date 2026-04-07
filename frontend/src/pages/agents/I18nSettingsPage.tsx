@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { ProTable, type ProColumns } from '@ant-design/pro-components';
-import { Button, Form, Input, Select, Tag, message, Space, Popconfirm, Drawer } from 'antd';
+import { Button, Form, Input, Select, Tag, App, Space, Popconfirm, Drawer } from 'antd';
 import { PlusOutlined, DeleteOutlined, EditOutlined, StarOutlined } from '@ant-design/icons';
 import {
   agentLocaleService,
@@ -27,6 +27,7 @@ const localeOptions = [
 ];
 
 const I18nSettingsPage: React.FC = () => {
+  const { message } = App.useApp();
   const [agents, setAgents] = useState<AgentConfig[]>([]);
   const [selectedAgent, setSelectedAgent] = useState<string | undefined>();
   const [createDrawerOpen, setCreateDrawerOpen] = useState(false);

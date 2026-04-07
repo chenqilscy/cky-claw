@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button, message, Popconfirm, Input, Space, Tag, Upload } from 'antd';
+import { Button, App, Popconfirm, Input, Space, Tag, Upload } from 'antd';
 import { PlusOutlined, ReloadOutlined, HistoryOutlined, ApartmentOutlined, DownloadOutlined, UploadOutlined } from '@ant-design/icons';
 import { ProTable } from '@ant-design/pro-components';
 import type { ProColumns } from '@ant-design/pro-components';
@@ -9,6 +9,7 @@ import { agentService } from '../../services/agentService';
 import { useAgentList, useDeleteAgent } from '../../hooks/useAgentQueries';
 
 const AgentListPage: React.FC = () => {
+  const { message } = App.useApp();
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [pagination, setPagination] = useState({ current: 1, pageSize: 20 });

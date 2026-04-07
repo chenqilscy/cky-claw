@@ -53,7 +53,7 @@ const OAuthCallbackPage: React.FC = () => {
 
   return (
     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
-      <Spin size="large" tip="正在通过 OAuth 登录..." />
+      <Spin size="large" />
     </div>
   );
 };

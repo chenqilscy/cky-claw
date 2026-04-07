@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Button, Card, message, Space, Tag, Tooltip, Spin, Empty, Select } from 'antd';
+import { Button, Card, App, Space, Tag, Tooltip, Spin, Empty, Select } from 'antd';
 import {
   SaveOutlined, ReloadOutlined, ApartmentOutlined, ArrowLeftOutlined,
 } from '@ant-design/icons';
@@ -200,6 +200,7 @@ function buildNodes(team: TeamConfig, agentMap: Map<string, AgentConfig>): Node<
 
 // ─── 主组件 ──────────────────────────────────────────────────
 const TeamFlowPage: React.FC = () => {
+  const { message } = App.useApp();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const teamId = searchParams.get('id');
@@ -244,7 +245,7 @@ const TeamFlowPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [teamId, setNodes, setEdges]);
+  }, [teamId, setNodes, setEdges, message]);
 
   useEffect(() => {
     fetchData();
@@ -272,7 +273,7 @@ const TeamFlowPage: React.FC = () => {
     setNodes(layout.nodes);
     setEdges(layout.edges);
     setDirty(true);
-  }, [team, agentMap, setNodes, setEdges]);
+  }, [team, agentMap, setNodes, setEdges, message]);
 
   const handleSave = useCallback(async () => {
     if (!team) return;
@@ -289,7 +290,7 @@ const TeamFlowPage: React.FC = () => {
     } finally {
       setSaving(false);
     }
-  }, [team]);
+  }, [team, message]);
 
   const availableAgents = useMemo(() => {
     if (!team) return [];
@@ -307,7 +308,7 @@ const TeamFlowPage: React.FC = () => {
   if (loading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', padding: 100 }}>
-        <Spin size="large" tip="加载中..." />
+        <Spin size="large" />
       </div>
     );
   }

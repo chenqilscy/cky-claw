@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Button, DatePicker, Form, Input, message, Modal, Popconfirm, Switch, Tag, Space } from 'antd';
+import { Button, DatePicker, Form, Input, App, Modal, Popconfirm, Switch, Tag, Space } from 'antd';
 import { KeyOutlined, PlusOutlined, ReloadOutlined, ThunderboltOutlined } from '@ant-design/icons';
 import { ProTable } from '@ant-design/pro-components';
 import type { ProColumns } from '@ant-design/pro-components';
@@ -14,6 +14,7 @@ const HEALTH_STATUS_MAP: Record<string, { color: string; text: string }> = {
 };
 
 const ProviderListPage: React.FC = () => {
+  const { message } = App.useApp();
   const navigate = useNavigate();
   const [data, setData] = useState<ProviderResponse[]>([]);
   const [total, setTotal] = useState(0);
@@ -32,7 +33,7 @@ const ProviderListPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [pagination]);
+  }, [pagination, message]);
 
   useEffect(() => {
     fetchProviders();

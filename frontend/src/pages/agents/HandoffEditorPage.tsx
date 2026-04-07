@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Button, Card, message, Space, Tag, Tooltip, Spin } from 'antd';
+import { Button, Card, App, Space, Tag, Tooltip, Spin } from 'antd';
 import { SaveOutlined, ReloadOutlined, ApartmentOutlined, WarningOutlined } from '@ant-design/icons';
 import {
   ReactFlow,
@@ -136,6 +136,7 @@ function detectCycles(edges: Edge[]): string[][] {
 
 // ─── 主组件 ────────────────────────────────────────────────────
 const HandoffEditorPage: React.FC = () => {
+  const { message } = App.useApp();
   const [agents, setAgents] = useState<AgentConfig[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -206,7 +207,7 @@ const HandoffEditorPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [setNodes, setEdges]);
+  }, [setNodes, setEdges, message]);
 
   useEffect(() => {
     loadAgents();
@@ -292,7 +293,7 @@ const HandoffEditorPage: React.FC = () => {
     } finally {
       setSaving(false);
     }
-  }, [agents, edges]);
+  }, [agents, edges, message]);
 
   // ── 自动布局 ──
   const handleAutoLayout = useCallback(() => {

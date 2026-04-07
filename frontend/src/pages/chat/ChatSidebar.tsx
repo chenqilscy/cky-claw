@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Button, Divider, List, Select, Typography, message } from 'antd';
+import { Button, Divider, List, Select, Typography, App } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import { agentService } from '../../services/agentService';
 import { chatService } from '../../services/chatService';
@@ -19,6 +19,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
   onSelectSession,
   onNewSession,
 }) => {
+  const { message } = App.useApp();
   const [agents, setAgents] = useState<AgentConfig[]>([]);
   const [selectedAgent, setSelectedAgent] = useState<string>('');
   const [sessions, setSessions] = useState<ChatSession[]>([]);
@@ -46,7 +47,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
       .then((res) => setSessions(res.data))
       .catch(() => message.error('加载会话列表失败'))
       .finally(() => setLoadingSessions(false));
-  }, [selectedAgent]);
+  }, [selectedAgent, message]);
 
   const handleNewSession = () => {
     if (!selectedAgent) {

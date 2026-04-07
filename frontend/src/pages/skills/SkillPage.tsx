@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { ProTable, type ProColumns } from '@ant-design/pro-components';
-import { Button, Modal, Form, Input, Select, Tag, message, Space, Popconfirm } from 'antd';
+import { Button, Modal, Form, Input, Select, Tag, App, Space, Popconfirm } from 'antd';
 import { PlusOutlined, SearchOutlined, DeleteOutlined, EditOutlined, EyeOutlined } from '@ant-design/icons';
 import { skillService, type SkillItem, type SkillCreateParams, type SkillUpdateParams } from '../../services/skillService';
 
@@ -15,6 +15,7 @@ const categoryColorMap: Record<string, string> = {
 };
 
 const SkillPage: React.FC = () => {
+  const { message } = App.useApp();
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [previewModalOpen, setPreviewModalOpen] = useState(false);

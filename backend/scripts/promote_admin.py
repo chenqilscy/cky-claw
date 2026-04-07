@@ -13,7 +13,10 @@ async def main() -> None:
         result = await conn.execute(
             text("UPDATE users SET role = 'admin' WHERE username = 'admin' RETURNING id, username, role")
         )
-        for row in result.fetchall():
+        rows = result.fetchall()
+        if not rows:
+            print("Warning: No user with username='admin' found. Nothing updated.")
+        for row in rows:
             print(f"Updated: id={row[0]}, username={row[1]}, role={row[2]}")
 
 

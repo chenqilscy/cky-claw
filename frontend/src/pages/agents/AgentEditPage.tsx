@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Button, Card, Form, Input, Select, Space, message, Spin } from 'antd';
+import { Button, Card, Form, Input, Select, Space, App, Spin } from 'antd';
 import { ArrowLeftOutlined } from '@ant-design/icons';
 import { agentService } from '../../services/agentService';
 import type { AgentConfig, AgentCreateInput, AgentUpdateInput } from '../../services/agentService';
@@ -18,6 +18,7 @@ const APPROVAL_MODES = [
 ];
 
 const AgentEditPage: React.FC = () => {
+  const { message } = App.useApp();
   const navigate = useNavigate();
   const { name } = useParams<{ name: string }>();
   const isEdit = !!name;
@@ -108,7 +109,7 @@ const AgentEditPage: React.FC = () => {
         .catch(() => message.error('加载 Agent 失败'))
         .finally(() => setLoading(false));
     }
-  }, [isEdit, name, form]);
+  }, [isEdit, name, form, message]);
 
   const onFinish = async (values: Record<string, unknown>) => {
     setSaving(true);

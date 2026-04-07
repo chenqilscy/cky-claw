@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { Tag, Button, Space, Modal, Input, message, Popconfirm, Badge } from 'antd';
+import { Tag, Button, Space, Modal, Input, App, Popconfirm, Badge } from 'antd';
 import { CheckOutlined, CloseOutlined, ReloadOutlined, WifiOutlined } from '@ant-design/icons';
 import type { ProColumns, ActionType } from '@ant-design/pro-components';
 import { ProTable } from '@ant-design/pro-components';
@@ -22,6 +22,7 @@ const triggerLabelMap: Record<string, string> = {
 };
 
 const ApprovalQueuePage: React.FC = () => {
+  const { message } = App.useApp();
   const actionRef = useRef<ActionType>(null);
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
   const [rejectingId, setRejectingId] = useState<string>('');
@@ -48,7 +49,7 @@ const ApprovalQueuePage: React.FC = () => {
     } catch {
       message.error('操作失败');
     }
-  }, []);
+  }, [message]);
 
   const handleRejectConfirm = useCallback(async () => {
     if (!rejectingId) return;
@@ -65,7 +66,7 @@ const ApprovalQueuePage: React.FC = () => {
     } catch {
       message.error('操作失败');
     }
-  }, [rejectingId, rejectComment]);
+  }, [rejectingId, rejectComment, message]);
 
   const columns: ProColumns<ApprovalItem>[] = [
     {

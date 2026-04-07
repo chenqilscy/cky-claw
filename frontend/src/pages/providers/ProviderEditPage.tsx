@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Button, Card, Form, Input, InputNumber, Select, Space, message, Spin } from 'antd';
+import { Button, Card, Form, Input, InputNumber, Select, Space, App, Spin } from 'antd';
 import { ArrowLeftOutlined } from '@ant-design/icons';
 import { providerService, PROVIDER_TYPES, AUTH_TYPES } from '../../services/providerService';
 import type { ProviderCreateRequest, ProviderUpdateRequest } from '../../services/providerService';
 
 const ProviderEditPage: React.FC = () => {
+  const { message } = App.useApp();
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const isEdit = !!id;
@@ -30,7 +31,7 @@ const ProviderEditPage: React.FC = () => {
         .catch(() => message.error('加载 Provider 失败'))
         .finally(() => setLoading(false));
     }
-  }, [isEdit, id, form]);
+  }, [isEdit, id, form, message]);
 
   const onFinish = async (values: Record<string, unknown>) => {
     setSaving(true);

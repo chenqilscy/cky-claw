@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { message, Tag, Badge, Modal, Descriptions, Input, Space, Card, Row, Col, Statistic } from 'antd';
+import { App, Tag, Badge, Modal, Descriptions, Input, Space, Card, Row, Col, Statistic } from 'antd';
 import { ReloadOutlined, PauseCircleOutlined, PlayCircleOutlined, EyeOutlined } from '@ant-design/icons';
 import { ProTable } from '@ant-design/pro-components';
 import type { ProColumns } from '@ant-design/pro-components';
@@ -17,6 +17,7 @@ const STATUS_MAP: Record<string, { color: string; text: string }> = {
 };
 
 const SupervisionPage: React.FC = () => {
+  const { message } = App.useApp();
   const [data, setData] = useState<SupervisionSessionItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [agentFilter, setAgentFilter] = useState<string>('');
@@ -36,7 +37,7 @@ const SupervisionPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [agentFilter]);
+  }, [agentFilter, message]);
 
   useEffect(() => {
     fetchList();

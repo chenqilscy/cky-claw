@@ -47,7 +47,7 @@ const OAuthCallbackPage = lazy(() => import('./pages/oauth/OAuthCallbackPage'));
 
 const PageLoading = () => (
   <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 300 }}>
-    <Spin size="large" tip="加载中..." />
+    <Spin size="large" />
   </div>
 );
 

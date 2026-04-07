@@ -21,7 +21,7 @@ import {
   Panel,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { Button, Card, Drawer, Form, Input, InputNumber, message, Select, Space, Tag, Typography } from 'antd';
+import { Button, Card, Drawer, Form, Input, InputNumber, App, Select, Space, Tag, Typography } from 'antd';
 import { SaveOutlined, CheckCircleOutlined, ArrowLeftOutlined, PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useWorkflow, useCreateWorkflow, useUpdateWorkflow, useValidateWorkflow } from '../../hooks/useWorkflowQueries';
 import type { StepSchema, EdgeSchema, WorkflowCreateParams } from '../../services/workflowService';
@@ -107,6 +107,7 @@ function flowToEdges(edges: Edge[]): EdgeSchema[] {
 }
 
 const WorkflowEditorPage: React.FC = () => {
+  const { message } = App.useApp();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const editId = searchParams.get('id');
@@ -233,7 +234,7 @@ const WorkflowEditorPage: React.FC = () => {
     );
     setDrawerOpen(false);
     message.success('节点已更新');
-  }, [selectedNode, form, setNodes]);
+  }, [selectedNode, form, setNodes, message]);
 
   // 删除选中节点
   const deleteSelectedNode = useCallback(() => {
@@ -264,7 +265,7 @@ const WorkflowEditorPage: React.FC = () => {
     } catch {
       message.error('验证请求失败');
     }
-  }, [buildParams, validateMutation]);
+  }, [buildParams, validateMutation, message]);
 
   // 保存
   const handleSave = useCallback(async () => {
@@ -285,7 +286,7 @@ const WorkflowEditorPage: React.FC = () => {
     } catch {
       message.error('保存失败');
     }
-  }, [wfName, editId, buildParams, createMutation, updateMutation, navigate]);
+  }, [wfName, editId, buildParams, createMutation, updateMutation, navigate, message]);
 
   return (
     <div style={{ height: 'calc(100vh - 64px)', display: 'flex', flexDirection: 'column' }}>

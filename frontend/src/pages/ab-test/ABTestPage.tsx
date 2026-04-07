@@ -107,8 +107,10 @@ const ABTestPage: React.FC = () => {
 
       {loading && (
         <Card>
-          <Spin tip="正在并行调用模型...">
-            <div style={{ height: 100 }} />
+          <Spin spinning>
+            <div style={{ height: 100, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+              正在并行调用模型...
+            </div>
           </Spin>
         </Card>
       )}

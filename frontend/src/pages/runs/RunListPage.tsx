@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { message, Card, Row, Col, Statistic, DatePicker, Input, Space, Tag, Segmented } from 'antd';
+import { App, Card, Row, Col, Statistic, DatePicker, Input, Space, Tag, Segmented } from 'antd';
 import { ReloadOutlined } from '@ant-design/icons';
 import { ProTable } from '@ant-design/pro-components';
 import type { ProColumns } from '@ant-design/pro-components';
@@ -25,6 +25,7 @@ const GROUP_BY_OPTIONS: { label: string; value: SummaryGroupBy }[] = [
 ];
 
 const RunListPage: React.FC = () => {
+  const { message } = App.useApp();
   const [data, setData] = useState<TokenUsageLog[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -61,7 +62,7 @@ const RunListPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [buildParams]);
+  }, [buildParams, message]);
 
   const fetchSummary = useCallback(async () => {
     setSummaryLoading(true);
@@ -80,7 +81,7 @@ const RunListPage: React.FC = () => {
     } finally {
       setSummaryLoading(false);
     }
-  }, [agentFilter, modelFilter, timeRange, groupBy]);
+  }, [agentFilter, modelFilter, timeRange, groupBy, message]);
 
   useEffect(() => {
     fetchList();
