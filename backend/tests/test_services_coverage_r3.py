@@ -354,7 +354,7 @@ class TestResolveProviderR3:
         config = _make_orm(provider_name=None)
         db = _mock_db()
         result = await _resolve_provider(db, config)
-        assert result == {}
+        assert result == ({}, None)
 
     @pytest.mark.asyncio
     async def test_provider_not_found(self) -> None:
@@ -363,7 +363,7 @@ class TestResolveProviderR3:
         config = _make_orm(provider_name="missing", name="agent1")
         db = _mock_db(_scalar_one_or_none(None))
         result = await _resolve_provider(db, config)
-        assert result == {}
+        assert result == ({}, None)
 
     @pytest.mark.asyncio
     async def test_provider_disabled(self) -> None:
@@ -416,10 +416,11 @@ class TestResolveProviderR3:
             raise Exception("fail")  # auth_config value 解密失败 → fallback
 
         with patch("app.core.crypto.decrypt_api_key", side_effect=selective_decrypt):
-            result = await _resolve_provider(db, config)
-        assert result["api_key"] == "decrypted_key"
-        assert result["api_base"] == "https://api.azure.com"
-        assert "extra_headers" in result
+            result_kwargs, result_type = await _resolve_provider(db, config)
+        assert result_kwargs["api_key"] == "decrypted_key"
+        assert result_kwargs["api_base"] == "https://api.azure.com"
+        assert "extra_headers" in result_kwargs
+        assert result_type == "azure"
 
 
 # ═════════════════════════════════════════════════════════════════════════

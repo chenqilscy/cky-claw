@@ -690,20 +690,53 @@ async def get_session_messages(
 # Provider 解析辅助
 # ---------------------------------------------------------------------------
 
+# provider_type → LiteLLM 模型前缀映射。
+# 原生支持的厂商（openai/anthropic）无前缀；国产兼容 OpenAI 格式的统一用 "openai/"。
+_PROVIDER_TYPE_PREFIX: dict[str, str] = {
+    "openai": "",
+    "anthropic": "",
+    "azure": "azure/",
+    "deepseek": "deepseek/",
+    "qwen": "openai/",
+    "doubao": "openai/",
+    "zhipu": "openai/",
+    "moonshot": "openai/",
+    "minimax": "openai/",
+    "custom": "",
+}
+
+
+def _ensure_model_prefix(model: str | None, provider_type: str | None) -> str | None:
+    """确保模型名称包含 LiteLLM 所需的 provider 前缀。
+
+    如果模型名已包含 "/"（即已有前缀），则原样返回。
+    否则根据 provider_type 自动补全前缀。
+    """
+    if not model or not provider_type:
+        return model
+    # 已包含前缀则跳过
+    if "/" in model:
+        return model
+    prefix = _PROVIDER_TYPE_PREFIX.get(provider_type, "")
+    if prefix:
+        return f"{prefix}{model}"
+    return model
+
 
 async def _resolve_provider(
     db: AsyncSession,
     agent_config: AgentConfig,
-) -> dict[str, str | None]:
+) -> tuple[dict[str, str | None], str | None]:
     """从 AgentConfig.provider_name 加载 ProviderConfig，返回 LiteLLMProvider 构造参数。
 
     Returns:
-        dict with keys: api_key, api_base, extra_headers (all optional).
-        若 provider_name 为空或 Provider 未找到/已禁用，返回空 dict（使用环境变量）。
+        tuple of (kwargs_dict, provider_type).
+        kwargs_dict keys: api_key, api_base, extra_headers (all optional).
+        若 provider_name 为空或 Provider 未找到/已禁用，返回 ({}, None)。
     """
     provider_name = getattr(agent_config, "provider_name", None)
     if not provider_name:
-        return {}
+        return {}, None
 
     from app.core.crypto import decrypt_api_key
     from app.models.provider import ProviderConfig
@@ -714,7 +747,7 @@ async def _resolve_provider(
     provider = (await db.execute(stmt)).scalar_one_or_none()
     if provider is None:
         logger.warning("Agent '%s' 指定的 Provider '%s' 不存在", agent_config.name, provider_name)
-        return {}
+        return {}, None
 
     if not provider.is_enabled:
         raise NotFoundError(f"Provider '{provider_name}' 已被禁用，无法执行 Agent '{agent_config.name}'")
@@ -752,7 +785,7 @@ async def _resolve_provider(
         provider.provider_type,
         provider.base_url,
     )
-    return result
+    return result, provider.provider_type
 
 
 # ---------------------------------------------------------------------------
@@ -794,7 +827,7 @@ async def execute_run(
     handoff_agents = await _resolve_handoff_agents(db, agent_config)
 
     # 解析 Provider 配置
-    provider_kwargs = await _resolve_provider(db, agent_config)
+    provider_kwargs, provider_type = await _resolve_provider(db, agent_config)
 
     # 加载 MCP Server 工具（通过 AsyncExitStack 管理连接生命周期）
     from contextlib import AsyncExitStack
@@ -806,7 +839,7 @@ async def execute_run(
         # 先创建子 Agent 的轻量 RunConfig（共享 model_provider，无 trace/approval）
         sub_model_provider = LiteLLMProvider(**provider_kwargs)
         sub_run_config = FrameworkRunConfig(
-            model=request.config.model_override or agent_config.model,
+            model=_ensure_model_prefix(request.config.model_override or agent_config.model, provider_type),
             model_provider=sub_model_provider,
         )
         agent_tool_fns = await _resolve_agent_tools(db, agent_config, run_config=sub_run_config)
@@ -834,7 +867,7 @@ async def execute_run(
 
         run_id = str(uuid.uuid4())
         trace_processor = PostgresTraceProcessor(session_id=str(session_id))
-        model = request.config.model_override or agent_config.model
+        model = _ensure_model_prefix(request.config.model_override or agent_config.model, provider_type)
 
         # 审批处理器：非 full-auto 模式时创建 HttpApprovalHandler
         approval_handler = None
@@ -960,7 +993,7 @@ async def execute_run_stream(
     handoff_agents = await _resolve_handoff_agents(db, agent_config)
 
     # 解析 Provider 配置
-    provider_kwargs = await _resolve_provider(db, agent_config)
+    provider_kwargs, provider_type = await _resolve_provider(db, agent_config)
 
     # 加载 MCP Server 工具（通过 AsyncExitStack 管理连接生命周期）
     from contextlib import AsyncExitStack
@@ -976,7 +1009,7 @@ async def execute_run_stream(
     # 解析 Agent-as-Tool
     sub_model_provider = LiteLLMProvider(**provider_kwargs)
     sub_run_config = FrameworkRunConfig(
-        model=request.config.model_override or agent_config.model,
+        model=_ensure_model_prefix(request.config.model_override or agent_config.model, provider_type),
         model_provider=sub_model_provider,
     )
     try:
@@ -1009,7 +1042,7 @@ async def execute_run_stream(
 
     run_id = str(uuid.uuid4())
     trace_processor = PostgresTraceProcessor(session_id=str(session_id))
-    model = request.config.model_override or agent_config.model
+    model = _ensure_model_prefix(request.config.model_override or agent_config.model, provider_type)
 
     # 审批处理器：非 full-auto 模式时创建 HttpApprovalHandler
     approval_handler = None

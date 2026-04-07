@@ -637,7 +637,7 @@ class TestResolveProvider:
         mock_config.provider_name = None
         mock_config.name = "test-agent"
         result = await _resolve_provider(AsyncMock(), mock_config)
-        assert result == {}
+        assert result == ({}, None)
 
     @pytest.mark.asyncio
     async def test_provider_not_found_returns_empty(self) -> None:
@@ -653,7 +653,7 @@ class TestResolveProvider:
         mock_db.execute = AsyncMock(return_value=mock_result)
 
         result = await _resolve_provider(mock_db, mock_config)
-        assert result == {}
+        assert result == ({}, None)
 
     @pytest.mark.asyncio
     async def test_provider_disabled_raises(self) -> None:
@@ -697,9 +697,10 @@ class TestResolveProvider:
         mock_result.scalar_one_or_none.return_value = mock_provider
         mock_db.execute = AsyncMock(return_value=mock_result)
 
-        result = await _resolve_provider(mock_db, mock_config)
-        assert result["api_key"] == "sk-test-123"
-        assert result["api_base"] == "https://custom.openai.com/v1"
+        result_kwargs, result_type = await _resolve_provider(mock_db, mock_config)
+        assert result_kwargs["api_key"] == "sk-test-123"
+        assert result_kwargs["api_base"] == "https://custom.openai.com/v1"
+        assert result_type == "openai"
 
     @pytest.mark.asyncio
     @patch("app.core.crypto.decrypt_api_key", side_effect=Exception("decrypt failed"))
