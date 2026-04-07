@@ -58,7 +58,7 @@ def _cleanup_overrides():
 @pytest.fixture(autouse=True)
 def _no_audit_log():
     """禁用审计日志中间件避免写真实 DB。"""
-    with patch("app.core.audit_middleware.AuditLogMiddleware._write_audit_log", new_callable=AsyncMock):
+    with patch("app.core.audit_middleware.AuditLogMiddleware._flush", new_callable=AsyncMock):
         yield
 
 
@@ -124,8 +124,11 @@ class TestCoreAuth:
     def test_decode_access_token_tampered_returns_none(self) -> None:
         from app.core.auth import create_access_token, decode_access_token
         token = create_access_token({"sub": "user"})
-        # 篡改最后一位
-        tampered = token[:-1] + ("A" if token[-1] != "A" else "B")
+        # 篡改签名部分（反转整个签名段）
+        parts = token.rsplit(".", 1)
+        sig = parts[1]
+        tampered_sig = sig[::-1] if sig != sig[::-1] else sig[1:] + sig[0]
+        tampered = parts[0] + "." + tampered_sig
         assert decode_access_token(tampered) is None
 
 
@@ -1366,7 +1369,7 @@ class TestWSBroadcast:
         mock_get_redis = AsyncMock(return_value=mock_redis)
         with patch("app.api.ws.get_redis", mock_get_redis):
             await publish_approval_event("approval_created", {"id": "abc"})
-        mock_redis.publish.assert_awaited_once()
+        assert mock_redis.publish.await_count == 2
 
     @pytest.mark.asyncio
     async def test_publish_approval_event_redis_error(self) -> None:
@@ -1380,8 +1383,8 @@ class TestWSBroadcast:
 
     @pytest.mark.asyncio
     async def test_broadcast_removes_dead_connections(self) -> None:
-        """_broadcast 移除死连接。"""
-        from app.api.ws import _broadcast, _active_connections
+        """_broadcast_to 移除死连接。"""
+        from app.api.ws import _broadcast_to, _active_connections
 
         ws_ok = AsyncMock()
         ws_dead = AsyncMock()
@@ -1391,7 +1394,7 @@ class TestWSBroadcast:
         _active_connections.add(ws_ok)
         _active_connections.add(ws_dead)
         try:
-            await _broadcast("test-message")
+            await _broadcast_to(_active_connections, "test-message")
             ws_ok.send_text.assert_awaited_once_with("test-message")
             assert ws_dead not in _active_connections
         finally:

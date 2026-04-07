@@ -15,7 +15,9 @@ export default defineConfig({
     globals: true,
     setupFiles: ['./src/__tests__/setup.ts'],
     testTimeout: 30000,
+    include: ['src/__tests__/**/*.test.{ts,tsx}'],
     exclude: ['e2e/**', 'node_modules/**'],
+    css: false,
   },
   build: {
     rollupOptions: {

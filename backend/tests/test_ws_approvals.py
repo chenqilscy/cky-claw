@@ -11,8 +11,9 @@ import pytest
 
 from app.api.ws import (
     APPROVAL_CHANNEL,
+    EVENTS_CHANNEL,
     _active_connections,
-    _broadcast,
+    _broadcast_to,
     publish_approval_event,
 )
 from app.core.redis import close_redis
@@ -23,16 +24,21 @@ class TestPublishApprovalEvent:
 
     @pytest.mark.asyncio
     async def test_publish_event_to_redis(self) -> None:
-        """正常发布事件到 Redis channel。"""
+        """正常发布事件到 Redis 双频道（审批 + 统一事件）。"""
         mock_redis = AsyncMock()
         with patch("app.api.ws.get_redis", return_value=mock_redis):
             await publish_approval_event("approval_created", {"id": "test-123"})
-        mock_redis.publish.assert_called_once()
-        args = mock_redis.publish.call_args
-        assert args[0][0] == APPROVAL_CHANNEL
-        payload = json.loads(args[0][1])
+        assert mock_redis.publish.call_count == 2
+        calls = mock_redis.publish.call_args_list
+        # 第一次调用：审批频道
+        assert calls[0][0][0] == APPROVAL_CHANNEL
+        payload = json.loads(calls[0][0][1])
         assert payload["type"] == "approval_created"
         assert payload["data"]["id"] == "test-123"
+        # 第二次调用：统一事件频道
+        assert calls[1][0][0] == EVENTS_CHANNEL
+        payload2 = json.loads(calls[1][0][1])
+        assert payload2["type"] == "approval_created"
 
     @pytest.mark.asyncio
     async def test_publish_handles_redis_error(self) -> None:
@@ -52,11 +58,11 @@ class TestPublishApprovalEvent:
                 "id": str(uuid.uuid4()),
                 "resolved_at": datetime.now(timezone.utc).isoformat(),
             })
-        mock_redis.publish.assert_called_once()
+        assert mock_redis.publish.call_count == 2
 
 
 class TestBroadcast:
-    """_broadcast 测试。"""
+    """_broadcast_to 测试。"""
 
     @pytest.mark.asyncio
     async def test_broadcast_to_active_connections(self) -> None:
@@ -67,7 +73,7 @@ class TestBroadcast:
         _active_connections.add(ws1)
         _active_connections.add(ws2)
         try:
-            await _broadcast('{"type":"test"}')
+            await _broadcast_to(_active_connections, '{"type":"test"}')
             ws1.send_text.assert_called_once_with('{"type":"test"}')
             ws2.send_text.assert_called_once_with('{"type":"test"}')
         finally:
@@ -83,7 +89,7 @@ class TestBroadcast:
         _active_connections.add(ws_alive)
         _active_connections.add(ws_dead)
         try:
-            await _broadcast("test")
+            await _broadcast_to(_active_connections, "test")
             assert ws_alive in _active_connections
             assert ws_dead not in _active_connections
         finally:
@@ -93,7 +99,7 @@ class TestBroadcast:
     async def test_broadcast_empty_connections(self) -> None:
         """无连接时广播不报错。"""
         _active_connections.clear()
-        await _broadcast("test")  # 不应抛异常
+        await _broadcast_to(_active_connections, "test")  # 不应抛异常
 
 
 class TestRedisModule:
