@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Button, Card, Slider, Space, Tag, Tooltip, Typography } from 'antd';
 import {
   CaretRightOutlined,
@@ -31,7 +31,7 @@ const TraceReplayTimeline: React.FC<TraceReplayTimelineProps> = ({ data }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const timeline = data?.timeline ?? [];
+  const timeline = useMemo(() => data?.timeline ?? [], [data?.timeline]);
 
   // 清理定时器
   useEffect(() => {

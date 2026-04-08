@@ -340,6 +340,105 @@ class TestSaveTraceFromProcessor:
 
 
 # ═════════════════════════════════════════════════════════════════════════
+# Session Service — _ensure_model_prefix
+# ═════════════════════════════════════════════════════════════════════════
+
+
+class TestEnsureModelPrefix:
+    """覆盖 session.py _ensure_model_prefix 的各分支。"""
+
+    def test_empty_model(self) -> None:
+        """model 为空字符串时原样返回。"""
+        from app.services.session import _ensure_model_prefix
+
+        assert _ensure_model_prefix("", "zhipu") == ""
+
+    def test_none_model(self) -> None:
+        """model 为 None 时原样返回。"""
+        from app.services.session import _ensure_model_prefix
+
+        assert _ensure_model_prefix(None, "zhipu") is None
+
+    def test_none_provider_type(self) -> None:
+        """provider_type 为 None 时原样返回。"""
+        from app.services.session import _ensure_model_prefix
+
+        assert _ensure_model_prefix("glm-5", None) == "glm-5"
+
+    def test_already_has_prefix(self) -> None:
+        """模型名已包含 '/' 时跳过补全。"""
+        from app.services.session import _ensure_model_prefix
+
+        assert _ensure_model_prefix("openai/glm-5", "zhipu") == "openai/glm-5"
+
+    def test_zhipu_prefix(self) -> None:
+        """zhipu 厂商使用 openai/ 前缀。"""
+        from app.services.session import _ensure_model_prefix
+
+        assert _ensure_model_prefix("glm-5", "zhipu") == "openai/glm-5"
+
+    def test_deepseek_prefix(self) -> None:
+        """deepseek 厂商使用 deepseek/ 前缀。"""
+        from app.services.session import _ensure_model_prefix
+
+        assert _ensure_model_prefix("deepseek-chat", "deepseek") == "deepseek/deepseek-chat"
+
+    def test_azure_prefix(self) -> None:
+        """azure 厂商使用 azure/ 前缀。"""
+        from app.services.session import _ensure_model_prefix
+
+        assert _ensure_model_prefix("gpt-4o", "azure") == "azure/gpt-4o"
+
+    def test_openai_no_prefix(self) -> None:
+        """openai 原生厂商无前缀。"""
+        from app.services.session import _ensure_model_prefix
+
+        assert _ensure_model_prefix("gpt-4o-mini", "openai") == "gpt-4o-mini"
+
+    def test_anthropic_no_prefix(self) -> None:
+        """anthropic 原生厂商无前缀。"""
+        from app.services.session import _ensure_model_prefix
+
+        assert _ensure_model_prefix("claude-3-haiku", "anthropic") == "claude-3-haiku"
+
+    def test_unknown_provider_type(self) -> None:
+        """未知 provider_type 无前缀。"""
+        from app.services.session import _ensure_model_prefix
+
+        assert _ensure_model_prefix("some-model", "google") == "some-model"
+
+    def test_qwen_prefix(self) -> None:
+        """qwen 厂商使用 openai/ 前缀。"""
+        from app.services.session import _ensure_model_prefix
+
+        assert _ensure_model_prefix("qwen-turbo", "qwen") == "openai/qwen-turbo"
+
+    def test_moonshot_prefix(self) -> None:
+        """moonshot 厂商使用 openai/ 前缀。"""
+        from app.services.session import _ensure_model_prefix
+
+        assert _ensure_model_prefix("moonshot-v1-8k", "moonshot") == "openai/moonshot-v1-8k"
+
+    def test_minimax_prefix(self) -> None:
+        """minimax 厂商使用 openai/ 前缀。"""
+        from app.services.session import _ensure_model_prefix
+
+        assert _ensure_model_prefix("MiniMax-Text-01", "minimax") == "openai/MiniMax-Text-01"
+
+    def test_custom_no_prefix(self) -> None:
+        """custom 厂商无前缀。"""
+        from app.services.session import _ensure_model_prefix
+
+        assert _ensure_model_prefix("my-model", "custom") == "my-model"
+
+    def test_doubao_prefix(self) -> None:
+        """doubao 厂商使用 openai/ 前缀。"""
+        from app.services.session import _ensure_model_prefix
+
+        assert _ensure_model_prefix("doubao-lite", "doubao") == "openai/doubao-lite"
+
+
+# ═════════════════════════════════════════════════════════════════════════
 # Session Service — _resolve_provider
 # ═════════════════════════════════════════════════════════════════════════
 

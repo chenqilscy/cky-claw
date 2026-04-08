@@ -70,6 +70,9 @@ ehthumbs.db
 *.log
 logs/
 
+# === Graphify ===
+graphify-out/
+
 # Local tool directories
 .claude/
 .omc/

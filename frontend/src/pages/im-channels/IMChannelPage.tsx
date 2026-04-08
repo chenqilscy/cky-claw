@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   Card, Button, Space, Modal, Form, Input, Select, Tag, message,
   Popconfirm, Empty, Table, Typography, Tooltip, Switch,
@@ -45,7 +45,7 @@ const IMChannelPage: React.FC = () => {
   const [filterType, setFilterType] = useState<string | undefined>(undefined);
   const [form] = Form.useForm();
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       const res = await listIMChannels({
@@ -60,9 +60,9 @@ const IMChannelPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, pageSize, filterType]);
 
-  useEffect(() => { fetchData(); }, [page, pageSize, filterType]);
+  useEffect(() => { fetchData(); }, [fetchData]);
 
   const handleCreate = () => {
     setEditRecord(null);

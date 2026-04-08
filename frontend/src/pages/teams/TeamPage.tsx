@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Card, Button, Space, Modal, Form, Input, Select, Tag, message,
@@ -39,7 +39,7 @@ const TeamPage: React.FC = () => {
   const [search, setSearch] = useState('');
   const [form] = Form.useForm();
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       const res = await listTeams({
@@ -54,9 +54,9 @@ const TeamPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, pageSize, search]);
 
-  useEffect(() => { fetchData(); }, [page, pageSize, search]);
+  useEffect(() => { fetchData(); }, [fetchData]);
 
   const handleCreate = () => {
     setEditRecord(null);

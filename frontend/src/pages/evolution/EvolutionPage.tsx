@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   Card, Button, Space, Table, Tag, Modal, Form, Input, InputNumber,
   Select, message, Popconfirm, Typography, Tooltip, Progress,
@@ -60,7 +60,7 @@ const EvolutionPage: React.FC = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [form] = Form.useForm();
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       const res = await evolutionService.list({
@@ -77,9 +77,9 @@ const EvolutionPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, pageSize, filterAgent, filterType, filterStatus]);
 
-  useEffect(() => { fetchData(); }, [page, pageSize, filterAgent, filterType, filterStatus]);
+  useEffect(() => { fetchData(); }, [fetchData]);
 
   const handleApprove = async (id: string) => {
     try {

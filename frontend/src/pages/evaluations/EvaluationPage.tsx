@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   Card, Button, Space, Modal, Form, Input, InputNumber, Select, Tag, message,
   Table, Typography, Tabs, Statistic, Row, Col, Progress,
@@ -62,7 +62,7 @@ const EvaluationTab: React.FC = () => {
   const [filterAgentId, setFilterAgentId] = useState('');
   const [form] = Form.useForm();
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       const res = await listEvaluations({
@@ -77,9 +77,9 @@ const EvaluationTab: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, pageSize, filterAgentId]);
 
-  useEffect(() => { fetchData(); }, [page, pageSize, filterAgentId]);
+  useEffect(() => { fetchData(); }, [fetchData]);
 
   const handleCreate = () => {
     form.resetFields();
@@ -246,7 +246,7 @@ const FeedbackTab: React.FC = () => {
   const [pageSize, setPageSize] = useState(20);
   const [form] = Form.useForm();
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       const res = await listFeedbacks({ limit: pageSize, offset: (page - 1) * pageSize });
@@ -257,9 +257,9 @@ const FeedbackTab: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, pageSize]);
 
-  useEffect(() => { fetchData(); }, [page, pageSize]);
+  useEffect(() => { fetchData(); }, [fetchData]);
 
   const handleSubmit = async () => {
     try {
