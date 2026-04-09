@@ -5,114 +5,28 @@ import {
   Tag,
   Space,
   Input,
-  Modal,
-  Tree,
-  Descriptions,
   Typography,
-  Row,
-  Col,
-  Statistic,
   Select,
-  Alert,
   DatePicker,
   InputNumber,
   Switch,
-  Button,
   Tooltip,
-  Tabs,
 } from 'antd';
 import {
   ApartmentOutlined,
-  ClockCircleOutlined,
   SearchOutlined,
-  SafetyOutlined,
-  ThunderboltOutlined,
-  WarningOutlined,
-  DownloadOutlined,
-  FireOutlined,
-  PlayCircleOutlined,
 } from '@ant-design/icons';
 import { ProTable } from '@ant-design/pro-components';
 import type { ProColumns } from '@ant-design/pro-components';
 import { traceService } from '../../services/traceService';
 import type { TraceItem, SpanItem, TraceListParams, FlameTreeResponse, ReplayTimelineResponse } from '../../services/traceService';
 import { useTraceList, useTraceStats } from '../../hooks/useTraceQueries';
-import type { DataNode } from 'antd/es/tree';
 import type { Dayjs } from 'dayjs';
-import SpanWaterfall from './SpanWaterfall';
-import FlameChart from './FlameChart';
-import TraceReplayTimeline from './TraceReplayTimeline';
+import TraceStatsPanel from './TraceStatsPanel';
+import TraceDetailModal from './TraceDetailModal';
 
 const { Text } = Typography;
 const { RangePicker } = DatePicker;
-
-import { SPAN_TYPE_TAG_COLORS } from '../../constants/colors';
-
-interface SpanTreeNode extends DataNode {
-  span: SpanItem;
-}
-
-function buildSpanTree(spans: SpanItem[]): SpanTreeNode[] {
-  const map = new Map<string, SpanTreeNode>();
-  const roots: SpanTreeNode[] = [];
-
-  for (const span of spans) {
-    const durationText = span.duration_ms !== null && span.duration_ms !== undefined
-      ? `${span.duration_ms}ms`
-      : '-';
-
-    const isGuardrailTriggered = span.type === 'guardrail' && span.status === 'failed';
-    const guardrailType = span.metadata?.guardrail_type as string | undefined;
-
-    map.set(span.id, {
-      key: span.id,
-      title: (
-        <Space size={4}>
-          <Tag color={SPAN_TYPE_TAG_COLORS[span.type] || 'default'} style={{ margin: 0 }}>
-            {span.type}
-          </Tag>
-          {guardrailType && (
-            <Tag color="volcano" style={{ margin: 0, fontSize: 11 }}>
-              {guardrailType}
-            </Tag>
-          )}
-          <Text strong>{span.name}</Text>
-          {span.model && <Text type="secondary">({span.model})</Text>}
-          <Text type="secondary">
-            <ClockCircleOutlined /> {durationText}
-          </Text>
-          {span.token_usage && (
-            <Text type="secondary">
-              tokens: {span.token_usage.total_tokens}
-            </Text>
-          )}
-          <Tag color={span.status === 'completed' ? 'success' : 'error'}>{span.status}</Tag>
-          {isGuardrailTriggered && (
-            <Tag icon={<WarningOutlined />} color="error">
-              已拦截
-            </Tag>
-          )}
-        </Space>
-      ),
-      span,
-      children: [],
-    });
-  }
-
-  for (const span of spans) {
-    const node = map.get(span.id);
-    if (!node) continue;
-
-    if (span.parent_span_id && map.has(span.parent_span_id)) {
-      const parent = map.get(span.parent_span_id) as SpanTreeNode;
-      (parent.children as SpanTreeNode[]).push(node);
-    } else {
-      roots.push(node);
-    }
-  }
-
-  return roots;
-}
 
 const TracesPage: React.FC = () => {
   const { message } = App.useApp();
@@ -253,64 +167,9 @@ const TracesPage: React.FC = () => {
     },
   ];
 
-  const spanTree = buildSpanTree(detailSpans);
-  const allKeys = detailSpans.map((s) => s.id);
-
   return (
     <>
-      {stats && (
-        <Row gutter={16} style={{ marginBottom: 16 }}>
-          <Col span={4}>
-            <Card size="small">
-              <Statistic title="总 Trace 数" value={stats.total_traces} />
-            </Card>
-          </Col>
-          <Col span={4}>
-            <Card size="small">
-              <Statistic title="总 Span 数" value={stats.total_spans} />
-            </Card>
-          </Col>
-          <Col span={4}>
-            <Card size="small">
-              <Statistic
-                title="平均耗时"
-                value={stats.avg_duration_ms !== null ? stats.avg_duration_ms.toFixed(0) : '-'}
-                suffix="ms"
-                prefix={<ThunderboltOutlined />}
-              />
-            </Card>
-          </Col>
-          <Col span={4}>
-            <Card size="small">
-              <Statistic
-                title="总 Token"
-                value={stats.total_tokens.total_tokens}
-              />
-            </Card>
-          </Col>
-          <Col span={4}>
-            <Card size="small">
-              <Statistic
-                title="Guardrail 拦截"
-                value={stats.guardrail_stats.triggered}
-                suffix={`/ ${stats.guardrail_stats.total}`}
-                prefix={<SafetyOutlined />}
-                valueStyle={stats.guardrail_stats.triggered > 0 ? { color: '#cf1322' } : undefined}
-              />
-            </Card>
-          </Col>
-          <Col span={4}>
-            <Card size="small">
-              <Statistic
-                title="错误率"
-                value={(stats.error_rate * 100).toFixed(1)}
-                suffix="%"
-                valueStyle={stats.error_rate > 0.1 ? { color: '#cf1322' } : undefined}
-              />
-            </Card>
-          </Col>
-        </Row>
-      )}
+      {stats && <TraceStatsPanel stats={stats} />}
 
       <Card
         title={
@@ -405,200 +264,17 @@ const TracesPage: React.FC = () => {
         />
       </Card>
 
-      <Modal
-        title={
-          <Space>
-            <ApartmentOutlined />
-            Trace 详情
-          </Space>
-        }
+      <TraceDetailModal
         open={detailVisible}
-        onCancel={() => setDetailVisible(false)}
-        footer={
-          detailTrace ? (
-            <Button
-              icon={<DownloadOutlined />}
-              onClick={() => {
-                const exportData = {
-                  trace: detailTrace,
-                  spans: detailSpans,
-                };
-                const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `trace-${detailTrace.id.slice(0, 8)}.json`;
-                a.click();
-                URL.revokeObjectURL(url);
-              }}
-            >
-              导出 JSON
-            </Button>
-          ) : null
-        }
-        width={1100}
+        onClose={() => setDetailVisible(false)}
         loading={detailLoading}
-      >
-        {detailTrace && (
-          <>
-            <Row gutter={16} style={{ marginBottom: 16 }}>
-              <Col span={6}>
-                <Statistic title="Span 数" value={detailTrace.span_count} />
-              </Col>
-              <Col span={6}>
-                <Statistic title="状态" value={detailTrace.status} />
-              </Col>
-              <Col span={6}>
-                <Statistic title="Agent" value={detailTrace.agent_name || '-'} />
-              </Col>
-              <Col span={6}>
-                <Statistic
-                  title="耗时"
-                  value={detailTrace.duration_ms !== null && detailTrace.duration_ms !== undefined
-                    ? detailTrace.duration_ms
-                    : '-'}
-                  suffix={detailTrace.duration_ms !== null ? 'ms' : ''}
-                />
-              </Col>
-            </Row>
-
-            <Card title="Span 可视化" size="small" style={{ marginBottom: 16 }}>
-              <Tabs
-                defaultActiveKey="waterfall"
-                items={[
-                  {
-                    key: 'waterfall',
-                    label: <span><ClockCircleOutlined /> Waterfall</span>,
-                    children: (
-                      <SpanWaterfall
-                        spans={detailSpans}
-                        onSpanClick={(span) => setSelectedSpan(span)}
-                        selectedSpanId={selectedSpan?.id}
-                      />
-                    ),
-                  },
-                  {
-                    key: 'flame',
-                    label: <span><FireOutlined /> 火焰图</span>,
-                    children: flameData ? (
-                      <FlameChart nodes={flameData.root} totalSpans={flameData.total_spans} />
-                    ) : (
-                      <div style={{ color: '#999', padding: 16 }}>加载中...</div>
-                    ),
-                  },
-                  {
-                    key: 'replay',
-                    label: <span><PlayCircleOutlined /> 回放</span>,
-                    children: <TraceReplayTimeline data={replayData} />,
-                  },
-                ]}
-              />
-            </Card>
-
-            <Card title="Span 树" size="small" style={{ marginBottom: 16 }}>
-              {spanTree.length > 0 ? (
-                <Tree
-                  showLine
-                  defaultExpandAll
-                  expandedKeys={allKeys}
-                  treeData={spanTree}
-                  onSelect={(_, info) => {
-                    const node = info.node as SpanTreeNode;
-                    setSelectedSpan(node.span);
-                  }}
-                />
-              ) : (
-                <Text type="secondary">无 Span 数据</Text>
-              )}
-            </Card>
-
-            {selectedSpan && (
-              <Card title={`Span 详情: ${selectedSpan.name}`} size="small">
-                {selectedSpan.type === 'guardrail' && selectedSpan.status === 'failed' && (
-                  <Alert
-                    message="Guardrail 已拦截"
-                    description={selectedSpan.metadata?.message as string || '此 Guardrail 触发了拦截'}
-                    type="error"
-                    showIcon
-                    icon={<WarningOutlined />}
-                    style={{ marginBottom: 12 }}
-                  />
-                )}
-                <Descriptions column={2} size="small" bordered>
-                  <Descriptions.Item label="ID">{selectedSpan.id}</Descriptions.Item>
-                  <Descriptions.Item label="类型">
-                    <Tag color={SPAN_TYPE_TAG_COLORS[selectedSpan.type] || 'default'}>
-                      {selectedSpan.type}
-                    </Tag>
-                  </Descriptions.Item>
-                  <Descriptions.Item label="状态">
-                    <Tag color={selectedSpan.status === 'completed' ? 'success' : 'error'}>
-                      {selectedSpan.status}
-                    </Tag>
-                  </Descriptions.Item>
-                  <Descriptions.Item label="模型">{selectedSpan.model || '-'}</Descriptions.Item>
-                  <Descriptions.Item label="耗时">
-                    {selectedSpan.duration_ms !== null && selectedSpan.duration_ms !== undefined
-                      ? `${selectedSpan.duration_ms}ms`
-                      : '-'}
-                  </Descriptions.Item>
-                  <Descriptions.Item label="开始时间">
-                    {new Date(selectedSpan.start_time).toLocaleString('zh-CN')}
-                  </Descriptions.Item>
-                  {selectedSpan.token_usage && (
-                    <>
-                      <Descriptions.Item label="输入 Token">
-                        {selectedSpan.token_usage.prompt_tokens}
-                      </Descriptions.Item>
-                      <Descriptions.Item label="输出 Token">
-                        {selectedSpan.token_usage.completion_tokens}
-                      </Descriptions.Item>
-                    </>
-                  )}
-                  {selectedSpan.type === 'guardrail' && (
-                    <>
-                      <Descriptions.Item label="Guardrail 类型">
-                        <Tag color="volcano">
-                          {(selectedSpan.metadata?.guardrail_type as string) || '-'}
-                        </Tag>
-                      </Descriptions.Item>
-                      <Descriptions.Item label="触发">
-                        {selectedSpan.metadata?.triggered
-                          ? <Tag color="error">是</Tag>
-                          : <Tag color="success">否</Tag>}
-                      </Descriptions.Item>
-                      {selectedSpan.metadata?.message && (
-                        <Descriptions.Item label="消息" span={2}>
-                          {selectedSpan.metadata.message as string}
-                        </Descriptions.Item>
-                      )}
-                      {selectedSpan.metadata?.tool_name && (
-                        <Descriptions.Item label="关联工具">
-                          <Tag color="orange">{selectedSpan.metadata.tool_name as string}</Tag>
-                        </Descriptions.Item>
-                      )}
-                    </>
-                  )}
-                  {selectedSpan.input && (
-                    <Descriptions.Item label="输入" span={2}>
-                      <pre style={{ margin: 0, maxHeight: 200, overflow: 'auto', fontSize: 12 }}>
-                        {JSON.stringify(selectedSpan.input, null, 2)}
-                      </pre>
-                    </Descriptions.Item>
-                  )}
-                  {selectedSpan.output && (
-                    <Descriptions.Item label="输出" span={2}>
-                      <pre style={{ margin: 0, maxHeight: 200, overflow: 'auto', fontSize: 12 }}>
-                        {JSON.stringify(selectedSpan.output, null, 2)}
-                      </pre>
-                    </Descriptions.Item>
-                  )}
-                </Descriptions>
-              </Card>
-            )}
-          </>
-        )}
-      </Modal>
+        trace={detailTrace}
+        spans={detailSpans}
+        selectedSpan={selectedSpan}
+        onSpanSelect={setSelectedSpan}
+        flameData={flameData}
+        replayData={replayData}
+      />
     </>
   );
 };

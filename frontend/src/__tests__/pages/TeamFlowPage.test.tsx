@@ -1,15 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-
-/* ---------- mock antd message (prevents jsdom hang) ---------- */
-vi.mock('antd', async () => {
-  const actual = await vi.importActual<Record<string, unknown>>('antd');
-  return {
-    ...actual,
-    message: { error: vi.fn(), info: vi.fn(), success: vi.fn(), warning: vi.fn() },
-  };
-});
+import { App } from 'antd';
 
 /* ---------- mock CSS ---------- */
 vi.mock('@xyflow/react/dist/style.css', () => ({}));
@@ -53,9 +45,11 @@ import TeamFlowPage from '../../pages/teams/TeamFlowPage';
 
 function renderPage(teamId = 'team-1') {
   return render(
-    <MemoryRouter initialEntries={[`/teams/flow?id=${teamId}`]}>
-      <TeamFlowPage />
-    </MemoryRouter>
+    <App>
+      <MemoryRouter initialEntries={[`/teams/flow?id=${teamId}`]}>
+        <TeamFlowPage />
+      </MemoryRouter>
+    </App>
   );
 }
 

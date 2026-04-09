@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 // Mock ProTable to avoid heavy @ant-design/pro-components rendering
 vi.mock('@ant-design/pro-components', () => ({
@@ -43,6 +44,17 @@ vi.mock('../../services/skillService', () => ({
 import SkillPage from '../../pages/skills/SkillPage';
 import { skillService } from '../../services/skillService';
 
+function renderPage() {
+  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  return render(
+    <QueryClientProvider client={qc}>
+      <MemoryRouter>
+        <SkillPage />
+      </MemoryRouter>
+    </QueryClientProvider>,
+  );
+}
+
 describe('SkillPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -67,44 +79,28 @@ describe('SkillPage', () => {
   });
 
   it('renders page title', async () => {
-    render(
-      <MemoryRouter>
-        <SkillPage />
-      </MemoryRouter>,
-    );
+    renderPage();
     await waitFor(() => {
       expect(document.body.textContent).toContain('技能');
     });
   });
 
   it('calls skillService.list via ProTable request', async () => {
-    render(
-      <MemoryRouter>
-        <SkillPage />
-      </MemoryRouter>,
-    );
+    renderPage();
     await waitFor(() => {
       expect(vi.mocked(skillService.list)).toHaveBeenCalled();
     });
   });
 
   it('renders create button', async () => {
-    render(
-      <MemoryRouter>
-        <SkillPage />
-      </MemoryRouter>,
-    );
+    renderPage();
     await waitFor(() => {
       expect(document.body.textContent).toContain('新建技能');
     });
   });
 
   it('renders search button', async () => {
-    render(
-      <MemoryRouter>
-        <SkillPage />
-      </MemoryRouter>,
-    );
+    renderPage();
     await waitFor(() => {
       expect(document.body.textContent).toContain('搜索技能');
     });

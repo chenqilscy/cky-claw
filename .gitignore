@@ -81,3 +81,6 @@ maf-deploy.*
 # Local tool directories
 .claude/
 .omc/
+test-out.txt
+test-output.txt
+vitest-out.json

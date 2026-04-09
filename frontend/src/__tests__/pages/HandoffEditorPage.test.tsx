@@ -1,14 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, waitFor } from '@testing-library/react';
-
-/* ---------- mock antd message (prevents jsdom hang) ---------- */
-vi.mock('antd', async () => {
-  const actual = await vi.importActual<Record<string, unknown>>('antd');
-  return {
-    ...actual,
-    message: { error: vi.fn(), info: vi.fn(), success: vi.fn(), warning: vi.fn() },
-  };
-});
+import { App } from 'antd';
 
 /* ---------- mock services ---------- */
 const mockAgentList = vi.fn();
@@ -57,7 +49,7 @@ describe('HandoffEditorPage', () => {
   });
 
   it('渲染页面标题', async () => {
-    const { container } = render(<HandoffEditorPage />);
+    const { container } = render(<App><HandoffEditorPage /></App>);
     await waitFor(() => {
       const text = container.textContent ?? '';
       expect(text).toContain('Handoff');
@@ -65,7 +57,7 @@ describe('HandoffEditorPage', () => {
   });
 
   it('渲染 ReactFlow 画布', async () => {
-    const { container } = render(<HandoffEditorPage />);
+    const { container } = render(<App><HandoffEditorPage /></App>);
     await waitFor(() => {
       const flow = container.querySelector('[data-testid="reactflow"]');
       expect(flow).toBeTruthy();
@@ -73,7 +65,7 @@ describe('HandoffEditorPage', () => {
   });
 
   it('调用 Agent 列表接口', async () => {
-    render(<HandoffEditorPage />);
+    render(<App><HandoffEditorPage /></App>);
     await waitFor(() => {
       expect(mockAgentList).toHaveBeenCalled();
     }, { timeout: 5000 });
@@ -81,7 +73,7 @@ describe('HandoffEditorPage', () => {
 
   it('加载失败不崩溃', async () => {
     mockAgentList.mockRejectedValueOnce(new Error('fail'));
-    const { container } = render(<HandoffEditorPage />);
+    const { container } = render(<App><HandoffEditorPage /></App>);
     await waitFor(() => {
       expect(container).toBeTruthy();
     }, { timeout: 5000 });
