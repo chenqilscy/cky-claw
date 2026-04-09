@@ -2,6 +2,7 @@
  * WorkflowGraphView — ReactFlow 工作流 DAG 可视化组件
  */
 import React, { useMemo } from 'react';
+import { theme } from 'antd';
 import {
   ReactFlow,
   Background,
@@ -29,6 +30,7 @@ interface WorkflowGraphViewProps {
 }
 
 const WorkflowGraphView: React.FC<WorkflowGraphViewProps> = ({ steps, edges }) => {
+  const { token } = theme.useToken();
   const { nodes, flowEdges } = useMemo(() => {
     const COLS = 3;
     const X_GAP = 250;
@@ -42,7 +44,7 @@ const WorkflowGraphView: React.FC<WorkflowGraphViewProps> = ({ steps, edges }) =
           <div style={{ textAlign: 'center' }}>
             <div style={{
               fontSize: 10,
-              color: NODE_COLORS[step.type] ?? '#999',
+              color: NODE_COLORS[step.type] ?? token.colorTextQuaternary,
               fontWeight: 600,
               marginBottom: 2,
             }}>
@@ -50,7 +52,7 @@ const WorkflowGraphView: React.FC<WorkflowGraphViewProps> = ({ steps, edges }) =
             </div>
             <div style={{ fontWeight: 500 }}>{step.name}</div>
             {step.agent_name && (
-              <div style={{ fontSize: 11, color: '#888' }}>{step.agent_name}</div>
+              <div style={{ fontSize: 11, color: token.colorTextTertiary }}>{step.agent_name}</div>
             )}
           </div>
         ),
@@ -58,10 +60,10 @@ const WorkflowGraphView: React.FC<WorkflowGraphViewProps> = ({ steps, edges }) =
       sourcePosition: Position.Right,
       targetPosition: Position.Left,
       style: {
-        border: `2px solid ${NODE_COLORS[step.type] ?? '#d9d9d9'}`,
+        border: `2px solid ${NODE_COLORS[step.type] ?? token.colorBorder}`,
         borderRadius: 8,
         padding: '8px 12px',
-        background: '#fff',
+        background: token.colorBgContainer,
         minWidth: 140,
       },
     }));
@@ -73,14 +75,14 @@ const WorkflowGraphView: React.FC<WorkflowGraphViewProps> = ({ steps, edges }) =
       label: e.condition ?? undefined,
       animated: !!e.condition,
       markerEnd: { type: MarkerType.ArrowClosed },
-      style: { stroke: '#aaa' },
+      style: { stroke: token.colorTextQuaternary },
     }));
 
     return { nodes: flowNodes, flowEdges: fe };
-  }, [steps, edges]);
+  }, [steps, edges, token]);
 
   if (steps.length === 0) {
-    return <div style={{ textAlign: 'center', padding: 40, color: '#999' }}>无步骤定义</div>;
+    return <div style={{ textAlign: 'center', padding: 40, color: token.colorTextQuaternary }}>无步骤定义</div>;
   }
 
   return (

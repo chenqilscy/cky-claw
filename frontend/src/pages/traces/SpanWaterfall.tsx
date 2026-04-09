@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Tag, Tooltip, Typography } from 'antd';
+import { Tag, Tooltip, Typography, theme } from 'antd';
 import { ClockCircleOutlined } from '@ant-design/icons';
 import type { SpanItem } from '../../services/traceService';
 
@@ -73,6 +73,7 @@ const LABEL_WIDTH = 220;
 const BAR_AREA_MIN_WIDTH = 500;
 
 const SpanWaterfall: React.FC<SpanWaterfallProps> = ({ spans, onSpanClick, selectedSpanId }) => {
+  const { token } = theme.useToken();
   const rows = useMemo(() => buildWaterfallRows(spans), [spans]);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
 
@@ -90,7 +91,7 @@ const SpanWaterfall: React.FC<SpanWaterfallProps> = ({ spans, onSpanClick, selec
     <div style={{ overflowX: 'auto', overflowY: 'auto', maxHeight: 400 }}>
       <div style={{ display: 'flex', minWidth: LABEL_WIDTH + BAR_AREA_MIN_WIDTH }}>
         {/* Label column */}
-        <div style={{ width: LABEL_WIDTH, flexShrink: 0, borderRight: '1px solid #f0f0f0' }}>
+        <div style={{ width: LABEL_WIDTH, flexShrink: 0, borderRight: `1px solid ${token.colorBorderSecondary}` }}>
           {rows.map((row) => (
             <div
               key={row.span.id}
@@ -102,11 +103,11 @@ const SpanWaterfall: React.FC<SpanWaterfallProps> = ({ spans, onSpanClick, selec
                 cursor: 'pointer',
                 backgroundColor:
                   row.span.id === selectedSpanId
-                    ? '#e6f4ff'
+                    ? token.colorPrimaryBg
                     : row.span.id === hoveredId
-                      ? '#fafafa'
+                      ? token.colorBgLayout
                       : undefined,
-                borderBottom: '1px solid #f5f5f5',
+                borderBottom: `1px solid ${token.colorFillQuaternary}`,
               }}
               onClick={() => onSpanClick?.(row.span)}
               onMouseEnter={() => setHoveredId(row.span.id)}
@@ -133,7 +134,7 @@ const SpanWaterfall: React.FC<SpanWaterfallProps> = ({ spans, onSpanClick, selec
           {rows.map((row) => {
             const leftPct = (row.startOffset / totalDuration) * 100;
             const widthPct = Math.max((row.duration / totalDuration) * 100, 0.3);
-            const color = SPAN_TYPE_COLORS[row.span.type] || '#999';
+            const color = SPAN_TYPE_COLORS[row.span.type] || token.colorTextQuaternary;
             const isFailed = row.span.status === 'failed';
 
             return (
@@ -159,11 +160,11 @@ const SpanWaterfall: React.FC<SpanWaterfallProps> = ({ spans, onSpanClick, selec
                     cursor: 'pointer',
                     backgroundColor:
                       row.span.id === selectedSpanId
-                        ? '#e6f4ff'
+                        ? token.colorPrimaryBg
                         : row.span.id === hoveredId
-                          ? '#fafafa'
+                          ? token.colorBgLayout
                           : undefined,
-                    borderBottom: '1px solid #f5f5f5',
+                    borderBottom: `1px solid ${token.colorFillQuaternary}`,
                   }}
                   onClick={() => onSpanClick?.(row.span)}
                   onMouseEnter={() => setHoveredId(row.span.id)}
@@ -176,7 +177,7 @@ const SpanWaterfall: React.FC<SpanWaterfallProps> = ({ spans, onSpanClick, selec
                       width: `${widthPct}%`,
                       top: 5,
                       height: ROW_HEIGHT - 10,
-                      backgroundColor: isFailed ? '#ff4d4f' : color,
+                      backgroundColor: isFailed ? token.colorError : color,
                       opacity: 0.85,
                       borderRadius: 2,
                       minWidth: 3,
@@ -191,7 +192,7 @@ const SpanWaterfall: React.FC<SpanWaterfallProps> = ({ spans, onSpanClick, selec
                         top: 6,
                         paddingLeft: 4,
                         fontSize: 10,
-                        color: '#fff',
+                        color: token.colorBgContainer,
                         whiteSpace: 'nowrap',
                         pointerEvents: 'none',
                       }}
@@ -209,7 +210,7 @@ const SpanWaterfall: React.FC<SpanWaterfallProps> = ({ spans, onSpanClick, selec
             style={{
               height: 20,
               position: 'relative',
-              borderTop: '1px solid #d9d9d9',
+              borderTop: `1px solid ${token.colorBorder}`,
             }}
           >
             {[0, 25, 50, 75, 100].map((pct) => (
@@ -220,7 +221,7 @@ const SpanWaterfall: React.FC<SpanWaterfallProps> = ({ spans, onSpanClick, selec
                   left: `${pct}%`,
                   top: 2,
                   fontSize: 10,
-                  color: '#999',
+                  color: token.colorTextQuaternary,
                   transform: pct > 0 ? 'translateX(-50%)' : undefined,
                 }}
               >

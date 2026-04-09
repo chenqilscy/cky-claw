@@ -24,8 +24,12 @@ export default defineConfig({
       output: {
         manualChunks(id) {
           if (id.includes('node_modules')) {
-            // antd 生态（含 @ant-design 所有子包）
-            if (id.includes('/antd/') || id.includes('/@ant-design/')) {
+            // React 核心（必须独立 chunk，避免 antd/query 交叉依赖竞争）
+            if (id.includes('/react-dom/') || id.includes('/react/') || id.includes('/scheduler/')) {
+              return 'vendor-react';
+            }
+            // antd 生态（含 @ant-design、rc-* 全部子包）
+            if (id.includes('/antd/') || id.includes('/@ant-design/') || id.includes('/rc-')) {
               return 'vendor-antd';
             }
             if (id.includes('echarts')) {

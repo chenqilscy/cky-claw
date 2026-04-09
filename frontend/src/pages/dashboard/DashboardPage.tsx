@@ -379,7 +379,7 @@ const DashboardPage: React.FC = () => {
                         data: Object.entries(spanTypeCounts).map(([type, count]) => ({
                           name: type,
                           value: count,
-                          itemStyle: { color: SPAN_TYPE_COLOR_VALUES[type] ?? '#8c8c8c' },
+                          itemStyle: { color: SPAN_TYPE_COLOR_VALUES[type] ?? token.colorTextQuaternary },
                         })),
                       }],
                     }}

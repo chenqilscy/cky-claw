@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import {
   Button, Space, Tag, Input, InputNumber,
   Select, App, Typography, Tooltip, Progress, Form, Popconfirm,
+  theme,
 } from 'antd';
 import {
   CheckOutlined, CloseOutlined,
@@ -24,6 +25,8 @@ import { CrudTable } from '../../components';
 import type { CrudTableActions } from '../../components';
 
 const { Text } = Typography;
+
+type DesignToken = ReturnType<typeof theme.useToken>['token'];
 
 const typeLabel: Record<string, string> = {
   instructions: '指令优化',
@@ -62,6 +65,7 @@ const statusColor: Record<string, string> = {
 const buildColumns = (
   actions: CrudTableActions<EvolutionProposal>,
   onStatusChange: (id: string, status: string) => void,
+  token: DesignToken,
 ): ProColumns<EvolutionProposal>[] => [
   {
     title: 'Agent',
@@ -98,7 +102,7 @@ const buildColumns = (
     render: (_, r) => {
       if (r.eval_before !== null && r.eval_after !== null) {
         const delta = r.eval_after - r.eval_before;
-        const color = delta >= 0 ? '#52c41a' : '#ff4d4f';
+        const color = delta >= 0 ? token.colorSuccess : token.colorError;
         return <Text style={{ color }}>{r.eval_before.toFixed(2)} → {r.eval_after.toFixed(2)}</Text>;
       }
       return <Text type="secondary">—</Text>;
@@ -166,6 +170,7 @@ const renderForm = (_form: FormInstance, _editing: EvolutionProposal | null) => 
 
 const EvolutionPage: React.FC = () => {
   const { message } = App.useApp();
+  const { token } = theme.useToken();
   const [pagination, setPagination] = useState({ current: 1, pageSize: 20 });
   const [filterAgent, setFilterAgent] = useState('');
   const [filterType, setFilterType] = useState('');
@@ -204,7 +209,7 @@ const EvolutionPage: React.FC = () => {
       deleteMutation={deleteMutation}
       createButtonText="新建建议"
       modalTitle={(editing) => (editing ? '编辑建议' : '新建进化建议')}
-      columns={(actions) => buildColumns(actions, handleStatusChange)}
+      columns={(actions) => buildColumns(actions, handleStatusChange, token)}
       renderForm={renderForm}
       toCreatePayload={(values) => values as unknown as EvolutionProposalCreate}
       toUpdatePayload={(values, record) => ({

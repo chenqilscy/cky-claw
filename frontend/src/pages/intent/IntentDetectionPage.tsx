@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button, Card, Col, Form, Input, App, Progress, Row, Slider, Space, Tag, Typography } from 'antd';
+import { Button, Card, Col, Form, Input, App, Progress, Row, Slider, Space, Tag, Typography, theme } from 'antd';
 import { AimOutlined } from '@ant-design/icons';
 import { intentService } from '../../services/intentService';
 import type { IntentDetectResponse } from '../../services/intentService';
@@ -9,6 +9,7 @@ const { TextArea } = Input;
 
 const IntentDetectionPage: React.FC = () => {
   const { message } = App.useApp();
+  const { token } = theme.useToken();
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<IntentDetectResponse | null>(null);
@@ -36,7 +37,7 @@ const IntentDetectionPage: React.FC = () => {
   };
 
   const driftColor = result
-    ? result.is_drifted ? '#ff4d4f' : '#52c41a'
+    ? result.is_drifted ? token.colorError : token.colorSuccess
     : undefined;
 
   return (

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Button, Divider, List, Select, Typography, App } from 'antd';
+import { Button, Divider, List, Select, Typography, App, theme } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import { agentService } from '../../services/agentService';
 import { chatService } from '../../services/chatService';
@@ -20,6 +20,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
   onNewSession,
 }) => {
   const { message } = App.useApp();
+  const { token } = theme.useToken();
   const [agents, setAgents] = useState<AgentConfig[]>([]);
   const [selectedAgent, setSelectedAgent] = useState<string>('');
   const [sessions, setSessions] = useState<ChatSession[]>([]);
@@ -93,7 +94,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
               cursor: 'pointer',
               padding: '8px 12px',
               borderRadius: 6,
-              background: item.id === currentSessionId ? '#e6f4ff' : undefined,
+              background: item.id === currentSessionId ? token.colorPrimaryBg : undefined,
             }}
           >
             <div style={{ width: '100%', overflow: 'hidden' }}>

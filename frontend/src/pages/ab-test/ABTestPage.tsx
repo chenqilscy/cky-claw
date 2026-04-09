@@ -13,6 +13,7 @@ import {
   Statistic,
   Tag,
   Typography,
+  theme,
 } from 'antd';
 import { ExperimentOutlined, ThunderboltOutlined } from '@ant-design/icons';
 import { abTestService } from '../../services/abTestService';
@@ -23,6 +24,7 @@ const { Text, Paragraph } = Typography;
 
 const ABTestPage: React.FC = () => {
   const { message } = App.useApp();
+  const { token } = theme.useToken();
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<ABTestModelResult[]>([]);
@@ -167,7 +169,7 @@ const ABTestPage: React.FC = () => {
                         maxHeight: 300,
                         overflowY: 'auto',
                         padding: 8,
-                        background: '#fafafa',
+                        background: token.colorBgLayout,
                         borderRadius: 4,
                         fontSize: 13,
                         whiteSpace: 'pre-wrap',

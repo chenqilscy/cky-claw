@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Button, Card, App, Space, Tag, Tooltip, Spin, Empty, Select } from 'antd';
+import { Button, Card, App, Space, Tag, Tooltip, Spin, Empty, Select, theme } from 'antd';
 import {
   SaveOutlined, ReloadOutlined, ApartmentOutlined, ArrowLeftOutlined,
 } from '@ant-design/icons';
@@ -39,8 +39,9 @@ type MemberNodeData = {
 };
 
 const MemberNode = ({ data }: NodeProps<Node<MemberNodeData>>) => {
-  const borderColor = data.isCoordinator ? '#722ed1' : '#1677ff';
-  const bgColor = data.isCoordinator ? '#f9f0ff' : '#f0f5ff';
+  const { token } = theme.useToken();
+  const borderColor = data.isCoordinator ? protocolColor.COORDINATOR : token.colorPrimary;
+  const bgColor = data.isCoordinator ? '#f9f0ff' : token.colorPrimaryBg;
   return (
     <div
       style={{
@@ -57,7 +58,7 @@ const MemberNode = ({ data }: NodeProps<Node<MemberNodeData>>) => {
     >
       <Handle type="target" position={Position.Top} style={{ background: borderColor }} />
       <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 4 }}>{data.label}</div>
-      <div style={{ fontSize: 12, color: '#666', marginBottom: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+      <div style={{ fontSize: 12, color: token.colorTextSecondary, marginBottom: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
         {data.description || '无描述'}
       </div>
       <div style={{ display: 'flex', gap: 4 }}>
@@ -107,7 +108,7 @@ function buildEdges(team: TeamConfig): Edge[] {
         animated: true,
         label: `第 ${i + 1} 步`,
         markerEnd: { type: MarkerType.ArrowClosed },
-        style: { stroke: '#1890ff', strokeWidth: 2 },
+        style: { stroke: protocolColor.SEQUENTIAL, strokeWidth: 2 },
       });
     }
   } else if (team.protocol === 'PARALLEL') {
@@ -119,7 +120,7 @@ function buildEdges(team: TeamConfig): Edge[] {
         target: id,
         animated: true,
         markerEnd: { type: MarkerType.ArrowClosed },
-        style: { stroke: '#52c41a', strokeWidth: 2 },
+        style: { stroke: protocolColor.PARALLEL, strokeWidth: 2 },
       });
     }
   } else if (team.protocol === 'COORDINATOR' && team.coordinator_agent_id) {
@@ -133,7 +134,7 @@ function buildEdges(team: TeamConfig): Edge[] {
           animated: true,
           label: '调度',
         markerEnd: { type: MarkerType.ArrowClosed },
-          style: { stroke: '#722ed1', strokeWidth: 2 },
+          style: { stroke: protocolColor.COORDINATOR, strokeWidth: 2 },
         });
       }
     }
@@ -354,7 +355,7 @@ const TeamFlowPage: React.FC = () => {
         <MiniMap
           nodeColor={(n: Node) => {
             const d = n.data as MemberNodeData;
-            return d?.isCoordinator ? '#722ed1' : '#1677ff';
+            return d?.isCoordinator ? (protocolColor.COORDINATOR ?? '#722ed1') : (protocolColor.SEQUENTIAL ?? '#1890ff');
           }}
         />
         <Panel position="top-left">

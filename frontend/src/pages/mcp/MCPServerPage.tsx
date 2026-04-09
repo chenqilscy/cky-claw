@@ -13,6 +13,7 @@ import {
   Table,
   Tag,
   Popconfirm,
+  theme,
 } from 'antd';
 import {
   PlusOutlined,
@@ -205,6 +206,7 @@ const buildColumns = (
 
 const MCPServerPage: React.FC = () => {
   const { message } = App.useApp();
+  const { token } = theme.useToken();
   const [pagination, setPagination] = useState({ current: 1, pageSize: 20 });
 
   // 连接测试 Modal
@@ -331,7 +333,7 @@ const MCPServerPage: React.FC = () => {
                     visibilityToggle
                   />
                 </Form.Item>
-                <MinusCircleOutlined onClick={() => remove(field.name)} style={{ color: '#ff4d4f' }} />
+                <MinusCircleOutlined onClick={() => remove(field.name)} style={{ color: token.colorError }} />
               </Space>
             ))}
             <Button type="dashed" onClick={() => add()} icon={<PlusOutlined />} style={{ width: '100%' }}>
@@ -345,7 +347,7 @@ const MCPServerPage: React.FC = () => {
         <Switch />
       </Form.Item>
     </>
-  ), []);
+  ), [token]);
 
   return (
     <>
@@ -423,7 +425,7 @@ const MCPServerPage: React.FC = () => {
         {testMutation.isPending ? (
           <div style={{ textAlign: 'center', padding: '40px 0' }}>
             <Spin size="large" />
-            <div style={{ marginTop: 16, color: '#666' }}>正在连接 MCP Server 并发现工具...</div>
+            <div style={{ marginTop: 16, color: token.colorTextSecondary }}>正在连接 MCP Server 并发现工具...</div>
           </div>
         ) : testResult ? (
           testResult.success ? (

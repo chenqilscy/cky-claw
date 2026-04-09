@@ -203,19 +203,30 @@ const BasicLayout: React.FC = () => {
       route={menuRoutes}
       location={{ pathname: location.pathname }}
       menuItemRender={(item, dom) => (
-        <a onClick={() => item.path && navigate(item.path)}>{dom}</a>
+        <a
+          role="link"
+          tabIndex={0}
+          aria-label={item.name}
+          onClick={() => item.path && navigate(item.path)}
+          onKeyDown={(e) => { if (e.key === 'Enter' && item.path) navigate(item.path); }}
+        >
+          {dom}
+        </a>
       )}
       actionsRender={() => [
         <Tooltip key="theme" title={themeMode === 'dark' ? '切换亮色模式' : '切换暗色模式'}>
           <Button
             type="text"
+            aria-label={themeMode === 'dark' ? '切换亮色模式' : '切换暗色模式'}
             icon={themeMode === 'dark' ? <BulbFilled /> : <BulbOutlined />}
             onClick={toggleTheme}
           />
         </Tooltip>,
       ]}
     >
-      <Outlet />
+      <main role="main" aria-label="页面内容">
+        <Outlet />
+      </main>
     </ProLayout>
   );
 };

@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { ConfigProvider, Spin, theme } from 'antd';
 import zhCN from 'antd/locale/zh_CN';
 import BasicLayout from './layouts/BasicLayout';
+import RouteErrorBoundary from './components/RouteErrorBoundary';
 import useAuthStore from './stores/authStore';
 import useThemeStore from './stores/themeStore';
 
@@ -51,6 +52,11 @@ const PageLoading = () => (
   </div>
 );
 
+/** 为路由页面包裹错误边界 */
+const guarded = (element: React.ReactNode) => (
+  <RouteErrorBoundary>{element}</RouteErrorBoundary>
+);
+
 const RequireAuth: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const token = useAuthStore((s) => s.token);
   if (!token) {
@@ -80,43 +86,43 @@ const App: React.FC = () => {
           }
         >
           <Route index element={<Navigate to="/dashboard" replace />} />
-          <Route path="dashboard" element={<DashboardPage />} />
-          <Route path="chat" element={<ChatPage />} />
-          <Route path="agents" element={<AgentListPage />} />
-          <Route path="agents/new" element={<AgentEditPage />} />
-          <Route path="agents/:name/edit" element={<AgentEditPage />} />
-          <Route path="agents/:agentId/versions" element={<AgentVersionPage />} />
-          <Route path="agents/handoff-editor" element={<HandoffEditorPage />} />
-          <Route path="runs" element={<RunListPage />} />
-          <Route path="supervision" element={<SupervisionPage />} />
-          <Route path="providers" element={<ProviderListPage />} />
-          <Route path="providers/new" element={<ProviderEditPage />} />
-          <Route path="providers/:id/edit" element={<ProviderEditPage />} />
-          <Route path="traces" element={<TracesPage />} />
-          <Route path="guardrails" element={<GuardrailRulesPage />} />
-          <Route path="approvals" element={<ApprovalQueuePage />} />
-          <Route path="mcp-servers" element={<MCPServerPage />} />
-          <Route path="tool-groups" element={<ToolGroupPage />} />
-          <Route path="memories" element={<MemoryPage />} />
-          <Route path="skills" element={<SkillPage />} />
-          <Route path="templates" element={<TemplatePage />} />
-          <Route path="workflows" element={<WorkflowPage />} />
-          <Route path="workflow-editor" element={<WorkflowEditorPage />} />
-          <Route path="teams" element={<TeamPage />} />
-          <Route path="teams/flow" element={<TeamFlowPage />} />
-          <Route path="audit-logs" element={<AuditLogPage />} />
-          <Route path="roles" element={<RolePage />} />
-          <Route path="im-channels" element={<IMChannelPage />} />
-          <Route path="evaluations" element={<EvaluationPage />} />
-          <Route path="evolution" element={<EvolutionPage />} />
-          <Route path="organizations" element={<OrganizationPage />} />
-          <Route path="scheduled-tasks" element={<ScheduledTasksPage />} />
-          <Route path="apm" element={<ApmDashboardPage />} />
-          <Route path="cost-router" element={<CostRouterPage />} />
-          <Route path="checkpoints" element={<CheckpointPage />} />
-          <Route path="intent" element={<IntentDetectionPage />} />
-          <Route path="ab-test" element={<ABTestPage />} />
-          <Route path="i18n" element={<I18nSettingsPage />} />
+          <Route path="dashboard" element={guarded(<DashboardPage />)} />
+          <Route path="chat" element={guarded(<ChatPage />)} />
+          <Route path="agents" element={guarded(<AgentListPage />)} />
+          <Route path="agents/new" element={guarded(<AgentEditPage />)} />
+          <Route path="agents/:name/edit" element={guarded(<AgentEditPage />)} />
+          <Route path="agents/:agentId/versions" element={guarded(<AgentVersionPage />)} />
+          <Route path="agents/handoff-editor" element={guarded(<HandoffEditorPage />)} />
+          <Route path="runs" element={guarded(<RunListPage />)} />
+          <Route path="supervision" element={guarded(<SupervisionPage />)} />
+          <Route path="providers" element={guarded(<ProviderListPage />)} />
+          <Route path="providers/new" element={guarded(<ProviderEditPage />)} />
+          <Route path="providers/:id/edit" element={guarded(<ProviderEditPage />)} />
+          <Route path="traces" element={guarded(<TracesPage />)} />
+          <Route path="guardrails" element={guarded(<GuardrailRulesPage />)} />
+          <Route path="approvals" element={guarded(<ApprovalQueuePage />)} />
+          <Route path="mcp-servers" element={guarded(<MCPServerPage />)} />
+          <Route path="tool-groups" element={guarded(<ToolGroupPage />)} />
+          <Route path="memories" element={guarded(<MemoryPage />)} />
+          <Route path="skills" element={guarded(<SkillPage />)} />
+          <Route path="templates" element={guarded(<TemplatePage />)} />
+          <Route path="workflows" element={guarded(<WorkflowPage />)} />
+          <Route path="workflow-editor" element={guarded(<WorkflowEditorPage />)} />
+          <Route path="teams" element={guarded(<TeamPage />)} />
+          <Route path="teams/flow" element={guarded(<TeamFlowPage />)} />
+          <Route path="audit-logs" element={guarded(<AuditLogPage />)} />
+          <Route path="roles" element={guarded(<RolePage />)} />
+          <Route path="im-channels" element={guarded(<IMChannelPage />)} />
+          <Route path="evaluations" element={guarded(<EvaluationPage />)} />
+          <Route path="evolution" element={guarded(<EvolutionPage />)} />
+          <Route path="organizations" element={guarded(<OrganizationPage />)} />
+          <Route path="scheduled-tasks" element={guarded(<ScheduledTasksPage />)} />
+          <Route path="apm" element={guarded(<ApmDashboardPage />)} />
+          <Route path="cost-router" element={guarded(<CostRouterPage />)} />
+          <Route path="checkpoints" element={guarded(<CheckpointPage />)} />
+          <Route path="intent" element={guarded(<IntentDetectionPage />)} />
+          <Route path="ab-test" element={guarded(<ABTestPage />)} />
+          <Route path="i18n" element={guarded(<I18nSettingsPage />)} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>

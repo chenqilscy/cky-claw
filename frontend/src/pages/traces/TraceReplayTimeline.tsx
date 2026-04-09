@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Button, Card, Slider, Space, Tag, Tooltip, Typography } from 'antd';
+import { Button, Card, Slider, Space, Tag, Tooltip, Typography, theme } from 'antd';
 import {
   CaretRightOutlined,
   PauseOutlined,
@@ -21,6 +21,7 @@ interface TraceReplayTimelineProps {
  * 支持播放/暂停/单步/进度条拖拽。
  */
 const TraceReplayTimeline: React.FC<TraceReplayTimelineProps> = ({ data }) => {
+  const { token } = theme.useToken();
   const [currentStep, setCurrentStep] = useState(-1);
   const [isPlaying, setIsPlaying] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -141,13 +142,13 @@ const TraceReplayTimeline: React.FC<TraceReplayTimelineProps> = ({ data }) => {
                 marginBottom: 2,
                 borderRadius: 4,
                 cursor: 'pointer',
-                background: isActive ? '#e6f4ff' : isPast ? '#f6ffed' : 'transparent',
+                background: isActive ? token.colorPrimaryBg : isPast ? token.colorSuccessBg : 'transparent',
                 opacity: isPast ? 0.7 : 1,
-                borderLeft: `3px solid ${TYPE_COLORS[ev.type] || '#999'}`,
+                borderLeft: `3px solid ${TYPE_COLORS[ev.type] || token.colorTextQuaternary}`,
                 transition: 'background 0.2s',
               }}
             >
-              <div style={{ minWidth: 60, fontSize: 11, color: '#999', fontFamily: 'monospace' }}>
+              <div style={{ minWidth: 60, fontSize: 11, color: token.colorTextQuaternary, fontFamily: 'monospace' }}>
                 +{ev.offset_ms}ms
               </div>
               <Tag color={TYPE_COLORS[ev.type] || 'default'} style={{ margin: 0 }}>
@@ -166,14 +167,14 @@ const TraceReplayTimeline: React.FC<TraceReplayTimelineProps> = ({ data }) => {
                     {ev.model && <div><Text type="secondary">模型:</Text> {ev.model}</div>}
                     {ev.input_summary && (
                       <Tooltip title={ev.input_summary}>
-                        <div style={{ color: '#666', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 500 }}>
+                        <div style={{ color: token.colorTextSecondary, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 500 }}>
                           <Text type="secondary">输入:</Text> {ev.input_summary}
                         </div>
                       </Tooltip>
                     )}
                     {ev.output_summary && (
                       <Tooltip title={ev.output_summary}>
-                        <div style={{ color: '#666', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 500 }}>
+                        <div style={{ color: token.colorTextSecondary, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 500 }}>
                           <Text type="secondary">输出:</Text> {ev.output_summary}
                         </div>
                       </Tooltip>

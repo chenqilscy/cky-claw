@@ -84,3 +84,4 @@ maf-deploy.*
 test-out.txt
 test-output.txt
 vitest-out.json
+test-results.json

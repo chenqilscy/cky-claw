@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { App, Tag, Badge, Modal, Descriptions, Input, Space, Card, Row, Col, Statistic } from 'antd';
+import { App, Tag, Badge, Modal, Descriptions, Input, Space, Card, Row, Col, Statistic, theme } from 'antd';
 import { ReloadOutlined, PauseCircleOutlined, PlayCircleOutlined, EyeOutlined } from '@ant-design/icons';
 import { ProTable } from '@ant-design/pro-components';
 import type { ProColumns } from '@ant-design/pro-components';
@@ -22,6 +22,7 @@ const STATUS_MAP: Record<string, { color: string; text: string }> = {
 
 const SupervisionPage: React.FC = () => {
   const { message } = App.useApp();
+  const { token } = theme.useToken();
   const [agentFilter, setAgentFilter] = useState<string>('');
   const [detailVisible, setDetailVisible] = useState(false);
   const [detailData, setDetailData] = useState<SupervisionSessionDetail | null>(null);
@@ -130,12 +131,12 @@ const SupervisionPage: React.FC = () => {
             <EyeOutlined /> 详情
           </a>
           {record.status === 'active' && (
-            <a onClick={() => handlePause(record.session_id)} style={{ color: '#fa8c16' }}>
+            <a onClick={() => handlePause(record.session_id)} style={{ color: token.colorWarning }}>
               <PauseCircleOutlined /> 暂停
             </a>
           )}
           {record.status === 'paused' && (
-            <a onClick={() => handleResume(record.session_id)} style={{ color: '#52c41a' }}>
+            <a onClick={() => handleResume(record.session_id)} style={{ color: token.colorSuccess }}>
               <PlayCircleOutlined /> 恢复
             </a>
           )}
@@ -154,12 +155,12 @@ const SupervisionPage: React.FC = () => {
         </Col>
         <Col span={6}>
           <Card size="small">
-            <Statistic title="运行中" value={activeSessions} valueStyle={{ color: '#52c41a' }} />
+            <Statistic title="运行中" value={activeSessions} valueStyle={{ color: token.colorSuccess }} />
           </Card>
         </Col>
         <Col span={6}>
           <Card size="small">
-            <Statistic title="已暂停" value={pausedSessions} valueStyle={{ color: '#fa8c16' }} />
+            <Statistic title="已暂停" value={pausedSessions} valueStyle={{ color: token.colorWarning }} />
           </Card>
         </Col>
         <Col span={6}>

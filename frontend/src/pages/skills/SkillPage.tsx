@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { ProColumns } from '@ant-design/pro-components';
 import { ProTable } from '@ant-design/pro-components';
-import { Button, Modal, Form, Input, Select, Tag, App, Space, Popconfirm } from 'antd';
+import { Button, Modal, Form, Input, Select, Tag, App, Space, Popconfirm, theme } from 'antd';
 import { SearchOutlined, DeleteOutlined, EditOutlined, EyeOutlined } from '@ant-design/icons';
 import type { FormInstance } from 'antd';
 import type { SkillItem, SkillCreateParams, SkillUpdateParams } from '../../services/skillService';
@@ -25,11 +25,14 @@ const categoryColorMap: Record<string, string> = {
   custom: 'green',
 };
 
+type DesignToken = ReturnType<typeof theme.useToken>['token'];
+
 /* ---- 列定义 ---- */
 
 const buildColumns = (
   actions: CrudTableActions<SkillItem>,
   onPreview: (record: SkillItem) => void,
+  token: DesignToken,
 ): ProColumns<SkillItem>[] => [
   {
     title: '名称',
@@ -85,7 +88,7 @@ const buildColumns = (
           <EditOutlined /> 编辑
         </a>
         <Popconfirm title="确认删除此技能？" onConfirm={() => actions.handleDelete(record.id)}>
-          <a style={{ color: '#ff4d4f' }}><DeleteOutlined /> 删除</a>
+          <a style={{ color: token.colorError }}><DeleteOutlined /> 删除</a>
         </Popconfirm>
       </Space>
     ),
@@ -143,6 +146,7 @@ const renderForm = (_form: FormInstance, editing: SkillItem | null) => (
 
 const SkillPage: React.FC = () => {
   const { message: _msg } = App.useApp();
+  const { token } = theme.useToken();
   const [pagination, setPagination] = useState({ current: 1, pageSize: 20 });
   const [previewModalOpen, setPreviewModalOpen] = useState(false);
   const [searchModalOpen, setSearchModalOpen] = useState(false);
@@ -188,7 +192,7 @@ const SkillPage: React.FC = () => {
         createButtonText="新建技能"
         modalTitle={(editing) => (editing ? '编辑技能' : '新建技能')}
         modalWidth={720}
-        columns={(actions) => buildColumns(actions, handlePreview)}
+        columns={(actions) => buildColumns(actions, handlePreview, token)}
         renderForm={renderForm}
         createDefaults={{ version: '1.0.0', category: 'custom' }}
         toFormValues={(record) => ({
@@ -250,7 +254,7 @@ const SkillPage: React.FC = () => {
             <p><strong>适用 Agent：</strong>{currentSkill.applicable_agents.length > 0 ? currentSkill.applicable_agents.join(', ') : '所有 Agent'}</p>
             <div style={{ marginTop: 16 }}>
               <strong>SKILL.md 内容：</strong>
-              <pre style={{ background: '#f5f5f5', padding: 16, borderRadius: 8, maxHeight: 400, overflow: 'auto', whiteSpace: 'pre-wrap' }}>
+              <pre style={{ background: token.colorFillQuaternary, padding: 16, borderRadius: 8, maxHeight: 400, overflow: 'auto', whiteSpace: 'pre-wrap' }}>
                 {currentSkill.content}
               </pre>
             </div>

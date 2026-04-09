@@ -71,22 +71,22 @@ const LoginPage: React.FC = () => {
           CkyClaw
         </Title>
         {error && (
-          <div style={{ color: token.colorError, textAlign: 'center', marginBottom: 16 }}>
+          <div role="alert" style={{ color: token.colorError, textAlign: 'center', marginBottom: 16 }}>
             {error}
           </div>
         )}
-        <Form onFinish={onFinish} size="large">
+        <Form onFinish={onFinish} size="large" aria-label="登录表单">
           <Form.Item
             name="username"
             rules={[{ required: true, message: '请输入用户名' }]}
           >
-            <Input prefix={<UserOutlined />} placeholder="用户名" />
+            <Input prefix={<UserOutlined />} placeholder="用户名" aria-label="用户名" autoComplete="username" />
           </Form.Item>
           <Form.Item
             name="password"
             rules={[{ required: true, message: '请输入密码' }]}
           >
-            <Input.Password prefix={<LockOutlined />} placeholder="密码" />
+            <Input.Password prefix={<LockOutlined />} placeholder="密码" aria-label="密码" autoComplete="current-password" />
           </Form.Item>
           <Form.Item>
             <Button type="primary" htmlType="submit" block loading={loading}>

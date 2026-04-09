@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import * as echarts from 'echarts';
+import { theme } from 'antd';
 import type { FlameNode } from '../../services/traceService';
 
 import { SPAN_TYPE_COLORS as TYPE_COLORS } from '../../constants/colors';
@@ -40,6 +41,7 @@ interface FlameChartProps {
 
 /** Span 火焰图 — 基于 ECharts custom series */
 export default function FlameChart({ nodes, totalSpans }: FlameChartProps) {
+  const { token } = theme.useToken();
   const chartRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -109,7 +111,7 @@ export default function FlameChart({ nodes, totalSpans }: FlameChartProps) {
           const wh = size([duration, 0]);
 
           const types = Object.keys(TYPE_COLORS);
-          const color = TYPE_COLORS[types[typeIdx] ?? 'agent'] ?? '#999';
+          const color = TYPE_COLORS[types[typeIdx] ?? 'agent'] ?? token.colorTextQuaternary;
 
           return {
             type: 'rect',
@@ -139,10 +141,10 @@ export default function FlameChart({ nodes, totalSpans }: FlameChartProps) {
       window.removeEventListener('resize', onResize);
       chart.dispose();
     };
-  }, [nodes, totalSpans]);
+  }, [nodes, totalSpans, token]);
 
   if (!nodes) {
-    return <div style={{ color: '#999', padding: 16 }}>无 Span 数据</div>;
+    return <div style={{ color: token.colorTextQuaternary, padding: 16 }}>无 Span 数据</div>;
   }
 
   return <div ref={chartRef} style={{ width: '100%', minHeight: 200 }} />;

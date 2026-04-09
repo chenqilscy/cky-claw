@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button, DatePicker, Form, Input, App, Modal, Popconfirm, Switch, Tag, Space } from 'antd';
+import { Button, DatePicker, Form, Input, App, Modal, Popconfirm, Switch, Tag, Space, theme } from 'antd';
 import { KeyOutlined, PlusOutlined, ReloadOutlined, ThunderboltOutlined } from '@ant-design/icons';
 import { ProTable } from '@ant-design/pro-components';
 import type { ProColumns } from '@ant-design/pro-components';
@@ -21,6 +21,7 @@ const HEALTH_STATUS_MAP: Record<string, { color: string; text: string }> = {
 
 const ProviderListPage: React.FC = () => {
   const { message } = App.useApp();
+  const { token } = theme.useToken();
   const navigate = useNavigate();
   const [pagination, setPagination] = useState({ current: 1, pageSize: 20 });
 
@@ -186,7 +187,7 @@ const ProviderListPage: React.FC = () => {
           </a>
           <a
             onClick={() => handleTest(record)}
-            style={{ color: testing === record.id ? '#999' : undefined }}
+            style={{ color: testing === record.id ? token.colorTextQuaternary : undefined }}
           >
             {testing === record.id ? '测试中...' : <><ThunderboltOutlined /> 测试</>}
           </a>
@@ -196,7 +197,7 @@ const ProviderListPage: React.FC = () => {
             okText="删除"
             cancelText="取消"
           >
-            <a style={{ color: '#ff4d4f' }}>删除</a>
+            <a style={{ color: token.colorError }}>删除</a>
           </Popconfirm>
         </Space>
       ),

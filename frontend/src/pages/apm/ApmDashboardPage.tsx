@@ -94,14 +94,14 @@ export default function ApmDashboardPage() {
         name: 'Trace 数量',
         type: 'bar',
         data: daily_trend.map((d) => d.traces),
-        itemStyle: { color: '#1890ff' },
+        itemStyle: { color: themeToken.colorPrimary },
       },
       {
         name: 'Token 消耗',
         type: 'line',
         data: daily_trend.map((d) => d.tokens),
         smooth: true,
-        itemStyle: { color: '#52c41a' },
+        itemStyle: { color: themeToken.colorSuccess },
       },
       {
         name: '成本',
@@ -109,7 +109,7 @@ export default function ApmDashboardPage() {
         yAxisIndex: 1,
         data: daily_trend.map((d) => d.cost),
         smooth: true,
-        itemStyle: { color: '#faad14' },
+        itemStyle: { color: themeToken.colorWarning },
       },
     ],
   };

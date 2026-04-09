@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Button, Card, App, Space, Tag, Tooltip, Spin } from 'antd';
+import { Button, Card, App, Space, Tag, Tooltip, Spin, theme } from 'antd';
 import { SaveOutlined, ReloadOutlined, ApartmentOutlined, WarningOutlined } from '@ant-design/icons';
 import {
   ReactFlow,
@@ -34,13 +34,14 @@ type AgentNodeData = {
 };
 
 const AgentNode = ({ data }: NodeProps<Node<AgentNodeData>>) => {
+  const { token } = theme.useToken();
   return (
     <div
       style={{
         padding: '10px 14px',
-        border: `2px solid ${data.isActive ? '#1677ff' : '#d9d9d9'}`,
+        border: `2px solid ${data.isActive ? token.colorPrimary : token.colorBorder}`,
         borderRadius: 8,
-        background: data.isActive ? '#f0f5ff' : '#fafafa',
+        background: data.isActive ? token.colorPrimaryBg : token.colorBgLayout,
         width: NODE_WIDTH,
         minHeight: NODE_HEIGHT,
         display: 'flex',
@@ -48,7 +49,7 @@ const AgentNode = ({ data }: NodeProps<Node<AgentNodeData>>) => {
         justifyContent: 'center',
       }}
     >
-      <Handle type="target" position={Position.Top} style={{ background: '#1677ff' }} />
+      <Handle type="target" position={Position.Top} style={{ background: token.colorPrimary }} />
       <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 4 }}>{data.label}</div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Tag color={data.model ? 'blue' : 'default'} style={{ fontSize: 11 }}>
@@ -60,7 +61,7 @@ const AgentNode = ({ data }: NodeProps<Node<AgentNodeData>>) => {
           </Tag>
         )}
       </div>
-      <Handle type="source" position={Position.Bottom} style={{ background: '#1677ff' }} />
+      <Handle type="source" position={Position.Bottom} style={{ background: token.colorPrimary }} />
     </div>
   );
 };
@@ -136,6 +137,7 @@ function detectCycles(edges: Edge[]): string[][] {
 // ─── 主组件 ────────────────────────────────────────────────────
 const HandoffEditorPage: React.FC = () => {
   const { message } = App.useApp();
+  const { token } = theme.useToken();
   const [agents, setAgents] = useState<AgentConfig[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -185,12 +187,12 @@ const HandoffEditorPage: React.FC = () => {
               source: a.name,
               target,
               label: `→ ${target}`,
-              labelStyle: { fontSize: 11, fill: '#666' },
-              labelBgStyle: { fill: '#fff', fillOpacity: 0.85 },
+              labelStyle: { fontSize: 11, fill: token.colorTextSecondary },
+              labelBgStyle: { fill: token.colorBgContainer, fillOpacity: 0.85 },
               labelBgPadding: [4, 6] as [number, number],
               labelBgBorderRadius: 4,
-              markerEnd: { type: MarkerType.ArrowClosed, color: '#1677ff' },
-              style: { stroke: '#1677ff', strokeWidth: 2 },
+              markerEnd: { type: MarkerType.ArrowClosed, color: token.colorPrimary },
+              style: { stroke: token.colorPrimary, strokeWidth: 2 },
               animated: true,
             });
           }
@@ -206,7 +208,7 @@ const HandoffEditorPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [setNodes, setEdges, message]);
+  }, [setNodes, setEdges, message, token]);
 
   useEffect(() => {
     loadAgents();
@@ -222,12 +224,12 @@ const HandoffEditorPage: React.FC = () => {
             ...params,
             id: `${params.source}->${params.target}`,
             label: `→ ${params.target}`,
-            labelStyle: { fontSize: 11, fill: '#666' },
-            labelBgStyle: { fill: '#fff', fillOpacity: 0.85 },
+            labelStyle: { fontSize: 11, fill: token.colorTextSecondary },
+            labelBgStyle: { fill: token.colorBgContainer, fillOpacity: 0.85 },
             labelBgPadding: [4, 6] as [number, number],
             labelBgBorderRadius: 4,
-            markerEnd: { type: MarkerType.ArrowClosed, color: '#1677ff' },
-            style: { stroke: '#1677ff', strokeWidth: 2 },
+            markerEnd: { type: MarkerType.ArrowClosed, color: token.colorPrimary },
+            style: { stroke: token.colorPrimary, strokeWidth: 2 },
             animated: true,
           },
           eds,
@@ -235,7 +237,7 @@ const HandoffEditorPage: React.FC = () => {
       );
       setDirty(true);
     },
-    [setEdges],
+    [setEdges, token],
   );
 
   // ── 删边 ──
@@ -370,7 +372,7 @@ const HandoffEditorPage: React.FC = () => {
           <MiniMap
             nodeColor={(n) => {
               const d = n.data as AgentNodeData;
-              return d.isActive ? '#1677ff' : '#d9d9d9';
+              return d.isActive ? token.colorPrimary : token.colorBorder;
             }}
             zoomable
             pannable

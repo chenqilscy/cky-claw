@@ -21,21 +21,20 @@ import {
   Panel,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { Button, Card, Drawer, Form, Input, InputNumber, App, Select, Space, Tag, Typography } from 'antd';
+import { Button, Card, Drawer, Form, Input, InputNumber, App, Select, Space, Tag, Typography, theme } from 'antd';
 import { SaveOutlined, CheckCircleOutlined, ArrowLeftOutlined, PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useWorkflow, useCreateWorkflow, useUpdateWorkflow, useValidateWorkflow } from '../../hooks/useWorkflowQueries';
 import type { StepSchema, EdgeSchema, WorkflowCreateParams } from '../../services/workflowService';
+import { NODE_COLORS } from '../../constants/colors';
 
 const { Text } = Typography;
 
 const STEP_TYPES = [
-  { label: 'Agent 步骤', value: 'agent', color: '#1890ff' },
-  { label: '并行步骤', value: 'parallel', color: '#52c41a' },
-  { label: '条件分支', value: 'conditional', color: '#fa8c16' },
-  { label: '循环步骤', value: 'loop', color: '#722ed1' },
+  { label: 'Agent 步骤', value: 'agent', color: NODE_COLORS.agent },
+  { label: '并行步骤', value: 'parallel', color: NODE_COLORS.parallel },
+  { label: '条件分支', value: 'conditional', color: NODE_COLORS.conditional },
+  { label: '循环步骤', value: 'loop', color: NODE_COLORS.loop },
 ] as const;
-
-import { NODE_COLORS } from '../../constants/colors';
 
 let nodeIdCounter = 1;
 function nextNodeId(): string {
@@ -103,6 +102,7 @@ function flowToEdges(edges: Edge[]): EdgeSchema[] {
 
 const WorkflowEditorPage: React.FC = () => {
   const { message } = App.useApp();
+  const { token } = theme.useToken();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const editId = searchParams.get('id');
@@ -178,7 +178,7 @@ const WorkflowEditorPage: React.FC = () => {
   const addNode = useCallback(
     (type: string) => {
       const id = nextNodeId();
-      const color = NODE_COLORS[type] ?? '#d9d9d9';
+      const color = NODE_COLORS[type] ?? token.colorBorder;
       const newNode: Node = {
         id,
         position: { x: 100 + Math.random() * 300, y: 100 + Math.random() * 200 },
@@ -194,7 +194,7 @@ const WorkflowEditorPage: React.FC = () => {
           border: `2px solid ${color}`,
           borderRadius: 8,
           padding: '8px 16px',
-          background: '#fff',
+          background: token.colorBgContainer,
           minWidth: 160,
         },
       };
@@ -207,7 +207,7 @@ const WorkflowEditorPage: React.FC = () => {
   const updateNodeData = useCallback(() => {
     if (!selectedNode) return;
     const values = form.getFieldsValue();
-    const color = NODE_COLORS[values.stepType] ?? '#d9d9d9';
+    const color = NODE_COLORS[values.stepType] ?? token.colorBorder;
     setNodes((nds) =>
       nds.map((n) =>
         n.id === selectedNode.id

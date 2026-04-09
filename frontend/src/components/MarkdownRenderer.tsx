@@ -1,9 +1,10 @@
-import { memo, useCallback, useState } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { CheckOutlined, CopyOutlined } from '@ant-design/icons';
+import { theme } from 'antd';
 import type { Components } from 'react-markdown';
 import type React from 'react';
 import type { CSSProperties } from 'react';
@@ -137,69 +138,75 @@ const components: Components = {
       </div>
     );
   },
-  th({ children, ...rest }) {
-    return (
-      <th
-        style={{
-          border: '1px solid #e8e8e8',
-          padding: '8px 12px',
-          background: '#fafafa',
-          fontWeight: 600,
-          textAlign: 'left',
-        }}
-        {...rest}
-      >
-        {children}
-      </th>
-    );
-  },
-  td({ children, ...rest }) {
-    return (
-      <td
-        style={{
-          border: '1px solid #e8e8e8',
-          padding: '8px 12px',
-        }}
-        {...rest}
-      >
-        {children}
-      </td>
-    );
-  },
-  a({ children, href, ...rest }) {
-    return (
-      <a
-        href={href}
-        target="_blank"
-        rel="noopener noreferrer"
-        style={{ color: '#1677ff' }}
-        {...rest}
-      >
-        {children}
-      </a>
-    );
-  },
-  blockquote({ children, ...rest }) {
-    return (
-      <blockquote
-        style={{
-          borderLeft: '3px solid #1677ff',
-          paddingLeft: 12,
-          margin: '8px 0',
-          color: '#666',
-        }}
-        {...rest}
-      >
-        {children}
-      </blockquote>
-    );
-  },
 };
 
 const MarkdownRenderer: React.FC<MarkdownRendererProps> = memo(({ content }) => {
+  const { token } = theme.useToken();
+
+  const mdComponents = useMemo<Components>(() => ({
+    ...components,
+    th({ children, ...rest }) {
+      return (
+        <th
+          style={{
+            border: `1px solid ${token.colorBorderSecondary}`,
+            padding: '8px 12px',
+            background: token.colorBgLayout,
+            fontWeight: 600,
+            textAlign: 'left',
+          }}
+          {...rest}
+        >
+          {children}
+        </th>
+      );
+    },
+    td({ children, ...rest }) {
+      return (
+        <td
+          style={{
+            border: `1px solid ${token.colorBorderSecondary}`,
+            padding: '8px 12px',
+          }}
+          {...rest}
+        >
+          {children}
+        </td>
+      );
+    },
+    a({ children, href, ...rest }) {
+      return (
+        <a
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ color: token.colorPrimary }}
+          {...rest}
+        >
+          {children}
+        </a>
+      );
+    },
+    blockquote({ children, ...rest }) {
+      return (
+        <blockquote
+          style={{
+            borderLeft: `3px solid ${token.colorPrimary}`,
+            paddingLeft: 12,
+            margin: '8px 0',
+            color: token.colorTextSecondary,
+          }}
+          {...rest}
+        >
+          {children}
+        </blockquote>
+      );
+    },
+  }), [token]);
+
   return (
     <div className="markdown-body" style={{ lineHeight: 1.7, fontSize: 14 }}>
-      <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
+      <ReactMarkdown remarkPlugins={[remarkGfm]} components={mdComponents}>
         {content}
       </ReactMarkdown>
     </div>

@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { Tag, Button, Space, Modal, Input, App, Popconfirm, Badge } from 'antd';
+import { Tag, Button, Space, Modal, Input, App, Popconfirm, Badge, theme } from 'antd';
 import { CheckOutlined, CloseOutlined, ReloadOutlined, WifiOutlined } from '@ant-design/icons';
 import type { ProColumns, ActionType } from '@ant-design/pro-components';
 import { ProTable } from '@ant-design/pro-components';
@@ -23,6 +23,7 @@ const triggerLabelMap: Record<string, string> = {
 
 const ApprovalQueuePage: React.FC = () => {
   const { message } = App.useApp();
+  const { token } = theme.useToken();
   const actionRef = useRef<ActionType>(null);
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
   const [rejectingId, setRejectingId] = useState<string>('');
@@ -99,12 +100,12 @@ const ApprovalQueuePage: React.FC = () => {
         return toolName ? (
           <span>
             <Tag color="blue">{toolName}</Tag>
-            <span style={{ color: '#888', fontSize: 12 }}>
+            <span style={{ color: token.colorTextTertiary, fontSize: 12 }}>
               {JSON.stringify(content.arguments || {}).slice(0, 80)}
             </span>
           </span>
         ) : (
-          <span style={{ color: '#888' }}>{JSON.stringify(content).slice(0, 100)}</span>
+          <span style={{ color: token.colorTextTertiary }}>{JSON.stringify(content).slice(0, 100)}</span>
         );
       },
     },
@@ -148,7 +149,7 @@ const ApprovalQueuePage: React.FC = () => {
       width: 160,
       search: false,
       render: (_, record) => {
-        if (record.status !== 'pending') return <span style={{ color: '#999' }}>—</span>;
+        if (record.status !== 'pending') return <span style={{ color: token.colorTextQuaternary }}>—</span>;
         return (
           <Space>
             <Popconfirm
@@ -208,7 +209,7 @@ const ApprovalQueuePage: React.FC = () => {
             key="ws-status"
             status={wsConnected ? 'success' : 'default'}
             text={
-              <span style={{ fontSize: 12, color: wsConnected ? '#52c41a' : '#999' }}>
+              <span style={{ fontSize: 12, color: wsConnected ? token.colorSuccess : token.colorTextQuaternary }}>
                 <WifiOutlined style={{ marginRight: 4 }} />
                 {wsConnected ? '实时连接' : '未连接'}
               </span>

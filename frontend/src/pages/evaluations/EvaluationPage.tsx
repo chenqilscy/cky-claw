@@ -2,6 +2,7 @@ import { useState } from 'react';
 import {
   Card, Button, Space, Modal, Form, Input, InputNumber, Select, Tag, App,
   Table, Typography, Tabs, Statistic, Row, Col, Progress,
+  theme,
 } from 'antd';
 import {
   PlusOutlined, ReloadOutlined, StarOutlined, LikeOutlined,
@@ -48,16 +49,17 @@ const methodColor: Record<string, string> = {
   llm_judge: 'purple',
 };
 
-const ratingIcon: Record<number, React.ReactNode> = {
-  '-1': <DislikeOutlined style={{ color: '#ff4d4f' }} />,
-  '0': <span style={{ color: '#faad14' }}>—</span>,
-  '1': <LikeOutlined style={{ color: '#52c41a' }} />,
-};
+const ratingIcon = (token: { colorError: string; colorWarning: string; colorSuccess: string }) => ({
+  '-1': <DislikeOutlined style={{ color: token.colorError }} />,
+  '0': <span style={{ color: token.colorWarning }}>—</span>,
+  '1': <LikeOutlined style={{ color: token.colorSuccess }} />,
+} as Record<number, React.ReactNode>);
 
 // ── 评估 Tab ──────────────────────────────────────
 
 const EvaluationTab: React.FC = () => {
   const { message } = App.useApp();
+  const { token } = theme.useToken();
   const [modalOpen, setModalOpen] = useState(false);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
@@ -120,7 +122,7 @@ const EvaluationTab: React.FC = () => {
       width: 100,
       sorter: (a: RunEvaluation, b: RunEvaluation) => a.overall_score - b.overall_score,
       render: (val: number) => (
-        <Text strong style={{ color: val >= 0.7 ? '#52c41a' : val >= 0.4 ? '#faad14' : '#ff4d4f' }}>
+        <Text strong style={{ color: val >= 0.7 ? token.colorSuccess : val >= 0.4 ? token.colorWarning : token.colorError }}>
           {(val * 100).toFixed(0)}%
         </Text>
       ),
@@ -231,6 +233,7 @@ const EvaluationTab: React.FC = () => {
 
 const FeedbackTab: React.FC = () => {
   const { message } = App.useApp();
+  const { token } = theme.useToken();
   const [modalOpen, setModalOpen] = useState(false);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
@@ -277,7 +280,7 @@ const FeedbackTab: React.FC = () => {
       dataIndex: 'rating',
       key: 'rating',
       width: 80,
-      render: (val: number) => ratingIcon[val] ?? val,
+      render: (val: number) => ratingIcon(token)[val] ?? val,
     },
     {
       title: '评论',
@@ -363,6 +366,7 @@ const FeedbackTab: React.FC = () => {
 
 const QualityTab: React.FC = () => {
   const { message } = App.useApp();
+  const { token } = theme.useToken();
   const [agentId, setAgentId] = useState('');
   const [summary, setSummary] = useState<AgentQualitySummary | null>(null);
   const [loading, setLoading] = useState(false);
@@ -413,7 +417,7 @@ const QualityTab: React.FC = () => {
                   title="综合得分"
                   value={summary.avg_overall * 100}
                   suffix="%"
-                  valueStyle={{ color: summary.avg_overall >= 0.7 ? '#3f8600' : '#cf1322' }}
+                  valueStyle={{ color: summary.avg_overall >= 0.7 ? token.colorSuccess : token.colorError }}
                 />
               </Card>
             </Col>
@@ -428,7 +432,7 @@ const QualityTab: React.FC = () => {
                   title="好评率"
                   value={summary.positive_rate * 100}
                   suffix="%"
-                  valueStyle={{ color: summary.positive_rate >= 0.6 ? '#3f8600' : '#cf1322' }}
+                  valueStyle={{ color: summary.positive_rate >= 0.6 ? token.colorSuccess : token.colorError }}
                 />
               </Card>
             </Col>

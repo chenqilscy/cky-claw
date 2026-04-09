@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import {
   Card, Row, Col, Tag, Button, Modal, Typography, Space, App,
-  Empty, Spin, Input, Select, Form,
+  Empty, Spin, Input, Select, Form, theme,
 } from 'antd';
 import {
   RobotOutlined,
@@ -69,6 +69,7 @@ const categoryLabelMap: Record<string, string> = {
 
 const TemplatePage: React.FC = () => {
   const { message } = App.useApp();
+  const { token } = theme.useToken();
   const navigate = useNavigate();
   const [previewOpen, setPreviewOpen] = useState(false);
   const [currentTemplate, setCurrentTemplate] = useState<AgentTemplateItem | null>(null);
@@ -202,7 +203,7 @@ const TemplatePage: React.FC = () => {
               >
                 <Card.Meta
                   avatar={
-                    <div style={{ fontSize: 32, color: '#1677ff' }}>
+                    <div style={{ fontSize: 32, color: token.colorPrimary }}>
                       {iconMap[tpl.icon] ?? <RobotOutlined />}
                     </div>
                   }
@@ -219,7 +220,7 @@ const TemplatePage: React.FC = () => {
                       </Tag>
                       <Paragraph
                         ellipsis={{ rows: 2 }}
-                        style={{ marginTop: 8, marginBottom: 0, color: '#666' }}
+                        style={{ marginTop: 8, marginBottom: 0, color: token.colorTextSecondary }}
                       >
                         {tpl.description || '暂无描述'}
                       </Paragraph>
@@ -253,7 +254,7 @@ const TemplatePage: React.FC = () => {
         {currentTemplate && (
           <div>
             <Space style={{ marginBottom: 12 }}>
-              <div style={{ fontSize: 36, color: '#1677ff' }}>
+              <div style={{ fontSize: 36, color: token.colorPrimary }}>
                 {iconMap[currentTemplate.icon] ?? <RobotOutlined />}
               </div>
               <div>
@@ -269,7 +270,7 @@ const TemplatePage: React.FC = () => {
             <Paragraph>{currentTemplate.description}</Paragraph>
             <Title level={5}>Agent 配置</Title>
             <pre style={{
-              background: '#f5f5f5',
+              background: token.colorFillQuaternary,
               padding: 16,
               borderRadius: 8,
               maxHeight: 400,
@@ -315,7 +316,7 @@ const TemplatePage: React.FC = () => {
             <div>
               <Title level={5}>模板配置预览</Title>
               <pre style={{
-                background: '#f5f5f5',
+                background: token.colorFillQuaternary,
                 padding: 12,
                 borderRadius: 8,
                 maxHeight: 200,

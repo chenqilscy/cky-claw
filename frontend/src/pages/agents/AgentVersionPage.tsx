@@ -11,6 +11,7 @@ import {
   Switch,
   Tag,
   Input,
+  theme,
 } from 'antd';
 import { ArrowLeftOutlined, DiffOutlined, RollbackOutlined } from '@ant-design/icons';
 import { ProTable } from '@ant-design/pro-components';
@@ -21,6 +22,7 @@ import { useAgentVersionList, useRollbackAgentVersion } from '../../hooks/useAge
 
 const AgentVersionPage: React.FC = () => {
   const { message } = App.useApp();
+  const { token } = theme.useToken();
   const navigate = useNavigate();
   const { agentId } = useParams<{ agentId: string }>();
   const [pagination, setPagination] = useState({ current: 1, pageSize: 20 });
@@ -219,7 +221,7 @@ const AgentVersionPage: React.FC = () => {
                 checkedChildren="仅变更"
                 unCheckedChildren="全部字段"
               />
-              <span style={{ fontSize: 12, color: '#999' }}>
+              <span style={{ fontSize: 12, color: token.colorTextQuaternary }}>
                 共 {diffKeys.length} 个字段
                 {showOnlyChanges ? '（已变更）' : ''}
               </span>
@@ -227,10 +229,10 @@ const AgentVersionPage: React.FC = () => {
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                 <thead>
-                  <tr style={{ background: '#fafafa' }}>
-                    <th style={{ border: '1px solid #f0f0f0', padding: '8px 12px', textAlign: 'left', width: 160 }}>字段</th>
-                    <th style={{ border: '1px solid #f0f0f0', padding: '8px 12px', textAlign: 'left', background: '#fef2f2' }}>v{diffData.version_a}（旧）</th>
-                    <th style={{ border: '1px solid #f0f0f0', padding: '8px 12px', textAlign: 'left', background: '#f0fdf4' }}>v{diffData.version_b}（新）</th>
+                  <tr style={{ background: token.colorBgLayout }}>
+                    <th style={{ border: `1px solid ${token.colorBorderSecondary}`, padding: '8px 12px', textAlign: 'left', width: 160 }}>字段</th>
+                    <th style={{ border: `1px solid ${token.colorBorderSecondary}`, padding: '8px 12px', textAlign: 'left', background: token.colorErrorBg }}>v{diffData.version_a}（旧）</th>
+                    <th style={{ border: `1px solid ${token.colorBorderSecondary}`, padding: '8px 12px', textAlign: 'left', background: token.colorSuccessBg }}>v{diffData.version_b}（新）</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -240,31 +242,31 @@ const AgentVersionPage: React.FC = () => {
                     const changed = valA !== valB;
                     return (
                       <tr key={key}>
-                        <td style={{ border: '1px solid #f0f0f0', padding: '6px 12px', fontWeight: changed ? 600 : 400 }}>
+                        <td style={{ border: `1px solid ${token.colorBorderSecondary}`, padding: '6px 12px', fontWeight: changed ? 600 : 400 }}>
                           {key}
                           {changed && <Tag color="orange" style={{ marginLeft: 4 }}>变更</Tag>}
                         </td>
                         <td style={{
-                          border: '1px solid #f0f0f0',
+                          border: `1px solid ${token.colorBorderSecondary}`,
                           padding: '6px 12px',
                           fontFamily: 'monospace',
                           fontSize: 12,
                           whiteSpace: 'pre-wrap',
                           wordBreak: 'break-all',
-                          background: changed ? '#fef2f2' : 'transparent',
-                          color: changed ? '#b91c1c' : 'inherit',
+                          background: changed ? token.colorErrorBg : 'transparent',
+                          color: changed ? token.colorError : 'inherit',
                         }}>
                           {valA}
                         </td>
                         <td style={{
-                          border: '1px solid #f0f0f0',
+                          border: `1px solid ${token.colorBorderSecondary}`,
                           padding: '6px 12px',
                           fontFamily: 'monospace',
                           fontSize: 12,
                           whiteSpace: 'pre-wrap',
                           wordBreak: 'break-all',
-                          background: changed ? '#f0fdf4' : 'transparent',
-                          color: changed ? '#15803d' : 'inherit',
+                          background: changed ? token.colorSuccessBg : 'transparent',
+                          color: changed ? token.colorSuccess : 'inherit',
                         }}>
                           {valB}
                         </td>
