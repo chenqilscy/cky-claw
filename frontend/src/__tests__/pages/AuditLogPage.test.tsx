@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, waitFor } from '@testing-library/react';
+import { TestQueryWrapper } from '../test-utils';
 import { MemoryRouter } from 'react-router-dom';
 
 // Mock auditLogService
@@ -32,9 +33,11 @@ describe('AuditLogPage', () => {
 
   it('renders page title', async () => {
     render(
-      <MemoryRouter>
-        <AuditLogPage />
-      </MemoryRouter>,
+      <TestQueryWrapper>
+        <MemoryRouter>
+          <AuditLogPage />
+        </MemoryRouter>
+      </TestQueryWrapper>,
     );
     await waitFor(() => {
       expect(document.body.textContent).toContain('审计日志');
@@ -43,9 +46,11 @@ describe('AuditLogPage', () => {
 
   it('renders audit log data in table', async () => {
     render(
-      <MemoryRouter>
-        <AuditLogPage />
-      </MemoryRouter>,
+      <TestQueryWrapper>
+        <MemoryRouter>
+          <AuditLogPage />
+        </MemoryRouter>
+      </TestQueryWrapper>,
     );
     await waitFor(() => {
       expect(mockListAuditLogs).toHaveBeenCalled();
@@ -59,9 +64,11 @@ describe('AuditLogPage', () => {
 
   it('renders table columns', async () => {
     render(
-      <MemoryRouter>
-        <AuditLogPage />
-      </MemoryRouter>,
+      <TestQueryWrapper>
+        <MemoryRouter>
+          <AuditLogPage />
+        </MemoryRouter>
+      </TestQueryWrapper>,
     );
     await waitFor(() => {
       expect(document.body.textContent).toContain('审计日志');
@@ -73,9 +80,11 @@ describe('AuditLogPage', () => {
 
   it('calls listAuditLogs on mount', async () => {
     render(
-      <MemoryRouter>
-        <AuditLogPage />
-      </MemoryRouter>,
+      <TestQueryWrapper>
+        <MemoryRouter>
+          <AuditLogPage />
+        </MemoryRouter>
+      </TestQueryWrapper>,
     );
     await waitFor(() => {
       expect(mockListAuditLogs).toHaveBeenCalled();

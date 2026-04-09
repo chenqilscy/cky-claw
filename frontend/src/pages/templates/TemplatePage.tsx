@@ -1,6 +1,6 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState } from 'react';
 import {
-  Card, Row, Col, Tag, Button, Modal, Typography, Space, message,
+  Card, Row, Col, Tag, Button, Modal, Typography, Space, App,
   Empty, Spin, Input, Select, Form,
 } from 'antd';
 import {
@@ -20,12 +20,16 @@ import {
   EyeOutlined,
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
-import {
-  agentTemplateService,
-  type AgentTemplateItem,
-  type TemplateInstantiateResult,
+import type {
+  AgentTemplateItem,
+  TemplateInstantiateResult,
 } from '../../services/agentTemplateService';
 import { agentService } from '../../services/agentService';
+import {
+  useTemplateList,
+  useSeedBuiltinTemplates,
+  useInstantiateTemplate,
+} from '../../hooks/useTemplateQueries';
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -64,13 +68,19 @@ const categoryLabelMap: Record<string, string> = {
 };
 
 const TemplatePage: React.FC = () => {
+  const { message } = App.useApp();
   const navigate = useNavigate();
-  const [templates, setTemplates] = useState<AgentTemplateItem[]>([]);
-  const [loading, setLoading] = useState(true);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [currentTemplate, setCurrentTemplate] = useState<AgentTemplateItem | null>(null);
   const [searchText, setSearchText] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string | undefined>(undefined);
+
+  // TanStack Query
+  const { data: listData, isLoading: loading } = useTemplateList({ category: categoryFilter, limit: 100 });
+  const templates = listData?.data ?? [];
+
+  const seedMutation = useSeedBuiltinTemplates();
+  const instantiateMutation = useInstantiateTemplate();
 
   /* 导入向导状态 */
   const [wizardOpen, setWizardOpen] = useState(false);
@@ -79,23 +89,10 @@ const TemplatePage: React.FC = () => {
   const [wizardLoading, setWizardLoading] = useState(false);
   const [form] = Form.useForm();
 
-  const loadTemplates = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await agentTemplateService.list({ category: categoryFilter, limit: 100 });
-      setTemplates(res.data);
-    } finally {
-      setLoading(false);
-    }
-  }, [categoryFilter]);
-
-  useEffect(() => { loadTemplates(); }, [loadTemplates]);
-
   const handleSeed = async () => {
-    const result = await agentTemplateService.seedBuiltin();
+    const result = await seedMutation.mutateAsync();
     if (result.created > 0) {
       message.success(`已初始化 ${result.created} 个内置模板`);
-      loadTemplates();
     } else {
       message.info('内置模板已是最新');
     }
@@ -107,7 +104,7 @@ const TemplatePage: React.FC = () => {
     setWizardOpen(true);
     setWizardLoading(true);
     try {
-      const preview = await agentTemplateService.instantiate(tpl.id);
+      const preview = await instantiateMutation.mutateAsync({ id: tpl.id });
       setWizardPreview(preview);
       form.setFieldsValue({
         name: `${tpl.name}-${Date.now().toString(36)}`,

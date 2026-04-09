@@ -6,7 +6,7 @@ import {
   Form,
   Input,
   InputNumber,
-  message,
+  App,
   Row,
   Select,
   Spin,
@@ -22,6 +22,7 @@ const { TextArea } = Input;
 const { Text, Paragraph } = Typography;
 
 const ABTestPage: React.FC = () => {
+  const { message } = App.useApp();
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<ABTestModelResult[]>([]);

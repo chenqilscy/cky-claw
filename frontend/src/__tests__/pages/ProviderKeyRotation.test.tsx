@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, act, fireEvent } from '@testing-library/react';
+import { render, waitFor, fireEvent, act } from '@testing-library/react';
+import { TestQueryWrapper } from '../test-utils';
 
 /* ---------- mock providerService ---------- */
 const mockList = vi.fn();
@@ -73,54 +74,46 @@ describe('ProviderListPage — 密钥轮换与到期', () => {
   });
 
   it('渲染密钥状态列', async () => {
-    let container!: HTMLElement;
-    await act(async () => {
-      ({ container } = render(<ProviderListPage />));
+    const { container } = render(<TestQueryWrapper><ProviderListPage /></TestQueryWrapper>);
+    await waitFor(() => {
+      expect(container.textContent ?? '').toContain('密钥状态');
     });
-    const text = container.textContent ?? '';
-    expect(text).toContain('密钥状态');
   });
 
   it('显示已过期标签', async () => {
-    let container!: HTMLElement;
-    await act(async () => {
-      ({ container } = render(<ProviderListPage />));
+    const { container } = render(<TestQueryWrapper><ProviderListPage /></TestQueryWrapper>);
+    await waitFor(() => {
+      expect(container.textContent ?? '').toContain('已过期');
     });
-    const text = container.textContent ?? '';
-    expect(text).toContain('已过期');
   });
 
   it('显示有效标签', async () => {
-    let container!: HTMLElement;
-    await act(async () => {
-      ({ container } = render(<ProviderListPage />));
+    const { container } = render(<TestQueryWrapper><ProviderListPage /></TestQueryWrapper>);
+    await waitFor(() => {
+      expect(container.textContent ?? '').toContain('有效');
     });
-    const text = container.textContent ?? '';
-    expect(text).toContain('有效');
   });
 
   it('显示永久标签（无过期时间）', async () => {
-    let container!: HTMLElement;
-    await act(async () => {
-      ({ container } = render(<ProviderListPage />));
+    const { container } = render(<TestQueryWrapper><ProviderListPage /></TestQueryWrapper>);
+    await waitFor(() => {
+      expect(container.textContent ?? '').toContain('永久');
     });
-    const text = container.textContent ?? '';
-    expect(text).toContain('永久');
   });
 
   it('渲染轮换按钮', async () => {
-    let container!: HTMLElement;
-    await act(async () => {
-      ({ container } = render(<ProviderListPage />));
+    const { container } = render(<TestQueryWrapper><ProviderListPage /></TestQueryWrapper>);
+    await waitFor(() => {
+      expect(container.textContent ?? '').toContain('轮换');
     });
-    const text = container.textContent ?? '';
-    expect(text).toContain('轮换');
   });
 
   it('点击轮换按钮显示弹窗', async () => {
-    let container!: HTMLElement;
-    await act(async () => {
-      ({ container } = render(<ProviderListPage />));
+    const { container } = render(<TestQueryWrapper><ProviderListPage /></TestQueryWrapper>);
+
+    // 等待数据加载完成
+    await waitFor(() => {
+      expect(container.textContent ?? '').toContain('轮换');
     });
 
     // 找到第一个轮换链接并点击
@@ -133,12 +126,10 @@ describe('ProviderListPage — 密钥轮换与到期', () => {
     });
 
     // 等待弹窗渲染
-    await act(async () => {
-      await new Promise((r) => setTimeout(r, 100));
+    await waitFor(() => {
+      const bodyText = document.body.textContent ?? '';
+      expect(bodyText).toContain('轮换密钥');
+      expect(bodyText).toContain('新 API Key');
     });
-
-    const bodyText = document.body.textContent ?? '';
-    expect(bodyText).toContain('轮换密钥');
-    expect(bodyText).toContain('新 API Key');
   });
 });

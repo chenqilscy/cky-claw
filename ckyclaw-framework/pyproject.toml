@@ -1,10 +1,24 @@
 [project]
 name = "ckyclaw-framework"
 version = "0.1.0"
-description = "CkyClaw Framework — Python Agent 运行时库"
+description = "CkyClaw Framework — Python Agent 运行时库，支持多 LLM 适配、工具编排、Guardrails 护栏、Handoff 交接、Tracing 链路追踪"
 readme = "README.md"
 license = {text = "MIT"}
 requires-python = ">=3.12"
+authors = [
+    {name = "CkyClaw Team"},
+]
+keywords = ["agent", "llm", "framework", "ai", "guardrails", "tracing", "handoff", "tools"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Typing :: Typed",
+]
 dependencies = [
     "litellm>=1.40.0",
     "pydantic>=2.0.0",
@@ -28,6 +42,11 @@ dev = [
     "ruff>=0.4.0",
     "mypy>=1.10.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/ckyclaw/ckyclaw-framework"
+Repository = "https://github.com/ckyclaw/ckyclaw-framework"
+Documentation = "https://github.com/ckyclaw/ckyclaw-framework#readme"
 
 [build-system]
 requires = ["hatchling"]

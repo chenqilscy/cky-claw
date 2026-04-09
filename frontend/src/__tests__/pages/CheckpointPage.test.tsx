@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, act, fireEvent } from '@testing-library/react';
+import { TestQueryWrapper } from '../test-utils';
 
 /* ---------- mock checkpointService ---------- */
 const mockList = vi.fn();
@@ -34,13 +35,13 @@ describe('CheckpointPage', () => {
   });
 
   it('渲染页面标题', () => {
-    const { container } = render(<CheckpointPage />);
+    const { container } = render(<TestQueryWrapper><CheckpointPage /></TestQueryWrapper>);
     const text = container.textContent ?? '';
     expect(text).toContain('检查点管理');
   });
 
   it('渲染搜索框和查询按钮', () => {
-    const { container } = render(<CheckpointPage />);
+    const { container } = render(<TestQueryWrapper><CheckpointPage /></TestQueryWrapper>);
     const text = container.textContent ?? '';
     expect(text).toContain('查询');
     const input = container.querySelector('input');
@@ -48,14 +49,14 @@ describe('CheckpointPage', () => {
   });
 
   it('空 Run ID 时查询按钮禁用', () => {
-    const { container } = render(<CheckpointPage />);
+    const { container } = render(<TestQueryWrapper><CheckpointPage /></TestQueryWrapper>);
     const btn = container.querySelector('button');
     expect(btn).toBeTruthy();
     expect((btn as HTMLButtonElement).disabled).toBe(true);
   });
 
   it('输入 Run ID 后点击查询调用 list 接口', async () => {
-    const { container } = render(<CheckpointPage />);
+    const { container } = render(<TestQueryWrapper><CheckpointPage /></TestQueryWrapper>);
     const input = container.querySelector('input') as HTMLInputElement;
 
     await act(async () => {
@@ -73,7 +74,7 @@ describe('CheckpointPage', () => {
   });
 
   it('显示检查点列表数据', async () => {
-    const { container } = render(<CheckpointPage />);
+    const { container } = render(<TestQueryWrapper><CheckpointPage /></TestQueryWrapper>);
     const input = container.querySelector('input') as HTMLInputElement;
 
     await act(async () => {
@@ -93,7 +94,7 @@ describe('CheckpointPage', () => {
   });
 
   it('显示消息数和 Token 使用', async () => {
-    const { container } = render(<CheckpointPage />);
+    const { container } = render(<TestQueryWrapper><CheckpointPage /></TestQueryWrapper>);
     const input = container.querySelector('input') as HTMLInputElement;
 
     await act(async () => {

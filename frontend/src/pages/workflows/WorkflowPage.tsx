@@ -1,10 +1,14 @@
 import { useState } from 'react';
-import { Card, Button, Space, Modal, Form, Input, Tag, App, Popconfirm, Empty, Typography, Table, Badge, Tooltip, Tabs } from 'antd';
-import { PlusOutlined, ReloadOutlined, DeleteOutlined, EditOutlined, EyeOutlined, CheckCircleOutlined, BranchesOutlined, NodeIndexOutlined, PartitionOutlined } from '@ant-design/icons';
+import { Card, Button, Space, Modal, Form, Input, Tag, App, Badge, Tooltip, Table, Typography, Tabs, Popconfirm } from 'antd';
+import { DeleteOutlined, EditOutlined, EyeOutlined, CheckCircleOutlined, BranchesOutlined, NodeIndexOutlined, PartitionOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
+import type { ProColumns } from '@ant-design/pro-components';
+import type { FormInstance } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import type { WorkflowItem, StepSchema, EdgeSchema, WorkflowCreateParams } from '../../services/workflowService';
+import type { WorkflowItem, StepSchema, EdgeSchema, WorkflowCreateParams, WorkflowUpdateParams } from '../../services/workflowService';
 import { useWorkflowList, useCreateWorkflow, useUpdateWorkflow, useDeleteWorkflow, useValidateWorkflow } from '../../hooks/useWorkflowQueries';
+import { CrudTable } from '../../components';
+import type { CrudTableActions } from '../../components';
 import WorkflowGraphView from './WorkflowGraphView';
 
 const { TextArea } = Input;
@@ -17,71 +21,127 @@ const stepTypeLabel: Record<string, string> = {
   loop: '循环步骤',
 };
 
-const stepTypeColor: Record<string, string> = {
-  agent: 'blue',
-  parallel: 'green',
-  conditional: 'orange',
-  loop: 'purple',
-};
+import { STEP_TYPE_TAG_COLORS as stepTypeColor } from '../../constants/colors';
+
+/* ---- 列定义 ---- */
+
+const buildColumns = (
+  actions: CrudTableActions<WorkflowItem>,
+  navigate: ReturnType<typeof useNavigate>,
+  handlePreview: (r: WorkflowItem) => void,
+): ProColumns<WorkflowItem>[] => [
+  {
+    title: '名称',
+    dataIndex: 'name',
+    render: (_, record) => <strong>{record.name}</strong>,
+  },
+  {
+    title: '描述',
+    dataIndex: 'description',
+    ellipsis: true,
+  },
+  {
+    title: '步骤数',
+    width: 100,
+    render: (_, record) => (
+      <Badge count={record.steps.length} showZero color="blue" />
+    ),
+  },
+  {
+    title: '边数',
+    width: 100,
+    render: (_, record) => (
+      <Badge count={record.edges.length} showZero color="green" />
+    ),
+  },
+  {
+    title: '步骤类型',
+    width: 200,
+    render: (_, record) => {
+      const types = [...new Set(record.steps.map(s => s.type))];
+      return (
+        <Space size={4} wrap>
+          {types.map(t => (
+            <Tag key={t} color={stepTypeColor[t]}>{stepTypeLabel[t] ?? t}</Tag>
+          ))}
+        </Space>
+      );
+    },
+  },
+  {
+    title: '超时(s)',
+    dataIndex: 'timeout',
+    width: 100,
+    render: (_, record) => record.timeout ?? '-',
+  },
+  {
+    title: '更新时间',
+    dataIndex: 'updated_at',
+    width: 180,
+    render: (_, record) => new Date(record.updated_at).toLocaleString(),
+  },
+  {
+    title: '操作',
+    width: 180,
+    render: (_, record) => (
+      <Space>
+        <Tooltip title="预览">
+          <Button type="link" size="small" icon={<EyeOutlined />} onClick={() => handlePreview(record)} />
+        </Tooltip>
+        <Tooltip title="编辑">
+          <Button type="link" size="small" icon={<EditOutlined />} onClick={() => actions.openEdit(record)} />
+        </Tooltip>
+        <Tooltip title="可视化编辑">
+          <Button type="link" size="small" icon={<PartitionOutlined />} onClick={() => navigate(`/workflow-editor?id=${record.id}`)} />
+        </Tooltip>
+        <Popconfirm title="确认删除此工作流？" onConfirm={() => actions.handleDelete(record.id)} okText="删除" cancelText="取消">
+          <Tooltip title="删除">
+            <Button type="link" danger size="small" icon={<DeleteOutlined />} />
+          </Tooltip>
+        </Popconfirm>
+      </Space>
+    ),
+  },
+];
+
+/* ---- 步骤预览表格列 ---- */
+
+const stepColumns: ColumnsType<StepSchema> = [
+  { title: 'ID', dataIndex: 'id', key: 'id', width: 120 },
+  { title: '名称', dataIndex: 'name', key: 'name' },
+  {
+    title: '类型', dataIndex: 'type', key: 'type', width: 120,
+    render: (t: string) => <Tag color={stepTypeColor[t]}>{stepTypeLabel[t] ?? t}</Tag>,
+  },
+  { title: 'Agent', dataIndex: 'agent_name', key: 'agent_name', render: (v: string) => v ?? '-' },
+  { title: '超时', dataIndex: 'timeout', key: 'timeout', width: 80, render: (v: number | undefined) => v ?? '-' },
+];
+
+/* ---- 页面组件 ---- */
 
 const WorkflowPage: React.FC = () => {
   const { message } = App.useApp();
   const navigate = useNavigate();
-  const [createOpen, setCreateOpen] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
-  const [editRecord, setEditRecord] = useState<WorkflowItem | null>(null);
   const [previewRecord, setPreviewRecord] = useState<WorkflowItem | null>(null);
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
-  const [form] = Form.useForm();
+  const [pagination, setPagination] = useState({ current: 1, pageSize: 20 });
 
-  const { data: listData, isLoading: loading, refetch: fetchData } = useWorkflowList({
-    limit: pageSize,
-    offset: (page - 1) * pageSize,
+  const queryResult = useWorkflowList({
+    limit: pagination.pageSize,
+    offset: (pagination.current - 1) * pagination.pageSize,
   });
-  const workflows = listData?.data ?? [];
-  const total = listData?.total ?? 0;
-
   const createMutation = useCreateWorkflow();
   const updateMutation = useUpdateWorkflow();
   const deleteMutation = useDeleteWorkflow();
   const validateMutation = useValidateWorkflow();
-
-  const handleCreate = () => {
-    setEditRecord(null);
-    form.resetFields();
-    form.setFieldsValue({ steps_json: '[]', edges_json: '[]' });
-    setCreateOpen(true);
-  };
-
-  const handleEdit = (record: WorkflowItem) => {
-    setEditRecord(record);
-    form.setFieldsValue({
-      name: record.name,
-      description: record.description,
-      steps_json: JSON.stringify(record.steps, null, 2),
-      edges_json: JSON.stringify(record.edges, null, 2),
-      output_keys: record.output_keys?.join(', ') ?? '',
-      timeout: record.timeout,
-    });
-    setCreateOpen(true);
-  };
 
   const handlePreview = (record: WorkflowItem) => {
     setPreviewRecord(record);
     setPreviewOpen(true);
   };
 
-  const handleDelete = async (id: string) => {
-    try {
-      await deleteMutation.mutateAsync(id);
-      message.success('已删除');
-    } catch {
-      message.error('删除失败');
-    }
-  };
-
-  const handleValidate = async () => {
+  /** 表单内验证按钮调用 */
+  const handleValidateFromForm = async (form: FormInstance) => {
     try {
       const values = await form.validateFields();
       const steps: StepSchema[] = JSON.parse(values.steps_json);
@@ -112,191 +172,91 @@ const WorkflowPage: React.FC = () => {
     }
   };
 
-  const handleSubmit = async () => {
-    try {
-      const values = await form.validateFields();
-      const steps: StepSchema[] = JSON.parse(values.steps_json);
-      const edges: EdgeSchema[] = JSON.parse(values.edges_json);
-      const params: WorkflowCreateParams = {
-        name: values.name,
-        steps,
-        edges,
-        description: values.description,
-        output_keys: values.output_keys ? values.output_keys.split(',').map((s: string) => s.trim()).filter(Boolean) : undefined,
-        timeout: values.timeout ? Number(values.timeout) : undefined,
-      };
-      if (editRecord) {
-        await updateMutation.mutateAsync({ id: editRecord.id, data: params });
-        message.success('更新成功');
-      } else {
-        await createMutation.mutateAsync(params);
-        message.success('创建成功');
-      }
-      setCreateOpen(false);
-    } catch {
-      message.error('操作失败，请检查输入');
-    }
-  };
-
-  const columns: ColumnsType<WorkflowItem> = [
-    {
-      title: '名称',
-      dataIndex: 'name',
-      key: 'name',
-      render: (name: string) => <Text strong>{name}</Text>,
-    },
-    {
-      title: '描述',
-      dataIndex: 'description',
-      key: 'description',
-      ellipsis: true,
-    },
-    {
-      title: '步骤数',
-      key: 'steps',
-      width: 100,
-      render: (_: unknown, record: WorkflowItem) => (
-        <Badge count={record.steps.length} showZero color="blue" />
-      ),
-    },
-    {
-      title: '边数',
-      key: 'edges',
-      width: 100,
-      render: (_: unknown, record: WorkflowItem) => (
-        <Badge count={record.edges.length} showZero color="green" />
-      ),
-    },
-    {
-      title: '步骤类型',
-      key: 'types',
-      width: 200,
-      render: (_: unknown, record: WorkflowItem) => {
-        const types = [...new Set(record.steps.map(s => s.type))];
-        return (
-          <Space size={4} wrap>
-            {types.map(t => (
-              <Tag key={t} color={stepTypeColor[t]}>{stepTypeLabel[t] ?? t}</Tag>
-            ))}
-          </Space>
-        );
-      },
-    },
-    {
-      title: '超时(s)',
-      dataIndex: 'timeout',
-      key: 'timeout',
-      width: 100,
-      render: (v: number | null) => v ?? '-',
-    },
-    {
-      title: '更新时间',
-      dataIndex: 'updated_at',
-      key: 'updated_at',
-      width: 180,
-      render: (v: string) => new Date(v).toLocaleString(),
-    },
-    {
-      title: '操作',
-      key: 'action',
-      width: 180,
-      render: (_: unknown, record: WorkflowItem) => (
-        <Space>
-          <Tooltip title="预览">
-            <Button type="link" size="small" icon={<EyeOutlined />} onClick={() => handlePreview(record)} />
-          </Tooltip>
-          <Tooltip title="编辑">
-            <Button type="link" size="small" icon={<EditOutlined />} onClick={() => handleEdit(record)} />
-          </Tooltip>
-          <Tooltip title="可视化编辑">
-            <Button type="link" size="small" icon={<PartitionOutlined />} onClick={() => navigate(`/workflow-editor?id=${record.id}`)} />
-          </Tooltip>
-          <Popconfirm title="确认删除此工作流？" onConfirm={() => handleDelete(record.id)} okText="删除" cancelText="取消">
-            <Tooltip title="删除">
-              <Button type="link" danger size="small" icon={<DeleteOutlined />} />
-            </Tooltip>
-          </Popconfirm>
-        </Space>
-      ),
-    },
-  ];
-
-  const stepColumns: ColumnsType<StepSchema> = [
-    { title: 'ID', dataIndex: 'id', key: 'id', width: 120 },
-    { title: '名称', dataIndex: 'name', key: 'name' },
-    {
-      title: '类型', dataIndex: 'type', key: 'type', width: 120,
-      render: (t: string) => <Tag color={stepTypeColor[t]}>{stepTypeLabel[t] ?? t}</Tag>,
-    },
-    { title: 'Agent', dataIndex: 'agent_name', key: 'agent_name', render: (v: string) => v ?? '-' },
-    { title: '超时', dataIndex: 'timeout', key: 'timeout', width: 80, render: (v: number | undefined) => v ?? '-' },
-  ];
+  const renderForm = (form: FormInstance, editing: WorkflowItem | null) => (
+    <>
+      <Form.Item name="name" label="名称" rules={[{ required: true, pattern: /^[a-z0-9][a-z0-9-]*$/, message: '小写字母/数字/连字符' }]}>
+        <Input placeholder="my-workflow" disabled={!!editing} />
+      </Form.Item>
+      <Form.Item name="description" label="描述">
+        <TextArea rows={2} placeholder="工作流描述" />
+      </Form.Item>
+      <Form.Item name="steps_json" label="步骤 (JSON)" rules={[{ required: true }]}>
+        <TextArea rows={8} placeholder='[{"id":"step1","name":"分析","type":"agent","agent_name":"researcher"}]' style={{ fontFamily: 'monospace' }} />
+      </Form.Item>
+      <Form.Item name="edges_json" label="边 (JSON)" rules={[{ required: true }]}>
+        <TextArea rows={4} placeholder='[{"source_step_id":"step1","target_step_id":"step2"}]' style={{ fontFamily: 'monospace' }} />
+      </Form.Item>
+      <Form.Item name="output_keys" label="输出键 (逗号分隔)">
+        <Input placeholder="result, summary" />
+      </Form.Item>
+      <Form.Item name="timeout" label="超时 (秒)">
+        <Input type="number" placeholder="300" />
+      </Form.Item>
+      <Button icon={<CheckCircleOutlined />} onClick={() => void handleValidateFromForm(form)} style={{ marginBottom: 8 }}>
+        验证
+      </Button>
+    </>
+  );
 
   return (
     <div style={{ padding: 24 }}>
-      <Card
+      <CrudTable<
+        WorkflowItem,
+        WorkflowCreateParams,
+        { id: string; data: WorkflowUpdateParams }
+      >
         title={<Space><BranchesOutlined />工作流管理</Space>}
-        extra={
-          <Space>
-            <Button icon={<ReloadOutlined />} onClick={() => void fetchData()}>刷新</Button>
-            <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>新建工作流</Button>
-            <Button icon={<PartitionOutlined />} onClick={() => navigate('/workflow-editor')}>可视化编排</Button>
-          </Space>
+        queryResult={queryResult}
+        createMutation={createMutation}
+        updateMutation={updateMutation}
+        deleteMutation={deleteMutation}
+        createButtonText="新建工作流"
+        modalTitle={(editing) => (editing ? '编辑工作流' : '新建工作流')}
+        modalWidth={720}
+        columns={(actions) => buildColumns(actions, navigate, handlePreview)}
+        renderForm={renderForm}
+        toFormValues={(record) => ({
+          name: record.name,
+          description: record.description,
+          steps_json: JSON.stringify(record.steps, null, 2),
+          edges_json: JSON.stringify(record.edges, null, 2),
+          output_keys: record.output_keys?.join(', ') ?? '',
+          timeout: record.timeout,
+        })}
+        toCreatePayload={(values) => {
+          const steps: StepSchema[] = JSON.parse(values.steps_json as string);
+          const edges: EdgeSchema[] = JSON.parse(values.edges_json as string);
+          return {
+            name: values.name as string,
+            steps,
+            edges,
+            description: values.description as string,
+            output_keys: values.output_keys ? (values.output_keys as string).split(',').map((s: string) => s.trim()).filter(Boolean) : undefined,
+            timeout: values.timeout ? Number(values.timeout) : undefined,
+          };
+        }}
+        toUpdatePayload={(values, record) => {
+          const steps: StepSchema[] = JSON.parse(values.steps_json as string);
+          const edges: EdgeSchema[] = JSON.parse(values.edges_json as string);
+          return {
+            id: record.id,
+            data: {
+              name: values.name as string,
+              steps,
+              edges,
+              description: values.description as string,
+              output_keys: values.output_keys ? (values.output_keys as string).split(',').map((s: string) => s.trim()).filter(Boolean) : undefined,
+              timeout: values.timeout ? Number(values.timeout) : undefined,
+            },
+          };
+        }}
+        extraToolbar={
+          <Button icon={<PartitionOutlined />} onClick={() => navigate('/workflow-editor')}>可视化编排</Button>
         }
-      >
-        <Table
-          rowKey="id"
-          columns={columns}
-          dataSource={workflows}
-          loading={loading}
-          locale={{ emptyText: <Empty description="暂无工作流" /> }}
-          pagination={{
-            current: page,
-            pageSize,
-            total,
-            showSizeChanger: true,
-            onChange: (p, s) => { setPage(p); setPageSize(s); },
-          }}
-        />
-      </Card>
-
-      {/* 创建/编辑 Modal */}
-      <Modal
-        title={editRecord ? '编辑工作流' : '新建工作流'}
-        open={createOpen}
-        onCancel={() => setCreateOpen(false)}
-        width={720}
-        footer={
-          <Space>
-            <Button onClick={() => setCreateOpen(false)}>取消</Button>
-            <Button icon={<CheckCircleOutlined />} onClick={handleValidate}>验证</Button>
-            <Button type="primary" onClick={handleSubmit}>
-              {editRecord ? '保存' : '创建'}
-            </Button>
-          </Space>
-        }
-      >
-        <Form form={form} layout="vertical">
-          <Form.Item name="name" label="名称" rules={[{ required: true, pattern: /^[a-z0-9][a-z0-9-]*$/, message: '小写字母/数字/连字符' }]}>
-            <Input placeholder="my-workflow" disabled={!!editRecord} />
-          </Form.Item>
-          <Form.Item name="description" label="描述">
-            <TextArea rows={2} placeholder="工作流描述" />
-          </Form.Item>
-          <Form.Item name="steps_json" label="步骤 (JSON)" rules={[{ required: true }]}>
-            <TextArea rows={8} placeholder='[{"id":"step1","name":"分析","type":"agent","agent_name":"researcher"}]' style={{ fontFamily: 'monospace' }} />
-          </Form.Item>
-          <Form.Item name="edges_json" label="边 (JSON)" rules={[{ required: true }]}>
-            <TextArea rows={4} placeholder='[{"source_step_id":"step1","target_step_id":"step2"}]' style={{ fontFamily: 'monospace' }} />
-          </Form.Item>
-          <Form.Item name="output_keys" label="输出键 (逗号分隔)">
-            <Input placeholder="result, summary" />
-          </Form.Item>
-          <Form.Item name="timeout" label="超时 (秒)">
-            <Input type="number" placeholder="300" />
-          </Form.Item>
-        </Form>
-      </Modal>
+        pagination={pagination}
+        onPaginationChange={(current, pageSize) => setPagination({ current, pageSize })}
+        showRefresh
+      />
 
       {/* 预览 Modal */}
       <Modal

@@ -181,8 +181,24 @@ describe('LoginPage', () => {
   });
 
   it('shows error message when OAuth authorize fails', async () => {
+    // 确保 authStore 使用默认值（无 error 泄漏）
+    const useAuthStore = (await import('../../stores/authStore')).default;
+    vi.mocked(useAuthStore).mockReturnValue({
+      login: vi.fn(),
+      loading: false,
+      error: null,
+      clearError: vi.fn(),
+      token: null,
+      user: null,
+      logout: vi.fn(),
+    });
+
     mockGetProviders.mockResolvedValue({ providers: ['wecom'] });
     mockAuthorize.mockRejectedValue(new Error('网络错误'));
+
+    // 获取全局 mock 的 message 对象
+    const { App: MockApp } = await import('antd');
+    const { message: mockMsg } = (MockApp as unknown as { useApp: () => { message: { error: ReturnType<typeof vi.fn> } } }).useApp();
 
     render(
       <AntApp><MemoryRouter><LoginPage />
@@ -196,9 +212,9 @@ describe('LoginPage', () => {
     const user = userEvent.setup();
     await user.click(screen.getByRole('button', { name: /企业微信 登录/ }));
 
-    // App.useApp() 的 message.error 会渲染到 DOM 中
+    // message.error 是全局 mock，检查调用而非 DOM 文本
     await waitFor(() => {
-      expect(document.body.textContent).toContain('企业微信 登录暂不可用');
+      expect(mockMsg.error).toHaveBeenCalledWith('企业微信 登录暂不可用');
     });
   });
 

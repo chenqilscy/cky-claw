@@ -1,8 +1,19 @@
-import { useState, useCallback, useEffect } from 'react';
-import { ProTable, type ProColumns } from '@ant-design/pro-components';
+import { useState } from 'react';
+import type { ProColumns } from '@ant-design/pro-components';
+import { ProTable } from '@ant-design/pro-components';
 import { Button, Modal, Form, Input, Select, Tag, App, Space, Popconfirm } from 'antd';
-import { PlusOutlined, SearchOutlined, DeleteOutlined, EditOutlined, EyeOutlined } from '@ant-design/icons';
-import { skillService, type SkillItem, type SkillCreateParams, type SkillUpdateParams } from '../../services/skillService';
+import { SearchOutlined, DeleteOutlined, EditOutlined, EyeOutlined } from '@ant-design/icons';
+import type { FormInstance } from 'antd';
+import type { SkillItem, SkillCreateParams, SkillUpdateParams } from '../../services/skillService';
+import {
+  useSkillList,
+  useCreateSkill,
+  useUpdateSkill,
+  useDeleteSkill,
+  useSearchSkill,
+} from '../../hooks/useSkillQueries';
+import { CrudTable } from '../../components';
+import type { CrudTableActions } from '../../components';
 
 const categoryOptions = [
   { label: '公共', value: 'public' },
@@ -14,61 +25,147 @@ const categoryColorMap: Record<string, string> = {
   custom: 'green',
 };
 
+/* ---- 列定义 ---- */
+
+const buildColumns = (
+  actions: CrudTableActions<SkillItem>,
+  onPreview: (record: SkillItem) => void,
+): ProColumns<SkillItem>[] => [
+  {
+    title: '名称',
+    dataIndex: 'name',
+    copyable: true,
+    width: 160,
+  },
+  {
+    title: '版本',
+    dataIndex: 'version',
+    width: 100,
+  },
+  {
+    title: '分类',
+    dataIndex: 'category',
+    width: 100,
+    render: (_, record) => (
+      <Tag color={categoryColorMap[record.category] ?? 'default'}>{record.category}</Tag>
+    ),
+  },
+  {
+    title: '描述',
+    dataIndex: 'description',
+    ellipsis: true,
+  },
+  {
+    title: '标签',
+    dataIndex: 'tags',
+    width: 200,
+    render: (_, record) =>
+      record.tags.map((t) => <Tag key={t}>{t}</Tag>),
+  },
+  {
+    title: '作者',
+    dataIndex: 'author',
+    width: 100,
+  },
+  {
+    title: '更新时间',
+    dataIndex: 'updated_at',
+    width: 180,
+    render: (_, record) => new Date(record.updated_at).toLocaleString('zh-CN'),
+  },
+  {
+    title: '操作',
+    width: 180,
+    render: (_, record) => (
+      <Space>
+        <a onClick={() => onPreview(record)}>
+          <EyeOutlined /> 查看
+        </a>
+        <a onClick={() => actions.openEdit(record)}>
+          <EditOutlined /> 编辑
+        </a>
+        <Popconfirm title="确认删除此技能？" onConfirm={() => actions.handleDelete(record.id)}>
+          <a style={{ color: '#ff4d4f' }}><DeleteOutlined /> 删除</a>
+        </Popconfirm>
+      </Space>
+    ),
+  },
+];
+
+/* ---- 搜索结果列 ---- */
+
+const searchResultColumns: ProColumns<SkillItem>[] = [
+  { title: '名称', dataIndex: 'name', width: 160 },
+  { title: '版本', dataIndex: 'version', width: 80 },
+  {
+    title: '分类',
+    dataIndex: 'category',
+    width: 80,
+    render: (_, r) => <Tag color={categoryColorMap[r.category] ?? 'default'}>{r.category}</Tag>,
+  },
+  { title: '描述', dataIndex: 'description', ellipsis: true },
+];
+
+/* ---- 表单 ---- */
+
+const renderForm = (_form: FormInstance, editing: SkillItem | null) => (
+  <>
+    {!editing && (
+      <Form.Item name="name" label="名称" rules={[{ required: true, pattern: /^[a-z0-9][a-z0-9-]*$/, message: '仅限小写字母、数字、连字符' }]}>
+        <Input placeholder="my-skill" />
+      </Form.Item>
+    )}
+    <Form.Item name="version" label="版本">
+      <Input />
+    </Form.Item>
+    <Form.Item name="description" label="描述">
+      <Input.TextArea rows={2} />
+    </Form.Item>
+    <Form.Item name="content" label="SKILL.md 内容" rules={[{ required: true, message: '请输入技能知识内容' }]}>
+      <Input.TextArea rows={10} placeholder="# 技能知识内容..." />
+    </Form.Item>
+    <Form.Item name="category" label="分类">
+      <Select options={categoryOptions} />
+    </Form.Item>
+    <Form.Item name="tags" label="标签">
+      <Select mode="tags" placeholder="输入标签后回车" />
+    </Form.Item>
+    <Form.Item name="applicable_agents" label="适用 Agent">
+      <Select mode="tags" placeholder="留空表示适用所有 Agent" />
+    </Form.Item>
+    <Form.Item name="author" label="作者">
+      <Input />
+    </Form.Item>
+  </>
+);
+
+/* ---- 页面组件 ---- */
+
 const SkillPage: React.FC = () => {
-  const { message } = App.useApp();
-  const [createModalOpen, setCreateModalOpen] = useState(false);
-  const [editModalOpen, setEditModalOpen] = useState(false);
+  const { message: _msg } = App.useApp();
+  const [pagination, setPagination] = useState({ current: 1, pageSize: 20 });
   const [previewModalOpen, setPreviewModalOpen] = useState(false);
   const [searchModalOpen, setSearchModalOpen] = useState(false);
   const [currentSkill, setCurrentSkill] = useState<SkillItem | null>(null);
   const [searchResults, setSearchResults] = useState<SkillItem[]>([]);
-  const [tableKey, setTableKey] = useState(0);
-  const [createForm] = Form.useForm();
-  const [editForm] = Form.useForm();
   const [searchForm] = Form.useForm();
 
-  const reload = useCallback(() => setTableKey((k) => k + 1), []);
+  const queryResult = useSkillList({
+    limit: pagination.pageSize,
+    offset: (pagination.current - 1) * pagination.pageSize,
+  });
+  const createMutation = useCreateSkill();
+  const updateMutation = useUpdateSkill();
+  const deleteMutation = useDeleteSkill();
+  const searchMutation = useSearchSkill();
 
-  useEffect(() => {
-    if (editModalOpen && currentSkill) {
-      editForm.setFieldsValue({
-        version: currentSkill.version,
-        description: currentSkill.description,
-        content: currentSkill.content,
-        category: currentSkill.category,
-        tags: currentSkill.tags,
-        applicable_agents: currentSkill.applicable_agents,
-        author: currentSkill.author,
-      });
-    }
-  }, [editModalOpen, currentSkill, editForm]);
-
-  const handleCreate = async (values: SkillCreateParams) => {
-    await skillService.create(values);
-    message.success('技能创建成功');
-    setCreateModalOpen(false);
-    createForm.resetFields();
-    reload();
-  };
-
-  const handleEdit = async (values: SkillUpdateParams) => {
-    if (!currentSkill) return;
-    await skillService.update(currentSkill.id, values);
-    message.success('技能更新成功');
-    setEditModalOpen(false);
-    editForm.resetFields();
-    setCurrentSkill(null);
-    reload();
-  };
-
-  const handleDelete = async (id: string) => {
-    await skillService.delete(id);
-    message.success('技能已删除');
-    reload();
+  const handlePreview = (record: SkillItem) => {
+    setCurrentSkill(record);
+    setPreviewModalOpen(true);
   };
 
   const handleSearch = async (values: { query: string; category?: string }) => {
-    const results = await skillService.search({
+    const results = await searchMutation.mutateAsync({
       query: values.query,
       category: values.category,
       limit: 50,
@@ -76,183 +173,65 @@ const SkillPage: React.FC = () => {
     setSearchResults(results);
   };
 
-  const columns: ProColumns<SkillItem>[] = [
-    {
-      title: '名称',
-      dataIndex: 'name',
-      copyable: true,
-      width: 160,
-    },
-    {
-      title: '版本',
-      dataIndex: 'version',
-      width: 100,
-    },
-    {
-      title: '分类',
-      dataIndex: 'category',
-      width: 100,
-      render: (_, record) => (
-        <Tag color={categoryColorMap[record.category] ?? 'default'}>{record.category}</Tag>
-      ),
-      filters: true,
-      valueEnum: { public: { text: '公共' }, custom: { text: '自定义' } },
-    },
-    {
-      title: '描述',
-      dataIndex: 'description',
-      ellipsis: true,
-    },
-    {
-      title: '标签',
-      dataIndex: 'tags',
-      width: 200,
-      render: (_, record) =>
-        record.tags.map((t) => <Tag key={t}>{t}</Tag>),
-      search: false,
-    },
-    {
-      title: '作者',
-      dataIndex: 'author',
-      width: 100,
-    },
-    {
-      title: '更新时间',
-      dataIndex: 'updated_at',
-      valueType: 'dateTime',
-      width: 180,
-      sorter: true,
-      search: false,
-    },
-    {
-      title: '操作',
-      valueType: 'option',
-      width: 180,
-      render: (_, record) => (
-        <Space>
-          <a onClick={() => { setCurrentSkill(record); setPreviewModalOpen(true); }}>
-            <EyeOutlined /> 查看
-          </a>
-          <a onClick={() => { setCurrentSkill(record); setEditModalOpen(true); }}>
-            <EditOutlined /> 编辑
-          </a>
-          <Popconfirm title="确认删除此技能？" onConfirm={() => handleDelete(record.id)}>
-            <a style={{ color: '#ff4d4f' }}><DeleteOutlined /> 删除</a>
-          </Popconfirm>
-        </Space>
-      ),
-    },
-  ];
-
-  const searchResultColumns: ProColumns<SkillItem>[] = [
-    { title: '名称', dataIndex: 'name', width: 160 },
-    { title: '版本', dataIndex: 'version', width: 80 },
-    {
-      title: '分类',
-      dataIndex: 'category',
-      width: 80,
-      render: (_, r) => <Tag color={categoryColorMap[r.category] ?? 'default'}>{r.category}</Tag>,
-    },
-    { title: '描述', dataIndex: 'description', ellipsis: true },
-  ];
-
   return (
-    <div>
-      <ProTable<SkillItem>
-        key={tableKey}
-        columns={columns}
-        request={async (params) => {
-          const res = await skillService.list({
-            category: params.category,
-            limit: params.pageSize,
-            offset: ((params.current ?? 1) - 1) * (params.pageSize ?? 20),
-          });
-          return { data: res.data, total: res.total, success: true };
-        }}
-        rowKey="id"
-        headerTitle="技能管理"
-        pagination={{ defaultPageSize: 20 }}
-        search={{ labelWidth: 'auto' }}
-        toolBarRender={() => [
-          <Button key="search" icon={<SearchOutlined />} onClick={() => setSearchModalOpen(true)}>
+    <>
+      <CrudTable<
+        SkillItem,
+        SkillCreateParams,
+        { id: string; data: SkillUpdateParams }
+      >
+        title="技能管理"
+        queryResult={queryResult}
+        createMutation={createMutation}
+        updateMutation={updateMutation}
+        deleteMutation={deleteMutation}
+        createButtonText="新建技能"
+        modalTitle={(editing) => (editing ? '编辑技能' : '新建技能')}
+        modalWidth={720}
+        columns={(actions) => buildColumns(actions, handlePreview)}
+        renderForm={renderForm}
+        createDefaults={{ version: '1.0.0', category: 'custom' }}
+        toFormValues={(record) => ({
+          name: record.name,
+          version: record.version,
+          description: record.description,
+          content: record.content,
+          category: record.category,
+          tags: record.tags,
+          applicable_agents: record.applicable_agents,
+          author: record.author,
+        })}
+        toCreatePayload={(values) => ({
+          name: values.name as string,
+          version: values.version as string | undefined,
+          description: values.description as string | undefined,
+          content: values.content as string,
+          category: values.category as string | undefined,
+          tags: values.tags as string[] | undefined,
+          applicable_agents: values.applicable_agents as string[] | undefined,
+          author: values.author as string | undefined,
+        })}
+        toUpdatePayload={(values, record) => ({
+          id: record.id,
+          data: {
+            version: values.version as string | undefined,
+            description: values.description as string | undefined,
+            content: values.content as string | undefined,
+            category: values.category as string | undefined,
+            tags: values.tags as string[] | undefined,
+            applicable_agents: values.applicable_agents as string[] | undefined,
+            author: values.author as string | undefined,
+          },
+        })}
+        extraToolbar={
+          <Button icon={<SearchOutlined />} onClick={() => setSearchModalOpen(true)}>
             搜索技能
-          </Button>,
-          <Button key="create" type="primary" icon={<PlusOutlined />} onClick={() => setCreateModalOpen(true)}>
-            新建技能
-          </Button>,
-        ]}
+          </Button>
+        }
+        pagination={pagination}
+        onPaginationChange={(current, pageSize) => setPagination({ current, pageSize })}
+        showRefresh
       />
-
-      {/* 创建弹窗 */}
-      <Modal
-        title="新建技能"
-        open={createModalOpen}
-        onCancel={() => { setCreateModalOpen(false); createForm.resetFields(); }}
-        onOk={() => createForm.submit()}
-        width={720}
-        destroyOnClose
-      >
-        <Form form={createForm} layout="vertical" onFinish={handleCreate}>
-          <Form.Item name="name" label="名称" rules={[{ required: true, pattern: /^[a-z0-9][a-z0-9-]*$/, message: '仅限小写字母、数字、连字符' }]}>
-            <Input placeholder="my-skill" />
-          </Form.Item>
-          <Form.Item name="version" label="版本" initialValue="1.0.0">
-            <Input />
-          </Form.Item>
-          <Form.Item name="description" label="描述">
-            <Input.TextArea rows={2} />
-          </Form.Item>
-          <Form.Item name="content" label="SKILL.md 内容" rules={[{ required: true, message: '请输入技能知识内容' }]}>
-            <Input.TextArea rows={10} placeholder="# 技能知识内容..." />
-          </Form.Item>
-          <Form.Item name="category" label="分类" initialValue="custom">
-            <Select options={categoryOptions} />
-          </Form.Item>
-          <Form.Item name="tags" label="标签">
-            <Select mode="tags" placeholder="输入标签后回车" />
-          </Form.Item>
-          <Form.Item name="applicable_agents" label="适用 Agent">
-            <Select mode="tags" placeholder="留空表示适用所有 Agent" />
-          </Form.Item>
-          <Form.Item name="author" label="作者">
-            <Input />
-          </Form.Item>
-        </Form>
-      </Modal>
-
-      {/* 编辑弹窗 */}
-      <Modal
-        title="编辑技能"
-        open={editModalOpen}
-        onCancel={() => { setEditModalOpen(false); editForm.resetFields(); setCurrentSkill(null); }}
-        onOk={() => editForm.submit()}
-        width={720}
-        destroyOnClose
-      >
-        <Form form={editForm} layout="vertical" onFinish={handleEdit}>
-          <Form.Item name="version" label="版本">
-            <Input />
-          </Form.Item>
-          <Form.Item name="description" label="描述">
-            <Input.TextArea rows={2} />
-          </Form.Item>
-          <Form.Item name="content" label="SKILL.md 内容" rules={[{ required: true, message: '请输入技能知识内容' }]}>
-            <Input.TextArea rows={10} />
-          </Form.Item>
-          <Form.Item name="category" label="分类">
-            <Select options={categoryOptions} />
-          </Form.Item>
-          <Form.Item name="tags" label="标签">
-            <Select mode="tags" placeholder="输入标签后回车" />
-          </Form.Item>
-          <Form.Item name="applicable_agents" label="适用 Agent">
-            <Select mode="tags" placeholder="留空表示适用所有 Agent" />
-          </Form.Item>
-          <Form.Item name="author" label="作者">
-            <Input />
-          </Form.Item>
-        </Form>
-      </Modal>
 
       {/* 预览弹窗 */}
       <Modal
@@ -307,7 +286,7 @@ const SkillPage: React.FC = () => {
           toolBarRender={false}
         />
       </Modal>
-    </div>
+    </>
   );
 };
 

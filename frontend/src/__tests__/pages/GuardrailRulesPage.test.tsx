@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, act } from '@testing-library/react';
+import { TestQueryWrapper } from '../test-utils';
 
 /* ---------- mock guardrailService ---------- */
 const mockList = vi.fn();
@@ -48,7 +49,7 @@ describe('GuardrailRulesPage', () => {
   it('渲染页面标题', async () => {
     let container!: HTMLElement;
     await act(async () => {
-      ({ container } = render(<GuardrailRulesPage />));
+      ({ container } = render(<TestQueryWrapper><GuardrailRulesPage /></TestQueryWrapper>));
     });
     const text = container.textContent ?? '';
     expect(text).toContain('Guardrail 规则管理');
@@ -57,7 +58,7 @@ describe('GuardrailRulesPage', () => {
   it('渲染新建按钮', async () => {
     let container!: HTMLElement;
     await act(async () => {
-      ({ container } = render(<GuardrailRulesPage />));
+      ({ container } = render(<TestQueryWrapper><GuardrailRulesPage /></TestQueryWrapper>));
     });
     const text = container.textContent ?? '';
     expect(text).toContain('新建规则');
@@ -65,7 +66,7 @@ describe('GuardrailRulesPage', () => {
 
   it('调用列表接口', async () => {
     await act(async () => {
-      render(<GuardrailRulesPage />);
+      render(<TestQueryWrapper><GuardrailRulesPage /></TestQueryWrapper>);
     });
     expect(mockList).toHaveBeenCalled();
   });
@@ -74,7 +75,7 @@ describe('GuardrailRulesPage', () => {
     mockList.mockRejectedValueOnce(new Error('fail'));
     let container!: HTMLElement;
     await act(async () => {
-      ({ container } = render(<GuardrailRulesPage />));
+      ({ container } = render(<TestQueryWrapper><GuardrailRulesPage /></TestQueryWrapper>));
     });
     expect(container).toBeTruthy();
   });

@@ -1,11 +1,17 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Button, DatePicker, Form, Input, App, Modal, Popconfirm, Switch, Tag, Space } from 'antd';
 import { KeyOutlined, PlusOutlined, ReloadOutlined, ThunderboltOutlined } from '@ant-design/icons';
 import { ProTable } from '@ant-design/pro-components';
 import type { ProColumns } from '@ant-design/pro-components';
 import { useNavigate } from 'react-router-dom';
-import { providerService } from '../../services/providerService';
-import type { ProviderResponse, ProviderTestResult } from '../../services/providerService';
+import {
+  useProviderList,
+  useDeleteProvider,
+  useToggleProvider,
+  useTestProviderConnection,
+  useRotateProviderKey,
+} from '../../hooks/useProviderQueries';
+import type { ProviderResponse } from '../../services/providerService';
 
 const HEALTH_STATUS_MAP: Record<string, { color: string; text: string }> = {
   healthy: { color: 'green', text: '健康' },
@@ -16,34 +22,24 @@ const HEALTH_STATUS_MAP: Record<string, { color: string; text: string }> = {
 const ProviderListPage: React.FC = () => {
   const { message } = App.useApp();
   const navigate = useNavigate();
-  const [data, setData] = useState<ProviderResponse[]>([]);
-  const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(false);
   const [pagination, setPagination] = useState({ current: 1, pageSize: 20 });
 
-  const fetchProviders = useCallback(async () => {
-    setLoading(true);
-    try {
-      const offset = (pagination.current - 1) * pagination.pageSize;
-      const res = await providerService.list({ limit: pagination.pageSize, offset });
-      setData(res.data);
-      setTotal(res.total);
-    } catch {
-      message.error('获取 Provider 列表失败');
-    } finally {
-      setLoading(false);
-    }
-  }, [pagination, message]);
+  const { data: listData, isLoading: loading, refetch } = useProviderList({
+    limit: pagination.pageSize,
+    offset: (pagination.current - 1) * pagination.pageSize,
+  });
+  const data = listData?.data ?? [];
+  const total = listData?.total ?? 0;
 
-  useEffect(() => {
-    fetchProviders();
-  }, [fetchProviders]);
+  const deleteMutation = useDeleteProvider();
+  const toggleMutation = useToggleProvider();
+  const testMutation = useTestProviderConnection();
+  const rotateMutation = useRotateProviderKey();
 
   const handleDelete = async (id: string) => {
     try {
-      await providerService.delete(id);
+      await deleteMutation.mutateAsync(id);
       message.success('删除成功');
-      fetchProviders();
     } catch {
       message.error('删除失败');
     }
@@ -51,9 +47,8 @@ const ProviderListPage: React.FC = () => {
 
   const handleToggle = async (id: string, enabled: boolean) => {
     try {
-      await providerService.toggle(id, enabled);
+      await toggleMutation.mutateAsync({ id, isEnabled: enabled });
       message.success(enabled ? '已启用' : '已禁用');
-      fetchProviders();
     } catch {
       message.error('操作失败');
     }
@@ -67,7 +62,7 @@ const ProviderListPage: React.FC = () => {
   const handleTest = async (record: ProviderResponse) => {
     setTesting(record.id);
     try {
-      const result: ProviderTestResult = await providerService.testConnection(record.id);
+      const result = await testMutation.mutateAsync(record.id);
       if (result.success) {
         Modal.success({
           title: '连接成功',
@@ -79,7 +74,6 @@ const ProviderListPage: React.FC = () => {
           content: result.error ?? '未知错误',
         });
       }
-      fetchProviders();
     } catch {
       message.error('测试请求失败');
     } finally {
@@ -98,13 +92,12 @@ const ProviderListPage: React.FC = () => {
     try {
       const values = await rotateForm.validateFields();
       const expiresAt = values.key_expires_at ? values.key_expires_at.toISOString() : null;
-      await providerService.rotateKey(rotateTarget.id, {
-        new_api_key: values.new_api_key,
-        key_expires_at: expiresAt,
+      await rotateMutation.mutateAsync({
+        id: rotateTarget.id,
+        data: { new_api_key: values.new_api_key, key_expires_at: expiresAt },
       });
       message.success('密钥轮换成功');
       setRotateModalOpen(false);
-      fetchProviders();
     } catch {
       message.error('密钥轮换失败');
     }
@@ -238,7 +231,7 @@ const ProviderListPage: React.FC = () => {
         <ReloadOutlined
           key="reload"
           style={{ cursor: 'pointer', fontSize: 16 }}
-          onClick={fetchProviders}
+          onClick={() => void refetch()}
         />,
       ]}
     />

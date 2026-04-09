@@ -8,9 +8,10 @@ import {
   Tag,
   Space,
   Typography,
-  Spin,
+  Skeleton,
   Switch,
-  message,
+  App,
+  theme,
 } from 'antd';
 import ReactECharts from 'echarts-for-react';
 import {
@@ -34,15 +35,11 @@ import type { TokenUsageByModelItem, TokenUsageTrendItem } from '../../services/
 
 const { Title, Text } = Typography;
 
-const SPAN_TYPE_COLOR_VALUES: Record<string, string> = {
-  agent: '#1677ff',
-  llm: '#52c41a',
-  tool: '#fa8c16',
-  handoff: '#722ed1',
-  guardrail: '#f5222d',
-};
+import { SPAN_TYPE_COLORS as SPAN_TYPE_COLOR_VALUES } from '../../constants/colors';
 
 const DashboardPage: React.FC = () => {
+  const { message } = App.useApp();
+  const { token } = theme.useToken();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [agentCount, setAgentCount] = useState(0);
@@ -156,7 +153,7 @@ const DashboardPage: React.FC = () => {
   ];
 
   return (
-    <Spin spinning={loading}>
+    <Skeleton loading={loading} active paragraph={{ rows: 12 }}>
       <Space direction="vertical" size={16} style={{ width: '100%' }}>
         {/* Header */}
         <Row justify="space-between" align="middle">
@@ -183,8 +180,8 @@ const DashboardPage: React.FC = () => {
         </Row>
 
         {/* Row 1: Key Metrics */}
-        <Row gutter={16}>
-          <Col span={4}>
+        <Row gutter={[16, 16]}>
+          <Col xs={12} sm={12} md={8} lg={4}>
             <Card
               size="small"
               hoverable
@@ -195,11 +192,11 @@ const DashboardPage: React.FC = () => {
                 title="Agent 总数"
                 value={agentCount}
                 prefix={<RobotOutlined />}
-                valueStyle={{ color: '#1677ff' }}
+                valueStyle={{ color: token.colorPrimary }}
               />
             </Card>
           </Col>
-          <Col span={4}>
+          <Col xs={12} sm={12} md={8} lg={4}>
             <Card
               size="small"
               hoverable
@@ -210,11 +207,11 @@ const DashboardPage: React.FC = () => {
                 title="Session 总数"
                 value={sessionCount}
                 prefix={<MessageOutlined />}
-                valueStyle={{ color: '#52c41a' }}
+                valueStyle={{ color: token.colorSuccess }}
               />
             </Card>
           </Col>
-          <Col span={4}>
+          <Col xs={12} sm={12} md={8} lg={4}>
             <Card
               size="small"
               hoverable
@@ -228,7 +225,7 @@ const DashboardPage: React.FC = () => {
               />
             </Card>
           </Col>
-          <Col span={4}>
+          <Col xs={12} sm={12} md={8} lg={4}>
             <Card size="small">
               <Statistic
                 title="Span 总数"
@@ -236,7 +233,7 @@ const DashboardPage: React.FC = () => {
               />
             </Card>
           </Col>
-          <Col span={4}>
+          <Col xs={12} sm={12} md={8} lg={4}>
             <Card size="small">
               <Statistic
                 title="平均耗时"
@@ -248,13 +245,13 @@ const DashboardPage: React.FC = () => {
               />
             </Card>
           </Col>
-          <Col span={4}>
+          <Col xs={12} sm={12} md={8} lg={4}>
             <Card size="small">
               <Statistic
                 title="错误率"
                 value={traceStats ? (traceStats.error_rate * 100).toFixed(1) : '-'}
                 suffix="%"
-                valueStyle={traceStats && traceStats.error_rate > 0.1 ? { color: '#cf1322' } : undefined}
+                valueStyle={traceStats && traceStats.error_rate > 0.1 ? { color: token.colorError } : undefined}
                 prefix={<WarningOutlined />}
               />
             </Card>
@@ -262,8 +259,8 @@ const DashboardPage: React.FC = () => {
         </Row>
 
         {/* Row 2: Token + Guardrail + Span Types */}
-        <Row gutter={16}>
-          <Col span={14}>
+        <Row gutter={[16, 16]}>
+          <Col xs={24} lg={14}>
             <Card title="Token 消耗（按模型）" size="small">
               <Row gutter={16} style={{ marginBottom: 12 }}>
                 <Col span={8}>
@@ -292,7 +289,7 @@ const DashboardPage: React.FC = () => {
               />
             </Card>
           </Col>
-          <Col span={10}>
+          <Col xs={24} lg={10}>
             <Space direction="vertical" size={16} style={{ width: '100%' }}>
               {/* Guardrail Stats */}
               <Card
@@ -317,7 +314,7 @@ const DashboardPage: React.FC = () => {
                         <Statistic
                           title="已拦截"
                           value={traceStats.guardrail_stats.triggered}
-                          valueStyle={traceStats.guardrail_stats.triggered > 0 ? { color: '#cf1322' } : undefined}
+                          valueStyle={traceStats.guardrail_stats.triggered > 0 ? { color: token.colorError } : undefined}
                         />
                       </Col>
                       <Col span={8}>
@@ -349,11 +346,11 @@ const DashboardPage: React.FC = () => {
                             fontSize: 16,
                             formatter: '{value}%',
                             offsetCenter: [0, '10%'],
-                            color: traceStats.guardrail_stats.trigger_rate > 0.2 ? '#cf1322' : '#52c41a',
+                            color: traceStats.guardrail_stats.trigger_rate > 0.2 ? token.colorError : token.colorSuccess,
                           },
                           data: [{ value: Number((traceStats.guardrail_stats.trigger_rate * 100).toFixed(1)) }],
                           itemStyle: {
-                            color: traceStats.guardrail_stats.trigger_rate > 0.2 ? '#cf1322' : '#52c41a',
+                            color: traceStats.guardrail_stats.trigger_rate > 0.2 ? token.colorError : token.colorSuccess,
                           },
                         }],
                       }}
@@ -473,14 +470,14 @@ const DashboardPage: React.FC = () => {
                         data: activityTrend.map((d) => d.run_count),
                         smooth: true,
                         areaStyle: { opacity: 0.15 },
-                        itemStyle: { color: '#1677ff' },
+                        itemStyle: { color: token.colorPrimary },
                       },
                       {
                         name: '错误次数',
                         type: 'line',
                         data: activityTrend.map((d) => d.error_count),
                         smooth: true,
-                        itemStyle: { color: '#f5222d' },
+                        itemStyle: { color: token.colorError },
                       },
                     ],
                   }}
@@ -523,14 +520,14 @@ const DashboardPage: React.FC = () => {
                         data: tokenTrend.map((d) => d.total_tokens),
                         smooth: true,
                         areaStyle: { opacity: 0.15 },
-                        itemStyle: { color: '#1677ff' },
+                        itemStyle: { color: token.colorPrimary },
                       },
                       {
                         name: '调用次数',
                         type: 'bar',
                         yAxisIndex: 1,
                         data: tokenTrend.map((d) => d.call_count),
-                        itemStyle: { color: '#52c41a', opacity: 0.6 },
+                        itemStyle: { color: token.colorSuccess, opacity: 0.6 },
                         barMaxWidth: 30,
                       },
                     ],
@@ -543,7 +540,7 @@ const DashboardPage: React.FC = () => {
           </Col>
         </Row>
       </Space>
-    </Spin>
+    </Skeleton>
   );
 };
 

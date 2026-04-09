@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Button, Card, Divider, Form, Input, Space, Typography, App } from 'antd';
+import { Button, Card, Divider, Form, Input, Space, Typography, App, theme } from 'antd';
 import { GithubOutlined, GoogleOutlined, LockOutlined, SafetyOutlined, UserOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../stores/authStore';
@@ -24,6 +24,7 @@ interface LoginFormValues {
 
 const LoginPage: React.FC = () => {
   const { message } = App.useApp();
+  const { token } = theme.useToken();
   const navigate = useNavigate();
   const { login, loading, error, clearError } = useAuthStore();
   const [providers, setProviders] = useState<string[]>([]);
@@ -63,14 +64,14 @@ const LoginPage: React.FC = () => {
       justifyContent: 'center',
       alignItems: 'center',
       minHeight: '100vh',
-      background: '#f0f2f5',
+      background: token.colorBgLayout,
     }}>
-      <Card style={{ width: 400 }}>
+      <Card style={{ width: 400, maxWidth: '90vw' }}>
         <Title level={3} style={{ textAlign: 'center', marginBottom: 32 }}>
           CkyClaw
         </Title>
         {error && (
-          <div style={{ color: '#ff4d4f', textAlign: 'center', marginBottom: 16 }}>
+          <div style={{ color: token.colorError, textAlign: 'center', marginBottom: 16 }}>
             {error}
           </div>
         )}

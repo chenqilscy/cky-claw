@@ -41,8 +41,8 @@ const I18nSettingsPage: React.FC = () => {
 
   /* 加载 Agent 列表（仅名称用于下拉选择） */
   useEffect(() => {
-    agentService.list({ limit: 500 }).then((res) => setAgents(res.data));
-  }, []);
+    agentService.list({ limit: 500 }).then((res) => setAgents(res.data)).catch(() => message.error('加载 Agent 列表失败'));
+  }, [message]);
 
   /* 编辑抽屉回填 */
   useEffect(() => {

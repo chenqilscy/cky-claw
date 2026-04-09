@@ -1,205 +1,156 @@
 import { useState } from 'react';
 import {
-  Card, Button, Space, Modal, Form, Input, Table, Tag, message, Popconfirm,
-  Typography, Descriptions,
+  Form, Input, Tag, Button, Space, Popconfirm, Modal, Descriptions,
 } from 'antd';
 import {
-  PlusOutlined, ReloadOutlined, DeleteOutlined, EditOutlined,
+  DeleteOutlined, EditOutlined,
   BankOutlined, EyeOutlined,
 } from '@ant-design/icons';
-import type { ColumnsType } from 'antd/es/table';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { organizationService } from '../../services/organizationService';
-import type { OrganizationItem, OrganizationCreateParams } from '../../services/organizationService';
+import type { ProColumns } from '@ant-design/pro-components';
+import type { FormInstance } from 'antd';
+import type { OrganizationItem, OrganizationCreateParams, OrganizationUpdateParams } from '../../services/organizationService';
+import {
+  useOrganizationList,
+  useCreateOrganization,
+  useUpdateOrganization,
+  useDeleteOrganization,
+} from '../../hooks/useOrganizationQueries';
+import { CrudTable } from '../../components';
+import type { CrudTableActions } from '../../components';
 
-const { Text } = Typography;
 const { TextArea } = Input;
 
+/* ---- 列定义 ---- */
+
+const buildColumns = (
+  actions: CrudTableActions<OrganizationItem>,
+  setDetailRecord: (r: OrganizationItem) => void,
+): ProColumns<OrganizationItem>[] => [
+  {
+    title: '名称',
+    dataIndex: 'name',
+    width: 160,
+    render: (_, record) => <strong>{record.name}</strong>,
+  },
+  {
+    title: 'Slug',
+    dataIndex: 'slug',
+    width: 120,
+    render: (_, record) => <Tag color="blue">{record.slug}</Tag>,
+  },
+  {
+    title: '状态',
+    dataIndex: 'is_active',
+    width: 80,
+    render: (_, record) => (
+      <Tag color={record.is_active ? 'green' : 'default'}>{record.is_active ? '启用' : '停用'}</Tag>
+    ),
+  },
+  {
+    title: '描述',
+    dataIndex: 'description',
+    ellipsis: true,
+    width: 200,
+  },
+  {
+    title: '创建时间',
+    dataIndex: 'created_at',
+    width: 180,
+    render: (_, record) => new Date(record.created_at).toLocaleString(),
+  },
+  {
+    title: '操作',
+    width: 180,
+    render: (_, record) => (
+      <Space size="small">
+        <Button type="link" size="small" icon={<EyeOutlined />} onClick={() => setDetailRecord(record)}>
+          详情
+        </Button>
+        <Button type="link" size="small" icon={<EditOutlined />} onClick={() => actions.openEdit(record)}>
+          编辑
+        </Button>
+        <Popconfirm title="确定删除？" onConfirm={() => actions.handleDelete(record.id)}>
+          <Button type="link" size="small" danger icon={<DeleteOutlined />}>删除</Button>
+        </Popconfirm>
+      </Space>
+    ),
+  },
+];
+
+/* ---- 表单渲染 ---- */
+
+const renderForm = (_form: FormInstance, editing: OrganizationItem | null) => (
+  <>
+    <Form.Item name="name" label="名称" rules={[{ required: true, message: '请输入组织名称' }]}>
+      <Input placeholder="CkyClaw Tech" />
+    </Form.Item>
+    <Form.Item name="slug" label="Slug" rules={[{ required: !editing, message: '请输入唯一标识' }]}>
+      <Input placeholder="ckyclaw-tech" disabled={!!editing} />
+    </Form.Item>
+    <Form.Item name="description" label="描述">
+      <TextArea rows={2} placeholder="组织描述" />
+    </Form.Item>
+    <Form.Item name="settings" label="设置 (JSON)">
+      <TextArea rows={3} placeholder="{}" />
+    </Form.Item>
+    <Form.Item name="quota" label="配额 (JSON)">
+      <TextArea rows={3} placeholder='{"max_agents": 50, "max_tokens_per_day": 1000000}' />
+    </Form.Item>
+  </>
+);
+
+/* ---- 页面组件 ---- */
+
 const OrganizationPage: React.FC = () => {
-  const [createOpen, setCreateOpen] = useState(false);
-  const [editRecord, setEditRecord] = useState<OrganizationItem | null>(null);
   const [detailRecord, setDetailRecord] = useState<OrganizationItem | null>(null);
-  const [form] = Form.useForm();
-  const queryClient = useQueryClient();
 
-  const { data, isLoading, refetch } = useQuery({
-    queryKey: ['organizations'],
-    queryFn: () => organizationService.list({ limit: 200 }),
-  });
-  const orgs = data?.data ?? [];
-
-  const createMutation = useMutation({
-    mutationFn: (params: OrganizationCreateParams) => organizationService.create(params),
-    onSuccess: () => { void queryClient.invalidateQueries({ queryKey: ['organizations'] }); },
-  });
-
-  const updateMutation = useMutation({
-    mutationFn: ({ id, data: d }: { id: string; data: Parameters<typeof organizationService.update>[1] }) =>
-      organizationService.update(id, d),
-    onSuccess: () => { void queryClient.invalidateQueries({ queryKey: ['organizations'] }); },
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: (id: string) => organizationService.delete(id),
-    onSuccess: () => { void queryClient.invalidateQueries({ queryKey: ['organizations'] }); },
-  });
-
-  const handleCreate = () => {
-    setEditRecord(null);
-    form.resetFields();
-    setCreateOpen(true);
-  };
-
-  const handleEdit = (record: OrganizationItem) => {
-    setEditRecord(record);
-    form.setFieldsValue({
-      name: record.name,
-      slug: record.slug,
-      description: record.description,
-      settings: JSON.stringify(record.settings, null, 2),
-      quota: JSON.stringify(record.quota, null, 2),
-    });
-    setCreateOpen(true);
-  };
-
-  const handleDelete = async (id: string) => {
-    try {
-      await deleteMutation.mutateAsync(id);
-      message.success('已删除');
-    } catch {
-      message.error('删除失败');
-    }
-  };
-
-  const handleSubmit = async () => {
-    try {
-      const values = await form.validateFields();
-      const payload = {
-        name: values.name,
-        slug: values.slug,
-        description: values.description || '',
-        settings: values.settings ? JSON.parse(values.settings as string) : {},
-        quota: values.quota ? JSON.parse(values.quota as string) : {},
-      };
-      if (editRecord) {
-        await updateMutation.mutateAsync({
-          id: editRecord.id,
-          data: { name: payload.name, description: payload.description, settings: payload.settings, quota: payload.quota },
-        });
-        message.success('更新成功');
-      } else {
-        await createMutation.mutateAsync(payload);
-        message.success('创建成功');
-      }
-      setCreateOpen(false);
-    } catch {
-      message.error('操作失败');
-    }
-  };
-
-  const columns: ColumnsType<OrganizationItem> = [
-    {
-      title: '名称',
-      dataIndex: 'name',
-      key: 'name',
-      render: (text: string) => <Text strong>{text}</Text>,
-    },
-    {
-      title: 'Slug',
-      dataIndex: 'slug',
-      key: 'slug',
-      render: (slug: string) => <Tag color="blue">{slug}</Tag>,
-    },
-    {
-      title: '状态',
-      dataIndex: 'is_active',
-      key: 'is_active',
-      width: 80,
-      render: (active: boolean) => (
-        <Tag color={active ? 'green' : 'default'}>{active ? '启用' : '停用'}</Tag>
-      ),
-    },
-    {
-      title: '描述',
-      dataIndex: 'description',
-      key: 'description',
-      ellipsis: true,
-      width: 200,
-    },
-    {
-      title: '创建时间',
-      dataIndex: 'created_at',
-      key: 'created_at',
-      width: 180,
-      render: (v: string) => new Date(v).toLocaleString(),
-    },
-    {
-      title: '操作',
-      key: 'actions',
-      width: 180,
-      render: (_: unknown, record: OrganizationItem) => (
-        <Space size="small">
-          <Button type="link" size="small" icon={<EyeOutlined />} onClick={() => setDetailRecord(record)}>
-            详情
-          </Button>
-          <Button type="link" size="small" icon={<EditOutlined />} onClick={() => handleEdit(record)}>
-            编辑
-          </Button>
-          <Popconfirm title="确定删除？" onConfirm={() => handleDelete(record.id)}>
-            <Button type="link" size="small" danger icon={<DeleteOutlined />}>删除</Button>
-          </Popconfirm>
-        </Space>
-      ),
-    },
-  ];
+  const queryResult = useOrganizationList({ limit: 200 });
+  const createMutation = useCreateOrganization();
+  const updateMutation = useUpdateOrganization();
+  const deleteMutation = useDeleteOrganization();
 
   return (
     <>
-      <Card
+      <CrudTable<
+        OrganizationItem,
+        OrganizationCreateParams,
+        { id: string; data: OrganizationUpdateParams }
+      >
         title={<><BankOutlined /> 组织管理</>}
-        extra={
-          <Space>
-            <Button icon={<ReloadOutlined />} onClick={() => refetch()}>刷新</Button>
-            <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>新建组织</Button>
-          </Space>
-        }
-      >
-        <Table
-          rowKey="id"
-          columns={columns}
-          dataSource={orgs}
-          loading={isLoading}
-          pagination={{ pageSize: 20, showTotal: (t) => `共 ${t} 条` }}
-        />
-      </Card>
-
-      {/* 创建/编辑弹窗 */}
-      <Modal
-        title={editRecord ? '编辑组织' : '新建组织'}
-        open={createOpen}
-        onCancel={() => setCreateOpen(false)}
-        onOk={handleSubmit}
-        confirmLoading={createMutation.isPending || updateMutation.isPending}
-        width={560}
-      >
-        <Form form={form} layout="vertical">
-          <Form.Item name="name" label="名称" rules={[{ required: true, message: '请输入组织名称' }]}>
-            <Input placeholder="CkyClaw Tech" />
-          </Form.Item>
-          <Form.Item name="slug" label="Slug" rules={[{ required: !editRecord, message: '请输入唯一标识' }]}>
-            <Input placeholder="ckyclaw-tech" disabled={!!editRecord} />
-          </Form.Item>
-          <Form.Item name="description" label="描述">
-            <TextArea rows={2} placeholder="组织描述" />
-          </Form.Item>
-          <Form.Item name="settings" label="设置 (JSON)">
-            <TextArea rows={3} placeholder="{}" />
-          </Form.Item>
-          <Form.Item name="quota" label="配额 (JSON)">
-            <TextArea rows={3} placeholder='{"max_agents": 50, "max_tokens_per_day": 1000000}' />
-          </Form.Item>
-        </Form>
-      </Modal>
+        queryResult={queryResult}
+        createMutation={createMutation}
+        updateMutation={updateMutation}
+        deleteMutation={deleteMutation}
+        createButtonText="新建组织"
+        modalTitle={(editing) => (editing ? '编辑组织' : '新建组织')}
+        modalWidth={560}
+        columns={(actions) => buildColumns(actions, setDetailRecord)}
+        renderForm={renderForm}
+        toFormValues={(record) => ({
+          name: record.name,
+          slug: record.slug,
+          description: record.description,
+          settings: JSON.stringify(record.settings, null, 2),
+          quota: JSON.stringify(record.quota, null, 2),
+        })}
+        toCreatePayload={(values) => ({
+          name: values.name as string,
+          slug: values.slug as string,
+          description: (values.description as string) || '',
+          settings: values.settings ? JSON.parse(values.settings as string) : {},
+          quota: values.quota ? JSON.parse(values.quota as string) : {},
+        })}
+        toUpdatePayload={(values, record) => ({
+          id: record.id,
+          data: {
+            name: values.name as string,
+            description: (values.description as string) || '',
+            settings: values.settings ? JSON.parse(values.settings as string) : {},
+            quota: values.quota ? JSON.parse(values.quota as string) : {},
+          },
+        })}
+        showRefresh
+      />
 
       {/* 详情弹窗 */}
       <Modal

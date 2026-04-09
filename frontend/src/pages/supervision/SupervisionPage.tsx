@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
 import { App, Tag, Badge, Modal, Descriptions, Input, Space, Card, Row, Col, Statistic } from 'antd';
 import { ReloadOutlined, PauseCircleOutlined, PlayCircleOutlined, EyeOutlined } from '@ant-design/icons';
 import { ProTable } from '@ant-design/pro-components';
@@ -7,8 +7,12 @@ import { supervisionService } from '../../services/supervisionService';
 import type {
   SupervisionSessionItem,
   SupervisionSessionDetail,
-  SupervisionListParams,
 } from '../../services/supervisionService';
+import {
+  useSupervisionSessionList,
+  usePauseSession,
+  useResumeSession,
+} from '../../hooks/useSupervisionQueries';
 
 const STATUS_MAP: Record<string, { color: string; text: string }> = {
   active: { color: 'green', text: '运行中' },
@@ -18,30 +22,18 @@ const STATUS_MAP: Record<string, { color: string; text: string }> = {
 
 const SupervisionPage: React.FC = () => {
   const { message } = App.useApp();
-  const [data, setData] = useState<SupervisionSessionItem[]>([]);
-  const [loading, setLoading] = useState(false);
   const [agentFilter, setAgentFilter] = useState<string>('');
   const [detailVisible, setDetailVisible] = useState(false);
   const [detailData, setDetailData] = useState<SupervisionSessionDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
 
-  const fetchList = useCallback(async () => {
-    setLoading(true);
-    try {
-      const params: SupervisionListParams = {};
-      if (agentFilter) params.agent_name = agentFilter;
-      const res = await supervisionService.listSessions(params);
-      setData(res.data);
-    } catch {
-      message.error('获取活跃会话失败');
-    } finally {
-      setLoading(false);
-    }
-  }, [agentFilter, message]);
+  // TanStack Query
+  const params = agentFilter ? { agent_name: agentFilter } : undefined;
+  const { data: listData, isLoading: loading, refetch } = useSupervisionSessionList(params);
+  const data = listData?.data ?? [];
 
-  useEffect(() => {
-    fetchList();
-  }, [fetchList]);
+  const pauseMutation = usePauseSession();
+  const resumeMutation = useResumeSession();
 
   const handleViewDetail = async (sessionId: string) => {
     setDetailVisible(true);
@@ -58,9 +50,9 @@ const SupervisionPage: React.FC = () => {
 
   const handlePause = async (sessionId: string) => {
     try {
-      const res = await supervisionService.pauseSession(sessionId);
+      const res = await pauseMutation.mutateAsync({ sessionId });
       message.success(res.message);
-      fetchList();
+      void refetch();
     } catch {
       message.error('暂停会话失败');
     }
@@ -68,9 +60,9 @@ const SupervisionPage: React.FC = () => {
 
   const handleResume = async (sessionId: string) => {
     try {
-      const res = await supervisionService.resumeSession(sessionId);
+      const res = await resumeMutation.mutateAsync({ sessionId });
       message.success(res.message);
-      fetchList();
+      void refetch();
     } catch {
       message.error('恢复会话失败');
     }
@@ -196,7 +188,7 @@ const SupervisionPage: React.FC = () => {
           <ReloadOutlined
             key="reload"
             style={{ cursor: 'pointer', fontSize: 16 }}
-            onClick={fetchList}
+            onClick={() => void refetch()}
           />,
         ]}
       />

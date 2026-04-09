@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, act } from '@testing-library/react';
+import { render, waitFor } from '@testing-library/react';
+import { TestQueryWrapper } from '../test-utils';
 
 /* ---------- mock tokenUsageService ---------- */
 const mockList = vi.fn();
@@ -52,49 +53,40 @@ describe('RunListPage', () => {
   });
 
   it('渲染页面标题', async () => {
-    let container!: HTMLElement;
-    await act(async () => {
-      ({ container } = render(<RunListPage />));
+    const { container } = render(<TestQueryWrapper><RunListPage /></TestQueryWrapper>);
+    await waitFor(() => {
+      expect(container.textContent ?? '').toContain('Token');
     });
-    const text = container.textContent ?? '';
-    expect(text).toContain('Token');
   });
 
   it('渲染统计卡片', async () => {
-    let container!: HTMLElement;
-    await act(async () => {
-      ({ container } = render(<RunListPage />));
+    const { container } = render(<TestQueryWrapper><RunListPage /></TestQueryWrapper>);
+    await waitFor(() => {
+      expect(container.textContent ?? '').toContain('总 Token');
     });
-    const text = container.textContent ?? '';
-    // 页面渲染总 Token / 调用次数 等统计
-    expect(text).toContain('总 Token');
   });
 
   it('调用列表和汇总接口', async () => {
-    await act(async () => {
-      render(<RunListPage />);
+    render(<TestQueryWrapper><RunListPage /></TestQueryWrapper>);
+    await waitFor(() => {
+      expect(mockList).toHaveBeenCalled();
+      expect(mockSummary).toHaveBeenCalled();
     });
-    expect(mockList).toHaveBeenCalled();
-    expect(mockSummary).toHaveBeenCalled();
   });
 
   it('切换分组模式', async () => {
-    let container!: HTMLElement;
-    await act(async () => {
-      ({ container } = render(<RunListPage />));
+    const { container } = render(<TestQueryWrapper><RunListPage /></TestQueryWrapper>);
+    await waitFor(() => {
+      expect(container.textContent ?? '').toContain('Agent + 模型');
     });
-    const text = container.textContent ?? '';
-    // 页面有 Segmented 控件含 "Agent + 模型" / "按用户" / "按模型"
-    expect(text).toContain('Agent + 模型');
   });
 
   it('加载失败不崩溃', async () => {
     mockList.mockRejectedValueOnce(new Error('fail'));
     mockSummary.mockRejectedValueOnce(new Error('fail'));
-    let container!: HTMLElement;
-    await act(async () => {
-      ({ container } = render(<RunListPage />));
+    const { container } = render(<TestQueryWrapper><RunListPage /></TestQueryWrapper>);
+    await waitFor(() => {
+      expect(container).toBeTruthy();
     });
-    expect(container).toBeTruthy();
   });
 });

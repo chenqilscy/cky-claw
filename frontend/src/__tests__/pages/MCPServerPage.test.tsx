@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, waitFor } from '@testing-library/react';
+import { TestQueryWrapper } from '../test-utils';
 
 // Mock ProTable
 vi.mock('@ant-design/pro-components', () => ({
@@ -51,21 +52,21 @@ describe('MCPServerPage', () => {
   });
 
   it('渲染 MCP Server 管理标题', async () => {
-    render(<MCPServerPage />);
+    render(<TestQueryWrapper><MCPServerPage /></TestQueryWrapper>);
     await waitFor(() => {
       expect(document.body.textContent).toContain('MCP Server 管理');
     });
   });
 
   it('渲染新建按钮', async () => {
-    render(<MCPServerPage />);
+    render(<TestQueryWrapper><MCPServerPage /></TestQueryWrapper>);
     await waitFor(() => {
       expect(document.body.textContent).toContain('新建 MCP Server');
     });
   });
 
   it('调用列表接口', async () => {
-    render(<MCPServerPage />);
+    render(<TestQueryWrapper><MCPServerPage /></TestQueryWrapper>);
     await waitFor(() => {
       expect(mockList).toHaveBeenCalled();
     });
@@ -73,7 +74,7 @@ describe('MCPServerPage', () => {
 
   it('加载失败不崩溃', async () => {
     mockList.mockRejectedValueOnce(new Error('fail'));
-    render(<MCPServerPage />);
+    render(<TestQueryWrapper><MCPServerPage /></TestQueryWrapper>);
     await waitFor(() => {
       expect(document.body.textContent).toContain('MCP Server 管理');
     });

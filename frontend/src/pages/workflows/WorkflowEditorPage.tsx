@@ -35,12 +35,7 @@ const STEP_TYPES = [
   { label: '循环步骤', value: 'loop', color: '#722ed1' },
 ] as const;
 
-const NODE_COLORS: Record<string, string> = {
-  agent: '#1890ff',
-  parallel: '#52c41a',
-  conditional: '#fa8c16',
-  loop: '#722ed1',
-};
+import { NODE_COLORS } from '../../constants/colors';
 
 let nodeIdCounter = 1;
 function nextNodeId(): string {

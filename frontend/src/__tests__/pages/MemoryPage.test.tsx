@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, waitFor } from '@testing-library/react';
+import { TestQueryWrapper } from '../test-utils';
 import { MemoryRouter } from 'react-router-dom';
 
 // Mock ProTable to avoid heavy @ant-design/pro-components rendering
@@ -52,9 +53,11 @@ describe('MemoryPage', () => {
 
   it('renders page title', async () => {
     render(
-      <MemoryRouter>
-        <MemoryPage />
-      </MemoryRouter>,
+      <TestQueryWrapper>
+        <MemoryRouter>
+          <MemoryPage />
+        </MemoryRouter>
+      </TestQueryWrapper>,
     );
     await waitFor(() => {
       expect(document.body.textContent).toContain('记忆');
@@ -63,9 +66,11 @@ describe('MemoryPage', () => {
 
   it('calls memoryService.list on mount', async () => {
     render(
-      <MemoryRouter>
-        <MemoryPage />
-      </MemoryRouter>,
+      <TestQueryWrapper>
+        <MemoryRouter>
+          <MemoryPage />
+        </MemoryRouter>
+      </TestQueryWrapper>,
     );
     await waitFor(() => {
       expect(vi.mocked(memoryService.list)).toHaveBeenCalled();
@@ -74,9 +79,11 @@ describe('MemoryPage', () => {
 
   it('renders memory data', async () => {
     render(
-      <MemoryRouter>
-        <MemoryPage />
-      </MemoryRouter>,
+      <TestQueryWrapper>
+        <MemoryRouter>
+          <MemoryPage />
+        </MemoryRouter>
+      </TestQueryWrapper>,
     );
     await waitFor(() => {
       expect(document.body.textContent).toContain('用户偏好设置');
@@ -85,9 +92,11 @@ describe('MemoryPage', () => {
 
   it('renders create button', async () => {
     render(
-      <MemoryRouter>
-        <MemoryPage />
-      </MemoryRouter>,
+      <TestQueryWrapper>
+        <MemoryRouter>
+          <MemoryPage />
+        </MemoryRouter>
+      </TestQueryWrapper>,
     );
     await waitFor(() => {
       expect(document.body.textContent).toContain('新建');

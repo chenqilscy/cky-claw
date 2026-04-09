@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, act } from '@testing-library/react';
+import { TestQueryWrapper } from '../test-utils';
 
 /* ---------- mock evaluationService ---------- */
 const mockListEvals = vi.fn();
@@ -34,7 +35,7 @@ describe('EvaluationPage', () => {
   it('渲染 Tabs', async () => {
     let container!: HTMLElement;
     await act(async () => {
-      ({ container } = render(<EvaluationPage />));
+      ({ container } = render(<TestQueryWrapper><EvaluationPage /></TestQueryWrapper>));
     });
     const text = container.textContent ?? '';
     expect(text).toContain('评估');
@@ -42,7 +43,7 @@ describe('EvaluationPage', () => {
 
   it('渲染评估列表', async () => {
     await act(async () => {
-      render(<EvaluationPage />);
+      render(<TestQueryWrapper><EvaluationPage /></TestQueryWrapper>);
     });
     expect(mockListEvals).toHaveBeenCalled();
   });
@@ -50,7 +51,7 @@ describe('EvaluationPage', () => {
   it('渲染新建评估按钮', async () => {
     let container!: HTMLElement;
     await act(async () => {
-      ({ container } = render(<EvaluationPage />));
+      ({ container } = render(<TestQueryWrapper><EvaluationPage /></TestQueryWrapper>));
     });
     const text = container.textContent ?? '';
     expect(text).toContain('新建评估');
@@ -60,7 +61,7 @@ describe('EvaluationPage', () => {
     mockListEvals.mockRejectedValueOnce(new Error('fail'));
     let container!: HTMLElement;
     await act(async () => {
-      ({ container } = render(<EvaluationPage />));
+      ({ container } = render(<TestQueryWrapper><EvaluationPage /></TestQueryWrapper>));
     });
     expect(container).toBeTruthy();
   });

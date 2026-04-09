@@ -1,11 +1,9 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
 import {
   Button,
-  Card,
   Form,
   Input,
   InputNumber,
-  message,
   Modal,
   Select,
   Space,
@@ -14,7 +12,6 @@ import {
   Slider,
 } from 'antd';
 import {
-  PlusOutlined,
   DeleteOutlined,
   EditOutlined,
   SearchOutlined,
@@ -22,12 +19,21 @@ import {
 } from '@ant-design/icons';
 import { ProTable } from '@ant-design/pro-components';
 import type { ProColumns } from '@ant-design/pro-components';
-import { memoryService } from '../../services/memoryService';
+import type { FormInstance } from 'antd';
 import type {
   MemoryItem,
   MemoryCreateParams,
   MemoryUpdateParams,
 } from '../../services/memoryService';
+import {
+  useMemoryList,
+  useCreateMemory,
+  useUpdateMemory,
+  useDeleteMemory,
+  useSearchMemory,
+} from '../../hooks/useMemoryQueries';
+import { CrudTable } from '../../components';
+import type { CrudTableActions } from '../../components';
 
 const { TextArea } = Input;
 
@@ -49,112 +55,121 @@ const TYPE_LABELS: Record<string, string> = {
   structured_fact: '结构化事实',
 };
 
+/* ---- 列定义 ---- */
+
+const buildColumns = (
+  actions: CrudTableActions<MemoryItem>,
+): ProColumns<MemoryItem>[] => [
+  {
+    title: '类型',
+    dataIndex: 'type',
+    width: 120,
+    render: (_, record) => (
+      <Tag color={TYPE_COLORS[record.type] ?? 'default'}>
+        {TYPE_LABELS[record.type] ?? record.type}
+      </Tag>
+    ),
+  },
+  {
+    title: '内容',
+    dataIndex: 'content',
+    ellipsis: true,
+  },
+  {
+    title: '置信度',
+    dataIndex: 'confidence',
+    width: 100,
+    render: (_, record) => (
+      <Tag color={record.confidence >= 0.7 ? 'green' : record.confidence >= 0.4 ? 'orange' : 'red'}>
+        {record.confidence.toFixed(2)}
+      </Tag>
+    ),
+    sorter: (a, b) => a.confidence - b.confidence,
+  },
+  {
+    title: '用户',
+    dataIndex: 'user_id',
+    width: 120,
+    ellipsis: true,
+  },
+  {
+    title: 'Agent',
+    dataIndex: 'agent_name',
+    width: 120,
+    render: (v) => v || '-',
+  },
+  {
+    title: '更新时间',
+    dataIndex: 'updated_at',
+    width: 180,
+    render: (v) => new Date(v as string).toLocaleString('zh-CN'),
+    sorter: (a, b) => new Date(a.updated_at).getTime() - new Date(b.updated_at).getTime(),
+  },
+  {
+    title: '操作',
+    width: 120,
+    render: (_, record) => (
+      <Space size="small">
+        <Button type="link" size="small" icon={<EditOutlined />} onClick={() => actions.openEdit(record)} />
+        <Popconfirm title="确认删除？" onConfirm={() => actions.handleDelete(record.id)}>
+          <Button type="link" size="small" danger icon={<DeleteOutlined />} />
+        </Popconfirm>
+      </Space>
+    ),
+  },
+];
+
+/* ---- 表单 ---- */
+
+const renderForm = (_form: FormInstance, editing: MemoryItem | null) => (
+  <>
+    {!editing && (
+      <Form.Item name="user_id" label="用户 ID" rules={[{ required: true, message: '请输入用户 ID' }]}>
+        <Input placeholder="用户标识" />
+      </Form.Item>
+    )}
+    <Form.Item name="type" label="类型" rules={[{ required: true }]}>
+      <Select options={TYPE_OPTIONS} />
+    </Form.Item>
+    <Form.Item name="content" label="内容" rules={[{ required: true, message: '请输入记忆内容' }]}>
+      <TextArea rows={4} placeholder="记忆内容" maxLength={10000} showCount />
+    </Form.Item>
+    <Form.Item name="confidence" label="置信度">
+      <Slider min={0} max={1} step={0.01} marks={{ 0: '0', 0.5: '0.5', 1: '1' }} />
+    </Form.Item>
+    {!editing && (
+      <Form.Item name="agent_name" label="Agent 名称">
+        <Input placeholder="可选" />
+      </Form.Item>
+    )}
+  </>
+);
+
+/* ---- 页面组件 ---- */
+
 const MemoryPage: React.FC = () => {
-  const [data, setData] = useState<MemoryItem[]>([]);
-  const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(false);
   const [pagination, setPagination] = useState({ current: 1, pageSize: 20 });
   const [filters, setFilters] = useState<{ user_id?: string; type?: string; agent_name?: string }>({});
-
-  // Create/Edit Modal
-  const [modalVisible, setModalVisible] = useState(false);
-  const [editingItem, setEditingItem] = useState<MemoryItem | null>(null);
-  const [form] = Form.useForm();
-  const [submitting, setSubmitting] = useState(false);
 
   // Search Modal
   const [searchVisible, setSearchVisible] = useState(false);
   const [searchForm] = Form.useForm();
   const [searchResults, setSearchResults] = useState<MemoryItem[]>([]);
-  const [searching, setSearching] = useState(false);
 
-  const fetchList = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await memoryService.list({
-        ...filters,
-        limit: pagination.pageSize,
-        offset: (pagination.current - 1) * pagination.pageSize,
-      });
-      setData(res.data);
-      setTotal(res.total);
-    } catch {
-      message.error('获取记忆列表失败');
-    } finally {
-      setLoading(false);
-    }
-  }, [pagination, filters]);
-
-  useEffect(() => {
-    fetchList();
-  }, [fetchList]);
-
-  const openCreate = () => {
-    setEditingItem(null);
-    form.resetFields();
-    form.setFieldsValue({ type: 'structured_fact', confidence: 1.0 });
-    setModalVisible(true);
-  };
-
-  const openEdit = (record: MemoryItem) => {
-    setEditingItem(record);
-    form.setFieldsValue({
-      type: record.type,
-      content: record.content,
-      confidence: record.confidence,
-      user_id: record.user_id,
-      agent_name: record.agent_name,
-    });
-    setModalVisible(true);
-  };
-
-  const handleSubmit = async () => {
-    try {
-      const values = await form.validateFields();
-      setSubmitting(true);
-      if (editingItem) {
-        const updateData: MemoryUpdateParams = {
-          content: values.content,
-          confidence: values.confidence,
-          type: values.type,
-        };
-        await memoryService.update(editingItem.id, updateData);
-        message.success('更新成功');
-      } else {
-        const createData: MemoryCreateParams = {
-          type: values.type,
-          content: values.content,
-          confidence: values.confidence ?? 1.0,
-          user_id: values.user_id,
-          agent_name: values.agent_name,
-        };
-        await memoryService.create(createData);
-        message.success('创建成功');
-      }
-      setModalVisible(false);
-      fetchList();
-    } catch {
-      // form validation error or API error
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleDelete = async (id: string) => {
-    try {
-      await memoryService.delete(id);
-      message.success('删除成功');
-      fetchList();
-    } catch {
-      message.error('删除失败');
-    }
-  };
+  const queryResult = useMemoryList({
+    ...filters,
+    limit: pagination.pageSize,
+    offset: (pagination.current - 1) * pagination.pageSize,
+  });
+  const createMutation = useCreateMemory();
+  const updateMutation = useUpdateMemory();
+  const deleteMutation = useDeleteMemory();
+  const searchMutation = useSearchMemory();
 
   const handleSearch = async () => {
     try {
       const values = await searchForm.validateFields();
-      setSearching(true);
-      const results = await memoryService.search({
+      const results = await searchMutation.mutateAsync({
         user_id: values.user_id,
         query: values.query,
         limit: values.limit ?? 10,
@@ -162,161 +177,89 @@ const MemoryPage: React.FC = () => {
       setSearchResults(results);
     } catch {
       // validation or API error
-    } finally {
-      setSearching(false);
     }
   };
 
-  const columns: ProColumns<MemoryItem>[] = [
-    {
-      title: '类型',
-      dataIndex: 'type',
-      width: 120,
-      render: (_, record) => (
-        <Tag color={TYPE_COLORS[record.type] ?? 'default'}>
-          {TYPE_LABELS[record.type] ?? record.type}
-        </Tag>
-      ),
-    },
-    {
-      title: '内容',
-      dataIndex: 'content',
-      ellipsis: true,
-    },
-    {
-      title: '置信度',
-      dataIndex: 'confidence',
-      width: 100,
-      render: (_, record) => (
-        <Tag color={record.confidence >= 0.7 ? 'green' : record.confidence >= 0.4 ? 'orange' : 'red'}>
-          {record.confidence.toFixed(2)}
-        </Tag>
-      ),
-      sorter: (a, b) => a.confidence - b.confidence,
-    },
-    {
-      title: '用户',
-      dataIndex: 'user_id',
-      width: 120,
-      ellipsis: true,
-    },
-    {
-      title: 'Agent',
-      dataIndex: 'agent_name',
-      width: 120,
-      render: (v) => v || '-',
-    },
-    {
-      title: '更新时间',
-      dataIndex: 'updated_at',
-      width: 180,
-      render: (v) => new Date(v as string).toLocaleString('zh-CN'),
-      sorter: (a, b) => new Date(a.updated_at).getTime() - new Date(b.updated_at).getTime(),
-    },
-    {
-      title: '操作',
-      width: 120,
-      render: (_, record) => (
-        <Space size="small">
-          <Button type="link" size="small" icon={<EditOutlined />} onClick={() => openEdit(record)} />
-          <Popconfirm title="确认删除？" onConfirm={() => handleDelete(record.id)}>
-            <Button type="link" size="small" danger icon={<DeleteOutlined />} />
-          </Popconfirm>
-        </Space>
-      ),
-    },
+  /** 搜索结果表列（复用 buildColumns 但去掉 user_id 列） */
+  const searchResultColumns: ProColumns<MemoryItem>[] = [
+    { title: '类型', dataIndex: 'type', width: 120, render: (_, r) => <Tag color={TYPE_COLORS[r.type] ?? 'default'}>{TYPE_LABELS[r.type] ?? r.type}</Tag> },
+    { title: '内容', dataIndex: 'content', ellipsis: true },
+    { title: '置信度', dataIndex: 'confidence', width: 100, render: (_, r) => <Tag color={r.confidence >= 0.7 ? 'green' : r.confidence >= 0.4 ? 'orange' : 'red'}>{r.confidence.toFixed(2)}</Tag> },
+    { title: 'Agent', dataIndex: 'agent_name', width: 120, render: (v) => v || '-' },
+    { title: '更新时间', dataIndex: 'updated_at', width: 180, render: (v) => new Date(v as string).toLocaleString('zh-CN') },
   ];
 
   return (
     <>
-      <Card
-        title={
-          <Space>
-            <BulbOutlined />
-            <span>记忆管理</span>
+      <CrudTable<
+        MemoryItem,
+        MemoryCreateParams,
+        { id: string; data: MemoryUpdateParams }
+      >
+        title={<Space><BulbOutlined /><span>记忆管理</span></Space>}
+        queryResult={queryResult}
+        createMutation={createMutation}
+        updateMutation={updateMutation}
+        deleteMutation={deleteMutation}
+        createButtonText="新建记忆"
+        modalTitle={(editing) => (editing ? '编辑记忆' : '新建记忆')}
+        columns={buildColumns}
+        renderForm={renderForm}
+        createDefaults={{ type: 'structured_fact', confidence: 1.0 }}
+        toFormValues={(record) => ({
+          type: record.type,
+          content: record.content,
+          confidence: record.confidence,
+          user_id: record.user_id,
+          agent_name: record.agent_name,
+        })}
+        toCreatePayload={(values) => ({
+          type: values.type as string,
+          content: values.content as string,
+          confidence: (values.confidence as number) ?? 1.0,
+          user_id: values.user_id as string,
+          agent_name: values.agent_name as string | undefined,
+        })}
+        toUpdatePayload={(values, record) => ({
+          id: record.id,
+          data: {
+            content: values.content as string,
+            confidence: values.confidence as number,
+            type: values.type as string,
+          },
+        })}
+        extraToolbar={
+          <Button icon={<SearchOutlined />} onClick={() => setSearchVisible(true)}>
+            搜索记忆
+          </Button>
+        }
+        beforeTable={
+          <Space style={{ marginBottom: 16 }}>
+            <Input
+              placeholder="按用户 ID 筛选"
+              allowClear
+              style={{ width: 200 }}
+              onChange={(e) => setFilters((prev) => ({ ...prev, user_id: e.target.value || undefined }))}
+            />
+            <Select
+              placeholder="按类型筛选"
+              allowClear
+              style={{ width: 160 }}
+              options={TYPE_OPTIONS}
+              onChange={(v) => setFilters((prev) => ({ ...prev, type: v }))}
+            />
+            <Input
+              placeholder="按 Agent 筛选"
+              allowClear
+              style={{ width: 200 }}
+              onChange={(e) => setFilters((prev) => ({ ...prev, agent_name: e.target.value || undefined }))}
+            />
           </Space>
         }
-        extra={
-          <Space>
-            <Button icon={<SearchOutlined />} onClick={() => setSearchVisible(true)}>
-              搜索记忆
-            </Button>
-            <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
-              新建记忆
-            </Button>
-          </Space>
-        }
-      >
-        <Space style={{ marginBottom: 16 }}>
-          <Input
-            placeholder="按用户 ID 筛选"
-            allowClear
-            style={{ width: 200 }}
-            onChange={(e) => setFilters((prev) => ({ ...prev, user_id: e.target.value || undefined }))}
-          />
-          <Select
-            placeholder="按类型筛选"
-            allowClear
-            style={{ width: 160 }}
-            options={TYPE_OPTIONS}
-            onChange={(v) => setFilters((prev) => ({ ...prev, type: v }))}
-          />
-          <Input
-            placeholder="按 Agent 筛选"
-            allowClear
-            style={{ width: 200 }}
-            onChange={(e) => setFilters((prev) => ({ ...prev, agent_name: e.target.value || undefined }))}
-          />
-        </Space>
-        <ProTable<MemoryItem>
-          rowKey="id"
-          columns={columns}
-          dataSource={data}
-          loading={loading}
-          search={false}
-          options={false}
-          pagination={{
-            current: pagination.current,
-            pageSize: pagination.pageSize,
-            total,
-            onChange: (page, size) => setPagination({ current: page, pageSize: size }),
-            showSizeChanger: true,
-            showTotal: (t) => `共 ${t} 条`,
-          }}
-        />
-      </Card>
-
-      {/* Create / Edit Modal */}
-      <Modal
-        title={editingItem ? '编辑记忆' : '新建记忆'}
-        open={modalVisible}
-        onOk={handleSubmit}
-        onCancel={() => setModalVisible(false)}
-        confirmLoading={submitting}
-        destroyOnClose
-      >
-        <Form form={form} layout="vertical">
-          {!editingItem && (
-            <Form.Item name="user_id" label="用户 ID" rules={[{ required: true, message: '请输入用户 ID' }]}>
-              <Input placeholder="用户标识" />
-            </Form.Item>
-          )}
-          <Form.Item name="type" label="类型" rules={[{ required: true }]}>
-            <Select options={TYPE_OPTIONS} />
-          </Form.Item>
-          <Form.Item name="content" label="内容" rules={[{ required: true, message: '请输入记忆内容' }]}>
-            <TextArea rows={4} placeholder="记忆内容" maxLength={10000} showCount />
-          </Form.Item>
-          <Form.Item name="confidence" label="置信度">
-            <Slider min={0} max={1} step={0.01} marks={{ 0: '0', 0.5: '0.5', 1: '1' }} />
-          </Form.Item>
-          {!editingItem && (
-            <Form.Item name="agent_name" label="Agent 名称">
-              <Input placeholder="可选" />
-            </Form.Item>
-          )}
-        </Form>
-      </Modal>
+        pagination={pagination}
+        onPaginationChange={(current, pageSize) => setPagination({ current, pageSize })}
+        showRefresh
+      />
 
       {/* Search Modal */}
       <Modal
@@ -338,7 +281,7 @@ const MemoryPage: React.FC = () => {
             <InputNumber placeholder="数量" min={1} max={100} />
           </Form.Item>
           <Form.Item>
-            <Button type="primary" icon={<SearchOutlined />} loading={searching} onClick={handleSearch}>
+            <Button type="primary" icon={<SearchOutlined />} loading={searchMutation.isPending} onClick={handleSearch}>
               搜索
             </Button>
           </Form.Item>
@@ -346,7 +289,7 @@ const MemoryPage: React.FC = () => {
         {searchResults.length > 0 && (
           <ProTable<MemoryItem>
             rowKey="id"
-            columns={columns.filter((c) => c.dataIndex !== 'user_id')}
+            columns={searchResultColumns}
             dataSource={searchResults}
             search={false}
             options={false}

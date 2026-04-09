@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, waitFor } from '@testing-library/react';
+import { TestQueryWrapper } from '../test-utils';
 import { MemoryRouter } from 'react-router-dom';
 
 // Mock agentTemplateService — use inline vi.fn() to avoid hoisting
@@ -49,9 +50,11 @@ describe('TemplatePage', () => {
 
   it('renders page title', async () => {
     render(
-      <MemoryRouter>
-        <TemplatePage />
-      </MemoryRouter>,
+      <TestQueryWrapper>
+        <MemoryRouter>
+          <TemplatePage />
+        </MemoryRouter>
+      </TestQueryWrapper>,
     );
     await waitFor(() => {
       expect(document.body.textContent).toContain('模板');
@@ -60,9 +63,11 @@ describe('TemplatePage', () => {
 
   it('loads and displays template card', async () => {
     render(
-      <MemoryRouter>
-        <TemplatePage />
-      </MemoryRouter>,
+      <TestQueryWrapper>
+        <MemoryRouter>
+          <TemplatePage />
+        </MemoryRouter>
+      </TestQueryWrapper>,
     );
     await waitFor(() => {
       expect(document.body.textContent).toContain('代码审查助手');
@@ -71,9 +76,11 @@ describe('TemplatePage', () => {
 
   it('shows template description', async () => {
     render(
-      <MemoryRouter>
-        <TemplatePage />
-      </MemoryRouter>,
+      <TestQueryWrapper>
+        <MemoryRouter>
+          <TemplatePage />
+        </MemoryRouter>
+      </TestQueryWrapper>,
     );
     await waitFor(() => {
       expect(document.body.textContent).toContain('自动审查代码');
@@ -82,9 +89,11 @@ describe('TemplatePage', () => {
 
   it('shows category tag', async () => {
     render(
-      <MemoryRouter>
-        <TemplatePage />
-      </MemoryRouter>,
+      <TestQueryWrapper>
+        <MemoryRouter>
+          <TemplatePage />
+        </MemoryRouter>
+      </TestQueryWrapper>,
     );
     await waitFor(() => {
       expect(document.body.textContent).toContain('开发辅助');
@@ -93,9 +102,11 @@ describe('TemplatePage', () => {
 
   it('calls list API on mount', async () => {
     render(
-      <MemoryRouter>
-        <TemplatePage />
-      </MemoryRouter>,
+      <TestQueryWrapper>
+        <MemoryRouter>
+          <TemplatePage />
+        </MemoryRouter>
+      </TestQueryWrapper>,
     );
     await waitFor(() => {
       expect(vi.mocked(agentTemplateService.list)).toHaveBeenCalled();
@@ -105,9 +116,11 @@ describe('TemplatePage', () => {
   it('shows empty state when no templates', async () => {
     vi.mocked(agentTemplateService.list).mockResolvedValue({ data: [], total: 0 } as never);
     render(
-      <MemoryRouter>
-        <TemplatePage />
-      </MemoryRouter>,
+      <TestQueryWrapper>
+        <MemoryRouter>
+          <TemplatePage />
+        </MemoryRouter>
+      </TestQueryWrapper>,
     );
     await waitFor(() => {
       // Ant Design Empty component or custom empty text

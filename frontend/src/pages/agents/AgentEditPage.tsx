@@ -51,7 +51,7 @@ const AgentEditPage: React.FC = () => {
             .map((r: GuardrailRuleItem) => ({ label: `${r.name} (${r.mode})`, value: r.name }))
         );
       })
-      .catch(() => { /* ignore */ });
+      .catch(() => { message.error('加载护栏规则失败'); });
 
     // 加载可选的工具组列表
     toolGroupService.list()
@@ -62,7 +62,7 @@ const AgentEditPage: React.FC = () => {
             .map((g) => ({ label: `${g.name}${g.description ? ` — ${g.description}` : ''}`, value: g.name }))
         );
       })
-      .catch(() => { /* ignore */ });
+      .catch(() => { message.error('加载工具组失败'); });
 
     // 加载可选的 Agent 列表（用于 Agent-as-Tool 选择）
     agentService.list({ limit: 200 })
@@ -73,7 +73,7 @@ const AgentEditPage: React.FC = () => {
             .map((a: AgentConfig) => ({ label: `${a.name}${a.description ? ` — ${a.description}` : ''}`, value: a.name }))
         );
       })
-      .catch(() => { /* ignore */ });
+      .catch(() => { message.error('加载 Agent 列表失败'); });
 
     // 加载可选的 Provider 列表
     providerService.list({ is_enabled: true, limit: 100 })
@@ -82,8 +82,8 @@ const AgentEditPage: React.FC = () => {
           res.data.map((p) => ({ label: `${p.name} (${p.provider_type})`, value: p.name }))
         );
       })
-      .catch(() => { /* ignore */ });
-  }, [name]);
+      .catch(() => { message.error('加载 Provider 列表失败'); });
+  }, [name, message]);
 
   useEffect(() => {
     if (isEdit && name) {

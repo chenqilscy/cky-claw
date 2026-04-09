@@ -12,7 +12,7 @@ from app.core.config import settings
 from app.core.exceptions import register_exception_handlers
 from app.core.middleware import RequestIDMiddleware
 from app.core.audit_middleware import AuditLogMiddleware
-from app.core.otel import setup_otel, instrument_fastapi
+from app.core.otel import setup_otel, instrument_fastapi, get_metrics_app
 from app.api.agents import router as agents_router
 from app.api.agent_locales import router as agent_locales_router
 from app.api.alerts import router as alerts_router
@@ -157,6 +157,11 @@ def create_app() -> FastAPI:
 
     # OTel FastAPI 自动埋点（最后添加）
     instrument_fastapi(app)
+
+    # Prometheus metrics endpoint
+    metrics_app = get_metrics_app()
+    if metrics_app:
+        app.mount("/metrics", metrics_app)
 
     return app
 

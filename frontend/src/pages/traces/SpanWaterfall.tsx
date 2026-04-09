@@ -5,13 +5,7 @@ import type { SpanItem } from '../../services/traceService';
 
 const { Text } = Typography;
 
-const SPAN_TYPE_COLORS: Record<string, string> = {
-  agent: '#1677ff',
-  llm: '#52c41a',
-  tool: '#fa8c16',
-  handoff: '#722ed1',
-  guardrail: '#f5222d',
-};
+import { SPAN_TYPE_COLORS } from '../../constants/colors';
 
 interface WaterfallRow {
   span: SpanItem;

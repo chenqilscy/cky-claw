@@ -18,6 +18,8 @@ from ckyclaw_framework.tools.hosted_tools import (
     HOSTED_GROUP_IDS,
     _build_hosted_groups,
     _safe_resolve,
+    analyze_code,
+    check_security_patterns,
     database_query,
     execute_python,
     execute_shell,
@@ -26,6 +28,7 @@ from ckyclaw_framework.tools.hosted_tools import (
     file_read,
     file_write,
     http_request,
+    parse_diff,
     register_hosted_tools,
     web_search,
 )
@@ -62,33 +65,33 @@ def _make_async_client(mock_client: AsyncMock) -> MagicMock:
 class TestRegisterHostedTools:
     """测试内置工具组注册。"""
 
-    def test_build_hosted_groups_returns_five(self) -> None:
-        """构建 5 个内置工具组。"""
+    def test_build_hosted_groups_returns_six(self) -> None:
+        """构建 6 个内置工具组。"""
         groups = _build_hosted_groups()
-        assert len(groups) == 5
+        assert len(groups) == 6
 
     def test_build_hosted_groups_names(self) -> None:
         """工具组名称匹配预期。"""
         groups = _build_hosted_groups()
         names = {g.name for g in groups}
-        assert names == {"web-search", "code-executor", "file-ops", "http", "database"}
+        assert names == {"web-search", "code-executor", "file-ops", "http", "database", "code-review"}
 
     def test_register_to_registry(self) -> None:
         """注册到 ToolRegistry 后可查询。"""
         registry = ToolRegistry()
         groups = register_hosted_tools(registry)
-        assert len(groups) == 5
+        assert len(groups) == 6
         for name in HOSTED_GROUP_IDS:
             assert registry.get_group(name) is not None
 
     def test_register_default_registry(self) -> None:
         """不传 registry 使用默认全局注册表。"""
         groups = register_hosted_tools()
-        assert len(groups) == 5
+        assert len(groups) == 6
 
     def test_hosted_group_ids_constant(self) -> None:
-        """HOSTED_GROUP_IDS 包含所有 5 个组。"""
-        assert len(HOSTED_GROUP_IDS) == 5
+        """HOSTED_GROUP_IDS 包含所有 6 个组。"""
+        assert len(HOSTED_GROUP_IDS) == 6
         assert "web-search" in HOSTED_GROUP_IDS
         assert "database" in HOSTED_GROUP_IDS
 
@@ -720,3 +723,211 @@ class TestCodeExecutorTools:
              patch("ckyclaw_framework.sandbox.SandboxConfig"):
             result = await execute_shell.execute({"command": "true"})
         assert result == "(无输出)"
+
+
+# ---------------------------------------------------------------------------
+# code-review 工具组测试
+# ---------------------------------------------------------------------------
+
+
+class TestAnalyzeCode:
+    """analyze_code 工具测试。"""
+
+    @pytest.mark.asyncio
+    async def test_python_bare_except(self) -> None:
+        """检测 Python 裸 except。"""
+        code = "try:\n    pass\nexcept:\n    pass"
+        raw = await analyze_code.execute({"code": code, "language": "python"})
+        result = json.loads(raw)
+        rules = [i["rule"] for i in result["issues"]]
+        assert "bare-except" in rules
+
+    @pytest.mark.asyncio
+    async def test_python_eval_detection(self) -> None:
+        """检测 eval 使用。"""
+        code = "result = eval(user_input)"
+        raw = await analyze_code.execute({"code": code, "language": "python"})
+        result = json.loads(raw)
+        rules = [i["rule"] for i in result["issues"]]
+        assert "security-eval" in rules
+
+    @pytest.mark.asyncio
+    async def test_python_hardcoded_secret(self) -> None:
+        """检测硬编码密钥。"""
+        code = 'password = "super_secret_123"'
+        raw = await analyze_code.execute({"code": code, "language": "python"})
+        result = json.loads(raw)
+        rules = [i["rule"] for i in result["issues"]]
+        assert "hardcoded-secret" in rules
+
+    @pytest.mark.asyncio
+    async def test_python_mutable_default(self) -> None:
+        """检测可变默认参数。"""
+        code = "def foo(items=[]):\n    items.append(1)"
+        raw = await analyze_code.execute({"code": code, "language": "python"})
+        result = json.loads(raw)
+        rules = [i["rule"] for i in result["issues"]]
+        assert "mutable-default-arg" in rules
+
+    @pytest.mark.asyncio
+    async def test_javascript_eval_detection(self) -> None:
+        """检测 JavaScript eval。"""
+        code = "const result = eval(userInput);"
+        raw = await analyze_code.execute({"code": code, "language": "javascript"})
+        result = json.loads(raw)
+        rules = [i["rule"] for i in result["issues"]]
+        assert "no-eval" in rules
+
+    @pytest.mark.asyncio
+    async def test_javascript_innerhtml(self) -> None:
+        """检测 innerHTML 使用。"""
+        code = "el.innerHTML = userContent;"
+        raw = await analyze_code.execute({"code": code, "language": "javascript"})
+        result = json.loads(raw)
+        rules = [i["rule"] for i in result["issues"]]
+        assert "no-inner-html" in rules
+
+    @pytest.mark.asyncio
+    async def test_javascript_var_usage(self) -> None:
+        """检测 var 声明。"""
+        code = "var count = 0;"
+        raw = await analyze_code.execute({"code": code, "language": "javascript"})
+        result = json.loads(raw)
+        rules = [i["rule"] for i in result["issues"]]
+        assert "no-var" in rules
+
+    @pytest.mark.asyncio
+    async def test_line_too_long(self) -> None:
+        """检测超长行。"""
+        code = "x = " + "a" * 120
+        raw = await analyze_code.execute({"code": code})
+        result = json.loads(raw)
+        rules = [i["rule"] for i in result["issues"]]
+        assert "line-too-long" in rules
+
+    @pytest.mark.asyncio
+    async def test_code_metrics(self) -> None:
+        """检查代码指标输出。"""
+        code = "def foo():\n    pass\n\ndef bar():\n    pass\n"
+        raw = await analyze_code.execute({"code": code, "language": "python"})
+        result = json.loads(raw)
+        assert result["function_count"] == 2
+        assert result["total_lines"] == 6
+
+    @pytest.mark.asyncio
+    async def test_clean_code_no_issues(self) -> None:
+        """干净代码无严重问题。"""
+        code = "def greet(name: str) -> str:\n    return f'Hello, {name}'"
+        raw = await analyze_code.execute({"code": code, "language": "python"})
+        result = json.loads(raw)
+        errors = [i for i in result["issues"] if i["severity"] == "error"]
+        assert len(errors) == 0
+
+
+class TestParseDiff:
+    """parse_diff 工具测试。"""
+
+    @pytest.mark.asyncio
+    async def test_simple_diff(self) -> None:
+        """解析简单的 unified diff。"""
+        diff = (
+            "--- a/hello.py\n"
+            "+++ b/hello.py\n"
+            "@@ -1,3 +1,4 @@\n"
+            " import os\n"
+            "-print('old')\n"
+            "+print('new')\n"
+            "+print('extra')\n"
+            " # end\n"
+        )
+        raw = await parse_diff.execute({"diff_text": diff})
+        result = json.loads(raw)
+        assert result["files_changed"] == 1
+        assert result["total_additions"] == 2
+        assert result["total_deletions"] == 1
+        assert result["files"][0]["file"] == "hello.py"
+
+    @pytest.mark.asyncio
+    async def test_multi_file_diff(self) -> None:
+        """解析多文件 diff。"""
+        diff = (
+            "--- a/foo.py\n+++ b/foo.py\n@@ -1,1 +1,2 @@\n x = 1\n+y = 2\n"
+            "--- a/bar.py\n+++ b/bar.py\n@@ -1,2 +1,1 @@\n-old_line\n new_line\n"
+        )
+        raw = await parse_diff.execute({"diff_text": diff})
+        result = json.loads(raw)
+        assert result["files_changed"] == 2
+
+    @pytest.mark.asyncio
+    async def test_empty_diff(self) -> None:
+        """空 diff 返回零变更。"""
+        raw = await parse_diff.execute({"diff_text": ""})
+        result = json.loads(raw)
+        assert result["files_changed"] == 0
+
+
+class TestCheckSecurityPatterns:
+    """check_security_patterns 工具测试。"""
+
+    @pytest.mark.asyncio
+    async def test_python_eval(self) -> None:
+        """检测 Python eval 漏洞。"""
+        code = "result = eval(user_input)"
+        raw = await check_security_patterns.execute({"code": code, "language": "python"})
+        result = json.loads(raw)
+        assert result["vulnerabilities_found"] > 0
+        cwes = [v["cwe"] for v in result["vulnerabilities"]]
+        assert "CWE-94" in cwes
+
+    @pytest.mark.asyncio
+    async def test_python_pickle(self) -> None:
+        """检测 pickle 反序列化漏洞。"""
+        code = "data = pickle.loads(user_bytes)"
+        raw = await check_security_patterns.execute({"code": code, "language": "python"})
+        result = json.loads(raw)
+        cwes = [v["cwe"] for v in result["vulnerabilities"]]
+        assert "CWE-502" in cwes
+
+    @pytest.mark.asyncio
+    async def test_python_os_system(self) -> None:
+        """检测 os.system 命令注入。"""
+        code = "os.system(f'rm -rf {user_dir}')"
+        raw = await check_security_patterns.execute({"code": code, "language": "python"})
+        result = json.loads(raw)
+        cwes = [v["cwe"] for v in result["vulnerabilities"]]
+        assert "CWE-78" in cwes
+
+    @pytest.mark.asyncio
+    async def test_hardcoded_credentials(self) -> None:
+        """检测硬编码凭据。"""
+        code = 'api_key = "sk-1234567890abcdef"'
+        raw = await check_security_patterns.execute({"code": code, "language": "python"})
+        result = json.loads(raw)
+        cwes = [v["cwe"] for v in result["vulnerabilities"]]
+        assert "CWE-798" in cwes
+
+    @pytest.mark.asyncio
+    async def test_javascript_xss(self) -> None:
+        """检测 JavaScript XSS 漏洞。"""
+        code = "document.getElementById('output').innerHTML = userInput;"
+        raw = await check_security_patterns.execute({"code": code, "language": "javascript"})
+        result = json.loads(raw)
+        cwes = [v["cwe"] for v in result["vulnerabilities"]]
+        assert "CWE-79" in cwes
+
+    @pytest.mark.asyncio
+    async def test_javascript_eval(self) -> None:
+        """检测 JavaScript eval 漏洞。"""
+        code = "eval(req.body.code)"
+        raw = await check_security_patterns.execute({"code": code, "language": "javascript"})
+        result = json.loads(raw)
+        cwes = [v["cwe"] for v in result["vulnerabilities"]]
+        assert "CWE-94" in cwes
+
+    @pytest.mark.asyncio
+    async def test_clean_code(self) -> None:
+        """安全代码无漏洞。"""
+        code = "def add(a: int, b: int) -> int:\n    return a + b"
+        raw = await check_security_patterns.execute({"code": code, "language": "python"})
+        result = json.loads(raw)
+        assert result["vulnerabilities_found"] == 0

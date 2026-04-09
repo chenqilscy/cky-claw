@@ -1,18 +1,27 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useState, useCallback } from 'react';
 import {
-  Card, Button, Space, Table, Tag, Modal, Form, Input, InputNumber,
-  Select, message, Popconfirm, Typography, Tooltip, Progress,
+  Button, Space, Tag, Input, InputNumber,
+  Select, App, Typography, Tooltip, Progress, Form, Popconfirm,
 } from 'antd';
 import {
-  PlusOutlined, ReloadOutlined, CheckOutlined, CloseOutlined,
+  CheckOutlined, CloseOutlined,
   DeleteOutlined, RocketOutlined, RollbackOutlined,
 } from '@ant-design/icons';
-import type { ColumnsType } from 'antd/es/table';
+import type { ProColumns } from '@ant-design/pro-components';
+import type { FormInstance } from 'antd';
 import type {
   EvolutionProposal,
   EvolutionProposalCreate,
+  EvolutionProposalUpdate,
 } from '../../services/evolutionService';
-import { evolutionService } from '../../services/evolutionService';
+import {
+  useEvolutionList,
+  useCreateEvolution,
+  useUpdateEvolution,
+  useDeleteEvolution,
+} from '../../hooks/useEvolutionQueries';
+import { CrudTable } from '../../components';
+import type { CrudTableActions } from '../../components';
 
 const { Text } = Typography;
 
@@ -48,200 +57,180 @@ const statusColor: Record<string, string> = {
   rolled_back: 'warning',
 };
 
+/* ---- 列定义 ---- */
+
+const buildColumns = (
+  actions: CrudTableActions<EvolutionProposal>,
+  onStatusChange: (id: string, status: string) => void,
+): ProColumns<EvolutionProposal>[] => [
+  {
+    title: 'Agent',
+    dataIndex: 'agent_name',
+    width: 120,
+  },
+  {
+    title: '类型',
+    dataIndex: 'proposal_type',
+    width: 100,
+    render: (_, r) => <Tag color={typeColor[r.proposal_type]}>{typeLabel[r.proposal_type] || r.proposal_type}</Tag>,
+  },
+  {
+    title: '状态',
+    dataIndex: 'status',
+    width: 100,
+    render: (_, r) => <Tag color={statusColor[r.status]}>{statusLabel[r.status] || r.status}</Tag>,
+  },
+  {
+    title: '置信度',
+    dataIndex: 'confidence_score',
+    width: 120,
+    render: (_, r) => <Progress percent={Math.round(r.confidence_score * 100)} size="small" />,
+  },
+  {
+    title: '触发原因',
+    dataIndex: 'trigger_reason',
+    ellipsis: true,
+    render: (_, r) => <Tooltip title={r.trigger_reason}><Text>{r.trigger_reason}</Text></Tooltip>,
+  },
+  {
+    title: '评分变化',
+    width: 120,
+    render: (_, r) => {
+      if (r.eval_before !== null && r.eval_after !== null) {
+        const delta = r.eval_after - r.eval_before;
+        const color = delta >= 0 ? '#52c41a' : '#ff4d4f';
+        return <Text style={{ color }}>{r.eval_before.toFixed(2)} → {r.eval_after.toFixed(2)}</Text>;
+      }
+      return <Text type="secondary">—</Text>;
+    },
+  },
+  {
+    title: '创建时间',
+    dataIndex: 'created_at',
+    width: 180,
+    render: (_, r) => new Date(r.created_at).toLocaleString('zh-CN'),
+  },
+  {
+    title: '操作',
+    width: 180,
+    render: (_, r) => (
+      <Space size="small">
+        {r.status === 'pending' && (
+          <>
+            <Tooltip title="批准">
+              <Button type="link" size="small" icon={<CheckOutlined />} onClick={() => onStatusChange(r.id, 'approved')} />
+            </Tooltip>
+            <Tooltip title="拒绝">
+              <Button type="link" size="small" danger icon={<CloseOutlined />} onClick={() => onStatusChange(r.id, 'rejected')} />
+            </Tooltip>
+          </>
+        )}
+        {r.status === 'approved' && (
+          <Tooltip title="应用">
+            <Button type="link" size="small" icon={<RocketOutlined />} onClick={() => onStatusChange(r.id, 'applied')} />
+          </Tooltip>
+        )}
+        {r.status === 'applied' && (
+          <Tooltip title="回滚">
+            <Button type="link" size="small" danger icon={<RollbackOutlined />} onClick={() => onStatusChange(r.id, 'rolled_back')} />
+          </Tooltip>
+        )}
+        <Popconfirm title="确认删除？" onConfirm={() => actions.handleDelete(r.id)}>
+          <Button type="link" size="small" danger icon={<DeleteOutlined />} />
+        </Popconfirm>
+      </Space>
+    ),
+  },
+];
+
+/* ---- 表单 ---- */
+
+const renderForm = (_form: FormInstance, _editing: EvolutionProposal | null) => (
+  <>
+    <Form.Item name="agent_name" label="Agent 名称" rules={[{ required: true }]}>
+      <Input />
+    </Form.Item>
+    <Form.Item name="proposal_type" label="建议类型" rules={[{ required: true }]}>
+      <Select options={Object.entries(typeLabel).map(([k, v]) => ({ label: v, value: k }))} />
+    </Form.Item>
+    <Form.Item name="trigger_reason" label="触发原因">
+      <Input.TextArea rows={3} />
+    </Form.Item>
+    <Form.Item name="confidence_score" label="置信度" initialValue={0.5}>
+      <InputNumber min={0} max={1} step={0.1} />
+    </Form.Item>
+  </>
+);
+
+/* ---- 页面组件 ---- */
+
 const EvolutionPage: React.FC = () => {
-  const [proposals, setProposals] = useState<EvolutionProposal[]>([]);
-  const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
+  const { message } = App.useApp();
+  const [pagination, setPagination] = useState({ current: 1, pageSize: 20 });
   const [filterAgent, setFilterAgent] = useState('');
   const [filterType, setFilterType] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
-  const [modalOpen, setModalOpen] = useState(false);
-  const [form] = Form.useForm();
 
-  const fetchData = useCallback(async () => {
-    setLoading(true);
+  const queryResult = useEvolutionList({
+    agent_name: filterAgent || undefined,
+    proposal_type: filterType || undefined,
+    status: filterStatus || undefined,
+    limit: pagination.pageSize,
+    offset: (pagination.current - 1) * pagination.pageSize,
+  });
+  const createMutation = useCreateEvolution();
+  const updateMutation = useUpdateEvolution();
+  const deleteMutation = useDeleteEvolution();
+
+  const handleStatusChange = useCallback(async (id: string, status: string) => {
     try {
-      const res = await evolutionService.list({
-        agent_name: filterAgent || undefined,
-        proposal_type: filterType || undefined,
-        status: filterStatus || undefined,
-        limit: pageSize,
-        offset: (page - 1) * pageSize,
-      });
-      setProposals(res.data);
-      setTotal(res.total);
-    } catch {
-      message.error('加载进化建议失败');
-    } finally {
-      setLoading(false);
-    }
-  }, [page, pageSize, filterAgent, filterType, filterStatus]);
-
-  useEffect(() => { fetchData(); }, [fetchData]);
-
-  const handleApprove = async (id: string) => {
-    try {
-      await evolutionService.update(id, { status: 'approved' });
-      message.success('已批准');
-      fetchData();
+      await updateMutation.mutateAsync({ id, data: { status } });
+      message.success(statusLabel[status] ?? status);
     } catch {
       message.error('操作失败');
     }
-  };
-
-  const handleReject = async (id: string) => {
-    try {
-      await evolutionService.update(id, { status: 'rejected' });
-      message.success('已拒绝');
-      fetchData();
-    } catch {
-      message.error('操作失败');
-    }
-  };
-
-  const handleApply = async (id: string) => {
-    try {
-      await evolutionService.update(id, { status: 'applied' });
-      message.success('已应用');
-      fetchData();
-    } catch {
-      message.error('操作失败');
-    }
-  };
-
-  const handleRollback = async (id: string) => {
-    try {
-      await evolutionService.update(id, { status: 'rolled_back' });
-      message.success('已回滚');
-      fetchData();
-    } catch {
-      message.error('操作失败');
-    }
-  };
-
-  const handleDelete = async (id: string) => {
-    try {
-      await evolutionService.delete(id);
-      message.success('已删除');
-      fetchData();
-    } catch {
-      message.error('删除失败');
-    }
-  };
-
-  const handleCreate = async (values: EvolutionProposalCreate) => {
-    try {
-      await evolutionService.create(values);
-      message.success('建议已创建');
-      setModalOpen(false);
-      form.resetFields();
-      fetchData();
-    } catch {
-      message.error('创建失败');
-    }
-  };
-
-  const columns: ColumnsType<EvolutionProposal> = [
-    {
-      title: 'Agent',
-      dataIndex: 'agent_name',
-      width: 120,
-    },
-    {
-      title: '类型',
-      dataIndex: 'proposal_type',
-      width: 100,
-      render: (v: string) => <Tag color={typeColor[v]}>{typeLabel[v] || v}</Tag>,
-    },
-    {
-      title: '状态',
-      dataIndex: 'status',
-      width: 100,
-      render: (v: string) => <Tag color={statusColor[v]}>{statusLabel[v] || v}</Tag>,
-    },
-    {
-      title: '置信度',
-      dataIndex: 'confidence_score',
-      width: 120,
-      render: (v: number) => <Progress percent={Math.round(v * 100)} size="small" />,
-    },
-    {
-      title: '触发原因',
-      dataIndex: 'trigger_reason',
-      ellipsis: true,
-      render: (v: string) => <Tooltip title={v}><Text>{v}</Text></Tooltip>,
-    },
-    {
-      title: '评分变化',
-      width: 120,
-      render: (_: unknown, r: EvolutionProposal) => {
-        if (r.eval_before !== null && r.eval_after !== null) {
-          const delta = r.eval_after - r.eval_before;
-          const color = delta >= 0 ? '#52c41a' : '#ff4d4f';
-          return <Text style={{ color }}>{r.eval_before.toFixed(2)} → {r.eval_after.toFixed(2)}</Text>;
-        }
-        return <Text type="secondary">—</Text>;
-      },
-    },
-    {
-      title: '创建时间',
-      dataIndex: 'created_at',
-      width: 180,
-      render: (v: string) => new Date(v).toLocaleString('zh-CN'),
-    },
-    {
-      title: '操作',
-      width: 180,
-      render: (_: unknown, r: EvolutionProposal) => (
-        <Space size="small">
-          {r.status === 'pending' && (
-            <>
-              <Tooltip title="批准">
-                <Button type="link" size="small" icon={<CheckOutlined />} onClick={() => handleApprove(r.id)} />
-              </Tooltip>
-              <Tooltip title="拒绝">
-                <Button type="link" size="small" danger icon={<CloseOutlined />} onClick={() => handleReject(r.id)} />
-              </Tooltip>
-            </>
-          )}
-          {r.status === 'approved' && (
-            <Tooltip title="应用">
-              <Button type="link" size="small" icon={<RocketOutlined />} onClick={() => handleApply(r.id)} />
-            </Tooltip>
-          )}
-          {r.status === 'applied' && (
-            <Tooltip title="回滚">
-              <Button type="link" size="small" danger icon={<RollbackOutlined />} onClick={() => handleRollback(r.id)} />
-            </Tooltip>
-          )}
-          <Popconfirm title="确认删除？" onConfirm={() => handleDelete(r.id)}>
-            <Button type="link" size="small" danger icon={<DeleteOutlined />} />
-          </Popconfirm>
-        </Space>
-      ),
-    },
-  ];
+  }, [updateMutation, message]);
 
   return (
-    <Card
+    <CrudTable<
+      EvolutionProposal,
+      EvolutionProposalCreate,
+      { id: string; data: EvolutionProposalUpdate }
+    >
       title="进化建议"
-      extra={
+      queryResult={queryResult}
+      createMutation={createMutation}
+      updateMutation={updateMutation}
+      deleteMutation={deleteMutation}
+      createButtonText="新建建议"
+      modalTitle={(editing) => (editing ? '编辑建议' : '新建进化建议')}
+      columns={(actions) => buildColumns(actions, handleStatusChange)}
+      renderForm={renderForm}
+      toCreatePayload={(values) => values as unknown as EvolutionProposalCreate}
+      toUpdatePayload={(values, record) => ({
+        id: record.id,
+        data: {
+          status: values.status as string | undefined,
+          eval_before: values.eval_before as number | undefined,
+          eval_after: values.eval_after as number | undefined,
+          metadata: values.metadata as Record<string, unknown> | undefined,
+        },
+      })}
+      extraToolbar={
         <Space>
           <Input
             placeholder="Agent 名称"
             allowClear
             style={{ width: 140 }}
             value={filterAgent}
-            onChange={(e) => { setFilterAgent(e.target.value); setPage(1); }}
+            onChange={(e) => { setFilterAgent(e.target.value); setPagination(p => ({ ...p, current: 1 })); }}
           />
           <Select
             placeholder="类型"
             allowClear
             style={{ width: 120 }}
             value={filterType || undefined}
-            onChange={(v) => { setFilterType(v || ''); setPage(1); }}
+            onChange={(v) => { setFilterType(v || ''); setPagination(p => ({ ...p, current: 1 })); }}
             options={Object.entries(typeLabel).map(([k, v]) => ({ label: v, value: k }))}
           />
           <Select
@@ -249,52 +238,15 @@ const EvolutionPage: React.FC = () => {
             allowClear
             style={{ width: 110 }}
             value={filterStatus || undefined}
-            onChange={(v) => { setFilterStatus(v || ''); setPage(1); }}
+            onChange={(v) => { setFilterStatus(v || ''); setPagination(p => ({ ...p, current: 1 })); }}
             options={Object.entries(statusLabel).map(([k, v]) => ({ label: v, value: k }))}
           />
-          <Button icon={<ReloadOutlined />} onClick={fetchData}>刷新</Button>
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => setModalOpen(true)}>
-            新建建议
-          </Button>
         </Space>
       }
-    >
-      <Table
-        rowKey="id"
-        columns={columns}
-        dataSource={proposals}
-        loading={loading}
-        pagination={{
-          current: page,
-          pageSize,
-          total,
-          showSizeChanger: true,
-          onChange: (p, s) => { setPage(p); setPageSize(s); },
-        }}
-      />
-
-      <Modal
-        title="新建进化建议"
-        open={modalOpen}
-        onCancel={() => setModalOpen(false)}
-        onOk={() => form.submit()}
-      >
-        <Form form={form} layout="vertical" onFinish={handleCreate}>
-          <Form.Item name="agent_name" label="Agent 名称" rules={[{ required: true }]}>
-            <Input />
-          </Form.Item>
-          <Form.Item name="proposal_type" label="建议类型" rules={[{ required: true }]}>
-            <Select options={Object.entries(typeLabel).map(([k, v]) => ({ label: v, value: k }))} />
-          </Form.Item>
-          <Form.Item name="trigger_reason" label="触发原因">
-            <Input.TextArea rows={3} />
-          </Form.Item>
-          <Form.Item name="confidence_score" label="置信度" initialValue={0.5}>
-            <InputNumber min={0} max={1} step={0.1} />
-          </Form.Item>
-        </Form>
-      </Modal>
-    </Card>
+      pagination={pagination}
+      onPaginationChange={(current, pageSize) => setPagination({ current, pageSize })}
+      showRefresh
+    />
   );
 };
 

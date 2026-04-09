@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react';
-import { Button, Input, Space, Spin, Typography, App } from 'antd';
+import { Button, Input, Space, Spin, Typography, App, theme } from 'antd';
 import { SendOutlined } from '@ant-design/icons';
 import { chatService } from '../../services/chatService';
 import type { ChatMessage } from './ChatPage';
@@ -20,6 +20,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   onSessionCreated,
 }) => {
   const { message } = App.useApp();
+  const { token } = theme.useToken();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
@@ -160,8 +161,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       {/* 顶栏 */}
       <div style={{
         padding: '12px 16px',
-        borderBottom: '1px solid #f0f0f0',
-        background: '#fff',
+        borderBottom: `1px solid ${token.colorBorderSecondary}`,
+        background: token.colorBgContainer,
       }}>
         <Text strong>{agentName || '请选择 Agent'}</Text>
       </div>
@@ -171,10 +172,10 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         flex: 1,
         overflow: 'auto',
         padding: '16px',
-        background: '#fafafa',
+        background: token.colorBgLayout,
       }}>
         {messages.length === 0 && (
-          <div style={{ textAlign: 'center', marginTop: 80, color: '#999' }}>
+          <div style={{ textAlign: 'center', marginTop: 80, color: token.colorTextDisabled }}>
             {agentName ? '发送消息开始对话' : '请从左侧选择 Agent 并创建对话'}
           </div>
         )}
@@ -192,8 +193,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
               maxWidth: '70%',
               padding: '10px 14px',
               borderRadius: 12,
-              background: msg.role === 'user' ? '#1677ff' : '#fff',
-              color: msg.role === 'user' ? '#fff' : '#000',
+              background: msg.role === 'user' ? token.colorPrimary : token.colorBgContainer,
+              color: msg.role === 'user' ? token.colorTextLightSolid : token.colorText,
               boxShadow: '0 1px 2px rgba(0,0,0,0.06)',
               whiteSpace: msg.role === 'user' ? 'pre-wrap' : undefined,
               wordBreak: 'break-word',
@@ -220,8 +221,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       {/* 输入区 */}
       <div style={{
         padding: '12px 16px',
-        borderTop: '1px solid #f0f0f0',
-        background: '#fff',
+        borderTop: `1px solid ${token.colorBorderSecondary}`,
+        background: token.colorBgContainer,
       }}>
         <Space.Compact style={{ width: '100%' }}>
           <Input.TextArea

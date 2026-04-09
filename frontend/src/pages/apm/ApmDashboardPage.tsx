@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import {
   Card,
   Col,
@@ -6,12 +6,13 @@ import {
   Statistic,
   Table,
   Spin,
-  message,
+  App,
   Select,
   Typography,
   Button,
   Tag,
   Space,
+  theme,
 } from 'antd';
 import {
   DashboardOutlined,
@@ -21,67 +22,43 @@ import {
   ClockCircleOutlined,
   WarningOutlined,
   PlusOutlined,
+  LinkOutlined,
+  CheckCircleOutlined,
+  CloseCircleOutlined,
 } from '@ant-design/icons';
 import ReactECharts from 'echarts-for-react';
 import type {
-  ApmDashboardResponse,
   AgentRankItem,
   ModelUsageItem,
   ToolUsageItem,
 } from '../../services/apmService';
-import { apmService } from '../../services/apmService';
-import { alertService, SLOW_QUERY_PRESETS, type AlertRule } from '../../services/alertService';
+import { SLOW_QUERY_PRESETS, type AlertRule } from '../../services/alertService';
+import { useApmDashboard } from '../../hooks/useApmQueries';
+import { useAlertRuleList, useCreateAlertRule } from '../../hooks/useAlertQueries';
+import { useSystemInfo } from '../../hooks/useSystemQueries';
 
 const { Title } = Typography;
 
 export default function ApmDashboardPage() {
-  const [data, setData] = useState<ApmDashboardResponse | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
+  const { message } = App.useApp();
+  const { token: themeToken } = theme.useToken();
   const [days, setDays] = useState(30);
-  const [alertRules, setAlertRules] = useState<AlertRule[]>([]);
-  const [alertLoading, setAlertLoading] = useState(false);
 
-  useEffect(() => {
-    setLoading(true);
-    setError(false);
-    apmService
-      .dashboard(days)
-      .then(setData)
-      .catch(() => {
-        message.error('加载 APM 数据失败');
-        setError(true);
-      })
-      .finally(() => setLoading(false));
-  }, [days]);
-
-  /** 加载告警规则 */
-  const loadAlertRules = async () => {
-    try {
-      const res = await alertService.listRules({ limit: 100 });
-      setAlertRules(res.data);
-    } catch {
-      // 非关键，静默
-    }
-  };
-
-  useEffect(() => {
-    loadAlertRules();
-  }, []);
+  const { data, isLoading: loading, isError: error } = useApmDashboard(days);
+  const { data: alertListData } = useAlertRuleList({ limit: 100 });
+  const alertRules = alertListData?.data ?? [];
+  const createAlertMutation = useCreateAlertRule();
+  const { data: sysInfo } = useSystemInfo();
 
   /** 一键创建预设告警规则 */
   const createPresetAlert = async (presetIdx: number) => {
-    setAlertLoading(true);
     try {
       const preset = SLOW_QUERY_PRESETS[presetIdx];
       if (!preset) return;
-      await alertService.createRule(preset);
+      await createAlertMutation.mutateAsync(preset);
       message.success(`告警规则「${preset.name}」创建成功`);
-      await loadAlertRules();
     } catch {
       message.error('创建告警规则失败');
-    } finally {
-      setAlertLoading(false);
     }
   };
 
@@ -158,7 +135,7 @@ export default function ApmDashboardPage() {
     { title: 'Token', dataIndex: 'total_tokens', key: 'total_tokens', render: (v: number) => v.toLocaleString() },
     { title: '成本 ($)', dataIndex: 'total_cost', key: 'total_cost', render: (v: number) => `$${v.toFixed(4)}` },
     { title: '平均耗时 (ms)', dataIndex: 'avg_duration_ms', key: 'avg_duration_ms', render: (v: number) => v.toFixed(1) },
-    { title: '错误数', dataIndex: 'error_count', key: 'error_count', render: (v: number) => v > 0 ? <span style={{ color: '#f5222d' }}>{v}</span> : 0 },
+    { title: '错误数', dataIndex: 'error_count', key: 'error_count', render: (v: number) => v > 0 ? <span style={{ color: themeToken.colorError }}>{v}</span> : 0 },
   ];
 
   const modelColumns = [
@@ -234,7 +211,7 @@ export default function ApmDashboardPage() {
               prefix={<WarningOutlined />}
               precision={2}
               suffix="%"
-              valueStyle={overview.error_rate > 5 ? { color: '#f5222d' } : undefined}
+              valueStyle={overview.error_rate > 5 ? { color: themeToken.colorError } : undefined}
             />
           </Card>
         </Col>
@@ -307,7 +284,7 @@ export default function ApmDashboardPage() {
                     key={idx}
                     size="small"
                     icon={<PlusOutlined />}
-                    loading={alertLoading}
+                    loading={createAlertMutation.isPending}
                     onClick={() => createPresetAlert(idx)}
                   >
                     {preset.name}
@@ -359,6 +336,86 @@ export default function ApmDashboardPage() {
           </Card>
         </Col>
       </Row>
+
+      {/* 可观测性集成 — Jaeger / Prometheus 外链 */}
+      {sysInfo && (
+        <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
+          <Col span={24}>
+            <Card
+              title={<Space><LinkOutlined /> 可观测性集成</Space>}
+            >
+              <Row gutter={[16, 16]}>
+                <Col xs={24} sm={12} md={8}>
+                  <Card size="small">
+                    <Space direction="vertical" style={{ width: '100%' }}>
+                      <Space>
+                        <Typography.Text strong>OpenTelemetry</Typography.Text>
+                        {sysInfo.otel_enabled ? (
+                          <Tag icon={<CheckCircleOutlined />} color="success">已启用</Tag>
+                        ) : (
+                          <Tag icon={<CloseCircleOutlined />} color="default">未启用</Tag>
+                        )}
+                      </Space>
+                      <Typography.Text type="secondary">
+                        服务名: {sysInfo.otel_service_name}
+                      </Typography.Text>
+                      {sysInfo.otel_enabled && (
+                        <Typography.Text type="secondary">
+                          Exporter: {sysInfo.otel_exporter_endpoint}
+                        </Typography.Text>
+                      )}
+                    </Space>
+                  </Card>
+                </Col>
+                {sysInfo.jaeger_ui_url && (
+                  <Col xs={24} sm={12} md={8}>
+                    <Card size="small">
+                      <Space direction="vertical" style={{ width: '100%' }}>
+                        <Typography.Text strong>Jaeger 链路追踪</Typography.Text>
+                        <Button
+                          type="primary"
+                          ghost
+                          icon={<LinkOutlined />}
+                          href={sysInfo.jaeger_ui_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          打开 Jaeger UI
+                        </Button>
+                        <Typography.Text type="secondary">
+                          查看分布式链路追踪详情、服务拓扑
+                        </Typography.Text>
+                      </Space>
+                    </Card>
+                  </Col>
+                )}
+                {sysInfo.prometheus_ui_url && (
+                  <Col xs={24} sm={12} md={8}>
+                    <Card size="small">
+                      <Space direction="vertical" style={{ width: '100%' }}>
+                        <Typography.Text strong>Prometheus 指标</Typography.Text>
+                        <Button
+                          type="primary"
+                          ghost
+                          icon={<LinkOutlined />}
+                          href={sysInfo.prometheus_ui_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          打开 Prometheus UI
+                        </Button>
+                        <Typography.Text type="secondary">
+                          查看系统指标、告警规则、PromQL 查询
+                        </Typography.Text>
+                      </Space>
+                    </Card>
+                  </Col>
+                )}
+              </Row>
+            </Card>
+          </Col>
+        </Row>
+      )}
     </div>
   );
 }

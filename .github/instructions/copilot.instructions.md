@@ -4,7 +4,7 @@
 
 - 助记标识：`EOT=ASK_NEXT_TASK`。
 - 最高优先级规则：只要代理判断当前任务已完成，就不得自主结束，必须先发起 AskQuestions。
-- 每次 AskQuestions 都必须包含这个完全一致的固定选项：`必须按照文档执行 #file:copilot.instructions.md `。
+- 每次 AskQuestions 都必须包含这个完全一致的固定选项：`必须按照文档执行 #file:copilot.instructions.md`。
 - 若收口前发现本轮还没有 AskQuestions，或固定选项缺失，代理必须立即补发询问，禁止直接 final。
 
 ## Fixed Ask Template

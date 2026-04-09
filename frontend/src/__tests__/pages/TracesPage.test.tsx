@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, act } from '@testing-library/react';
+import { TestQueryWrapper } from '../test-utils';
 
 /* ---------- mock traceService ---------- */
 const mockList = vi.fn();
@@ -62,7 +63,7 @@ describe('TracesPage', () => {
   it('渲染页面标题', async () => {
     let container!: HTMLElement;
     await act(async () => {
-      ({ container } = render(<TracesPage />));
+      ({ container } = render(<TestQueryWrapper><TracesPage /></TestQueryWrapper>));
     });
     const text = container.textContent ?? '';
     expect(text).toContain('Trace');
@@ -71,7 +72,7 @@ describe('TracesPage', () => {
   it('渲染统计卡片', async () => {
     let container!: HTMLElement;
     await act(async () => {
-      ({ container } = render(<TracesPage />));
+      ({ container } = render(<TestQueryWrapper><TracesPage /></TestQueryWrapper>));
     });
     const text = container.textContent ?? '';
     // 统计卡片包含 "总 Trace" 或 "平均耗时" 等
@@ -80,7 +81,7 @@ describe('TracesPage', () => {
 
   it('调用列表和统计接口', async () => {
     await act(async () => {
-      render(<TracesPage />);
+      render(<TestQueryWrapper><TracesPage /></TestQueryWrapper>);
     });
     expect(mockList).toHaveBeenCalled();
     expect(mockStats).toHaveBeenCalled();
@@ -91,7 +92,7 @@ describe('TracesPage', () => {
     mockStats.mockRejectedValueOnce(new Error('fail'));
     let container!: HTMLElement;
     await act(async () => {
-      ({ container } = render(<TracesPage />));
+      ({ container } = render(<TestQueryWrapper><TracesPage /></TestQueryWrapper>));
     });
     expect(container).toBeTruthy();
   });

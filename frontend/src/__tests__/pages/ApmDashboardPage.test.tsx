@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, act } from '@testing-library/react';
+import { render, waitFor } from '@testing-library/react';
+import { TestQueryWrapper } from '../test-utils';
 
 /* ---------- mock apmService ---------- */
 const mockDashboard = vi.fn();
@@ -48,46 +49,39 @@ describe('ApmDashboardPage', () => {
   });
 
   it('渲染页面标题', async () => {
-    let container!: HTMLElement;
-    await act(async () => {
-      ({ container } = render(<ApmDashboardPage />));
+    const { container } = render(<TestQueryWrapper><ApmDashboardPage /></TestQueryWrapper>);
+    await waitFor(() => {
+      expect(container.textContent ?? '').toContain('APM');
     });
-    const text = container.textContent ?? '';
-    expect(text).toContain('APM');
   });
 
   it('渲染统计卡片', async () => {
-    let container!: HTMLElement;
-    await act(async () => {
-      ({ container } = render(<ApmDashboardPage />));
+    const { container } = render(<TestQueryWrapper><ApmDashboardPage /></TestQueryWrapper>);
+    await waitFor(() => {
+      expect(container.textContent ?? '').toContain('100');
     });
-    const text = container.textContent ?? '';
-    expect(text).toContain('100');
   });
 
   it('调用 dashboard 接口', async () => {
-    await act(async () => {
-      render(<ApmDashboardPage />);
+    render(<TestQueryWrapper><ApmDashboardPage /></TestQueryWrapper>);
+    await waitFor(() => {
+      expect(mockDashboard).toHaveBeenCalledWith(30);
     });
-    expect(mockDashboard).toHaveBeenCalledWith(30);
   });
 
   it('加载失败显示错误提示', async () => {
     mockDashboard.mockRejectedValueOnce(new Error('fail'));
-    let container!: HTMLElement;
-    await act(async () => {
-      ({ container } = render(<ApmDashboardPage />));
+    const { container } = render(<TestQueryWrapper><ApmDashboardPage /></TestQueryWrapper>);
+    await waitFor(() => {
+      expect(container.textContent ?? '').toContain('失败');
     });
-    const text = container.textContent ?? '';
-    expect(text).toContain('失败');
   });
 
   it('渲染 ECharts 图表', async () => {
-    let container!: HTMLElement;
-    await act(async () => {
-      ({ container } = render(<ApmDashboardPage />));
+    const { container } = render(<TestQueryWrapper><ApmDashboardPage /></TestQueryWrapper>);
+    await waitFor(() => {
+      const charts = container.querySelectorAll('[data-testid="echarts"]');
+      expect(charts.length).toBeGreaterThan(0);
     });
-    const charts = container.querySelectorAll('[data-testid="echarts"]');
-    expect(charts.length).toBeGreaterThan(0);
   });
 });

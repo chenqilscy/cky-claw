@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, waitFor } from '@testing-library/react';
+import { TestQueryWrapper } from '../test-utils';
 import { MemoryRouter } from 'react-router-dom';
 
 // Mock navigate
@@ -57,9 +58,11 @@ describe('ProviderListPage', () => {
 
   it('renders and fetches providers on mount', async () => {
     render(
-      <MemoryRouter>
-        <ProviderListPage />
-      </MemoryRouter>,
+      <TestQueryWrapper>
+        <MemoryRouter>
+          <ProviderListPage />
+        </MemoryRouter>
+      </TestQueryWrapper>,
     );
     await waitFor(() => {
       expect(vi.mocked(providerService.list)).toHaveBeenCalled();
@@ -68,9 +71,11 @@ describe('ProviderListPage', () => {
 
   it('renders page content', async () => {
     render(
-      <MemoryRouter>
-        <ProviderListPage />
-      </MemoryRouter>,
+      <TestQueryWrapper>
+        <MemoryRouter>
+          <ProviderListPage />
+        </MemoryRouter>
+      </TestQueryWrapper>,
     );
     await waitFor(() => {
       expect(document.body.textContent).toContain('模型厂商');
@@ -79,9 +84,11 @@ describe('ProviderListPage', () => {
 
   it('shows provider data in table', async () => {
     render(
-      <MemoryRouter>
-        <ProviderListPage />
-      </MemoryRouter>,
+      <TestQueryWrapper>
+        <MemoryRouter>
+          <ProviderListPage />
+        </MemoryRouter>
+      </TestQueryWrapper>,
     );
     await waitFor(() => {
       // PRO table mock shows row count

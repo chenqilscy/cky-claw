@@ -1,4 +1,4 @@
-"""健康检查路由 — 含 DB/Redis 深度探测。"""
+"""健康检查路由 — 含 DB/Redis 深度探测 + 系统信息。"""
 
 from __future__ import annotations
 
@@ -7,6 +7,8 @@ import time
 from typing import Any
 
 from fastapi import APIRouter
+
+from app.core.config import settings
 
 router = APIRouter(tags=["system"])
 
@@ -85,3 +87,15 @@ async def _gather_probes() -> tuple[dict[str, Any], dict[str, Any]]:
     db_task = asyncio.create_task(_probe_db())
     redis_task = asyncio.create_task(_probe_redis())
     return await db_task, await redis_task
+
+
+@router.get("/system/info")
+async def system_info() -> dict[str, Any]:
+    """返回系统可观测性配置信息，供前端 APM 面板展示。"""
+    return {
+        "otel_enabled": settings.otel_enabled,
+        "otel_service_name": settings.otel_service_name,
+        "otel_exporter_endpoint": settings.otel_exporter_endpoint,
+        "jaeger_ui_url": settings.jaeger_ui_url,
+        "prometheus_ui_url": settings.prometheus_ui_url,
+    }

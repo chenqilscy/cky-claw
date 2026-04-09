@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, waitFor } from '@testing-library/react';
+import { TestQueryWrapper } from '../test-utils';
 import { MemoryRouter } from 'react-router-dom';
 
 // Mock teamService — named exports
@@ -36,9 +37,11 @@ describe('TeamPage', () => {
 
   it('renders page title', async () => {
     render(
-      <MemoryRouter>
-        <TeamPage />
-      </MemoryRouter>,
+      <TestQueryWrapper>
+        <MemoryRouter>
+          <TeamPage />
+        </MemoryRouter>
+      </TestQueryWrapper>,
     );
     await waitFor(() => {
       expect(document.body.textContent).toContain('团队');
@@ -47,9 +50,11 @@ describe('TeamPage', () => {
 
   it('calls listTeams on mount', async () => {
     render(
-      <MemoryRouter>
-        <TeamPage />
-      </MemoryRouter>,
+      <TestQueryWrapper>
+        <MemoryRouter>
+          <TeamPage />
+        </MemoryRouter>
+      </TestQueryWrapper>,
     );
     await waitFor(() => {
       expect(mockListTeams).toHaveBeenCalled();
@@ -58,9 +63,11 @@ describe('TeamPage', () => {
 
   it('renders team data', async () => {
     render(
-      <MemoryRouter>
-        <TeamPage />
-      </MemoryRouter>,
+      <TestQueryWrapper>
+        <MemoryRouter>
+          <TeamPage />
+        </MemoryRouter>
+      </TestQueryWrapper>,
     );
     await waitFor(() => {
       expect(document.body.textContent).toContain('客服团队');
@@ -69,9 +76,11 @@ describe('TeamPage', () => {
 
   it('renders protocol tag', async () => {
     render(
-      <MemoryRouter>
-        <TeamPage />
-      </MemoryRouter>,
+      <TestQueryWrapper>
+        <MemoryRouter>
+          <TeamPage />
+        </MemoryRouter>
+      </TestQueryWrapper>,
     );
     await waitFor(() => {
       expect(document.body.textContent).toContain('顺序执行');

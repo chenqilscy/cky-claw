@@ -1,17 +1,23 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useState, useCallback } from 'react';
 import {
-  Card, Button, Space, Modal, Form, Input, Select, Tag, message,
-  Popconfirm, Empty, Table, Typography, Tooltip, Switch,
+  App, Form, Input, Select, Tag, Typography, Tooltip, Switch,
+  Space, Button, Popconfirm,
 } from 'antd';
+import type { FormInstance } from 'antd';
 import {
-  PlusOutlined, ReloadOutlined, DeleteOutlined, EditOutlined,
-  LinkOutlined, CopyOutlined,
+  LinkOutlined, DeleteOutlined, EditOutlined, CopyOutlined,
 } from '@ant-design/icons';
-import type { ColumnsType } from 'antd/es/table';
-import type { IMChannel, IMChannelCreate, ChannelType } from '../../services/imChannelService';
+import type { ProColumns } from '@ant-design/pro-components';
+import type { IMChannel, IMChannelCreate, IMChannelUpdate, ChannelType } from '../../services/imChannelService';
+import { CHANNEL_TYPES } from '../../services/imChannelService';
 import {
-  CHANNEL_TYPES, listIMChannels, createIMChannel, updateIMChannel, deleteIMChannel,
-} from '../../services/imChannelService';
+  useIMChannelList,
+  useCreateIMChannel,
+  useUpdateIMChannel,
+  useDeleteIMChannel,
+} from '../../hooks/useIMChannelQueries';
+import { CrudTable } from '../../components';
+import type { CrudTableActions } from '../../components';
 
 const { TextArea } = Input;
 const { Text } = Typography;
@@ -34,156 +40,52 @@ const channelColor: Record<ChannelType, string> = {
   webhook: 'default',
 };
 
-const IMChannelPage: React.FC = () => {
-  const [channels, setChannels] = useState<IMChannel[]>([]);
-  const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [editRecord, setEditRecord] = useState<IMChannel | null>(null);
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
-  const [filterType, setFilterType] = useState<string | undefined>(undefined);
-  const [form] = Form.useForm();
-
-  const fetchData = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await listIMChannels({
-        channel_type: filterType,
-        limit: pageSize,
-        offset: (page - 1) * pageSize,
-      });
-      setChannels(res.data);
-      setTotal(res.total);
-    } catch {
-      message.error('加载 IM 渠道列表失败');
-    } finally {
-      setLoading(false);
-    }
-  }, [page, pageSize, filterType]);
-
-  useEffect(() => { fetchData(); }, [fetchData]);
-
-  const handleCreate = () => {
-    setEditRecord(null);
-    form.resetFields();
-    form.setFieldsValue({ channel_type: 'webhook', is_enabled: true, app_config_json: '{}' });
-    setModalOpen(true);
-  };
-
-  const handleEdit = (record: IMChannel) => {
-    setEditRecord(record);
-    form.setFieldsValue({
-      name: record.name,
-      description: record.description,
-      channel_type: record.channel_type,
-      webhook_url: record.webhook_url ?? '',
-      webhook_secret: '',
-      agent_id: record.agent_id ?? '',
-      is_enabled: record.is_enabled,
-      app_config_json: JSON.stringify(record.app_config, null, 2),
-    });
-    setModalOpen(true);
-  };
-
-  const handleDelete = async (id: string) => {
-    try {
-      await deleteIMChannel(id);
-      message.success('已删除');
-      fetchData();
-    } catch {
-      message.error('删除失败');
-    }
-  };
-
-  const handleSubmit = async () => {
-    try {
-      const values = await form.validateFields();
-      let appConfig = {};
-      try {
-        appConfig = values.app_config_json ? JSON.parse(values.app_config_json) : {};
-      } catch {
-        message.error('应用配置必须是合法 JSON');
-        return;
-      }
-      const payload: IMChannelCreate = {
-        name: values.name,
-        description: values.description || '',
-        channel_type: values.channel_type,
-        webhook_url: values.webhook_url || null,
-        webhook_secret: values.webhook_secret || null,
-        app_config: appConfig,
-        agent_id: values.agent_id || null,
-        is_enabled: values.is_enabled ?? true,
-      };
-      if (editRecord) {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { name: _name, ...updatePayload } = payload;
-        await updateIMChannel(editRecord.id, updatePayload);
-        message.success('更新成功');
-      } else {
-        await createIMChannel(payload);
-        message.success('创建成功');
-      }
-      setModalOpen(false);
-      fetchData();
-    } catch {
-      // form validation error
-    }
-  };
-
-  const copyWebhookUrl = (record: IMChannel) => {
-    const url = `${window.location.origin}/api/v1/im-channels/${record.id}/webhook`;
-    navigator.clipboard?.writeText(url).then(
-      () => message.success('Webhook URL 已复制'),
-      () => message.info(url),
-    );
-  };
-
-  const columns: ColumnsType<IMChannel> = [
+/* ---- 列工厂 ---- */
+function buildColumns(
+  actions: CrudTableActions<IMChannel>,
+  copyWebhookUrl: (r: IMChannel) => void,
+): ProColumns<IMChannel>[] {
+  return [
     {
       title: '名称',
       dataIndex: 'name',
-      key: 'name',
-      render: (text: string) => <Text strong>{text}</Text>,
+      render: (_: unknown, r: IMChannel) => <Text strong>{r.name}</Text>,
     },
     {
       title: '渠道类型',
       dataIndex: 'channel_type',
-      key: 'channel_type',
-      render: (val: ChannelType) => (
-        <Tag color={channelColor[val] || 'default'}>
-          {channelLabel[val] || val}
+      render: (_: unknown, r: IMChannel) => (
+        <Tag color={channelColor[r.channel_type] || 'default'}>
+          {channelLabel[r.channel_type] || r.channel_type}
         </Tag>
       ),
     },
     {
       title: '状态',
       dataIndex: 'is_enabled',
-      key: 'is_enabled',
-      render: (val: boolean) => (
-        <Tag color={val ? 'success' : 'default'}>
-          {val ? '启用' : '停用'}
+      render: (_: unknown, r: IMChannel) => (
+        <Tag color={r.is_enabled ? 'success' : 'default'}>
+          {r.is_enabled ? '启用' : '停用'}
         </Tag>
       ),
     },
     {
       title: '绑定 Agent',
       dataIndex: 'agent_id',
-      key: 'agent_id',
-      render: (val: string | null) => val ? <Text code>{val.slice(0, 8)}...</Text> : <Text type="secondary">未绑定</Text>,
+      render: (_: unknown, r: IMChannel) =>
+        r.agent_id
+          ? <Text code>{r.agent_id.slice(0, 8)}...</Text>
+          : <Text type="secondary">未绑定</Text>,
     },
     {
       title: '描述',
       dataIndex: 'description',
-      key: 'description',
       ellipsis: true,
     },
     {
       title: '创建时间',
       dataIndex: 'created_at',
-      key: 'created_at',
-      render: (val: string) => new Date(val).toLocaleString(),
+      render: (_: unknown, r: IMChannel) => new Date(r.created_at).toLocaleString(),
     },
     {
       title: '操作',
@@ -194,106 +96,166 @@ const IMChannelPage: React.FC = () => {
             <Button type="text" icon={<CopyOutlined />} onClick={() => copyWebhookUrl(record)} />
           </Tooltip>
           <Tooltip title="编辑">
-            <Button type="text" icon={<EditOutlined />} onClick={() => handleEdit(record)} />
+            <Button type="text" icon={<EditOutlined />} onClick={() => actions.openEdit(record)} />
           </Tooltip>
-          <Popconfirm title="确认删除？" onConfirm={() => handleDelete(record.id)}>
+          <Popconfirm title="确认删除？" onConfirm={() => actions.handleDelete(record.id)}>
             <Button type="text" danger icon={<DeleteOutlined />} />
           </Popconfirm>
         </Space>
       ),
     },
   ];
+}
+
+/* ---- 表单渲染 ---- */
+function renderForm(_form: FormInstance, editing: IMChannel | null) {
+  return (
+    <>
+      <Form.Item
+        name="name"
+        label="渠道名称"
+        rules={[{ required: true, message: '请输入名称' }]}
+      >
+        <Input maxLength={64} placeholder="如: wecom-sales" disabled={!!editing} />
+      </Form.Item>
+      <Form.Item name="description" label="描述">
+        <TextArea rows={2} maxLength={2000} placeholder="渠道用途描述" />
+      </Form.Item>
+      <Form.Item
+        name="channel_type"
+        label="渠道类型"
+        rules={[{ required: true, message: '请选择类型' }]}
+      >
+        <Select
+          options={CHANNEL_TYPES.map((t) => ({ value: t, label: channelLabel[t] || t }))}
+        />
+      </Form.Item>
+      <Form.Item name="webhook_url" label="Webhook URL">
+        <Input placeholder="https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=xxx" />
+      </Form.Item>
+      <Form.Item name="webhook_secret" label="Webhook 签名密钥">
+        <Input.Password
+          placeholder={editing ? '留空表示不修改' : '用于验证消息签名'}
+        />
+      </Form.Item>
+      <Form.Item name="agent_id" label="绑定 Agent ID">
+        <Input placeholder="接收消息后路由到此 Agent" />
+      </Form.Item>
+      <Form.Item name="is_enabled" label="启用" valuePropName="checked">
+        <Switch />
+      </Form.Item>
+      <Form.Item name="app_config_json" label="应用配置 (JSON)">
+        <TextArea rows={4} placeholder='{"app_id": "xxx", "token": "xxx"}' />
+      </Form.Item>
+    </>
+  );
+}
+
+/* ---- Payload 构建 ---- */
+function parseAppConfig(values: Record<string, unknown>): Record<string, unknown> {
+  const raw = values.app_config_json as string;
+  try {
+    return raw ? (JSON.parse(raw) as Record<string, unknown>) : {};
+  } catch {
+    throw new Error('应用配置必须是合法 JSON');
+  }
+}
+
+function toCreatePayload(values: Record<string, unknown>): IMChannelCreate {
+  return {
+    name: values.name as string,
+    description: (values.description as string) || '',
+    channel_type: values.channel_type as string,
+    webhook_url: (values.webhook_url as string) || null,
+    webhook_secret: (values.webhook_secret as string) || null,
+    app_config: parseAppConfig(values),
+    agent_id: (values.agent_id as string) || null,
+    is_enabled: (values.is_enabled as boolean) ?? true,
+  };
+}
+
+function toUpdatePayload(
+  values: Record<string, unknown>,
+  editing: IMChannel,
+): { id: string; data: IMChannelUpdate } {
+  const { name: _, ...update } = toCreatePayload(values);
+  void _;
+  return { id: editing.id, data: update };
+}
+
+function toFormValues(record: IMChannel): Record<string, unknown> {
+  return {
+    name: record.name,
+    description: record.description,
+    channel_type: record.channel_type,
+    webhook_url: record.webhook_url ?? '',
+    webhook_secret: '',
+    agent_id: record.agent_id ?? '',
+    is_enabled: record.is_enabled,
+    app_config_json: JSON.stringify(record.app_config, null, 2),
+  };
+}
+
+/* ---- 页面组件 ---- */
+
+const IMChannelPage: React.FC = () => {
+  const { message } = App.useApp();
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [filterType, setFilterType] = useState<string | undefined>(undefined);
+
+  const queryResult = useIMChannelList({
+    channel_type: filterType,
+    limit: pageSize,
+    offset: (page - 1) * pageSize,
+  });
+  const createMut = useCreateIMChannel();
+  const updateMut = useUpdateIMChannel();
+  const deleteMut = useDeleteIMChannel();
+
+  const copyWebhookUrl = useCallback(
+    (record: IMChannel) => {
+      const url = `${window.location.origin}/api/v1/im-channels/${record.id}/webhook`;
+      navigator.clipboard?.writeText(url).then(
+        () => message.success('Webhook URL 已复制'),
+        () => message.info(url),
+      );
+    },
+    [message],
+  );
+
+  const filterSelect = (
+    <Select
+      placeholder="渠道类型"
+      allowClear
+      style={{ width: 140 }}
+      onChange={(v: string | undefined) => { setFilterType(v); setPage(1); }}
+      options={CHANNEL_TYPES.map((t) => ({ value: t, label: channelLabel[t] || t }))}
+    />
+  );
 
   return (
-    <Card
-      title={
-        <Space>
-          <LinkOutlined />
-          <span>IM 渠道管理</span>
-        </Space>
-      }
-      extra={
-        <Space>
-          <Select
-            placeholder="渠道类型"
-            allowClear
-            style={{ width: 140 }}
-            onChange={(v) => { setFilterType(v); setPage(1); }}
-            options={CHANNEL_TYPES.map((t) => ({ value: t, label: channelLabel[t] || t }))}
-          />
-          <Button icon={<ReloadOutlined />} onClick={fetchData}>刷新</Button>
-          <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
-            创建渠道
-          </Button>
-        </Space>
-      }
-    >
-      {channels.length === 0 && !loading ? (
-        <Empty description="暂无 IM 渠道配置" />
-      ) : (
-        <Table
-          rowKey="id"
-          columns={columns}
-          dataSource={channels}
-          loading={loading}
-          pagination={{
-            current: page,
-            pageSize,
-            total,
-            onChange: (p, ps) => { setPage(p); setPageSize(ps); },
-            showTotal: (t) => `共 ${t} 个渠道`,
-          }}
-        />
-      )}
-
-      <Modal
-        title={editRecord ? '编辑渠道' : '创建渠道'}
-        open={modalOpen}
-        onOk={handleSubmit}
-        onCancel={() => setModalOpen(false)}
-        width={640}
-        destroyOnClose
-      >
-        <Form form={form} layout="vertical">
-          <Form.Item
-            name="name"
-            label="渠道名称"
-            rules={[{ required: true, message: '请输入名称' }]}
-          >
-            <Input maxLength={64} placeholder="如: wecom-sales" disabled={!!editRecord} />
-          </Form.Item>
-          <Form.Item name="description" label="描述">
-            <TextArea rows={2} maxLength={2000} placeholder="渠道用途描述" />
-          </Form.Item>
-          <Form.Item
-            name="channel_type"
-            label="渠道类型"
-            rules={[{ required: true, message: '请选择类型' }]}
-          >
-            <Select
-              options={CHANNEL_TYPES.map((t) => ({ value: t, label: channelLabel[t] || t }))}
-            />
-          </Form.Item>
-          <Form.Item name="webhook_url" label="Webhook URL">
-            <Input placeholder="https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=xxx" />
-          </Form.Item>
-          <Form.Item name="webhook_secret" label="Webhook 签名密钥">
-            <Input.Password
-              placeholder={editRecord ? '留空表示不修改' : '用于验证消息签名'}
-            />
-          </Form.Item>
-          <Form.Item name="agent_id" label="绑定 Agent ID">
-            <Input placeholder="接收消息后路由到此 Agent" />
-          </Form.Item>
-          <Form.Item name="is_enabled" label="启用" valuePropName="checked">
-            <Switch />
-          </Form.Item>
-          <Form.Item name="app_config_json" label="应用配置 (JSON)">
-            <TextArea rows={4} placeholder='{"app_id": "xxx", "token": "xxx"}' />
-          </Form.Item>
-        </Form>
-      </Modal>
-    </Card>
+    <CrudTable<IMChannel, IMChannelCreate, { id: string; data: IMChannelUpdate }>
+      title="IM 渠道管理"
+      icon={<LinkOutlined />}
+      columns={(actions) => buildColumns(actions, copyWebhookUrl)}
+      queryResult={queryResult}
+      createMutation={createMut}
+      updateMutation={updateMut}
+      deleteMutation={deleteMut}
+      renderForm={renderForm}
+      toFormValues={toFormValues}
+      toCreatePayload={toCreatePayload}
+      toUpdatePayload={toUpdatePayload}
+      createDefaults={{ channel_type: 'webhook', is_enabled: true, app_config_json: '{}' }}
+      createButtonText="创建渠道"
+      modalTitle={(editing) => (editing ? '编辑渠道' : '创建渠道')}
+      showRefresh
+      extraToolbar={filterSelect}
+      pagination={{ current: page, pageSize }}
+      onPaginationChange={(p, ps) => { setPage(p); setPageSize(ps); }}
+      total={queryResult.data?.total ?? 0}
+    />
   );
 };
 

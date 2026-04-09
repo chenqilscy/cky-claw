@@ -23,7 +23,7 @@ class SpanResponse(BaseModel):
     duration_ms: int | None = None
     input_data: dict[str, Any] | None = Field(None, alias="input")
     output_data: dict[str, Any] | None = Field(None, alias="output")
-    metadata: dict[str, Any] = Field(default_factory=dict)
+    metadata: dict[str, Any] = Field(default_factory=dict, alias="metadata_")
     model: str | None = None
     token_usage: dict[str, int] | None = None
     created_at: datetime
@@ -44,7 +44,7 @@ class TraceResponse(BaseModel):
     start_time: datetime
     end_time: datetime | None = None
     duration_ms: int | None = None
-    metadata: dict[str, Any] = Field(default_factory=dict)
+    metadata: dict[str, Any] = Field(default_factory=dict, alias="metadata_")
     created_at: datetime
 
     model_config = {"from_attributes": True, "populate_by_name": True}

@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
+import { TestQueryWrapper } from '../test-utils';
 import { MemoryRouter } from 'react-router-dom';
 
 vi.mock('../../services/evolutionService', () => ({
@@ -42,9 +43,11 @@ describe('EvolutionPage', () => {
 
   it('renders page title', () => {
     render(
-      <MemoryRouter>
-        <EvolutionPage />
-      </MemoryRouter>,
+      <TestQueryWrapper>
+        <MemoryRouter>
+          <EvolutionPage />
+        </MemoryRouter>
+      </TestQueryWrapper>,
     );
     // Card title 通过 Ant Design 内部渲染，用 container 查找
     expect(document.body.textContent).toContain('进化建议');
@@ -52,9 +55,11 @@ describe('EvolutionPage', () => {
 
   it('shows proposal in table after loading', async () => {
     render(
-      <MemoryRouter>
-        <EvolutionPage />
-      </MemoryRouter>,
+      <TestQueryWrapper>
+        <MemoryRouter>
+          <EvolutionPage />
+        </MemoryRouter>
+      </TestQueryWrapper>,
     );
     await waitFor(() => {
       expect(screen.getByText('test-bot')).toBeDefined();
@@ -63,9 +68,11 @@ describe('EvolutionPage', () => {
 
   it('shows proposal type tag', async () => {
     render(
-      <MemoryRouter>
-        <EvolutionPage />
-      </MemoryRouter>,
+      <TestQueryWrapper>
+        <MemoryRouter>
+          <EvolutionPage />
+        </MemoryRouter>
+      </TestQueryWrapper>,
     );
     await waitFor(() => {
       expect(screen.getByText('指令优化')).toBeDefined();
@@ -74,9 +81,11 @@ describe('EvolutionPage', () => {
 
   it('shows status tag', async () => {
     render(
-      <MemoryRouter>
-        <EvolutionPage />
-      </MemoryRouter>,
+      <TestQueryWrapper>
+        <MemoryRouter>
+          <EvolutionPage />
+        </MemoryRouter>
+      </TestQueryWrapper>,
     );
     await waitFor(() => {
       expect(screen.getByText('待审批')).toBeDefined();
@@ -85,27 +94,33 @@ describe('EvolutionPage', () => {
 
   it('renders filter inputs', () => {
     render(
-      <MemoryRouter>
-        <EvolutionPage />
-      </MemoryRouter>,
+      <TestQueryWrapper>
+        <MemoryRouter>
+          <EvolutionPage />
+        </MemoryRouter>
+      </TestQueryWrapper>,
     );
     expect(screen.getByPlaceholderText('Agent 名称')).toBeDefined();
   });
 
   it('renders create button', () => {
     render(
-      <MemoryRouter>
-        <EvolutionPage />
-      </MemoryRouter>,
+      <TestQueryWrapper>
+        <MemoryRouter>
+          <EvolutionPage />
+        </MemoryRouter>
+      </TestQueryWrapper>,
     );
     expect(screen.getByRole('button', { name: /新建建议/ })).toBeDefined();
   });
 
   it('renders refresh button', () => {
     render(
-      <MemoryRouter>
-        <EvolutionPage />
-      </MemoryRouter>,
+      <TestQueryWrapper>
+        <MemoryRouter>
+          <EvolutionPage />
+        </MemoryRouter>
+      </TestQueryWrapper>,
     );
     expect(screen.getByRole('button', { name: /刷新/ })).toBeDefined();
   });

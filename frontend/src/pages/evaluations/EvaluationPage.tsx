@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
 import {
-  Card, Button, Space, Modal, Form, Input, InputNumber, Select, Tag, message,
+  Card, Button, Space, Modal, Form, Input, InputNumber, Select, Tag, App,
   Table, Typography, Tabs, Statistic, Row, Col, Progress,
 } from 'antd';
 import {
@@ -14,10 +14,14 @@ import type {
   AgentQualitySummary,
 } from '../../services/evaluationService';
 import {
-  listEvaluations, createEvaluation,
-  listFeedbacks, createFeedback,
   getAgentQuality,
 } from '../../services/evaluationService';
+import {
+  useEvaluationList,
+  useCreateEvaluation,
+  useFeedbackList,
+  useCreateFeedback,
+} from '../../hooks/useEvaluationQueries';
 
 const { TextArea } = Input;
 const { Text } = Typography;
@@ -53,33 +57,22 @@ const ratingIcon: Record<number, React.ReactNode> = {
 // ── 评估 Tab ──────────────────────────────────────
 
 const EvaluationTab: React.FC = () => {
-  const [evals, setEvals] = useState<RunEvaluation[]>([]);
-  const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(false);
+  const { message } = App.useApp();
   const [modalOpen, setModalOpen] = useState(false);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const [filterAgentId, setFilterAgentId] = useState('');
   const [form] = Form.useForm();
 
-  const fetchData = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await listEvaluations({
-        agent_id: filterAgentId || undefined,
-        limit: pageSize,
-        offset: (page - 1) * pageSize,
-      });
-      setEvals(res.data);
-      setTotal(res.total);
-    } catch {
-      message.error('加载评估列表失败');
-    } finally {
-      setLoading(false);
-    }
-  }, [page, pageSize, filterAgentId]);
+  const { data: listData, isLoading: loading, refetch } = useEvaluationList({
+    agent_id: filterAgentId || undefined,
+    limit: pageSize,
+    offset: (page - 1) * pageSize,
+  });
+  const evals = listData?.data ?? [];
+  const total = listData?.total ?? 0;
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+  const createMutation = useCreateEvaluation();
 
   const handleCreate = () => {
     form.resetFields();
@@ -104,10 +97,9 @@ const EvaluationTab: React.FC = () => {
         evaluator: values.evaluator || '',
         comment: values.comment || '',
       };
-      await createEvaluation(payload);
+      await createMutation.mutateAsync(payload);
       message.success('评估已创建');
       setModalOpen(false);
-      fetchData();
     } catch {
       // form validation
     }
@@ -171,7 +163,7 @@ const EvaluationTab: React.FC = () => {
           onSearch={(v) => { setFilterAgentId(v); setPage(1); }}
           style={{ width: 280 }}
         />
-        <Button icon={<ReloadOutlined />} onClick={fetchData}>刷新</Button>
+        <Button icon={<ReloadOutlined />} onClick={() => void refetch()}>刷新</Button>
         <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>新建评估</Button>
       </Space>
 
@@ -238,28 +230,20 @@ const EvaluationTab: React.FC = () => {
 // ── 反馈 Tab ──────────────────────────────────────
 
 const FeedbackTab: React.FC = () => {
-  const [feedbacks, setFeedbacks] = useState<RunFeedback[]>([]);
-  const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(false);
+  const { message } = App.useApp();
   const [modalOpen, setModalOpen] = useState(false);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const [form] = Form.useForm();
 
-  const fetchData = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await listFeedbacks({ limit: pageSize, offset: (page - 1) * pageSize });
-      setFeedbacks(res.data);
-      setTotal(res.total);
-    } catch {
-      message.error('加载反馈列表失败');
-    } finally {
-      setLoading(false);
-    }
-  }, [page, pageSize]);
+  const { data: listData, isLoading: loading, refetch } = useFeedbackList({
+    limit: pageSize,
+    offset: (page - 1) * pageSize,
+  });
+  const feedbacks = listData?.data ?? [];
+  const total = listData?.total ?? 0;
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+  const createMutation = useCreateFeedback();
 
   const handleSubmit = async () => {
     try {
@@ -273,10 +257,9 @@ const FeedbackTab: React.FC = () => {
         comment: values.comment || '',
         tags: tagsArr,
       };
-      await createFeedback(payload);
+      await createMutation.mutateAsync(payload);
       message.success('反馈已提交');
       setModalOpen(false);
-      fetchData();
     } catch {
       // form validation
     }
@@ -324,7 +307,7 @@ const FeedbackTab: React.FC = () => {
   return (
     <>
       <Space style={{ marginBottom: 16 }}>
-        <Button icon={<ReloadOutlined />} onClick={fetchData}>刷新</Button>
+        <Button icon={<ReloadOutlined />} onClick={() => void refetch()}>刷新</Button>
         <Button type="primary" icon={<PlusOutlined />} onClick={() => { form.resetFields(); setModalOpen(true); }}>
           提交反馈
         </Button>
@@ -379,6 +362,7 @@ const FeedbackTab: React.FC = () => {
 // ── Agent 质量 Tab ────────────────────────────────
 
 const QualityTab: React.FC = () => {
+  const { message } = App.useApp();
   const [agentId, setAgentId] = useState('');
   const [summary, setSummary] = useState<AgentQualitySummary | null>(null);
   const [loading, setLoading] = useState(false);

@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
 import {
-  message,
+  App,
   Card,
   Tag,
   Space,
@@ -35,7 +35,8 @@ import {
 import { ProTable } from '@ant-design/pro-components';
 import type { ProColumns } from '@ant-design/pro-components';
 import { traceService } from '../../services/traceService';
-import type { TraceItem, SpanItem, TraceStatsResponse, TraceListParams, FlameTreeResponse, ReplayTimelineResponse } from '../../services/traceService';
+import type { TraceItem, SpanItem, TraceListParams, FlameTreeResponse, ReplayTimelineResponse } from '../../services/traceService';
+import { useTraceList, useTraceStats } from '../../hooks/useTraceQueries';
 import type { DataNode } from 'antd/es/tree';
 import type { Dayjs } from 'dayjs';
 import SpanWaterfall from './SpanWaterfall';
@@ -45,13 +46,7 @@ import TraceReplayTimeline from './TraceReplayTimeline';
 const { Text } = Typography;
 const { RangePicker } = DatePicker;
 
-const SPAN_TYPE_COLORS: Record<string, string> = {
-  agent: 'blue',
-  llm: 'green',
-  tool: 'orange',
-  handoff: 'purple',
-  guardrail: 'red',
-};
+import { SPAN_TYPE_TAG_COLORS } from '../../constants/colors';
 
 interface SpanTreeNode extends DataNode {
   span: SpanItem;
@@ -73,7 +68,7 @@ function buildSpanTree(spans: SpanItem[]): SpanTreeNode[] {
       key: span.id,
       title: (
         <Space size={4}>
-          <Tag color={SPAN_TYPE_COLORS[span.type] || 'default'} style={{ margin: 0 }}>
+          <Tag color={SPAN_TYPE_TAG_COLORS[span.type] || 'default'} style={{ margin: 0 }}>
             {span.type}
           </Tag>
           {guardrailType && (
@@ -120,9 +115,7 @@ function buildSpanTree(spans: SpanItem[]): SpanTreeNode[] {
 }
 
 const TracesPage: React.FC = () => {
-  const [data, setData] = useState<TraceItem[]>([]);
-  const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(false);
+  const { message } = App.useApp();
   const [agentFilter, setAgentFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
   const [timeRange, setTimeRange] = useState<[Dayjs, Dayjs] | null>(null);
@@ -130,7 +123,28 @@ const TracesPage: React.FC = () => {
   const [maxDuration, setMaxDuration] = useState<number | null>(null);
   const [guardrailTriggered, setGuardrailTriggered] = useState(false);
   const [pagination, setPagination] = useState({ current: 1, pageSize: 20 });
-  const [stats, setStats] = useState<TraceStatsResponse | null>(null);
+
+  // TanStack Query — list & stats
+  const listParams: TraceListParams = {
+    limit: pagination.pageSize,
+    offset: (pagination.current - 1) * pagination.pageSize,
+  };
+  if (agentFilter) listParams.agent_name = agentFilter;
+  if (statusFilter) listParams.status = statusFilter;
+  if (timeRange) {
+    listParams.start_time = timeRange[0].toISOString();
+    listParams.end_time = timeRange[1].toISOString();
+  }
+  if (minDuration !== null) listParams.min_duration_ms = minDuration;
+  if (maxDuration !== null) listParams.max_duration_ms = maxDuration;
+  if (guardrailTriggered) listParams.has_guardrail_triggered = true;
+
+  const { data: listData, isLoading: loading } = useTraceList(listParams);
+  const data = listData?.data ?? [];
+  const total = listData?.total ?? 0;
+
+  const statsParams = agentFilter ? { agent_name: agentFilter } : undefined;
+  const { data: stats } = useTraceStats(statsParams);
 
   // Detail modal
   const [detailVisible, setDetailVisible] = useState(false);
@@ -140,48 +154,6 @@ const TracesPage: React.FC = () => {
   const [selectedSpan, setSelectedSpan] = useState<SpanItem | null>(null);
   const [flameData, setFlameData] = useState<FlameTreeResponse | null>(null);
   const [replayData, setReplayData] = useState<ReplayTimelineResponse | null>(null);
-
-  const fetchStats = useCallback(async () => {
-    try {
-      const res = await traceService.stats(
-        agentFilter ? { agent_name: agentFilter } : undefined,
-      );
-      setStats(res);
-    } catch {
-      // 非关键数据，静默
-    }
-  }, [agentFilter]);
-
-  const fetchList = useCallback(async () => {
-    setLoading(true);
-    try {
-      const params: TraceListParams = {
-        limit: pagination.pageSize,
-        offset: (pagination.current - 1) * pagination.pageSize,
-      };
-      if (agentFilter) params.agent_name = agentFilter;
-      if (statusFilter) params.status = statusFilter;
-      if (timeRange) {
-        params.start_time = timeRange[0].toISOString();
-        params.end_time = timeRange[1].toISOString();
-      }
-      if (minDuration !== null) params.min_duration_ms = minDuration;
-      if (maxDuration !== null) params.max_duration_ms = maxDuration;
-      if (guardrailTriggered) params.has_guardrail_triggered = true;
-      const res = await traceService.list(params);
-      setData(res.data);
-      setTotal(res.total);
-    } catch {
-      message.error('获取 Trace 列表失败');
-    } finally {
-      setLoading(false);
-    }
-  }, [pagination, agentFilter, statusFilter, timeRange, minDuration, maxDuration, guardrailTriggered]);
-
-  useEffect(() => {
-    fetchList();
-    fetchStats();
-  }, [fetchList, fetchStats]);
 
   const openDetail = async (traceId: string) => {
     setDetailVisible(true);
@@ -555,7 +527,7 @@ const TracesPage: React.FC = () => {
                 <Descriptions column={2} size="small" bordered>
                   <Descriptions.Item label="ID">{selectedSpan.id}</Descriptions.Item>
                   <Descriptions.Item label="类型">
-                    <Tag color={SPAN_TYPE_COLORS[selectedSpan.type] || 'default'}>
+                    <Tag color={SPAN_TYPE_TAG_COLORS[selectedSpan.type] || 'default'}>
                       {selectedSpan.type}
                     </Tag>
                   </Descriptions.Item>

@@ -5,5 +5,5 @@ global:
 scrape_configs:
   - job_name: "ckyclaw-backend"
     static_configs:
-      - targets: ["backend:8000"]
+      - targets: ["ckyclaw-backend:8000"]
     metrics_path: "/metrics"

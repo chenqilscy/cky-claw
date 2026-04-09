@@ -13,8 +13,9 @@ import ChatPage from '../../pages/chat/ChatPage';
 
 describe('ChatPage', () => {
   it('渲染侧边栏', () => {
-    const { container } = render(<ChatPage />);
-    expect(container.textContent).toContain('ChatSidebar Mock');
+    render(<ChatPage />);
+    // 响应式布局：jsdom 中 sidebar 在 Drawer（portal）里，需查 body
+    expect(document.body.textContent).toContain('ChatSidebar Mock');
   });
 
   it('渲染聊天窗口', () => {

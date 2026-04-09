@@ -147,6 +147,15 @@ _HOSTED_TOOL_GROUPS: list[dict[str, object]] = [
             {"name": "database_query", "description": "执行只读 SQL 查询并返回结果。"},
         ],
     },
+    {
+        "name": "code-review",
+        "description": "代码审查与安全检测",
+        "tools": [
+            {"name": "analyze_code", "description": "分析代码质量：复杂度、风格问题、常见反模式。"},
+            {"name": "parse_diff", "description": "解析 unified diff 格式，提取变更文件与增删行。"},
+            {"name": "check_security_patterns", "description": "检测代码中的安全漏洞模式（OWASP Top 10）。"},
+        ],
+    },
 ]
 
 

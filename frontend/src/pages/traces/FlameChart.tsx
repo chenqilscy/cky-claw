@@ -2,14 +2,7 @@ import { useEffect, useRef } from 'react';
 import * as echarts from 'echarts';
 import type { FlameNode } from '../../services/traceService';
 
-/** Span 类型 → 颜色映射 */
-const TYPE_COLORS: Record<string, string> = {
-  agent: '#1677ff',
-  llm: '#52c41a',
-  tool: '#faad14',
-  handoff: '#722ed1',
-  guardrail: '#eb2f96',
-};
+import { SPAN_TYPE_COLORS as TYPE_COLORS } from '../../constants/colors';
 
 interface FlatSpan {
   name: string;

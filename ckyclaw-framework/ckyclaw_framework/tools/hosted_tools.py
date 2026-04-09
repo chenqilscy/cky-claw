@@ -340,6 +340,228 @@ async def database_query(
 
 
 # ---------------------------------------------------------------------------
+# code-review 工具组
+# ---------------------------------------------------------------------------
+
+
+@function_tool(name="analyze_code", description="分析代码片段，检测复杂度、风格问题和常见 Bug 模式。")
+async def analyze_code(code: str, language: str = "python") -> str:
+    """对代码进行静态分析。
+
+    Args:
+        code: 待审查的源代码文本
+        language: 编程语言（python/javascript/typescript/java/go 等）
+    """
+    issues: list[dict[str, str]] = []
+    lines = code.split("\n")
+
+    # 通用检查
+    for i, line in enumerate(lines, 1):
+        stripped = line.rstrip()
+        # 过长行
+        if len(stripped) > 120:
+            issues.append({"line": str(i), "severity": "warning", "rule": "line-too-long",
+                           "message": f"行长度 {len(stripped)} 超过 120 字符"})
+        # 行尾空格
+        if line.rstrip() != line.rstrip("\n") and line.endswith(" "):
+            issues.append({"line": str(i), "severity": "info", "rule": "trailing-whitespace",
+                           "message": "行尾包含多余空格"})
+
+    lang = language.lower()
+    if lang in ("python", "py"):
+        _analyze_python(code, lines, issues)
+    elif lang in ("javascript", "js", "typescript", "ts"):
+        _analyze_javascript(code, lines, issues)
+
+    # 复杂度估算
+    func_count = sum(1 for ln in lines if ln.strip().startswith(("def ", "function ", "async def ", "async function ")))
+    total_lines = len(lines)
+    blank_lines = sum(1 for ln in lines if not ln.strip())
+    comment_lines = sum(1 for ln in lines if ln.strip().startswith(("#", "//", "/*", "*")))
+
+    summary = {
+        "total_lines": total_lines,
+        "code_lines": total_lines - blank_lines - comment_lines,
+        "blank_lines": blank_lines,
+        "comment_lines": comment_lines,
+        "function_count": func_count,
+        "issues_found": len(issues),
+        "issues": issues[:50],  # 限制返回数量
+    }
+    return json.dumps(summary, ensure_ascii=False, indent=2)
+
+
+def _analyze_python(code: str, lines: list[str], issues: list[dict[str, str]]) -> None:
+    """Python 特定的静态分析。"""
+    for i, line in enumerate(lines, 1):
+        stripped = line.strip()
+        # 裸 except
+        if re.match(r"except\s*:", stripped):
+            issues.append({"line": str(i), "severity": "error", "rule": "bare-except",
+                           "message": "使用裸 except，应指定异常类型"})
+        # eval/exec 使用
+        if re.search(r"\b(eval|exec)\s*\(", stripped):
+            issues.append({"line": str(i), "severity": "error", "rule": "security-eval",
+                           "message": "使用 eval/exec 存在代码注入风险"})
+        # 硬编码密码/密钥模式
+        if re.search(r"(password|secret|api_key|token)\s*=\s*['\"][^'\"]+['\"]", stripped, re.IGNORECASE):
+            issues.append({"line": str(i), "severity": "error", "rule": "hardcoded-secret",
+                           "message": "检测到硬编码的密码/密钥，应使用环境变量"})
+        # TODO/FIXME 标记
+        if re.search(r"\b(TODO|FIXME|HACK|XXX)\b", stripped):
+            issues.append({"line": str(i), "severity": "info", "rule": "todo-marker",
+                           "message": "包含待处理标记"})
+        # 可变默认参数
+        if re.match(r"def\s+\w+\(.*=\s*(\[\]|\{\}|set\(\))", stripped):
+            issues.append({"line": str(i), "severity": "warning", "rule": "mutable-default-arg",
+                           "message": "使用可变对象作为默认参数，可能导致意外行为"})
+
+    # SQL 注入模式
+    if re.search(r"(execute|cursor\.execute)\s*\(.*(f\"|f'|%s|\.format\(|\" \+|\' \+)", code, re.DOTALL):
+        issues.append({"line": "N/A", "severity": "error", "rule": "sql-injection",
+                       "message": "检测到可能的 SQL 注入风险：使用字符串拼接构造 SQL"})
+
+
+def _analyze_javascript(code: str, lines: list[str], issues: list[dict[str, str]]) -> None:
+    """JavaScript/TypeScript 特定的静态分析。"""
+    for i, line in enumerate(lines, 1):
+        stripped = line.strip()
+        # eval 使用
+        if re.search(r"\beval\s*\(", stripped):
+            issues.append({"line": str(i), "severity": "error", "rule": "no-eval",
+                           "message": "使用 eval() 存在代码注入风险"})
+        # innerHTML
+        if ".innerHTML" in stripped and "=" in stripped:
+            issues.append({"line": str(i), "severity": "warning", "rule": "no-inner-html",
+                           "message": "直接设置 innerHTML 可能导致 XSS 漏洞"})
+        # var 声明
+        if re.match(r"var\s+\w+", stripped):
+            issues.append({"line": str(i), "severity": "warning", "rule": "no-var",
+                           "message": "使用 var 声明，建议使用 let 或 const"})
+        # console.log
+        if re.search(r"\bconsole\.(log|debug|info)\(", stripped):
+            issues.append({"line": str(i), "severity": "info", "rule": "no-console",
+                           "message": "残留的 console 调试语句"})
+
+
+@function_tool(name="parse_diff", description="解析 unified diff 格式的代码变更，提取新增、修改和删除的代码行。")
+async def parse_diff(diff_text: str) -> str:
+    """解析 unified diff 格式文本。
+
+    Args:
+        diff_text: unified diff 格式的文本（如 git diff 输出）
+    """
+    files: list[dict[str, Any]] = []
+    current_file: dict[str, Any] | None = None
+    added_lines: list[dict[str, Any]] = []
+    removed_lines: list[dict[str, Any]] = []
+    line_num_new = 0
+    line_num_old = 0
+
+    for line in diff_text.split("\n"):
+        # 新文件头
+        if line.startswith("+++ "):
+            if current_file is not None:
+                current_file["added"] = added_lines
+                current_file["removed"] = removed_lines
+                files.append(current_file)
+            filename = line[4:].strip()
+            if filename.startswith("b/"):
+                filename = filename[2:]
+            current_file = {"file": filename, "added": [], "removed": []}
+            added_lines = []
+            removed_lines = []
+        # hunk 头 @@ -a,b +c,d @@
+        elif line.startswith("@@"):
+            match = re.search(r"\+(\d+)", line)
+            line_num_new = int(match.group(1)) if match else 0
+            match_old = re.search(r"-(\d+)", line)
+            line_num_old = int(match_old.group(1)) if match_old else 0
+        elif line.startswith("+") and not line.startswith("+++"):
+            added_lines.append({"line": line_num_new, "content": line[1:]})
+            line_num_new += 1
+        elif line.startswith("-") and not line.startswith("---"):
+            removed_lines.append({"line": line_num_old, "content": line[1:]})
+            line_num_old += 1
+        else:
+            line_num_new += 1
+            line_num_old += 1
+
+    if current_file is not None:
+        current_file["added"] = added_lines
+        current_file["removed"] = removed_lines
+        files.append(current_file)
+
+    summary = {
+        "files_changed": len(files),
+        "total_additions": sum(len(f["added"]) for f in files),
+        "total_deletions": sum(len(f["removed"]) for f in files),
+        "files": files,
+    }
+    return json.dumps(summary, ensure_ascii=False, indent=2)
+
+
+@function_tool(name="check_security_patterns", description="检查代码中的安全漏洞模式（OWASP Top 10）。")
+async def check_security_patterns(code: str, language: str = "python") -> str:
+    """检查常见安全漏洞模式。
+
+    Args:
+        code: 待检查的源代码
+        language: 编程语言
+    """
+    vulnerabilities: list[dict[str, str]] = []
+    lang = language.lower()
+
+    # 通用安全模式
+    patterns: list[tuple[str, str, str]] = [
+        (r"(password|secret|api_key|token|private_key)\s*=\s*['\"][^'\"]{3,}['\"]",
+         "CWE-798", "硬编码凭据：密码/密钥不应硬编码在源代码中"),
+        (r"https?://[^\s]*\?.*=(password|token|secret|key)=[^&\s]+",
+         "CWE-598", "URL 中包含敏感参数，可能泄露到日志或浏览器历史"),
+    ]
+
+    if lang in ("python", "py"):
+        patterns.extend([
+            (r"\b(eval|exec)\s*\(", "CWE-94", "代码注入：eval/exec 可执行任意代码"),
+            (r"pickle\.loads?\(", "CWE-502", "反序列化漏洞：pickle 可执行任意代码"),
+            (r"subprocess\.(call|run|Popen)\s*\(.*shell\s*=\s*True",
+             "CWE-78", "命令注入：shell=True 允许 shell 注入"),
+            (r"os\.system\s*\(", "CWE-78", "命令注入：os.system 容易被注入"),
+            (r"yaml\.load\s*\((?!.*Loader)", "CWE-502", "YAML 反序列化漏洞：应使用 yaml.safe_load"),
+            (r"\.format\(.*\)|f['\"].*\{.*\}.*['\"].*execute|cursor\.execute\s*\(.*(\+|format|f['\"])",
+             "CWE-89", "SQL 注入：使用字符串拼接构造 SQL 语句"),
+        ])
+    elif lang in ("javascript", "js", "typescript", "ts"):
+        patterns.extend([
+            (r"\beval\s*\(", "CWE-94", "代码注入：eval() 可执行任意代码"),
+            (r"\.innerHTML\s*=", "CWE-79", "XSS 漏洞：直接设置 innerHTML"),
+            (r"document\.write\s*\(", "CWE-79", "XSS 漏洞：document.write 可注入脚本"),
+            (r"new\s+Function\s*\(", "CWE-94", "代码注入：通过 new Function 执行动态代码"),
+            (r"child_process\.(exec|spawn)\s*\(", "CWE-78", "命令注入：应验证和转义用户输入"),
+        ])
+
+    for pattern, cwe, desc in patterns:
+        matches = list(re.finditer(pattern, code, re.IGNORECASE | re.MULTILINE))
+        for match in matches:
+            # 计算行号
+            line_start = code[:match.start()].count("\n") + 1
+            vulnerabilities.append({
+                "line": str(line_start),
+                "cwe": cwe,
+                "severity": "critical" if "injection" in desc.lower() or "CWE-94" in cwe else "high",
+                "description": desc,
+                "matched": match.group(0)[:80],
+            })
+
+    result = {
+        "language": language,
+        "vulnerabilities_found": len(vulnerabilities),
+        "vulnerabilities": vulnerabilities[:30],
+    }
+    return json.dumps(result, ensure_ascii=False, indent=2)
+
+
+# ---------------------------------------------------------------------------
 # 工具组注册
 # ---------------------------------------------------------------------------
 
@@ -365,7 +587,12 @@ def _build_hosted_groups() -> list[ToolGroup]:
     database_group = ToolGroup(name="database", description="只读 SQL 查询")
     database_group.register(database_query)
 
-    return [web_search_group, code_executor_group, file_ops_group, http_group, database_group]
+    code_review_group = ToolGroup(name="code-review", description="代码审查与安全检测")
+    code_review_group.register(analyze_code)
+    code_review_group.register(parse_diff)
+    code_review_group.register(check_security_patterns)
+
+    return [web_search_group, code_executor_group, file_ops_group, http_group, database_group, code_review_group]
 
 
 def register_hosted_tools(registry: ToolRegistry | None = None) -> list[ToolGroup]:
@@ -386,4 +613,4 @@ def register_hosted_tools(registry: ToolRegistry | None = None) -> list[ToolGrou
 
 
 # 所有内置工具组 ID
-HOSTED_GROUP_IDS = ["web-search", "code-executor", "file-ops", "http", "database"]
+HOSTED_GROUP_IDS = ["web-search", "code-executor", "file-ops", "http", "database", "code-review"]

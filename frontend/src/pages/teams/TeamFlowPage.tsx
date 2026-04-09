@@ -28,17 +28,7 @@ import { agentService, type AgentConfig } from '../../services/agentService';
 const NODE_WIDTH = 220;
 const NODE_HEIGHT = 90;
 
-const protocolLabel: Record<string, string> = {
-  SEQUENTIAL: '顺序执行',
-  PARALLEL: '并行执行',
-  COORDINATOR: '协调者模式',
-};
-
-const protocolColor: Record<string, string> = {
-  SEQUENTIAL: '#1890ff',
-  PARALLEL: '#52c41a',
-  COORDINATOR: '#722ed1',
-};
+import { PROTOCOL_LABELS as protocolLabel, PROTOCOL_COLORS as protocolColor } from '../../constants/colors';
 
 // ─── 自定义节点 ───────────────────────────────────────────────
 type MemberNodeData = {

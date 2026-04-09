@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, act } from '@testing-library/react';
+import { TestQueryWrapper } from '../test-utils';
 
 /* ---------- mock supervisionService ---------- */
 const mockListSessions = vi.fn();
@@ -47,7 +48,7 @@ describe('SupervisionPage', () => {
   it('渲染页面标题', async () => {
     let container!: HTMLElement;
     await act(async () => {
-      ({ container } = render(<SupervisionPage />));
+      ({ container } = render(<TestQueryWrapper><SupervisionPage /></TestQueryWrapper>));
     });
     const text = container.textContent ?? '';
     expect(text).toContain('监督面板');
@@ -56,7 +57,7 @@ describe('SupervisionPage', () => {
   it('渲染统计卡片', async () => {
     let container!: HTMLElement;
     await act(async () => {
-      ({ container } = render(<SupervisionPage />));
+      ({ container } = render(<TestQueryWrapper><SupervisionPage /></TestQueryWrapper>));
     });
     const text = container.textContent ?? '';
     // 期望有 "总会话" / "运行中" / "已暂停" 之类的统计
@@ -65,7 +66,7 @@ describe('SupervisionPage', () => {
 
   it('调用列表接口', async () => {
     await act(async () => {
-      render(<SupervisionPage />);
+      render(<TestQueryWrapper><SupervisionPage /></TestQueryWrapper>);
     });
     expect(mockListSessions).toHaveBeenCalled();
   });
@@ -74,7 +75,7 @@ describe('SupervisionPage', () => {
     mockListSessions.mockRejectedValueOnce(new Error('fail'));
     let container!: HTMLElement;
     await act(async () => {
-      ({ container } = render(<SupervisionPage />));
+      ({ container } = render(<TestQueryWrapper><SupervisionPage /></TestQueryWrapper>));
     });
     expect(container).toBeTruthy();
   });

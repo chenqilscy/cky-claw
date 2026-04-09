@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, act } from '@testing-library/react';
+import { TestQueryWrapper } from '../test-utils';
 
 /* ---------- mock toolGroupService ---------- */
 const mockList = vi.fn();
@@ -48,7 +49,7 @@ describe('ToolGroupPage', () => {
   it('渲染页面标题', async () => {
     let container!: HTMLElement;
     await act(async () => {
-      ({ container } = render(<ToolGroupPage />));
+      ({ container } = render(<TestQueryWrapper><ToolGroupPage /></TestQueryWrapper>));
     });
     const text = container.textContent ?? '';
     expect(text).toContain('工具组管理');
@@ -57,7 +58,7 @@ describe('ToolGroupPage', () => {
   it('渲染新建按钮', async () => {
     let container!: HTMLElement;
     await act(async () => {
-      ({ container } = render(<ToolGroupPage />));
+      ({ container } = render(<TestQueryWrapper><ToolGroupPage /></TestQueryWrapper>));
     });
     const text = container.textContent ?? '';
     expect(text).toContain('新建工具组');
@@ -65,7 +66,7 @@ describe('ToolGroupPage', () => {
 
   it('调用列表接口', async () => {
     await act(async () => {
-      render(<ToolGroupPage />);
+      render(<TestQueryWrapper><ToolGroupPage /></TestQueryWrapper>);
     });
     expect(mockList).toHaveBeenCalled();
   });
@@ -74,7 +75,7 @@ describe('ToolGroupPage', () => {
     mockList.mockRejectedValueOnce(new Error('fail'));
     let container!: HTMLElement;
     await act(async () => {
-      ({ container } = render(<ToolGroupPage />));
+      ({ container } = render(<TestQueryWrapper><ToolGroupPage /></TestQueryWrapper>));
     });
     expect(container).toBeTruthy();
   });

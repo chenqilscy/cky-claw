@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
+
+_metrics_app: Any | None = None
 
 
 def setup_otel() -> None:
@@ -50,6 +53,27 @@ def setup_otel() -> None:
         )
     except Exception as e:
         logger.error("Failed to initialize OTel: %s", e)
+
+    # Prometheus metrics endpoint
+    _setup_prometheus_metrics()
+
+
+def _setup_prometheus_metrics() -> None:
+    """创建 Prometheus WSGI app 供 /metrics 端点挂载。"""
+    global _metrics_app
+    try:
+        from prometheus_client import make_asgi_app
+        _metrics_app = make_asgi_app()
+        logger.info("Prometheus metrics endpoint enabled")
+    except ImportError:
+        logger.debug("prometheus-client not installed, /metrics disabled")
+    except Exception as e:
+        logger.error("Failed to setup Prometheus metrics: %s", e)
+
+
+def get_metrics_app() -> Any | None:
+    """返回 Prometheus ASGI app（如果已初始化）。"""
+    return _metrics_app
 
 
 def instrument_fastapi(app: object) -> None:

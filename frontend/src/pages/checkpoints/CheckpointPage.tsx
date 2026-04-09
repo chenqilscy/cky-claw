@@ -1,49 +1,34 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Button, Card, Input, App, Popconfirm, Space, Tag, Typography } from 'antd';
 import { DeleteOutlined, ReloadOutlined, SearchOutlined } from '@ant-design/icons';
 import { ProTable } from '@ant-design/pro-components';
 import type { ProColumns } from '@ant-design/pro-components';
-import { checkpointService } from '../../services/checkpointService';
 import type { CheckpointResponse } from '../../services/checkpointService';
+import { useCheckpointList, useDeleteCheckpoint } from '../../hooks/useCheckpointQueries';
 
 const { Title, Text } = Typography;
 
 const CheckpointPage: React.FC = () => {
   const { message } = App.useApp();
   const [runId, setRunId] = useState('');
-  const [data, setData] = useState<CheckpointResponse[]>([]);
-  const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(false);
+  const [submittedRunId, setSubmittedRunId] = useState<string | undefined>();
 
-  const fetchCheckpoints = useCallback(async () => {
-    if (!runId.trim()) return;
-    setLoading(true);
-    try {
-      const res = await checkpointService.list(runId.trim());
-      setData(res.data);
-      setTotal(res.total);
-    } catch {
-      message.error('获取检查点列表失败');
-      setData([]);
-      setTotal(0);
-    } finally {
-      setLoading(false);
-    }
-  }, [runId, message]);
+  const { data: listData, isLoading: loading, refetch } = useCheckpointList(submittedRunId);
+  const data = listData?.data ?? [];
+  const total = listData?.total ?? 0;
 
-  useEffect(() => {
-    if (runId.trim()) {
-      fetchCheckpoints();
-    }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  const deleteMutation = useDeleteCheckpoint();
+
+  const handleSearch = () => {
+    if (runId.trim()) setSubmittedRunId(runId.trim());
+  };
 
   const handleDelete = async () => {
-    if (!runId.trim()) return;
+    if (!submittedRunId) return;
     try {
-      await checkpointService.delete(runId.trim());
+      await deleteMutation.mutateAsync(submittedRunId);
       message.success('检查点已删除');
-      setData([]);
-      setTotal(0);
+      setSubmittedRunId(undefined);
     } catch {
       message.error('删除失败');
     }
@@ -104,12 +89,12 @@ const CheckpointPage: React.FC = () => {
             value={runId}
             onChange={(e) => setRunId(e.target.value)}
             style={{ width: 360 }}
-            onPressEnter={fetchCheckpoints}
+            onPressEnter={handleSearch}
           />
           <Button
             type="primary"
             icon={<SearchOutlined />}
-            onClick={fetchCheckpoints}
+            onClick={handleSearch}
             loading={loading}
             disabled={!runId.trim()}
           >
@@ -144,7 +129,7 @@ const CheckpointPage: React.FC = () => {
             <ReloadOutlined
               key="reload"
               style={{ cursor: 'pointer', fontSize: 16 }}
-              onClick={fetchCheckpoints}
+              onClick={() => void refetch()}
             />,
           ]}
         />

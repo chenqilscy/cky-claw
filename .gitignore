@@ -73,6 +73,11 @@ logs/
 # === Graphify ===
 graphify-out/
 
+# === Deploy archives ===
+maf-deploy.*
+*.tar
+*.zip
+
 # Local tool directories
 .claude/
 .omc/

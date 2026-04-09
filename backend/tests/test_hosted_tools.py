@@ -19,9 +19,9 @@ class TestHostedToolGroupsSeed:
 
     def test_hosted_groups_definition(self) -> None:
         """定义包含 5 个工具组。"""
-        assert len(_HOSTED_TOOL_GROUPS) == 5
+        assert len(_HOSTED_TOOL_GROUPS) == 6
         names = {str(g["name"]) for g in _HOSTED_TOOL_GROUPS}
-        assert names == {"web-search", "code-executor", "file-ops", "http", "database"}
+        assert names == {"web-search", "code-executor", "file-ops", "http", "database", "code-review"}
 
     def test_hosted_groups_each_has_tools(self) -> None:
         """每个工具组至少有 1 个工具定义。"""
@@ -40,8 +40,8 @@ class TestHostedToolGroupsSeed:
         db.execute.return_value = mock_result
 
         count = await seed_hosted_tool_groups(db)
-        assert count == 5
-        assert db.add.call_count == 5
+        assert count == 6
+        assert db.add.call_count == 6
         db.commit.assert_called_once()
 
     @pytest.mark.asyncio
@@ -75,8 +75,8 @@ class TestHostedToolGroupsSeed:
         db.execute = mock_execute
 
         count = await seed_hosted_tool_groups(db)
-        assert count == 2
-        assert db.add.call_count == 2
+        assert count == 3
+        assert db.add.call_count == 3
 
     def test_hosted_groups_have_source_hosted(self) -> None:
         """确认 seed 创建的记录 source='hosted'。"""

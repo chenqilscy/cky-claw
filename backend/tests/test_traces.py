@@ -33,6 +33,7 @@ def _make_trace_record(**overrides: Any) -> MagicMock:
         "end_time": now,
         "duration_ms": 150,
         "metadata": {},
+        "metadata_": {},
         "created_at": now,
     }
     defaults.update(overrides)
@@ -61,6 +62,7 @@ def _make_span_record(**overrides: Any) -> MagicMock:
         "output": {"text": "world"},
         "output_data": {"text": "world"},
         "metadata": {},
+        "metadata_": {},
         "model": None,
         "token_usage": None,
         "created_at": now,

@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, waitFor } from '@testing-library/react';
+import { TestQueryWrapper } from '../test-utils';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 
 // Mock ProTable
@@ -31,11 +32,13 @@ import AgentVersionPage from '../../pages/agents/AgentVersionPage';
 
 function renderWithRouter(agentId = 'agent-1') {
   return render(
-    <MemoryRouter initialEntries={[`/agents/${agentId}/versions`]}>
-      <Routes>
-        <Route path="/agents/:agentId/versions" element={<AgentVersionPage />} />
-      </Routes>
-    </MemoryRouter>
+    <TestQueryWrapper>
+      <MemoryRouter initialEntries={[`/agents/${agentId}/versions`]}>
+        <Routes>
+          <Route path="/agents/:agentId/versions" element={<AgentVersionPage />} />
+        </Routes>
+      </MemoryRouter>
+    </TestQueryWrapper>
   );
 }
 

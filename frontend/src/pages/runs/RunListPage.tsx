@@ -1,18 +1,17 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { App, Card, Row, Col, Statistic, DatePicker, Input, Space, Tag, Segmented } from 'antd';
+import { useMemo, useState } from 'react';
+import { Card, Row, Col, Statistic, DatePicker, Input, Space, Tag, Segmented } from 'antd';
 import { ReloadOutlined } from '@ant-design/icons';
 import { ProTable } from '@ant-design/pro-components';
 import type { ProColumns } from '@ant-design/pro-components';
-import { tokenUsageService } from '../../services/tokenUsageService';
 import type {
   TokenUsageLog,
   TokenUsageSummaryItem,
   TokenUsageByUserItem,
   TokenUsageByModelItem,
   TokenUsageListParams,
-  TokenUsageSummaryParams,
   SummaryGroupBy,
 } from '../../services/tokenUsageService';
+import { useTokenUsageList, useTokenUsageSummary } from '../../hooks/useTokenUsageQueries';
 
 const { RangePicker } = DatePicker;
 
@@ -25,71 +24,36 @@ const GROUP_BY_OPTIONS: { label: string; value: SummaryGroupBy }[] = [
 ];
 
 const RunListPage: React.FC = () => {
-  const { message } = App.useApp();
-  const [data, setData] = useState<TokenUsageLog[]>([]);
-  const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const [summaryData, setSummaryData] = useState<AnySummaryItem[]>([]);
-  const [summaryLoading, setSummaryLoading] = useState(false);
   const [agentFilter, setAgentFilter] = useState<string>('');
   const [modelFilter, setModelFilter] = useState<string>('');
   const [timeRange, setTimeRange] = useState<[string, string] | null>(null);
   const [pagination, setPagination] = useState({ current: 1, pageSize: 20 });
   const [groupBy, setGroupBy] = useState<SummaryGroupBy>('agent_model');
 
-  const buildParams = useCallback((): TokenUsageListParams => {
-    const params: TokenUsageListParams = {
-      limit: pagination.pageSize,
-      offset: (pagination.current - 1) * pagination.pageSize,
-    };
-    if (agentFilter) params.agent_name = agentFilter;
-    if (modelFilter) params.model = modelFilter;
-    if (timeRange) {
-      params.start_time = timeRange[0];
-      params.end_time = timeRange[1];
-    }
-    return params;
-  }, [pagination, agentFilter, modelFilter, timeRange]);
+  // TanStack Query
+  const listParams: TokenUsageListParams = {
+    limit: pagination.pageSize,
+    offset: (pagination.current - 1) * pagination.pageSize,
+  };
+  if (agentFilter) listParams.agent_name = agentFilter;
+  if (modelFilter) listParams.model = modelFilter;
+  if (timeRange) {
+    listParams.start_time = timeRange[0];
+    listParams.end_time = timeRange[1];
+  }
 
-  const fetchList = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await tokenUsageService.list(buildParams());
-      setData(res.data);
-      setTotal(res.total);
-    } catch {
-      message.error('获取 Token 消耗记录失败');
-    } finally {
-      setLoading(false);
-    }
-  }, [buildParams, message]);
+  const { data: listData, isLoading: loading, refetch: refetchList } = useTokenUsageList(listParams);
+  const data = listData?.data ?? [];
+  const total = listData?.total ?? 0;
 
-  const fetchSummary = useCallback(async () => {
-    setSummaryLoading(true);
-    try {
-      const params: TokenUsageSummaryParams = { group_by: groupBy };
-      if (agentFilter) params.agent_name = agentFilter;
-      if (modelFilter) params.model = modelFilter;
-      if (timeRange) {
-        params.start_time = timeRange[0];
-        params.end_time = timeRange[1];
-      }
-      const res = await tokenUsageService.summary(params);
-      setSummaryData(res.data);
-    } catch {
-      message.error('获取汇总数据失败');
-    } finally {
-      setSummaryLoading(false);
-    }
-  }, [agentFilter, modelFilter, timeRange, groupBy, message]);
-
-  useEffect(() => {
-    fetchList();
-  }, [fetchList]);
-
-  useEffect(() => {
-    fetchSummary();
-  }, [fetchSummary]);
+  const summaryParams = {
+    group_by: groupBy,
+    ...(agentFilter ? { agent_name: agentFilter } : {}),
+    ...(modelFilter ? { model: modelFilter } : {}),
+    ...(timeRange ? { start_time: timeRange[0], end_time: timeRange[1] } : {}),
+  };
+  const { data: summaryResponse, isLoading: summaryLoading, refetch: refetchSummary } = useTokenUsageSummary(summaryParams);
+  const summaryData = (summaryResponse?.data ?? []) as AnySummaryItem[];
 
   const totalTokens = summaryData.reduce((sum, item) => sum + item.total_tokens, 0);
   const totalCalls = summaryData.reduce((sum, item) => sum + item.call_count, 0);
@@ -198,7 +162,7 @@ const RunListPage: React.FC = () => {
     return [...dimensionCols, ...shared];
   }, [groupBy]);
 
-  const summaryRowKey = useCallback((record: AnySummaryItem) => {
+  const summaryRowKey = (record: AnySummaryItem) => {
     if (groupBy === 'agent_model') {
       const r = record as TokenUsageSummaryItem;
       return `${r.agent_name}-${r.model}`;
@@ -206,7 +170,7 @@ const RunListPage: React.FC = () => {
       return `user-${(record as TokenUsageByUserItem).user_id ?? 'null'}`;
     }
     return `model-${(record as TokenUsageByModelItem).model}`;
-  }, [groupBy]);
+  };
 
   const summaryTitle = useMemo(() => {
     const labels: Record<SummaryGroupBy, string> = {
@@ -311,7 +275,7 @@ const RunListPage: React.FC = () => {
           <ReloadOutlined
             key="reload"
             style={{ cursor: 'pointer', fontSize: 16 }}
-            onClick={() => { fetchList(); fetchSummary(); }}
+            onClick={() => { void refetchList(); void refetchSummary(); }}
           />,
         ]}
       />

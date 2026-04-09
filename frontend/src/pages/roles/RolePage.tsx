@@ -1,16 +1,24 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import {
-  Card, Button, Space, Modal, Form, Input, Table, Tag, message, Popconfirm, Empty,
-  Typography, Checkbox, Tooltip,
+  Form, Input, Tag, Button, Space, Popconfirm, Tooltip, Checkbox, Table,
+  Typography,
 } from 'antd';
 import {
-  PlusOutlined, ReloadOutlined, DeleteOutlined, EditOutlined,
+  DeleteOutlined, EditOutlined,
   SafetyCertificateOutlined, LockOutlined,
 } from '@ant-design/icons';
+import type { ProColumns } from '@ant-design/pro-components';
+import type { FormInstance } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { roleService } from '../../services/roleService';
-import type { RoleItem, RoleCreateParams } from '../../services/roleService';
+import type { RoleItem, RoleCreateParams, RoleUpdateParams } from '../../services/roleService';
+import {
+  useRoleList,
+  useCreateRole,
+  useUpdateRole,
+  useDeleteRole,
+} from '../../hooks/useRoleQueries';
+import { CrudTable } from '../../components';
+import type { CrudTableActions } from '../../components';
 
 const { Text } = Typography;
 
@@ -44,59 +52,79 @@ const RESOURCE_LABELS: Record<string, string> = {
   users: '用户',
 };
 
+const permissionCount = (perms: Record<string, string[]>) =>
+  Object.values(perms).reduce((sum, actions) => sum + actions.length, 0);
+
+/* ---- 列定义 ---- */
+
+const buildColumns = (
+  actions: CrudTableActions<RoleItem>,
+): ProColumns<RoleItem>[] => [
+  {
+    title: '角色名',
+    dataIndex: 'name',
+    render: (_, record) => (
+      <Space>
+        <Text strong>{record.name}</Text>
+        {record.is_system && <Tag color="gold"><LockOutlined /> 系统</Tag>}
+      </Space>
+    ),
+  },
+  { title: '描述', dataIndex: 'description', ellipsis: true },
+  {
+    title: '权限数',
+    width: 100,
+    render: (_, record) => (
+      <Tag color="blue">{permissionCount(record.permissions)}</Tag>
+    ),
+  },
+  {
+    title: '更新时间',
+    dataIndex: 'updated_at',
+    width: 180,
+    render: (_, record) => new Date(record.updated_at).toLocaleString(),
+  },
+  {
+    title: '操作',
+    width: 120,
+    render: (_, record) => (
+      <Space>
+        <Tooltip title="编辑">
+          <Button
+            type="link"
+            size="small"
+            icon={<EditOutlined />}
+            onClick={() => actions.openEdit(record)}
+            disabled={record.is_system}
+          />
+        </Tooltip>
+        <Popconfirm
+          title="确认删除此角色？"
+          onConfirm={() => actions.handleDelete(record.id)}
+          okText="删除"
+          cancelText="取消"
+          disabled={record.is_system}
+        >
+          <Tooltip title={record.is_system ? '系统角色不可删除' : '删除'}>
+            <Button type="link" danger size="small" icon={<DeleteOutlined />} disabled={record.is_system} />
+          </Tooltip>
+        </Popconfirm>
+      </Space>
+    ),
+  },
+];
+
+/* ---- 页面组件 ---- */
+
 const RolePage: React.FC = () => {
-  const [createOpen, setCreateOpen] = useState(false);
-  const [editRecord, setEditRecord] = useState<RoleItem | null>(null);
   const [permissions, setPermissions] = useState<Record<string, string[]>>({});
-  const [form] = Form.useForm();
-  const queryClient = useQueryClient();
 
-  const { data, isLoading, refetch } = useQuery({
-    queryKey: ['roles'],
-    queryFn: () => roleService.list({ limit: 200 }),
-  });
-  const roles = data?.data ?? [];
+  const queryResult = useRoleList({ limit: 200 });
+  const createMutation = useCreateRole();
+  const updateMutation = useUpdateRole();
+  const deleteMutation = useDeleteRole();
 
-  const createMutation = useMutation({
-    mutationFn: (params: RoleCreateParams) => roleService.create(params),
-    onSuccess: () => { void queryClient.invalidateQueries({ queryKey: ['roles'] }); },
-  });
-
-  const updateMutation = useMutation({
-    mutationFn: ({ id, data: d }: { id: string; data: { description?: string; permissions?: Record<string, string[]> } }) =>
-      roleService.update(id, d),
-    onSuccess: () => { void queryClient.invalidateQueries({ queryKey: ['roles'] }); },
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: (id: string) => roleService.delete(id),
-    onSuccess: () => { void queryClient.invalidateQueries({ queryKey: ['roles'] }); },
-  });
-
-  const handleCreate = () => {
-    setEditRecord(null);
-    setPermissions({});
-    form.resetFields();
-    setCreateOpen(true);
-  };
-
-  const handleEdit = (record: RoleItem) => {
-    setEditRecord(record);
-    setPermissions({ ...record.permissions });
-    form.setFieldsValue({ name: record.name, description: record.description });
-    setCreateOpen(true);
-  };
-
-  const handleDelete = async (id: string) => {
-    try {
-      await deleteMutation.mutateAsync(id);
-      message.success('已删除');
-    } catch {
-      message.error('删除失败');
-    }
-  };
-
-  const togglePermission = (resource: string, action: string) => {
+  const togglePermission = useCallback((resource: string, action: string) => {
     setPermissions((prev) => {
       const current = prev[resource] ?? [];
       const has = current.includes(action);
@@ -105,163 +133,93 @@ const RolePage: React.FC = () => {
         [resource]: has ? current.filter((a) => a !== action) : [...current, action],
       };
     });
-  };
+  }, []);
 
-  const handleSubmit = async () => {
-    try {
-      const values = await form.validateFields();
-      if (editRecord) {
-        await updateMutation.mutateAsync({
-          id: editRecord.id,
-          data: { description: values.description, permissions },
-        });
-        message.success('更新成功');
-      } else {
-        await createMutation.mutateAsync({
-          name: values.name,
-          description: values.description,
-          permissions,
-        });
-        message.success('创建成功');
-      }
-      setCreateOpen(false);
-    } catch {
-      message.error('操作失败');
-    }
-  };
-
-  const permissionCount = (perms: Record<string, string[]>) =>
-    Object.values(perms).reduce((sum, actions) => sum + actions.length, 0);
-
-  const columns: ColumnsType<RoleItem> = [
+  const permMatrixColumns: ColumnsType<{ resource: string }> = [
     {
-      title: '角色名',
-      dataIndex: 'name',
-      key: 'name',
-      render: (name: string, record: RoleItem) => (
-        <Space>
-          <Text strong>{name}</Text>
-          {record.is_system && <Tag color="gold"><LockOutlined /> 系统</Tag>}
-        </Space>
+      title: '资源',
+      dataIndex: 'resource',
+      width: 140,
+      render: (r: string) => RESOURCE_LABELS[r] ?? r,
+    },
+    ...ACTIONS.map((action) => ({
+      title: action,
+      key: action,
+      width: 80,
+      render: (_: unknown, row: { resource: string }) => (
+        <Checkbox
+          checked={(permissions[row.resource] ?? []).includes(action)}
+          onChange={() => togglePermission(row.resource, action)}
+        />
       ),
-    },
-    { title: '描述', dataIndex: 'description', key: 'description', ellipsis: true },
-    {
-      title: '权限数',
-      key: 'perms',
-      width: 100,
-      render: (_: unknown, record: RoleItem) => (
-        <Tag color="blue">{permissionCount(record.permissions)}</Tag>
-      ),
-    },
-    {
-      title: '更新时间',
-      dataIndex: 'updated_at',
-      key: 'updated_at',
-      width: 180,
-      render: (v: string) => new Date(v).toLocaleString(),
-    },
-    {
-      title: '操作',
-      key: 'action',
-      width: 120,
-      render: (_: unknown, record: RoleItem) => (
-        <Space>
-          <Tooltip title="编辑">
-            <Button
-              type="link"
-              size="small"
-              icon={<EditOutlined />}
-              onClick={() => handleEdit(record)}
-              disabled={record.is_system}
-            />
-          </Tooltip>
-          <Popconfirm
-            title="确认删除此角色？"
-            onConfirm={() => handleDelete(record.id)}
-            okText="删除"
-            cancelText="取消"
-            disabled={record.is_system}
-          >
-            <Tooltip title={record.is_system ? '系统角色不可删除' : '删除'}>
-              <Button type="link" danger size="small" icon={<DeleteOutlined />} disabled={record.is_system} />
-            </Tooltip>
-          </Popconfirm>
-        </Space>
-      ),
-    },
+    })),
   ];
+
+  /** renderForm 需要访问 permissions state，所以在组件内定义 */
+  const renderForm = (_form: FormInstance, editing: RoleItem | null) => (
+    <>
+      <Form.Item
+        name="name"
+        label="角色名"
+        rules={[{ required: true, pattern: /^[a-z][a-z0-9_-]{1,62}[a-z0-9]$/, message: '小写字母开头，字母/数字/连字符/下划线' }]}
+      >
+        <Input placeholder="dev-team" disabled={!!editing} />
+      </Form.Item>
+      <Form.Item name="description" label="描述">
+        <Input placeholder="角色描述" />
+      </Form.Item>
+
+      <Text strong>权限矩阵</Text>
+      <Table
+        size="small"
+        pagination={false}
+        rowKey="resource"
+        dataSource={RESOURCES.map((r) => ({ resource: r }))}
+        style={{ marginTop: 12 }}
+        columns={permMatrixColumns}
+      />
+    </>
+  );
 
   return (
     <div style={{ padding: 24 }}>
-      <Card
+      <CrudTable<
+        RoleItem,
+        RoleCreateParams,
+        { id: string; data: RoleUpdateParams }
+      >
         title={<Space><SafetyCertificateOutlined />角色管理 (RBAC)</Space>}
-        extra={
-          <Space>
-            <Button icon={<ReloadOutlined />} onClick={() => void refetch()}>刷新</Button>
-            <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>新建角色</Button>
-          </Space>
-        }
-      >
-        <Table
-          rowKey="id"
-          columns={columns}
-          dataSource={roles}
-          loading={isLoading}
-          pagination={false}
-          locale={{ emptyText: <Empty description="暂无角色" /> }}
-        />
-      </Card>
-
-      <Modal
-        title={editRecord ? '编辑角色' : '新建角色'}
-        open={createOpen}
-        onCancel={() => setCreateOpen(false)}
-        width={720}
-        onOk={() => void handleSubmit()}
-        okText={editRecord ? '保存' : '创建'}
-      >
-        <Form form={form} layout="vertical">
-          <Form.Item
-            name="name"
-            label="角色名"
-            rules={[{ required: true, pattern: /^[a-z][a-z0-9_-]{1,62}[a-z0-9]$/, message: '小写字母开头，字母/数字/连字符/下划线' }]}
-          >
-            <Input placeholder="dev-team" disabled={!!editRecord} />
-          </Form.Item>
-          <Form.Item name="description" label="描述">
-            <Input placeholder="角色描述" />
-          </Form.Item>
-        </Form>
-
-        <Text strong>权限矩阵</Text>
-        <Table
-          size="small"
-          pagination={false}
-          rowKey="resource"
-          dataSource={RESOURCES.map((r) => ({ resource: r }))}
-          style={{ marginTop: 12 }}
-          columns={[
-            {
-              title: '资源',
-              dataIndex: 'resource',
-              width: 140,
-              render: (r: string) => RESOURCE_LABELS[r] ?? r,
-            },
-            ...ACTIONS.map((action) => ({
-              title: action,
-              key: action,
-              width: 80,
-              render: (_: unknown, row: { resource: string }) => (
-                <Checkbox
-                  checked={(permissions[row.resource] ?? []).includes(action)}
-                  onChange={() => togglePermission(row.resource, action)}
-                />
-              ),
-            })),
-          ]}
-        />
-      </Modal>
+        queryResult={queryResult}
+        createMutation={createMutation}
+        updateMutation={updateMutation}
+        deleteMutation={deleteMutation}
+        createButtonText="新建角色"
+        modalTitle={(editing) => (editing ? '编辑角色' : '新建角色')}
+        modalWidth={720}
+        columns={(actions) => buildColumns(actions)}
+        renderForm={renderForm}
+        toFormValues={(record) => {
+          setPermissions({ ...record.permissions });
+          return {
+            name: record.name,
+            description: record.description,
+          };
+        }}
+        toCreatePayload={(values) => ({
+          name: values.name as string,
+          description: (values.description as string) || '',
+          permissions,
+        })}
+        toUpdatePayload={(values, record) => ({
+          id: record.id,
+          data: {
+            description: (values.description as string) || '',
+            permissions,
+          },
+        })}
+        createDefaults={{}}
+        showRefresh
+      />
     </div>
   );
 };

@@ -32,6 +32,10 @@ class Settings(BaseSettings):
     otel_service_name: str = "ckyclaw-backend"
     otel_exporter_endpoint: str = "http://localhost:4317"
 
+    # 可观测性 UI 外链（供前端展示跳转按钮）
+    jaeger_ui_url: str = ""
+    prometheus_ui_url: str = ""
+
     # OAuth 2.0 — GitHub
     oauth_github_client_id: str = ""
     oauth_github_client_secret: str = ""

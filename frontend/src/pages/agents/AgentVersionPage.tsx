@@ -1,10 +1,10 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   Button,
   Card,
   Descriptions,
-  message,
+  App,
   Modal,
   Popconfirm,
   Space,
@@ -17,13 +17,12 @@ import { ProTable } from '@ant-design/pro-components';
 import type { ProColumns } from '@ant-design/pro-components';
 import { agentVersionService } from '../../services/agentVersionService';
 import type { AgentVersion, AgentVersionDiffResponse } from '../../services/agentVersionService';
+import { useAgentVersionList, useRollbackAgentVersion } from '../../hooks/useAgentVersionQueries';
 
 const AgentVersionPage: React.FC = () => {
+  const { message } = App.useApp();
   const navigate = useNavigate();
   const { agentId } = useParams<{ agentId: string }>();
-  const [data, setData] = useState<AgentVersion[]>([]);
-  const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(false);
   const [pagination, setPagination] = useState({ current: 1, pageSize: 20 });
 
   // Snapshot detail modal
@@ -35,34 +34,20 @@ const AgentVersionPage: React.FC = () => {
   const [selectedRows, setSelectedRows] = useState<AgentVersion[]>([]);
   const [showOnlyChanges, setShowOnlyChanges] = useState(true);
 
-  const fetchVersions = useCallback(async () => {
-    if (!agentId) return;
-    setLoading(true);
-    try {
-      const offset = (pagination.current - 1) * pagination.pageSize;
-      const res = await agentVersionService.list(agentId, {
-        limit: pagination.pageSize,
-        offset,
-      });
-      setData(res.data);
-      setTotal(res.total);
-    } catch {
-      message.error('获取版本列表失败');
-    } finally {
-      setLoading(false);
-    }
-  }, [agentId, pagination]);
-
-  useEffect(() => {
-    fetchVersions();
-  }, [fetchVersions]);
+  const listParams = useMemo(() => ({
+    limit: pagination.pageSize,
+    offset: (pagination.current - 1) * pagination.pageSize,
+  }), [pagination]);
+  const { data: listData, isLoading: loading } = useAgentVersionList(agentId, listParams);
+  const data = listData?.data ?? [];
+  const total = listData?.total ?? 0;
+  const rollbackMutation = useRollbackAgentVersion();
 
   const handleRollback = async (version: number) => {
     if (!agentId) return;
     try {
-      await agentVersionService.rollback(agentId, version);
+      await rollbackMutation.mutateAsync({ agentId, version });
       message.success(`已回滚至 v${version}`);
-      fetchVersions();
     } catch {
       message.error('回滚失败');
     }

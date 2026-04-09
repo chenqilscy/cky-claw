@@ -1,9 +1,9 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Table, Card, Tag, Input, Select, Space, Typography, Tooltip } from 'antd';
 import { AuditOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import type { AuditLog } from '../../services/auditLogService';
-import { listAuditLogs } from '../../services/auditLogService';
+import { useAuditLogList } from '../../hooks/useAuditLogQueries';
 
 const { Title } = Typography;
 const { Search } = Input;
@@ -15,35 +15,21 @@ const ACTION_COLORS: Record<string, string> = {
 };
 
 const AuditLogPage: React.FC = () => {
-  const [data, setData] = useState<AuditLog[]>([]);
-  const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const [actionFilter, setActionFilter] = useState<string | undefined>();
   const [resourceTypeFilter, setResourceTypeFilter] = useState<string | undefined>();
   const [resourceIdFilter, setResourceIdFilter] = useState<string | undefined>();
 
-  const fetchData = useCallback(async () => {
-    setLoading(true);
-    try {
-      const result = await listAuditLogs({
-        limit: pageSize,
-        offset: (page - 1) * pageSize,
-        action: actionFilter,
-        resource_type: resourceTypeFilter,
-        resource_id: resourceIdFilter,
-      });
-      setData(result.data);
-      setTotal(result.total);
-    } finally {
-      setLoading(false);
-    }
-  }, [page, pageSize, actionFilter, resourceTypeFilter, resourceIdFilter]);
-
-  useEffect(() => {
-    void fetchData();
-  }, [fetchData]);
+  const { data: listData, isLoading: loading } = useAuditLogList({
+    limit: pageSize,
+    offset: (page - 1) * pageSize,
+    action: actionFilter,
+    resource_type: resourceTypeFilter,
+    resource_id: resourceIdFilter,
+  });
+  const data = listData?.data ?? [];
+  const total = listData?.total ?? 0;
 
   const columns: ColumnsType<AuditLog> = [
     {

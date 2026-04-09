@@ -14,12 +14,7 @@ import {
 import '@xyflow/react/dist/style.css';
 import type { StepSchema, EdgeSchema } from '../../services/workflowService';
 
-const NODE_COLORS: Record<string, string> = {
-  agent: '#1890ff',
-  parallel: '#52c41a',
-  conditional: '#fa8c16',
-  loop: '#722ed1',
-};
+import { NODE_COLORS } from '../../constants/colors';
 
 const NODE_LABELS: Record<string, string> = {
   agent: 'Agent',

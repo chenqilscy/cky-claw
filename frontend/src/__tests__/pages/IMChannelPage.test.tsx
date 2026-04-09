@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, act } from '@testing-library/react';
+import { TestQueryWrapper } from '../test-utils';
 
 /* ---------- mock imChannelService ---------- */
 const mockListIMChannels = vi.fn();
@@ -30,7 +31,7 @@ describe('IMChannelPage', () => {
   it('渲染页面标题', async () => {
     let container!: HTMLElement;
     await act(async () => {
-      ({ container } = render(<IMChannelPage />));
+      ({ container } = render(<TestQueryWrapper><IMChannelPage /></TestQueryWrapper>));
     });
     const text = container.textContent ?? '';
     expect(text).toContain('IM 渠道管理');
@@ -39,7 +40,7 @@ describe('IMChannelPage', () => {
   it('渲染新建按钮', async () => {
     let container!: HTMLElement;
     await act(async () => {
-      ({ container } = render(<IMChannelPage />));
+      ({ container } = render(<TestQueryWrapper><IMChannelPage /></TestQueryWrapper>));
     });
     const text = container.textContent ?? '';
     expect(text).toContain('创建渠道');
@@ -47,7 +48,7 @@ describe('IMChannelPage', () => {
 
   it('调用列表接口', async () => {
     await act(async () => {
-      render(<IMChannelPage />);
+      render(<TestQueryWrapper><IMChannelPage /></TestQueryWrapper>);
     });
     expect(mockListIMChannels).toHaveBeenCalled();
   });
@@ -56,7 +57,7 @@ describe('IMChannelPage', () => {
     mockListIMChannels.mockRejectedValueOnce(new Error('fail'));
     let container!: HTMLElement;
     await act(async () => {
-      ({ container } = render(<IMChannelPage />));
+      ({ container } = render(<TestQueryWrapper><IMChannelPage /></TestQueryWrapper>));
     });
     expect(container).toBeTruthy();
   });
