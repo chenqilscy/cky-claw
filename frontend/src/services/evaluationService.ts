@@ -112,3 +112,27 @@ export async function listFeedbacks(params?: {
 export async function createFeedback(data: RunFeedbackCreate): Promise<RunFeedback> {
   return api.post<RunFeedback>('/api/v1/evaluations/feedbacks', data);
 }
+
+/* ---------- 自动评估（LLM-as-Judge）---------- */
+
+export interface AutoEvaluateRequest {
+  run_id: string;
+  agent_id?: string | null;
+  user_input: string;
+  agent_output: string;
+  duration_ms?: number;
+  total_tokens?: number;
+  turn_count?: number;
+  last_agent?: string;
+  judge_model?: string | null;
+}
+
+export async function autoEvaluate(data: AutoEvaluateRequest): Promise<RunEvaluation> {
+  return api.post<RunEvaluation>('/api/v1/evaluations/auto', data);
+}
+
+export async function autoEvaluateByRunId(runId: string, judgeModel?: string): Promise<RunEvaluation> {
+  const params: Record<string, string> = {};
+  if (judgeModel) params.judge_model = judgeModel;
+  return api.post<RunEvaluation>(`/api/v1/evaluations/auto/${runId}`, params);
+}

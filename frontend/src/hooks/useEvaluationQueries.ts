@@ -4,9 +4,9 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   listEvaluations, createEvaluation, getAgentQuality,
-  listFeedbacks, createFeedback,
+  listFeedbacks, createFeedback, autoEvaluate, autoEvaluateByRunId,
 } from '../services/evaluationService';
-import type { RunEvaluationCreate, RunFeedbackCreate } from '../services/evaluationService';
+import type { RunEvaluationCreate, RunFeedbackCreate, AutoEvaluateRequest } from '../services/evaluationService';
 
 const EVAL_KEY = ['evaluations'] as const;
 const FEEDBACK_KEY = ['feedbacks'] as const;
@@ -53,5 +53,24 @@ export function useAgentQuality(agentId: string | undefined) {
     queryKey: [...QUALITY_KEY, agentId],
     queryFn: () => getAgentQuality(agentId as string),
     enabled: !!agentId,
+  });
+}
+
+/* ---------- Auto Evaluation ---------- */
+
+export function useAutoEvaluate() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: AutoEvaluateRequest) => autoEvaluate(data),
+    onSuccess: () => { void qc.invalidateQueries({ queryKey: EVAL_KEY }); },
+  });
+}
+
+export function useAutoEvaluateByRunId() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ runId, judgeModel }: { runId: string; judgeModel?: string }) =>
+      autoEvaluateByRunId(runId, judgeModel),
+    onSuccess: () => { void qc.invalidateQueries({ queryKey: EVAL_KEY }); },
   });
 }

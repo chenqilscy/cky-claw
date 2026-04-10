@@ -866,7 +866,7 @@ async def execute_run(
         from app.services.trace_processor import PostgresTraceProcessor
 
         run_id = str(uuid.uuid4())
-        trace_processor = PostgresTraceProcessor(session_id=str(session_id))
+        trace_processor = PostgresTraceProcessor(session_id=str(session_id), run_id=run_id)
         model = _ensure_model_prefix(request.config.model_override or agent_config.model, provider_type)
 
         # 审批处理器：非 full-auto 模式时创建 HttpApprovalHandler
@@ -1041,7 +1041,7 @@ async def execute_run_stream(
     from app.services.trace_processor import PostgresTraceProcessor
 
     run_id = str(uuid.uuid4())
-    trace_processor = PostgresTraceProcessor(session_id=str(session_id))
+    trace_processor = PostgresTraceProcessor(session_id=str(session_id), run_id=run_id)
     model = _ensure_model_prefix(request.config.model_override or agent_config.model, provider_type)
 
     # 审批处理器：非 full-auto 模式时创建 HttpApprovalHandler

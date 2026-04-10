@@ -20,8 +20,9 @@ class PostgresTraceProcessor(TraceProcessor):  # type: ignore[misc]
     然后使用已有的 AsyncSession 写入数据库。
     """
 
-    def __init__(self, *, session_id: str | None = None) -> None:
+    def __init__(self, *, session_id: str | None = None, run_id: str | None = None) -> None:
         self._session_id = session_id
+        self._run_id = run_id
         self._trace_data: dict[str, Any] | None = None
         self._span_data: list[dict[str, Any]] = []
 
@@ -72,6 +73,11 @@ class PostgresTraceProcessor(TraceProcessor):  # type: ignore[misc]
                 if span_type == "agent" and span.parent_span_id is None:
                     self._trace_data["agent_name"] = span.name
                     break
+            # 在 metadata 中存储 run_id，便于评估系统关联
+            if self._run_id:
+                metadata = self._trace_data.get("metadata_", {})
+                metadata["run_id"] = self._run_id
+                self._trace_data["metadata_"] = metadata
 
     def get_collected_data(self) -> tuple[dict[str, Any] | None, list[dict[str, Any]]]:
         """获取收集的 Trace/Span 数据。"""

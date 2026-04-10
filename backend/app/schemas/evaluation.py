@@ -108,3 +108,17 @@ class AgentQualitySummary(BaseModel):
     avg_overall: float = 0.0
     feedback_count: int = 0
     positive_rate: float = 0.0
+
+
+class AutoEvaluateRequest(BaseModel):
+    """自动评估请求（提供上下文）。"""
+
+    run_id: str = Field(..., description="运行 ID")
+    agent_id: uuid.UUID | None = Field(default=None, description="Agent ID")
+    user_input: str = Field(..., description="用户输入文本")
+    agent_output: str = Field(..., description="Agent 输出文本")
+    duration_ms: int = Field(default=0, ge=0, description="执行时间（ms）")
+    total_tokens: int = Field(default=0, ge=0, description="总 Token 消耗")
+    turn_count: int = Field(default=0, ge=0, description="对话轮次")
+    last_agent: str = Field(default="", description="最终处理 Agent")
+    judge_model: str | None = Field(default=None, description="Judge LLM 模型（默认 deepseek-chat）")

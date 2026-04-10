@@ -6,13 +6,13 @@ import {
 } from 'antd';
 import {
   PlusOutlined, ReloadOutlined, StarOutlined, LikeOutlined,
-  DislikeOutlined, BarChartOutlined,
+  DislikeOutlined, BarChartOutlined, RobotOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import type {
   RunEvaluation, RunEvaluationCreate,
   RunFeedback, RunFeedbackCreate,
-  AgentQualitySummary,
+  AgentQualitySummary, AutoEvaluateRequest,
 } from '../../services/evaluationService';
 import {
   getAgentQuality,
@@ -22,6 +22,8 @@ import {
   useCreateEvaluation,
   useFeedbackList,
   useCreateFeedback,
+  useAutoEvaluate,
+  useAutoEvaluateByRunId,
 } from '../../hooks/useEvaluationQueries';
 
 const { TextArea } = Input;
@@ -61,10 +63,14 @@ const EvaluationTab: React.FC = () => {
   const { message } = App.useApp();
   const { token } = theme.useToken();
   const [modalOpen, setModalOpen] = useState(false);
+  const [autoModalOpen, setAutoModalOpen] = useState(false);
+  const [autoByRunModalOpen, setAutoByRunModalOpen] = useState(false);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const [filterAgentId, setFilterAgentId] = useState('');
   const [form] = Form.useForm();
+  const [autoForm] = Form.useForm();
+  const [autoByRunForm] = Form.useForm();
 
   const { data: listData, isLoading: loading, refetch } = useEvaluationList({
     agent_id: filterAgentId || undefined,
@@ -75,6 +81,8 @@ const EvaluationTab: React.FC = () => {
   const total = listData?.total ?? 0;
 
   const createMutation = useCreateEvaluation();
+  const autoMutation = useAutoEvaluate();
+  const autoByRunMutation = useAutoEvaluateByRunId();
 
   const handleCreate = () => {
     form.resetFields();
@@ -167,6 +175,18 @@ const EvaluationTab: React.FC = () => {
         />
         <Button icon={<ReloadOutlined />} onClick={() => void refetch()}>刷新</Button>
         <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>新建评估</Button>
+        <Button
+          icon={<RobotOutlined />}
+          onClick={() => { autoForm.resetFields(); setAutoModalOpen(true); }}
+        >
+          LLM 自动评估
+        </Button>
+        <Button
+          icon={<RobotOutlined />}
+          onClick={() => { autoByRunForm.resetFields(); setAutoByRunModalOpen(true); }}
+        >
+          按 Run ID 自动评估
+        </Button>
       </Space>
 
       <Table
@@ -222,6 +242,104 @@ const EvaluationTab: React.FC = () => {
           </Form.Item>
           <Form.Item name="comment" label="评语">
             <TextArea rows={3} placeholder="对本次运行的评价" />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      <Modal
+        title="LLM 自动评估（提供上下文）"
+        open={autoModalOpen}
+        onOk={async () => {
+          try {
+            const values = await autoForm.validateFields();
+            const payload: AutoEvaluateRequest = {
+              run_id: values.run_id,
+              agent_id: values.agent_id || null,
+              user_input: values.user_input,
+              agent_output: values.agent_output,
+              duration_ms: values.duration_ms ?? 0,
+              total_tokens: values.total_tokens ?? 0,
+              turn_count: values.turn_count ?? 0,
+              last_agent: values.last_agent || '',
+              judge_model: values.judge_model || null,
+            };
+            await autoMutation.mutateAsync(payload);
+            message.success('LLM 自动评估完成');
+            setAutoModalOpen(false);
+          } catch {
+            // form validation or API error
+          }
+        }}
+        onCancel={() => setAutoModalOpen(false)}
+        confirmLoading={autoMutation.isPending}
+        width={640}
+        destroyOnClose
+      >
+        <Form form={autoForm} layout="vertical">
+          <Form.Item name="run_id" label="Run ID" rules={[{ required: true, message: '请输入 Run ID' }]}>
+            <Input placeholder="运行记录 ID" />
+          </Form.Item>
+          <Form.Item name="agent_id" label="Agent ID">
+            <Input placeholder="关联的 Agent ID（可选）" />
+          </Form.Item>
+          <Form.Item name="user_input" label="用户输入" rules={[{ required: true, message: '请输入用户原始内容' }]}>
+            <TextArea rows={3} placeholder="用户发送给 Agent 的原始消息" />
+          </Form.Item>
+          <Form.Item name="agent_output" label="Agent 输出" rules={[{ required: true, message: '请输入 Agent 回复' }]}>
+            <TextArea rows={3} placeholder="Agent 的回复内容" />
+          </Form.Item>
+          <Row gutter={16}>
+            <Col span={8}>
+              <Form.Item name="duration_ms" label="耗时 (ms)">
+                <InputNumber min={0} style={{ width: '100%' }} />
+              </Form.Item>
+            </Col>
+            <Col span={8}>
+              <Form.Item name="total_tokens" label="Token 消耗">
+                <InputNumber min={0} style={{ width: '100%' }} />
+              </Form.Item>
+            </Col>
+            <Col span={8}>
+              <Form.Item name="turn_count" label="轮次">
+                <InputNumber min={0} style={{ width: '100%' }} />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Form.Item name="last_agent" label="最终 Agent">
+            <Input placeholder="最终处理的 Agent 名称" />
+          </Form.Item>
+          <Form.Item name="judge_model" label="Judge 模型">
+            <Input placeholder="默认 deepseek-chat（可选）" />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      <Modal
+        title="按 Run ID 自动评估（从 Trace 提取）"
+        open={autoByRunModalOpen}
+        onOk={async () => {
+          try {
+            const values = await autoByRunForm.validateFields();
+            await autoByRunMutation.mutateAsync({
+              runId: values.run_id,
+              judgeModel: values.judge_model || undefined,
+            });
+            message.success('自动评估完成');
+            setAutoByRunModalOpen(false);
+          } catch {
+            // form validation or API error
+          }
+        }}
+        onCancel={() => setAutoByRunModalOpen(false)}
+        confirmLoading={autoByRunMutation.isPending}
+        destroyOnClose
+      >
+        <Form form={autoByRunForm} layout="vertical">
+          <Form.Item name="run_id" label="Run ID" rules={[{ required: true, message: '请输入 Run ID' }]}>
+            <Input placeholder="运行记录 ID（将自动从 Trace 提取上下文）" />
+          </Form.Item>
+          <Form.Item name="judge_model" label="Judge 模型">
+            <Input placeholder="默认 deepseek-chat（可选）" />
           </Form.Item>
         </Form>
       </Modal>
