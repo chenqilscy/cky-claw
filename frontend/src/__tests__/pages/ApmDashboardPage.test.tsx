@@ -10,6 +10,22 @@ vi.mock('../../services/apmService', () => ({
   },
 }));
 
+/* ---------- mock alertService ---------- */
+vi.mock('../../services/alertService', () => ({
+  alertService: {
+    listRules: vi.fn().mockResolvedValue({ data: [], total: 0 }),
+    createRule: vi.fn().mockResolvedValue({}),
+  },
+  SLOW_QUERY_PRESETS: [],
+}));
+
+/* ---------- mock systemService ---------- */
+vi.mock('../../services/systemService', () => ({
+  systemService: {
+    info: vi.fn().mockResolvedValue({ version: '1.0.0', environment: 'test' }),
+  },
+}));
+
 /* ---------- mock ECharts ---------- */
 vi.mock('echarts-for-react', () => ({
   default: (props: Record<string, unknown>) => (
