@@ -77,13 +77,16 @@ async def create_agent(db: AsyncSession, data: AgentCreate) -> AgentConfig:
         description=data.description,
         instructions=data.instructions,
         model=data.model,
+        provider_name=data.provider_name,
         model_settings=data.model_settings,
         tool_groups=data.tool_groups,
         handoffs=data.handoffs,
         guardrails=data.guardrails.model_dump(),
         approval_mode=data.approval_mode,
         mcp_servers=data.mcp_servers,
+        agent_tools=data.agent_tools,
         skills=data.skills,
+        output_type=data.output_type,
         metadata_=data.metadata,
     )
     db.add(agent)

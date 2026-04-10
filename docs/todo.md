@@ -2,7 +2,7 @@
 
 > 本文件记录 CkyClaw 项目的当前状态、未来演进方向和历史交付归档。
 >
-> 最后更新：2026-07-07 · 文档版本 v3.1.0
+> 最后更新：2026-07-08 · 文档版本 v3.2.0
 
 ---
 
@@ -15,7 +15,8 @@
 | Alembic 迁移 | **45** 个（0001–0045） |
 | API 路由模块 | **37** 个 |
 | 前端页面 | **38** 个（React.lazy 懒加载，含 29 菜单页 + 9 非菜单页） |
-| 前端测试文件 | **73** 个 |
+| 前端测试文件 | **74** 个 |
+| 前端测试数 | **401** 个（Vitest） |
 | CI Job | **6** 个 GitHub Actions + **5** Stage Jenkinsfile |
 | TypeScript 错误 | **0** |
 | Backend mypy | **0** 错误（166 源文件） |
@@ -45,7 +46,7 @@
 
 | # | 功能 | 说明 |
 |---|------|------|
-| F1 | 全链路启动验证 | PG + Redis + Backend + Frontend 完整功能流程体验、修复 UI/API 缺陷 |
+| F1 | ~~全链路启动验证~~ | ✅ 完成 — 25/25 API 验证通过 + Workflow metadata 列名修复（`f1-verify.ps1`） |
 | F2 | Kubernetes 部署 | Helm Chart / Kustomize + HPA + PDB + Ingress |
 | F3 | 日志聚合 | 结构化日志 + ELK/Loki 集成 (开源免费方案优先) |
 
@@ -54,7 +55,7 @@
 | # | 功能 | 说明 |
 |---|------|------|
 | F4 | Agents SDK 兼容层（优先级最低） | Adapter 允许 OpenAI Agents SDK 的 Agent 定义直接在 CkyClaw 上运行 |
-| F5 | 流式输出端到端优化 | Runner run_streamed 的 SSE/WebSocket 推送链路末端优化 |
+| F5 | ~~流式输出端到端优化~~ | ✅ 完成 — RAF 批处理 text_delta + tool_call/handoff 事件 UI + 13 测试（`useStreamReducer`） |
 | F6 | Agent 自动评估 Pipeline | 基于 Evolution Signal + 评估维度的自动化质量评分 |
 
 ### 3.3 用户体验（P2）
