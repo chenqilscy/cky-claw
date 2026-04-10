@@ -24,13 +24,13 @@ export default defineConfig({
       output: {
         manualChunks(id) {
           if (id.includes('node_modules')) {
-            // React 核心（必须独立 chunk，避免 antd/query 交叉依赖竞争）
-            if (id.includes('/react-dom/') || id.includes('/react/') || id.includes('/scheduler/')) {
-              return 'vendor-react';
-            }
-            // antd 生态（含 @ant-design、rc-* 全部子包）
+            // antd 生态（含 @ant-design、rc-* 全部子包）— 必须在 react 核心之前匹配
             if (id.includes('/antd/') || id.includes('/@ant-design/') || id.includes('/rc-')) {
               return 'vendor-antd';
+            }
+            // React 核心 — 精确匹配包名边界，避免误匹配 rc-* 内嵌 react
+            if (/[\\/]node_modules[\\/](react-dom|react|scheduler)[\\/]/.test(id)) {
+              return 'vendor-react';
             }
             if (id.includes('echarts')) {
               return 'vendor-charts';
