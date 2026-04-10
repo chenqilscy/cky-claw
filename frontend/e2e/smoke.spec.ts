@@ -49,7 +49,7 @@ test.describe('认证后页面', () => {
   test('A/B 测试页可加载', async ({ page }) => {
     await page.goto('/ab-test');
     await expect(page.locator('#root')).toBeVisible({ timeout: 10_000 });
-    await expect(page.locator('text=A/B')).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator('text=A/B').first()).toBeVisible({ timeout: 10_000 });
   });
 
   test('Traces 页可加载', async ({ page }) => {
