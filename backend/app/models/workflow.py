@@ -47,7 +47,7 @@ class WorkflowDefinition(SoftDeleteMixin, Base):
         JSONB, nullable=False, server_default=text("'[]'::jsonb")
     )
     metadata_: Mapped[dict[str, Any]] = mapped_column(
-        "metadata", JSONB, nullable=False, server_default=text("'{}'::jsonb")
+        JSONB, nullable=False, server_default=text("'{}'::jsonb")
     )
     org_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("organizations.id"), nullable=True, index=True
