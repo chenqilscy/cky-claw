@@ -1,8 +1,9 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react';
-import { Button, Input, Space, Spin, Typography, App, theme } from 'antd';
-import { SendOutlined } from '@ant-design/icons';
+import { Button, Input, Space, Spin, Tag, Typography, App, theme } from 'antd';
+import { SendOutlined, ToolOutlined, SwapOutlined } from '@ant-design/icons';
 import { chatService } from '../../services/chatService';
-import type { ChatMessage } from './ChatPage';
+import { useStreamReducer } from './useStreamReducer';
+import type { StreamMessage } from './useStreamReducer';
 
 const MarkdownRenderer = lazy(() => import('../../components/MarkdownRenderer'));
 
@@ -21,7 +22,15 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 }) => {
   const { message } = App.useApp();
   const { token } = theme.useToken();
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const {
+    messages,
+    setMessages,
+    appendUserMessage,
+    createAssistantMessage,
+    handleSSEEvent,
+    finalizeStream,
+    cancelPendingFlush,
+  } = useStreamReducer();
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -37,12 +46,13 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     setMessages([]);
   }, [sessionId, agentName]);
 
-  // 组件卸载时中止 SSE
+  // 组件卸载时中止 SSE + 取消 RAF
   useEffect(() => {
     return () => {
       abortRef.current?.abort();
+      cancelPendingFlush();
     };
-  }, []);
+  }, [cancelPendingFlush]);
 
   const handleSend = async () => {
     const text = input.trim();
@@ -56,13 +66,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     setSending(true);
 
     // 添加用户消息
-    const userMsg: ChatMessage = {
-      id: `user-${Date.now()}`,
-      role: 'user',
-      content: text,
-      timestamp: Date.now(),
-    };
-    setMessages((prev) => [...prev, userMsg]);
+    appendUserMessage(text);
 
     try {
       // 如果没有 session，先创建
@@ -74,47 +78,14 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       }
 
       // 添加一条空的 assistant 消息用于流式填充
-      const assistantMsgId = `assistant-${Date.now()}`;
-      const assistantMsg: ChatMessage = {
-        id: assistantMsgId,
-        role: 'assistant',
-        content: '',
-        agentName,
-        timestamp: Date.now(),
-        streaming: true,
-      };
-      setMessages((prev) => [...prev, assistantMsg]);
+      const assistantMsgId = createAssistantMessage(agentName);
 
-      // SSE 流式请求
+      // SSE 流式请求（text_delta 通过 RAF 批处理优化）
       const controller = chatService.runStream(
         sid,
         text,
         (event) => {
-          if (event.type === 'text_delta') {
-            const delta = (event.data as { delta?: string }).delta || '';
-            setMessages((prev) =>
-              prev.map((m) =>
-                m.id === assistantMsgId
-                  ? { ...m, content: m.content + delta }
-                  : m
-              )
-            );
-          } else if (event.type === 'agent_start') {
-            const name = (event.data as { agent_name?: string }).agent_name;
-            if (name) {
-              setMessages((prev) =>
-                prev.map((m) =>
-                  m.id === assistantMsgId ? { ...m, agentName: name } : m
-                )
-              );
-            }
-          } else if (event.type === 'run_end') {
-            setMessages((prev) =>
-              prev.map((m) =>
-                m.id === assistantMsgId ? { ...m, streaming: false } : m
-              )
-            );
-          } else if (event.type === 'error') {
+          if (event.type === 'error') {
             const data = event.data as { code?: string; message?: string };
             const code = data.code || '';
             const errMsg = data.message || '执行出错';
@@ -123,23 +94,17 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
             } else {
               message.error(errMsg);
             }
+          } else {
+            handleSSEEvent(assistantMsgId, event);
           }
         },
         () => {
           setSending(false);
-          setMessages((prev) =>
-            prev.map((m) =>
-              m.id === assistantMsgId ? { ...m, streaming: false } : m
-            )
-          );
+          finalizeStream(assistantMsgId);
         },
         () => {
           setSending(false);
-          setMessages((prev) =>
-            prev.map((m) =>
-              m.id === assistantMsgId ? { ...m, streaming: false } : m
-            )
-          );
+          finalizeStream(assistantMsgId);
         },
       );
       abortRef.current = controller;
@@ -203,6 +168,29 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                 <Text type="secondary" style={{ fontSize: 11, display: 'block', marginBottom: 4 }}>
                   {msg.agentName}
                 </Text>
+              )}
+              {/* 工具调用状态标签 */}
+              {(msg as StreamMessage).toolCalls && (msg as StreamMessage).toolCalls!.length > 0 && (
+                <div style={{ marginBottom: 4 }}>
+                  {(msg as StreamMessage).toolCalls!.map((tc, i) => (
+                    <Tag
+                      key={`${tc.name}-${i}`}
+                      icon={tc.status === 'running' ? <ToolOutlined spin /> : <ToolOutlined />}
+                      color={tc.status === 'running' ? 'processing' : 'success'}
+                      style={{ marginBottom: 2 }}
+                    >
+                      {tc.name}
+                    </Tag>
+                  ))}
+                </div>
+              )}
+              {/* Handoff 状态提示 */}
+              {(msg as StreamMessage).statusText && (
+                <div style={{ marginBottom: 4 }}>
+                  <Tag icon={<SwapOutlined />} color="blue">
+                    {(msg as StreamMessage).statusText}
+                  </Tag>
+                </div>
               )}
               {msg.role === 'assistant' ? (
                 <Suspense fallback={<Spin size="small" />}>
