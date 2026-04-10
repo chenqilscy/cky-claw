@@ -21,7 +21,7 @@
 | Backend mypy | **0** 错误（166 源文件） |
 | Framework mypy | **0** 错误（92 源文件） |
 | ruff E501 | **0** |
-| Playwright E2E | **6** 个烟雾测试 |
+| Playwright E2E | **33** 个烟雾测试 |
 
 ---
 
@@ -143,7 +143,7 @@
 | Agent 管理 | 列表/编辑/版本（色彩 diff）/Handoff 编排/模板市场 |
 | 可视化 | ReactFlow（Handoff/Team/Workflow）+ ECharts（Dashboard/APM/Flame） |
 | 暗色模式 | themeStore + ConfigProvider |
-| Playwright E2E | 6 烟雾测试 + playwright.config |
+| Playwright E2E | 33 烟雾测试 + playwright.config |
 | pre-commit | ruff + mypy + 6 hooks |
 | Vendor 分包 | antd/charts/markdown/flow/query 5 路 manualChunks |
 

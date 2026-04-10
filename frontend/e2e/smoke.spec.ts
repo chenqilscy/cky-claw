@@ -18,6 +18,11 @@ test.describe('关键页面加载', () => {
     // 应被重定向到登录页
     await expect(page).toHaveURL(/login/, { timeout: 10_000 });
   });
+
+  test('404 页面显示未找到提示', async ({ page }) => {
+    await page.goto('/nonexistent-page-xyz');
+    await expect(page).toHaveURL(/login/, { timeout: 10_000 });
+  });
 });
 
 test.describe('认证后页面', () => {
@@ -33,8 +38,6 @@ test.describe('认证后页面', () => {
 
   test('Dashboard 页面渲染标题', async ({ page }) => {
     await page.goto('/dashboard');
-    // Dashboard 页面应包含 "仪表盘" 或 "Dashboard" 标题
-    // 即使 API 调用失败，页面框架也应加载
     await expect(page.locator('#root')).toBeVisible({ timeout: 10_000 });
   });
 
@@ -46,12 +49,136 @@ test.describe('认证后页面', () => {
   test('A/B 测试页可加载', async ({ page }) => {
     await page.goto('/ab-test');
     await expect(page.locator('#root')).toBeVisible({ timeout: 10_000 });
-    // 应显示 A/B 测试相关内容
     await expect(page.locator('text=A/B')).toBeVisible({ timeout: 10_000 });
   });
 
   test('Traces 页可加载', async ({ page }) => {
     await page.goto('/traces');
+    await expect(page.locator('#root')).toBeVisible({ timeout: 10_000 });
+  });
+
+  test('Chat 对话页可加载', async ({ page }) => {
+    await page.goto('/chat');
+    await expect(page.locator('#root')).toBeVisible({ timeout: 10_000 });
+  });
+
+  test('Runs 运行列表页可加载', async ({ page }) => {
+    await page.goto('/runs');
+    await expect(page.locator('#root')).toBeVisible({ timeout: 10_000 });
+  });
+
+  test('Providers 模型提供商页可加载', async ({ page }) => {
+    await page.goto('/providers');
+    await expect(page.locator('#root')).toBeVisible({ timeout: 10_000 });
+  });
+
+  test('Guardrails 护栏页可加载', async ({ page }) => {
+    await page.goto('/guardrails');
+    await expect(page.locator('#root')).toBeVisible({ timeout: 10_000 });
+  });
+
+  test('Approvals 审批页可加载', async ({ page }) => {
+    await page.goto('/approvals');
+    await expect(page.locator('#root')).toBeVisible({ timeout: 10_000 });
+  });
+
+  test('MCP Servers 页可加载', async ({ page }) => {
+    await page.goto('/mcp-servers');
+    await expect(page.locator('#root')).toBeVisible({ timeout: 10_000 });
+  });
+
+  test('Tool Groups 工具组页可加载', async ({ page }) => {
+    await page.goto('/tool-groups');
+    await expect(page.locator('#root')).toBeVisible({ timeout: 10_000 });
+  });
+
+  test('Memories 记忆页可加载', async ({ page }) => {
+    await page.goto('/memories');
+    await expect(page.locator('#root')).toBeVisible({ timeout: 10_000 });
+  });
+
+  test('Skills 技能页可加载', async ({ page }) => {
+    await page.goto('/skills');
+    await expect(page.locator('#root')).toBeVisible({ timeout: 10_000 });
+  });
+
+  test('Templates 模板页可加载', async ({ page }) => {
+    await page.goto('/templates');
+    await expect(page.locator('#root')).toBeVisible({ timeout: 10_000 });
+  });
+
+  test('Workflows 工作流页可加载', async ({ page }) => {
+    await page.goto('/workflows');
+    await expect(page.locator('#root')).toBeVisible({ timeout: 10_000 });
+  });
+
+  test('Teams 团队页可加载', async ({ page }) => {
+    await page.goto('/teams');
+    await expect(page.locator('#root')).toBeVisible({ timeout: 10_000 });
+  });
+
+  test('Audit Logs 审计日志页可加载', async ({ page }) => {
+    await page.goto('/audit-logs');
+    await expect(page.locator('#root')).toBeVisible({ timeout: 10_000 });
+  });
+
+  test('Roles 角色管理页可加载', async ({ page }) => {
+    await page.goto('/roles');
+    await expect(page.locator('#root')).toBeVisible({ timeout: 10_000 });
+  });
+
+  test('IM Channels 渠道页可加载', async ({ page }) => {
+    await page.goto('/im-channels');
+    await expect(page.locator('#root')).toBeVisible({ timeout: 10_000 });
+  });
+
+  test('Evaluations 评估页可加载', async ({ page }) => {
+    await page.goto('/evaluations');
+    await expect(page.locator('#root')).toBeVisible({ timeout: 10_000 });
+  });
+
+  test('Evolution 进化页可加载', async ({ page }) => {
+    await page.goto('/evolution');
+    await expect(page.locator('#root')).toBeVisible({ timeout: 10_000 });
+  });
+
+  test('Organizations 组织页可加载', async ({ page }) => {
+    await page.goto('/organizations');
+    await expect(page.locator('#root')).toBeVisible({ timeout: 10_000 });
+  });
+
+  test('Scheduled Tasks 定时任务页可加载', async ({ page }) => {
+    await page.goto('/scheduled-tasks');
+    await expect(page.locator('#root')).toBeVisible({ timeout: 10_000 });
+  });
+
+  test('APM 仪表盘页可加载', async ({ page }) => {
+    await page.goto('/apm');
+    await expect(page.locator('#root')).toBeVisible({ timeout: 10_000 });
+  });
+
+  test('Cost Router 成本路由页可加载', async ({ page }) => {
+    await page.goto('/cost-router');
+    await expect(page.locator('#root')).toBeVisible({ timeout: 10_000 });
+  });
+
+  test('Checkpoints 检查点页可加载', async ({ page }) => {
+    await page.goto('/checkpoints');
+    await expect(page.locator('#root')).toBeVisible({ timeout: 10_000 });
+  });
+
+  test('Intent Detection 意图检测页可加载', async ({ page }) => {
+    await page.goto('/intent');
+    await expect(page.locator('#root')).toBeVisible({ timeout: 10_000 });
+  });
+
+  test('Supervision 监管页可加载', async ({ page }) => {
+    await page.goto('/supervision');
+    await expect(page.locator('#root')).toBeVisible({ timeout: 10_000 });
+  });
+
+  test('I18n 国际化设置页可加载', async ({ page }) => {
+    await page.goto('/i18n');
     await expect(page.locator('#root')).toBeVisible({ timeout: 10_000 });
   });
 });
