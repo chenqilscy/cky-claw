@@ -1,6 +1,13 @@
 /**
  * Vitest 全局 setup — 为 jsdom 环境补全 Ant Design 需要的浏览器 API。
  */
+import { afterEach } from 'vitest';
+import { cleanup } from '@testing-library/react';
+
+// 每个测试用例结束后清理 DOM，防止跨测试状态泄漏
+afterEach(() => {
+  cleanup();
+});
 
 /* ---------- 全局 mock antd App.useApp()（jsdom 中无法使用 context） ---------- */
 vi.mock('antd', async () => {

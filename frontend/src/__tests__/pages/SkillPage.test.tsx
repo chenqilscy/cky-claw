@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { TestQueryWrapper } from '../test-utils';
 
 // Mock ProTable to avoid heavy @ant-design/pro-components rendering
 vi.mock('@ant-design/pro-components', () => ({
@@ -45,13 +45,12 @@ import SkillPage from '../../pages/skills/SkillPage';
 import { skillService } from '../../services/skillService';
 
 function renderPage() {
-  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
-    <QueryClientProvider client={qc}>
+    <TestQueryWrapper>
       <MemoryRouter>
         <SkillPage />
       </MemoryRouter>
-    </QueryClientProvider>,
+    </TestQueryWrapper>,
   );
 }
 
