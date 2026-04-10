@@ -217,6 +217,33 @@ async def auto_evaluate_run(
     return await create_evaluation(db, eval_data)
 
 
+async def _resolve_judge_provider(
+    db: AsyncSession,
+    judge_model: str,
+) -> dict[str, Any] | None:
+    """从数据库查找 Judge LLM 对应的 Provider API Key。"""
+    from sqlalchemy import select
+
+    from app.core.crypto import decrypt_api_key
+    from app.models.provider import ProviderConfig
+
+    # 从模型名推断 provider_type（deepseek/xxx → deepseek）
+    provider_type = judge_model.split("/")[0] if "/" in judge_model else judge_model
+
+    prov_stmt = select(ProviderConfig).where(
+        ProviderConfig.provider_type == provider_type,
+        ProviderConfig.is_enabled == True,  # noqa: E712
+    )
+    provider = (await db.execute(prov_stmt)).scalar_one_or_none()
+    if provider and provider.api_key_encrypted:
+        api_key = decrypt_api_key(provider.api_key_encrypted)
+        kwargs: dict[str, Any] = {"api_key": api_key}
+        if provider.base_url:
+            kwargs["api_base"] = provider.base_url
+        return kwargs
+    return None
+
+
 async def auto_evaluate_by_run_id(
     db: AsyncSession,
     run_id: str,
@@ -286,20 +313,7 @@ async def auto_evaluate_by_run_id(
     effective_model = judge_model or "deepseek/deepseek-chat"
 
     # 查找 Provider 配置获取 API Key
-    from app.models.provider import ProviderConfig
-    from app.core.crypto import decrypt_api_key
-
-    provider_kwargs: dict[str, Any] = {}
-    prov_stmt = select(ProviderConfig).where(
-        ProviderConfig.provider_type == "deepseek",
-        ProviderConfig.is_enabled == True,  # noqa: E712
-    )
-    provider = (await db.execute(prov_stmt)).scalar_one_or_none()
-    if provider and provider.api_key_encrypted:
-        api_key = decrypt_api_key(provider.api_key_encrypted)
-        provider_kwargs["api_key"] = api_key
-        if provider.base_url:
-            provider_kwargs["api_base"] = provider.base_url
+    provider_kwargs = await _resolve_judge_provider(db, effective_model)
 
     return await auto_evaluate_run(
         db,

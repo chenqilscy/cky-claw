@@ -96,9 +96,11 @@ async def auto_evaluate(
     _: dict[str, Any] = Depends(require_admin),
 ) -> RunEvaluationResponse:
     """使用 LLM-as-Judge 自动评估一次运行（由调用方提供上下文）。"""
-    from app.services.auto_evaluator import auto_evaluate_run
+    from app.services.auto_evaluator import auto_evaluate_run, _resolve_judge_provider
 
     try:
+        judge_model = data.judge_model or "deepseek/deepseek-chat"
+        provider_kwargs = await _resolve_judge_provider(db, judge_model)
         record = await auto_evaluate_run(
             db,
             run_id=data.run_id,
@@ -109,7 +111,8 @@ async def auto_evaluate(
             total_tokens=data.total_tokens,
             turn_count=data.turn_count,
             last_agent=data.last_agent,
-            judge_model=data.judge_model or "deepseek/deepseek-chat",
+            judge_model=judge_model,
+            judge_provider_kwargs=provider_kwargs,
         )
     except ValidationError as e:
         raise HTTPException(status_code=422, detail=str(e.message))

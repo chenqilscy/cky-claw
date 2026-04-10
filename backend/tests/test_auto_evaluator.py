@@ -348,6 +348,10 @@ class TestAutoEvaluateAPI:
             comment="good", created_at=_now(),
         )
         with patch(
+            "app.services.auto_evaluator._resolve_judge_provider",
+            new_callable=AsyncMock,
+            return_value={"api_key": "sk-test"},
+        ), patch(
             "app.services.auto_evaluator.auto_evaluate_run",
             new_callable=AsyncMock,
             return_value=mock_eval,
@@ -370,6 +374,10 @@ class TestAutoEvaluateAPI:
 
         _override_admin()
         with patch(
+            "app.services.auto_evaluator._resolve_judge_provider",
+            new_callable=AsyncMock,
+            return_value={"api_key": "sk-test"},
+        ), patch(
             "app.services.auto_evaluator.auto_evaluate_run",
             new_callable=AsyncMock,
             side_effect=ValidationError("LLM Judge 调用失败: timeout"),
