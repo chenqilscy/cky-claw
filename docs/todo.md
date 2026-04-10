@@ -15,13 +15,13 @@
 | Alembic 迁移 | **45** 个（0001–0045） |
 | API 路由模块 | **37** 个 |
 | 前端页面 | **38** 个（React.lazy 懒加载，含 29 菜单页 + 9 非菜单页） |
-| 前端测试文件 | **74** 个 |
+| 前端测试文件 | **73** 个 |
 | CI Job | **6** 个 GitHub Actions + **5** Stage Jenkinsfile |
 | TypeScript 错误 | **0** |
 | Backend mypy | **0** 错误（166 源文件） |
 | Framework mypy | **0** 错误（92 源文件） |
 | ruff E501 | **0** |
-| Playwright E2E | **33** 个烟雾测试 |
+| Playwright E2E | **32** 个烟雾测试 |
 
 ---
 
@@ -143,7 +143,7 @@
 | Agent 管理 | 列表/编辑/版本（色彩 diff）/Handoff 编排/模板市场 |
 | 可视化 | ReactFlow（Handoff/Team/Workflow）+ ECharts（Dashboard/APM/Flame） |
 | 暗色模式 | themeStore + ConfigProvider |
-| Playwright E2E | 33 烟雾测试 + playwright.config |
+| Playwright E2E | 32 烟雾测试 + playwright.config + 远程站点配置 |
 | pre-commit | ruff + mypy + 6 hooks |
 | Vendor 分包 | antd/charts/markdown/flow/query 5 路 manualChunks |
 
@@ -155,7 +155,7 @@
 | GitHub Actions | 5 Job（lint-py / lint-fe / test-py / test-fe / build） |
 | Jenkinsfile | 5 Stage 容器化流水线 |
 | Locust 性能测试 | 12 @task + 10+ API 覆盖 |
-| OTel + Jaeger | OTelTraceProcessor + FastAPI 中间件 |
+| OTel + Jaeger | OTelTraceProcessor + FastAPI 中间件 + OTel Web SDK 前端追踪 |
 | Prometheus | docker-compose profile + scrape 配置 |
 
 ---
