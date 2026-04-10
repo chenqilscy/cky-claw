@@ -56,6 +56,11 @@ export default defineConfig({
         target: 'http://localhost:8000',
         changeOrigin: true,
       },
+      '/otlp': {
+        target: 'http://localhost:4318',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/otlp/, ''),
+      },
     },
   },
 });

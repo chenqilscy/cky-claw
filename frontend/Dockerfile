@@ -17,6 +17,8 @@ RUN echo "node-linker=hoisted" > .npmrc && pnpm install
 
 # 复制源码并构建（Docker 中跳过 tsc 检查，仅 vite 构建）
 COPY . .
+ARG VITE_OTEL_ENABLED=true
+ENV VITE_OTEL_ENABLED=${VITE_OTEL_ENABLED}
 RUN pnpm exec vite build
 
 # 清理 node_modules 以最小化 COPY 层（实际只用 dist）

@@ -7,6 +7,10 @@ import { ConfigProvider, App as AntApp } from 'antd';
 import zhCN from 'antd/locale/zh_CN';
 import ErrorBoundary from './components/ErrorBoundary';
 import App from './App';
+import { initOtel } from './otel';
+
+// 在 React 渲染前初始化链路追踪（VITE_OTEL_ENABLED=true 时生效）
+initOtel();
 
 const queryClient = new QueryClient({
   defaultOptions: {
