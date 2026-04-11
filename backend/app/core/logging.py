@@ -26,6 +26,15 @@ class _HealthFilter(logging.Filter):
         return "/health" not in msg
 
 
+class _RequestIDFilter(logging.Filter):
+    """自动注入 request_id 到每条日志记录（从 contextvars 读取）。"""
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        from app.core.middleware import request_id_var
+        record.request_id = request_id_var.get("-")  # type: ignore[attr-defined]
+        return True
+
+
 def setup_logging() -> None:
     """初始化全局日志配置。
 
@@ -41,13 +50,13 @@ def setup_logging() -> None:
 
     if settings.debug:
         # 开发环境：人类可读格式
-        fmt = "%(asctime)s [%(levelname)-8s] %(name)s: %(message)s"
+        fmt = "%(asctime)s [%(levelname)-8s] %(name)s [%(request_id)s]: %(message)s"
         handlers: dict[str, Any] = {
             "console": {
                 "class": "logging.StreamHandler",
                 "stream": "ext://sys.stdout",
                 "formatter": "text",
-                "filters": ["health_filter"],
+                "filters": ["health_filter", "request_id_filter"],
             }
         }
         formatters: dict[str, Any] = {
@@ -63,13 +72,13 @@ def setup_logging() -> None:
                 "class": "logging.StreamHandler",
                 "stream": "ext://sys.stdout",
                 "formatter": "json",
-                "filters": ["health_filter"],
+                "filters": ["health_filter", "request_id_filter"],
             }
         }
         formatters = {
             "json": {
                 "()": "pythonjsonlogger.jsonlogger.JsonFormatter",
-                "format": "%(asctime)s %(levelname)s %(name)s %(message)s",
+                "format": "%(asctime)s %(levelname)s %(name)s %(message)s %(request_id)s",
                 "rename_fields": {"asctime": "timestamp", "levelname": "level", "name": "logger"},
                 "datefmt": "%Y-%m-%dT%H:%M:%S.%fZ",
             }
@@ -81,7 +90,10 @@ def setup_logging() -> None:
         "filters": {
             "health_filter": {
                 "()": _HealthFilter,
-            }
+            },
+            "request_id_filter": {
+                "()": _RequestIDFilter,
+            },
         },
         "formatters": formatters,
         "handlers": handlers,
