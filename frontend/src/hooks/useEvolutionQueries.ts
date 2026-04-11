@@ -3,7 +3,7 @@
  */
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { evolutionService } from '../services/evolutionService';
-import type { EvolutionProposalCreate, EvolutionProposalUpdate, EvolutionProposalListParams } from '../services/evolutionService';
+import type { EvolutionProposalCreate, EvolutionProposalUpdate, EvolutionProposalListParams, RollbackCheckRequest } from '../services/evolutionService';
 
 const KEY = ['evolutions'] as const;
 
@@ -43,6 +43,23 @@ export function useDeleteEvolution() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => evolutionService.delete(id),
+    onSuccess: () => { void qc.invalidateQueries({ queryKey: KEY }); },
+  });
+}
+
+export function useRollbackCheck() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: RollbackCheckRequest }) =>
+      evolutionService.rollbackCheck(id, data),
+    onSuccess: () => { void qc.invalidateQueries({ queryKey: KEY }); },
+  });
+}
+
+export function useScanRollback() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (threshold?: number) => evolutionService.scanRollback(threshold),
     onSuccess: () => { void qc.invalidateQueries({ queryKey: KEY }); },
   });
 }

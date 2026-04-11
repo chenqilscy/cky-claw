@@ -91,4 +91,41 @@ describe('evolutionService', () => {
       expect(mockApi.delete).toHaveBeenCalledWith('/evolution/proposals/x');
     });
   });
+
+  describe('rollbackCheck', () => {
+    it('calls POST /evolution/proposals/:id/rollback-check', async () => {
+      mockApi.post.mockResolvedValue({ rolled_back: true, proposal: { id: 'x' } });
+      const res = await evolutionService.rollbackCheck('x', { eval_after: 0.5 });
+      expect(mockApi.post).toHaveBeenCalledWith(
+        '/evolution/proposals/x/rollback-check',
+        { eval_after: 0.5 },
+      );
+      expect(res.rolled_back).toBe(true);
+    });
+
+    it('passes custom threshold', async () => {
+      mockApi.post.mockResolvedValue({ rolled_back: false, proposal: { id: 'x' } });
+      await evolutionService.rollbackCheck('x', { eval_after: 0.7, rollback_threshold: 0.2 });
+      expect(mockApi.post).toHaveBeenCalledWith(
+        '/evolution/proposals/x/rollback-check',
+        { eval_after: 0.7, rollback_threshold: 0.2 },
+      );
+    });
+  });
+
+  describe('scanRollback', () => {
+    it('calls POST /evolution/scan-rollback with default threshold', async () => {
+      mockApi.post.mockResolvedValue({ rolled_back_count: 0, proposals: [] });
+      const res = await evolutionService.scanRollback();
+      expect(mockApi.post).toHaveBeenCalledWith('/evolution/scan-rollback?rollback_threshold=0.1');
+      expect(res.rolled_back_count).toBe(0);
+    });
+
+    it('passes custom threshold', async () => {
+      mockApi.post.mockResolvedValue({ rolled_back_count: 1, proposals: [{ id: 'x' }] });
+      const res = await evolutionService.scanRollback(0.05);
+      expect(mockApi.post).toHaveBeenCalledWith('/evolution/scan-rollback?rollback_threshold=0.05');
+      expect(res.rolled_back_count).toBe(1);
+    });
+  });
 });

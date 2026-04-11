@@ -454,3 +454,147 @@ async def _create_version_snapshot(
         change_summary=change_summary,
     )
     db.add(version)
+
+
+# ────────────────────────────────────────────────────────────────
+# S5: 自动回滚监控
+# ────────────────────────────────────────────────────────────────
+
+
+async def check_and_rollback(
+    db: AsyncSession,
+    proposal_id: uuid.UUID,
+    eval_after: float,
+    *,
+    rollback_threshold: float = 0.1,
+) -> tuple[bool, EvolutionProposalRecord]:
+    """检查已应用建议的评分是否退化，必要时自动回滚。
+
+    Args:
+        db: 数据库会话。
+        proposal_id: 建议 ID。
+        eval_after: 应用后的最新评分。
+        rollback_threshold: 评分下降超过此比例时自动回滚。
+
+    Returns:
+        (是否触发回滚, 更新后的建议记录)。
+
+    Raises:
+        NotFoundError: 建议不存在。
+        ValidationError: 建议状态不是 applied。
+    """
+    record = await get_proposal(db, proposal_id)
+
+    if record.status != "applied":
+        raise ValidationError(
+            f"只能对 applied 状态的建议执行回滚检查，当前状态: '{record.status}'"
+        )
+
+    # 更新 eval_after
+    record.eval_after = eval_after
+    record.updated_at = datetime.now(timezone.utc)
+
+    # 判断是否需要回滚
+    triggered = False
+    if record.eval_before is not None and record.eval_before > 0:
+        drop_ratio = (record.eval_before - eval_after) / record.eval_before
+        if drop_ratio > rollback_threshold:
+            triggered = True
+            record.status = "rolled_back"
+            record.rolled_back_at = datetime.now(timezone.utc)
+
+            # 回滚 Agent 配置到快照
+            await _rollback_agent_config(db, record)
+
+    await db.commit()
+    await db.refresh(record)
+    return triggered, record
+
+
+async def scan_and_rollback_all(
+    db: AsyncSession,
+    *,
+    rollback_threshold: float = 0.1,
+) -> list[EvolutionProposalRecord]:
+    """扫描所有已应用建议，对评分退化的建议自动回滚。
+
+    仅回滚同时满足以下条件的建议：
+    - status = applied
+    - eval_before 和 eval_after 均不为空
+    - (eval_before - eval_after) / eval_before > rollback_threshold
+
+    Returns:
+        被回滚的建议列表。
+    """
+    stmt = (
+        select(EvolutionProposalRecord)
+        .where(
+            EvolutionProposalRecord.status == "applied",
+            EvolutionProposalRecord.eval_before.isnot(None),
+            EvolutionProposalRecord.eval_after.isnot(None),
+        )
+    )
+    rows = (await db.execute(stmt)).scalars().all()
+
+    rolled_back: list[EvolutionProposalRecord] = []
+    for record in rows:
+        if record.eval_before is None or record.eval_before <= 0:
+            continue
+        drop_ratio = (record.eval_before - (record.eval_after or 0)) / record.eval_before
+        if drop_ratio > rollback_threshold:
+            record.status = "rolled_back"
+            record.rolled_back_at = datetime.now(timezone.utc)
+            record.updated_at = datetime.now(timezone.utc)
+            await _rollback_agent_config(db, record)
+            rolled_back.append(record)
+
+    if rolled_back:
+        await db.commit()
+        for r in rolled_back:
+            await db.refresh(r)
+
+    return rolled_back
+
+
+async def _rollback_agent_config(
+    db: AsyncSession,
+    record: EvolutionProposalRecord,
+) -> None:
+    """回滚 Agent 配置到应用前的快照。
+
+    找到该建议对应的版本快照，将 Agent 恢复到之前的配置。
+    """
+    from app.models.agent import AgentConfig
+    from app.models.agent_version import AgentConfigVersion
+
+    stmt = select(AgentConfig).where(AgentConfig.name == record.agent_name)
+    agent = (await db.execute(stmt)).scalar_one_or_none()
+    if agent is None:
+        return  # Agent 已删除，跳过回滚
+
+    # 找到该建议应用时创建的快照（时间最接近 applied_at 且在其之前的版本）
+    if record.applied_at is not None:
+        snap_stmt = (
+            select(AgentConfigVersion)
+            .where(
+                AgentConfigVersion.agent_config_id == agent.id,
+                AgentConfigVersion.created_at <= record.applied_at,
+            )
+            .order_by(AgentConfigVersion.created_at.desc())
+            .limit(1)
+        )
+    else:
+        snap_stmt = (
+            select(AgentConfigVersion)
+            .where(AgentConfigVersion.agent_config_id == agent.id)
+            .order_by(AgentConfigVersion.version.desc())
+            .limit(1)
+        )
+
+    snapshot_row = (await db.execute(snap_stmt)).scalar_one_or_none()
+    if snapshot_row is None:
+        return  # 无快照可回滚
+
+    # 从快照恢复配置
+    snap = snapshot_row.snapshot or {}
+    _apply_value_to_agent(agent, record.proposal_type, snap)

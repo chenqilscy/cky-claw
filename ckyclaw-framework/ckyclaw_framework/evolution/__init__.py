@@ -13,6 +13,11 @@ from __future__ import annotations
 
 from ckyclaw_framework.evolution.config import EvolutionConfig
 from ckyclaw_framework.evolution.hooks import EvolutionHook
+from ckyclaw_framework.evolution.learning_loop import (
+    LearningLoop,
+    RunReflection,
+    RunReflector,
+)
 from ckyclaw_framework.evolution.proposal import (
     EvolutionProposal,
     ProposalStatus,
@@ -35,9 +40,12 @@ __all__ = [
     "EvolutionSignal",
     "EvolutionStrategy",
     "FeedbackSignal",
+    "LearningLoop",
     "MetricSignal",
     "ProposalStatus",
     "ProposalType",
+    "RunReflection",
+    "RunReflector",
     "SignalCollector",
     "SignalType",
     "StrategyEngine",

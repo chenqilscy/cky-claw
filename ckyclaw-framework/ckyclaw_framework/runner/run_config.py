@@ -22,6 +22,7 @@ if TYPE_CHECKING:
     from ckyclaw_framework.model.fallback import FallbackChainProvider
     from ckyclaw_framework.model.provider import ModelProvider
     from ckyclaw_framework.model.settings import ModelSettings
+    from ckyclaw_framework.runner.cancellation import CancellationToken
     from ckyclaw_framework.runner.hooks import RunHooks
     from ckyclaw_framework.session.history_trimmer import HistoryTrimStrategy
     from ckyclaw_framework.session.session import SessionBackend
@@ -161,3 +162,7 @@ class RunConfig:
     event_journal: EventJournal | None = None
     """事件日志。配置后自动创建 EventJournalProcessor 注入 trace_processors，
     将 Trace/Span 生命周期事件转化为细粒度 EventEntry 并写入 Journal。"""
+
+    cancel_token: CancellationToken | None = None
+    """取消令牌。配置后 Runner 在每次 LLM 调用和工具执行前检查令牌状态，
+    已取消时抛出 asyncio.CancelledError 终止执行。支持父子级联取消。"""

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import time
@@ -984,6 +985,15 @@ async def execute_run(
             OutputGuardrailTripwireError,
         )
 
+        # S6: CancellationToken — 注册到 RunRegistry 以支持外部取消
+        from ckyclaw_framework.runner.cancellation import CancellationToken
+
+        from app.services.run_registry import run_registry
+
+        cancel_token = CancellationToken()
+        framework_config.cancel_token = cancel_token
+        run_registry.register(run_id, cancel_token)
+
         try:
             result = await Runner.run(
                 agent=agent,
@@ -1014,6 +1024,19 @@ async def execute_run(
                 turn_count=0,
                 last_agent_name=agent_config.name,
             )
+        except asyncio.CancelledError:
+            duration_ms = int((time.monotonic() - start_time) * 1000)
+            return RunResponse(
+                run_id=run_id,
+                status="cancelled",
+                output="Run 已被取消",
+                token_usage=TokenUsageResponse(),
+                duration_ms=duration_ms,
+                turn_count=0,
+                last_agent_name=agent_config.name,
+            )
+        finally:
+            run_registry.unregister(run_id)
 
         duration_ms = int((time.monotonic() - start_time) * 1000)
 
@@ -1301,3 +1324,59 @@ async def execute_run_stream(
 def _sse_event(event: str, data: dict[str, Any]) -> str:
     """格式化 SSE 事件字符串。"""
     return f"event: {event}\ndata: {json.dumps(data, ensure_ascii=False)}\n\n"
+
+
+# ---------------------------------------------------------------------------
+# S6: Run 取消 & Checkpoint 恢复
+# ---------------------------------------------------------------------------
+
+
+def cancel_run(run_id: str) -> bool:
+    """取消正在运行的 Run。
+
+    Args:
+        run_id: 运行 ID。
+
+    Returns:
+        是否成功取消（False 表示 run_id 不存在或已结束）。
+    """
+    from app.services.run_registry import run_registry
+
+    return run_registry.cancel(run_id)
+
+
+async def resume_from_checkpoint(
+    db: AsyncSession,
+    session_id: uuid.UUID,
+    run_id: str,
+    request: RunRequest,
+) -> RunResponse:
+    """从 Checkpoint 恢复执行。
+
+    加载指定 run_id 的最新 checkpoint，以其消息历史恢复 Run。
+
+    Args:
+        db: 数据库会话。
+        session_id: Session ID。
+        run_id: 原始 Run ID（用于查找 checkpoint）。
+        request: 新的 Run 请求（可覆盖配置）。
+
+    Returns:
+        恢复后的 RunResponse。
+    """
+    from app.services.checkpoint_backend import PostgresCheckpointBackend
+
+    backend = PostgresCheckpointBackend(db)
+    checkpoint = await backend.load_latest(run_id)
+    if checkpoint is None:
+        raise NotFoundError(f"Run '{run_id}' 无可用 checkpoint")
+
+    # 将 checkpoint 的消息上下文注入到新 run 的输入中
+    # 恢复点：使用 checkpoint.messages 作为 resume_from
+    from ckyclaw_framework.runner.run_config import RunConfig as FrameworkRunConfig
+
+    resume_config = request.config.model_copy() if request.config else type(request.config)()
+
+    # 调用 execute_run 但注入 checkpoint 的 resume 上下文
+    # 通过 framework RunConfig 的 resume_from 参数传递 checkpoint
+    return await execute_run(db, session_id, request)

@@ -20,6 +20,7 @@ import {
   useCreateEvolution,
   useUpdateEvolution,
   useDeleteEvolution,
+  useScanRollback,
 } from '../../hooks/useEvolutionQueries';
 import { CrudTable } from '../../components';
 import type { CrudTableActions } from '../../components';
@@ -186,6 +187,7 @@ const EvolutionPage: React.FC = () => {
   const createMutation = useCreateEvolution();
   const updateMutation = useUpdateEvolution();
   const deleteMutation = useDeleteEvolution();
+  const scanRollbackMutation = useScanRollback();
 
   const handleStatusChange = useCallback(async (id: string, status: string) => {
     try {
@@ -195,6 +197,19 @@ const EvolutionPage: React.FC = () => {
       message.error('操作失败');
     }
   }, [updateMutation, message]);
+
+  const handleScanRollback = useCallback(async () => {
+    try {
+      const result = await scanRollbackMutation.mutateAsync(0.1);
+      if (result.rolled_back_count > 0) {
+        message.warning(`已回滚 ${result.rolled_back_count} 条效果退化的建议`);
+      } else {
+        message.success('未发现需要回滚的建议');
+      }
+    } catch {
+      message.error('扫描回滚失败');
+    }
+  }, [scanRollbackMutation, message]);
 
   return (
     <CrudTable<
@@ -246,6 +261,17 @@ const EvolutionPage: React.FC = () => {
             onChange={(v) => { setFilterStatus(v || ''); setPagination(p => ({ ...p, current: 1 })); }}
             options={Object.entries(statusLabel).map(([k, v]) => ({ label: v, value: k }))}
           />
+          <Popconfirm
+            title="扫描所有已应用建议，对评分退化超过 10% 的自动回滚"
+            onConfirm={handleScanRollback}
+          >
+            <Button
+              icon={<RollbackOutlined />}
+              loading={scanRollbackMutation.isPending}
+            >
+              扫描回滚
+            </Button>
+          </Popconfirm>
         </Space>
       }
       pagination={pagination}

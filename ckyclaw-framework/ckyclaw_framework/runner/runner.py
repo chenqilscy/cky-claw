@@ -1125,12 +1125,18 @@ class Runner:
 
         # Hooks
         hooks = config.hooks
+        # CancellationToken
+        _cancel_token = config.cancel_token
         # Hooks: on_run_start
         if hooks:
             _start_ctx = RunContext(agent=current_agent, config=config, context=context or {}, turn_count=0)
             await _invoke_hook(hooks.on_run_start, "on_run_start", _start_ctx)
 
         while turn_count < max_turns:
+            # S6: 取消检查
+            if _cancel_token is not None:
+                _cancel_token.check()
+
             turn_count += 1
 
             # 构建 RunContext
@@ -1584,12 +1590,18 @@ class Runner:
 
         # Hooks
         hooks = config.hooks
+        # CancellationToken
+        _cancel_token = config.cancel_token
         # Hooks: on_run_start
         if hooks:
             _start_ctx = RunContext(agent=current_agent, config=config, context=context or {}, turn_count=0)
             await _invoke_hook(hooks.on_run_start, "on_run_start", _start_ctx)
 
         while turn_count < max_turns:
+            # S6: 取消检查
+            if _cancel_token is not None:
+                _cancel_token.check()
+
             turn_count += 1
 
             run_ctx = RunContext(

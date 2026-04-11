@@ -20,6 +20,9 @@ from app.schemas.evolution import (
     EvolutionSignalCreate,
     EvolutionSignalListResponse,
     EvolutionSignalResponse,
+    RollbackCheckRequest,
+    RollbackCheckResponse,
+    ScanRollbackResponse,
 )
 from app.services import evolution as svc
 
@@ -169,4 +172,51 @@ async def analyze_agent(
     return EvolutionAnalyzeResponse(
         proposals_created=len(proposals),
         proposals=[EvolutionProposalResponse.model_validate(p) for p in proposals],
+    )
+
+
+# ────────────────────────────────────────────────────────────────
+# S5: 自动回滚监控 API
+# ────────────────────────────────────────────────────────────────
+
+
+@router.post(
+    "/proposals/{proposal_id}/rollback-check",
+    response_model=RollbackCheckResponse,
+)
+async def rollback_check(
+    proposal_id: uuid.UUID,
+    data: RollbackCheckRequest,
+    db: AsyncSession = Depends(get_db),
+    _: dict[str, Any] = Depends(require_admin),
+) -> RollbackCheckResponse:
+    """检查已应用建议是否需要回滚。
+
+    当 eval_after 相比 eval_before 下降超过 rollback_threshold 时自动回滚。
+    """
+    triggered, record = await svc.check_and_rollback(
+        db,
+        proposal_id,
+        data.eval_after,
+        rollback_threshold=data.rollback_threshold,
+    )
+    return RollbackCheckResponse(
+        rolled_back=triggered,
+        proposal=EvolutionProposalResponse.model_validate(record),
+    )
+
+
+@router.post("/scan-rollback", response_model=ScanRollbackResponse)
+async def scan_rollback(
+    rollback_threshold: float = 0.1,
+    db: AsyncSession = Depends(get_db),
+    _: dict[str, Any] = Depends(require_admin),
+) -> ScanRollbackResponse:
+    """扫描所有已应用建议，对评分退化超过阈值的自动回滚。"""
+    rolled_back = await svc.scan_and_rollback_all(
+        db, rollback_threshold=rollback_threshold
+    )
+    return ScanRollbackResponse(
+        rolled_back_count=len(rolled_back),
+        proposals=[EvolutionProposalResponse.model_validate(r) for r in rolled_back],
     )

@@ -54,6 +54,7 @@ from app.api.export import router as export_router
 from app.api.debug import router as debug_router
 from app.api.intent import router as intent_router
 from app.api.ab_test import router as ab_test_router
+from app.api.mailbox import router as mailbox_router
 
 
 @asynccontextmanager
@@ -203,6 +204,7 @@ def create_app() -> FastAPI:
     app.include_router(debug_router)
     app.include_router(intent_router)
     app.include_router(ab_test_router)
+    app.include_router(mailbox_router)
 
     # OTel FastAPI 自动埋点（最后添加）
     instrument_fastapi(app)

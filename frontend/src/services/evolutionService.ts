@@ -50,6 +50,21 @@ export interface EvolutionProposalUpdate {
   metadata?: Record<string, unknown>;
 }
 
+export interface RollbackCheckRequest {
+  eval_after: number;
+  rollback_threshold?: number;
+}
+
+export interface RollbackCheckResponse {
+  rolled_back: boolean;
+  proposal: EvolutionProposal;
+}
+
+export interface ScanRollbackResponse {
+  rolled_back_count: number;
+  proposals: EvolutionProposal[];
+}
+
 export const evolutionService = {
   async list(params?: EvolutionProposalListParams): Promise<EvolutionProposalListResponse> {
     const cleanParams: Record<string, string | number> = {};
@@ -77,5 +92,13 @@ export const evolutionService = {
 
   async delete(id: string): Promise<void> {
     await api.delete<undefined>(`/evolution/proposals/${id}`);
+  },
+
+  async rollbackCheck(id: string, data: RollbackCheckRequest): Promise<RollbackCheckResponse> {
+    return api.post<RollbackCheckResponse>(`/evolution/proposals/${id}/rollback-check`, data);
+  },
+
+  async scanRollback(rollbackThreshold = 0.1): Promise<ScanRollbackResponse> {
+    return api.post<ScanRollbackResponse>(`/evolution/scan-rollback?rollback_threshold=${rollbackThreshold}`);
   },
 };

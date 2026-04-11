@@ -1523,3 +1523,295 @@ class TestScheduledTaskType:
             updated_at=now,
         )
         assert resp.task_type == "evolution_analyze"
+
+
+# ---------------------------------------------------------------------------
+# S5: 自动回滚监控 — Service 层测试
+# ---------------------------------------------------------------------------
+
+
+class TestCheckAndRollback:
+    """check_and_rollback 服务函数测试。"""
+
+    @pytest.mark.anyio()
+    async def test_rollback_triggered_on_score_drop(self) -> None:
+        """评分大幅下降时触发回滚。"""
+        mock_db = AsyncMock()
+        proposal = _make_proposal(status="applied", eval_before=0.8)
+        mock_db.execute = AsyncMock(
+            return_value=MagicMock(
+                scalar_one_or_none=MagicMock(return_value=proposal)
+            )
+        )
+
+        from app.services.evolution import check_and_rollback
+
+        with patch("app.services.evolution._rollback_agent_config", new_callable=AsyncMock):
+            triggered, record = await check_and_rollback(
+                mock_db, proposal.id, eval_after=0.5, rollback_threshold=0.1
+            )
+
+        assert triggered is True
+        assert record.status == "rolled_back"
+        assert record.eval_after == 0.5
+        assert record.rolled_back_at is not None
+
+    @pytest.mark.anyio()
+    async def test_no_rollback_within_threshold(self) -> None:
+        """评分下降在阈值内不触发回滚。"""
+        mock_db = AsyncMock()
+        proposal = _make_proposal(status="applied", eval_before=0.8)
+        mock_db.execute = AsyncMock(
+            return_value=MagicMock(
+                scalar_one_or_none=MagicMock(return_value=proposal)
+            )
+        )
+
+        from app.services.evolution import check_and_rollback
+
+        triggered, record = await check_and_rollback(
+            mock_db, proposal.id, eval_after=0.75, rollback_threshold=0.1
+        )
+        assert triggered is False
+        assert record.status == "applied"
+        assert record.eval_after == 0.75
+
+    @pytest.mark.anyio()
+    async def test_no_rollback_score_improved(self) -> None:
+        """评分提升时不触发回滚。"""
+        mock_db = AsyncMock()
+        proposal = _make_proposal(status="applied", eval_before=0.6)
+        mock_db.execute = AsyncMock(
+            return_value=MagicMock(
+                scalar_one_or_none=MagicMock(return_value=proposal)
+            )
+        )
+
+        from app.services.evolution import check_and_rollback
+
+        triggered, record = await check_and_rollback(
+            mock_db, proposal.id, eval_after=0.8, rollback_threshold=0.1
+        )
+        assert triggered is False
+        assert record.status == "applied"
+
+    @pytest.mark.anyio()
+    async def test_no_eval_before_no_rollback(self) -> None:
+        """eval_before 为 None 时不触发回滚。"""
+        mock_db = AsyncMock()
+        proposal = _make_proposal(status="applied", eval_before=None)
+        mock_db.execute = AsyncMock(
+            return_value=MagicMock(
+                scalar_one_or_none=MagicMock(return_value=proposal)
+            )
+        )
+
+        from app.services.evolution import check_and_rollback
+
+        triggered, record = await check_and_rollback(
+            mock_db, proposal.id, eval_after=0.3, rollback_threshold=0.1
+        )
+        assert triggered is False
+
+    @pytest.mark.anyio()
+    async def test_not_applied_raises(self) -> None:
+        """非 applied 状态报错。"""
+        mock_db = AsyncMock()
+        proposal = _make_proposal(status="pending")
+        mock_db.execute = AsyncMock(
+            return_value=MagicMock(
+                scalar_one_or_none=MagicMock(return_value=proposal)
+            )
+        )
+
+        from app.services.evolution import check_and_rollback
+
+        with pytest.raises(ValidationError, match="只能对 applied"):
+            await check_and_rollback(mock_db, proposal.id, eval_after=0.5)
+
+    @pytest.mark.anyio()
+    async def test_not_found_raises(self) -> None:
+        """不存在的 ID 报错。"""
+        mock_db = AsyncMock()
+        mock_db.execute = AsyncMock(
+            return_value=MagicMock(
+                scalar_one_or_none=MagicMock(return_value=None)
+            )
+        )
+
+        from app.services.evolution import check_and_rollback
+
+        with pytest.raises(NotFoundError):
+            await check_and_rollback(mock_db, uuid.uuid4(), eval_after=0.5)
+
+
+class TestScanAndRollbackAll:
+    """scan_and_rollback_all 服务函数测试。"""
+
+    @pytest.mark.anyio()
+    async def test_scan_finds_degraded_proposals(self) -> None:
+        """扫描发现退化建议并回滚。"""
+        mock_db = AsyncMock()
+        p1 = _make_proposal(status="applied", eval_before=0.8, eval_after=0.4)
+        p2 = _make_proposal(status="applied", eval_before=0.7, eval_after=0.65)
+        mock_result = MagicMock()
+        mock_result.scalars.return_value.all.return_value = [p1, p2]
+        mock_db.execute = AsyncMock(return_value=mock_result)
+
+        from app.services.evolution import scan_and_rollback_all
+
+        with patch("app.services.evolution._rollback_agent_config", new_callable=AsyncMock):
+            rolled_back = await scan_and_rollback_all(mock_db, rollback_threshold=0.1)
+
+        # p1: (0.8-0.4)/0.8 = 0.5 > 0.1 → 回滚
+        # p2: (0.7-0.65)/0.7 = 0.071 < 0.1 → 不回滚
+        assert len(rolled_back) == 1
+        assert rolled_back[0].status == "rolled_back"
+        mock_db.commit.assert_awaited_once()
+
+    @pytest.mark.anyio()
+    async def test_scan_empty(self) -> None:
+        """无已应用建议时返回空列表。"""
+        mock_db = AsyncMock()
+        mock_result = MagicMock()
+        mock_result.scalars.return_value.all.return_value = []
+        mock_db.execute = AsyncMock(return_value=mock_result)
+
+        from app.services.evolution import scan_and_rollback_all
+
+        rolled_back = await scan_and_rollback_all(mock_db, rollback_threshold=0.1)
+        assert rolled_back == []
+        mock_db.commit.assert_not_awaited()
+
+
+# ---------------------------------------------------------------------------
+# S5: 自动回滚监控 — API 层测试
+# ---------------------------------------------------------------------------
+
+
+class TestRollbackCheckAPI:
+    """POST /api/v1/evolution/proposals/{id}/rollback-check 测试。"""
+
+    def test_rollback_triggered(self, client: TestClient) -> None:
+        """评分退化触发回滚并返回正确响应。"""
+        mock_record = _make_proposal(
+            status="rolled_back",
+            eval_before=0.8,
+            eval_after=0.5,
+            rolled_back_at=datetime.now(timezone.utc),
+        )
+        with patch(
+            "app.services.evolution.check_and_rollback",
+            new_callable=AsyncMock,
+            return_value=(True, mock_record),
+        ):
+            resp = client.post(
+                f"/api/v1/evolution/proposals/{mock_record.id}/rollback-check",
+                json={"eval_after": 0.5, "rollback_threshold": 0.1},
+            )
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["rolled_back"] is True
+        assert body["proposal"]["status"] == "rolled_back"
+
+    def test_no_rollback(self, client: TestClient) -> None:
+        """评分在阈值内不触发回滚。"""
+        mock_record = _make_proposal(
+            status="applied",
+            eval_before=0.8,
+            eval_after=0.75,
+        )
+        with patch(
+            "app.services.evolution.check_and_rollback",
+            new_callable=AsyncMock,
+            return_value=(False, mock_record),
+        ):
+            resp = client.post(
+                f"/api/v1/evolution/proposals/{mock_record.id}/rollback-check",
+                json={"eval_after": 0.75},
+            )
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["rolled_back"] is False
+        assert body["proposal"]["status"] == "applied"
+
+    def test_invalid_eval_after(self, client: TestClient) -> None:
+        """eval_after 超出范围返回 422。"""
+        resp = client.post(
+            f"/api/v1/evolution/proposals/{uuid.uuid4()}/rollback-check",
+            json={"eval_after": 1.5},
+        )
+        assert resp.status_code == 422
+
+
+class TestScanRollbackAPI:
+    """POST /api/v1/evolution/scan-rollback 测试。"""
+
+    def test_scan_rollback(self, client: TestClient) -> None:
+        """扫描回滚返回正确响应。"""
+        mock_record = _make_proposal(
+            status="rolled_back",
+            eval_before=0.8,
+            eval_after=0.4,
+            rolled_back_at=datetime.now(timezone.utc),
+        )
+        with patch(
+            "app.services.evolution.scan_and_rollback_all",
+            new_callable=AsyncMock,
+            return_value=[mock_record],
+        ):
+            resp = client.post(
+                "/api/v1/evolution/scan-rollback",
+                params={"rollback_threshold": 0.1},
+            )
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["rolled_back_count"] == 1
+        assert len(body["proposals"]) == 1
+
+    def test_scan_rollback_empty(self, client: TestClient) -> None:
+        """无需回滚时返回空列表。"""
+        with patch(
+            "app.services.evolution.scan_and_rollback_all",
+            new_callable=AsyncMock,
+            return_value=[],
+        ):
+            resp = client.post("/api/v1/evolution/scan-rollback")
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["rolled_back_count"] == 0
+        assert body["proposals"] == []
+
+
+# ---------------------------------------------------------------------------
+# S5: Schema 测试
+# ---------------------------------------------------------------------------
+
+
+class TestRollbackSchemas:
+    """回滚相关 Schema 校验测试。"""
+
+    def test_rollback_check_request_valid(self) -> None:
+        """有效请求。"""
+        from app.schemas.evolution import RollbackCheckRequest
+
+        data = RollbackCheckRequest(eval_after=0.5)
+        assert data.eval_after == 0.5
+        assert data.rollback_threshold == 0.1  # default
+
+    def test_rollback_check_request_custom_threshold(self) -> None:
+        """自定义阈值。"""
+        from app.schemas.evolution import RollbackCheckRequest
+
+        data = RollbackCheckRequest(eval_after=0.3, rollback_threshold=0.2)
+        assert data.rollback_threshold == 0.2
+
+    def test_rollback_check_request_invalid_eval(self) -> None:
+        """eval_after 超范围。"""
+        from app.schemas.evolution import RollbackCheckRequest
+
+        with pytest.raises(ValueError):
+            RollbackCheckRequest(eval_after=1.5)
+
+        with pytest.raises(ValueError):
+            RollbackCheckRequest(eval_after=-0.1)

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import uuid
+from typing import Any
 
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import StreamingResponse
@@ -149,3 +150,34 @@ async def get_session_messages(
         messages=items,
         total=len(items),
     )
+
+
+@router.post(
+    "/runs/{run_id}/cancel",
+    dependencies=[Depends(require_permission("sessions", "execute"))],
+)
+async def cancel_run(
+    run_id: str,
+) -> dict[str, Any]:
+    """取消正在运行的 Run。"""
+    cancelled = session_service.cancel_run(run_id)
+    if not cancelled:
+        return {"cancelled": False, "message": f"Run '{run_id}' 不存在或已结束"}
+    return {"cancelled": True, "message": f"Run '{run_id}' 已取消"}
+
+
+@router.post(
+    "/{session_id}/resume-from-checkpoint",
+    response_model=RunResponse,
+    dependencies=[Depends(require_permission("sessions", "execute"))],
+)
+async def resume_from_checkpoint(
+    session_id: uuid.UUID,
+    run_id: str = Query(..., description="原始 Run ID（用于查找 checkpoint）"),
+    data: RunRequest = None,  # type: ignore[assignment]
+    db: AsyncSession = Depends(get_db),
+) -> RunResponse:
+    """从 Checkpoint 恢复执行。"""
+    if data is None:
+        data = RunRequest(input="")
+    return await session_service.resume_from_checkpoint(db, session_id, run_id, data)

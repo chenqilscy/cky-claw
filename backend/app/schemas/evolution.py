@@ -147,3 +147,26 @@ class EvolutionAnalyzeResponse(BaseModel):
 
     proposals_created: int = Field(description="生成的建议数量")
     proposals: list[EvolutionProposalResponse] = Field(description="生成的建议列表")
+
+
+class RollbackCheckRequest(BaseModel):
+    """回滚检查请求体。"""
+
+    eval_after: float = Field(..., ge=0.0, le=1.0, description="应用后的最新评分")
+    rollback_threshold: float = Field(default=0.1, ge=0.0, le=1.0, description="回滚阈值")
+
+
+class RollbackCheckResponse(BaseModel):
+    """回滚检查响应。"""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    rolled_back: bool = Field(description="是否触发了回滚")
+    proposal: EvolutionProposalResponse = Field(description="更新后的建议记录")
+
+
+class ScanRollbackResponse(BaseModel):
+    """批量回滚扫描响应。"""
+
+    rolled_back_count: int = Field(description="被回滚的建议数量")
+    proposals: list[EvolutionProposalResponse] = Field(description="被回滚的建议列表")

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
@@ -89,12 +89,26 @@ class TeamRunner:
         if not team.members:
             return TeamResult(output="", team_name=team.name, protocol=team.protocol.value)
 
+        # 取消令牌：用父级 token 为每个成员创建子 token
+        parent_token = config.cancel_token if config else None
+
         current_input = input_data
         all_results: list[RunResult] = []
 
         for agent in team.members:
+            # 每次循环前检查取消
+            if parent_token is not None:
+                parent_token.check()
+
             logger.info("Team '%s' sequential: running agent '%s'", team.name, agent.name)
-            result = await Runner.run(agent, current_input, config=config)
+
+            # 为每个成员创建子令牌
+            member_config = config
+            if parent_token is not None and config is not None:
+                child_token = parent_token.create_child()
+                member_config = replace(config, cancel_token=child_token)
+
+            result = await Runner.run(agent, current_input, config=member_config)
             all_results.append(result)
             # 下一个 agent 的输入是当前 agent 的输出
             current_input = str(result.output)
@@ -117,13 +131,23 @@ class TeamRunner:
         if not team.members:
             return TeamResult(output="", team_name=team.name, protocol=team.protocol.value)
 
+        # 取消令牌：父级 token 为每个并行成员创建子 token
+        parent_token = config.cancel_token if config else None
+        if parent_token is not None:
+            parent_token.check()
+
         all_results: list[RunResult] = []
 
         async with asyncio.TaskGroup() as tg:
             tasks = []
             for agent in team.members:
                 logger.info("Team '%s' parallel: dispatching agent '%s'", team.name, agent.name)
-                task = tg.create_task(Runner.run(agent, input_data, config=config))
+                # 为每个并行成员创建子令牌
+                member_config = config
+                if parent_token is not None and config is not None:
+                    child_token = parent_token.create_child()
+                    member_config = replace(config, cancel_token=child_token)
+                task = tg.create_task(Runner.run(agent, input_data, config=member_config))
                 tasks.append((agent.name, task))
 
         # TaskGroup 确保所有任务完成后才到这里
@@ -180,7 +204,15 @@ class TeamRunner:
         logger.info("Team '%s' coordinator: running coordinator '%s' with %d member tools",
                      team.name, coordinator.name, len(member_tools))
 
-        result = await Runner.run(enhanced, input_data, config=config)
+        # 为 coordinator 创建子令牌
+        parent_token = config.cancel_token if config else None
+        member_config = config
+        if parent_token is not None and config is not None:
+            parent_token.check()
+            child_token = parent_token.create_child()
+            member_config = replace(config, cancel_token=child_token)
+
+        result = await Runner.run(enhanced, input_data, config=member_config)
 
         return TeamResult(
             output=str(result.output),
