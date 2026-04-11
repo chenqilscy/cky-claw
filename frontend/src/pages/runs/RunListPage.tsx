@@ -1,6 +1,6 @@
-import { useMemo, useState } from 'react';
-import { Card, Row, Col, Statistic, DatePicker, Input, Space, Tag, Segmented } from 'antd';
-import { ReloadOutlined } from '@ant-design/icons';
+import { useMemo, useState, useCallback } from 'react';
+import { Card, Row, Col, Statistic, DatePicker, Input, Space, Tag, Segmented, Button, App } from 'antd';
+import { ReloadOutlined, DownloadOutlined } from '@ant-design/icons';
 import { ProTable } from '@ant-design/pro-components';
 import type { ProColumns } from '@ant-design/pro-components';
 import type {
@@ -24,11 +24,42 @@ const GROUP_BY_OPTIONS: { label: string; value: SummaryGroupBy }[] = [
 ];
 
 const RunListPage: React.FC = () => {
+  const { message } = App.useApp();
   const [agentFilter, setAgentFilter] = useState<string>('');
   const [modelFilter, setModelFilter] = useState<string>('');
   const [timeRange, setTimeRange] = useState<[string, string] | null>(null);
   const [pagination, setPagination] = useState({ current: 1, pageSize: 20 });
   const [groupBy, setGroupBy] = useState<SummaryGroupBy>('agent_model');
+  const [exporting, setExporting] = useState(false);
+
+  const handleExportCSV = useCallback(async () => {
+    setExporting(true);
+    try {
+      const params = new URLSearchParams();
+      if (agentFilter) params.set('agent_name', agentFilter);
+      if (modelFilter) params.set('model', modelFilter);
+      if (timeRange) {
+        params.set('start_time', timeRange[0]);
+        params.set('end_time', timeRange[1]);
+      }
+      const token = localStorage.getItem('ckyclaw_token');
+      const resp = await fetch(`/api/v1/export/token-usage?${params.toString()}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (!resp.ok) throw new Error(`导出失败: ${resp.status}`);
+      const blob = await resp.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `token_usage_${new Date().toISOString().slice(0, 10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      void message.error(err instanceof Error ? err.message : '导出失败');
+    } finally {
+      setExporting(false);
+    }
+  }, [agentFilter, modelFilter, timeRange, message]);
 
   // TanStack Query
   const listParams: TokenUsageListParams = {
@@ -277,6 +308,14 @@ const RunListPage: React.FC = () => {
             style={{ cursor: 'pointer', fontSize: 16 }}
             onClick={() => { void refetchList(); void refetchSummary(); }}
           />,
+          <Button
+            key="export"
+            icon={<DownloadOutlined />}
+            loading={exporting}
+            onClick={() => { void handleExportCSV(); }}
+          >
+            导出 CSV
+          </Button>,
         ]}
       />
     </div>

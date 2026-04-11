@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import {
   App,
+  Button,
   Card,
   Tag,
   Space,
@@ -14,6 +15,7 @@ import {
 } from 'antd';
 import {
   ApartmentOutlined,
+  DownloadOutlined,
   SearchOutlined,
 } from '@ant-design/icons';
 import { ProTable } from '@ant-design/pro-components';
@@ -37,6 +39,35 @@ const TracesPage: React.FC = () => {
   const [maxDuration, setMaxDuration] = useState<number | null>(null);
   const [guardrailTriggered, setGuardrailTriggered] = useState(false);
   const [pagination, setPagination] = useState({ current: 1, pageSize: 20 });
+  const [exporting, setExporting] = useState(false);
+
+  const handleExportCSV = useCallback(async () => {
+    setExporting(true);
+    try {
+      const params = new URLSearchParams();
+      if (agentFilter) params.set('agent_name', agentFilter);
+      if (timeRange) {
+        params.set('start_time', timeRange[0].toISOString());
+        params.set('end_time', timeRange[1].toISOString());
+      }
+      const token = localStorage.getItem('ckyclaw_token');
+      const resp = await fetch(`/api/v1/export/runs?${params.toString()}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (!resp.ok) throw new Error(`导出失败: ${resp.status}`);
+      const blob = await resp.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `runs_${new Date().toISOString().slice(0, 10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      void message.error(err instanceof Error ? err.message : '导出失败');
+    } finally {
+      setExporting(false);
+    }
+  }, [agentFilter, timeRange, message]);
 
   // TanStack Query — list & stats
   const listParams: TraceListParams = {
@@ -252,7 +283,16 @@ const TracesPage: React.FC = () => {
           dataSource={data}
           loading={loading}
           search={false}
-          toolBarRender={false}
+          toolBarRender={() => [
+            <Button
+              key="export"
+              icon={<DownloadOutlined />}
+              loading={exporting}
+              onClick={() => { void handleExportCSV(); }}
+            >
+              导出 CSV
+            </Button>,
+          ]}
           pagination={{
             current: pagination.current,
             pageSize: pagination.pageSize,

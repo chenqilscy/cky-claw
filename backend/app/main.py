@@ -49,6 +49,7 @@ from app.api.ws import router as ws_router
 from app.api.config_reload import router as config_reload_router
 from app.api.cost_router import router as cost_router_router
 from app.api.checkpoints import router as checkpoints_router
+from app.api.export import router as export_router
 from app.api.intent import router as intent_router
 from app.api.ab_test import router as ab_test_router
 
@@ -139,6 +140,7 @@ def create_app() -> FastAPI:
             {"name": "cost-router", "description": "成本路由策略"},
             {"name": "intent", "description": "意图识别与路由"},
             {"name": "ab-test", "description": "A/B 测试实验"},
+            {"name": "export", "description": "数据导出（Token 用量 / 运行记录 CSV）"},
         ],
         lifespan=lifespan,
     )
@@ -193,6 +195,7 @@ def create_app() -> FastAPI:
     app.include_router(config_reload_router)
     app.include_router(cost_router_router)
     app.include_router(checkpoints_router)
+    app.include_router(export_router)
     app.include_router(intent_router)
     app.include_router(ab_test_router)
 
