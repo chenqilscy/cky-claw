@@ -33,7 +33,7 @@ ruler:
     type: local
     local:
       directory: /etc/loki/rules
-  alertmanager_url: http://localhost:9093
+  alertmanager_url: http://alertmanager:9093
 
 limits_config:
   # 允许无序日志（容器重启可能导致时间戳乱序）

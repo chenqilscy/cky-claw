@@ -150,6 +150,22 @@ services:
     profiles:
       - loki
 
+  alertmanager:
+    image: prom/alertmanager:v0.28.1
+    container_name: ckyclaw-alertmanager
+    restart: unless-stopped
+    ports:
+      - "19093:9093"
+    networks:
+      - default
+      - 1panel-network
+    volumes:
+      - ./docker/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+    command:
+      - --config.file=/etc/alertmanager/alertmanager.yml
+    profiles:
+      - loki
+
   grafana:
     image: grafana/grafana:11.0.0
     container_name: ckyclaw-grafana
@@ -171,6 +187,7 @@ services:
       - ./docker/grafana-dashboards:/var/lib/grafana/dashboards:ro
     depends_on:
       - loki
+      - alertmanager
     profiles:
       - loki
 
