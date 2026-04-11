@@ -2,7 +2,7 @@
 
 > 本文件记录 CkyClaw 项目的当前状态、未来演进方向和历史交付归档。
 >
-> 最后更新：2026-07-08 · 文档版本 v3.2.0
+> 最后更新：2026-04-11 · 文档版本 v3.3.0
 
 ---
 
@@ -10,7 +10,7 @@
 
 | 指标 | 数值 |
 |------|------|
-| 测试通过 | **2958+**（Backend 1740 + Framework 1218） |
+| 测试通过 | **3037+**（Backend 1804 + Framework 1218 + CLI 32） |
 | 测试覆盖率 | Backend **98%** · Framework **100%** |
 | Alembic 迁移 | **45** 个（0001–0045） |
 | API 路由模块 | **37** 个 |
@@ -33,6 +33,9 @@
 | D1 | `test_ws_approvals.py` 导入失败 | ✅ 已修复 | `_broadcast` → `_broadcast_to` 同步更新（commit `82490e9`） |
 | D2 | `test_api_coverage.py` 140 错误 | ✅ 已修复 | 审计中间件 mock + JWT 篡改 + 广播修复（commit `82490e9`） |
 | D3 | 4 个 Framework 集成测试需 LLM Key | ⏭️ 已知 | 需要真实 LLM API Key，CI 中 skip，非阻塞 |
+| D6 | IM/OAuth token 无缓存 | ✅ 已修复 | Redis 统一缓存 `token_cache.py`（TTL 7000s + 降级容错），commit `ae1a67f` |
+| D7 | 日志缺少 request_id | ✅ 已修复 | `contextvars` + `_RequestIDFilter`，开发/生产日志均携带 `request_id`，commit `924abc5` |
+| D8 | Framework 边界无守卫 | ✅ 已修复 | 3 个 AST 扫描测试确保零反向依赖，commit `924abc5` |
 | D4 | 前端 vitest 超长耗时 | ✅ 已修复 | `css: false` + `include` 精确匹配，耗时大幅降低（commit `82490e9`） |
 | D5 | pre-commit hooks 未在 CI 中运行 | ✅ 已修复 | 新增 `pre-commit/action@v3.0.1` CI Job（commit `82490e9`） |
 
@@ -48,7 +51,7 @@
 |---|------|------|
 | F1 | ~~全链路启动验证~~ | ✅ 完成 — 25/25 API 验证通过 + Workflow metadata 列名修复（`f1-verify.ps1`） |
 | F2 | Kubernetes 部署 | Helm Chart / Kustomize + HPA + PDB + Ingress |
-| F3 | 日志聚合 | 结构化日志 + ELK/Loki 集成 (开源免费方案优先) |
+| F3 | ~~日志聚合~~ | ✅ 完成 — Promtail→Loki 日志管线 + JSON 结构化 + request_id 注入 + AlertRule + `f3-loki-verify.ps1` |
 
 ### 3.2 框架能力增强（P1）
 
@@ -56,7 +59,7 @@
 |---|------|------|
 | F4 | Agents SDK 兼容层（优先级最低） | Adapter 允许 OpenAI Agents SDK 的 Agent 定义直接在 CkyClaw 上运行 |
 | F5 | ~~流式输出端到端优化~~ | ✅ 完成 — RAF 批处理 text_delta + tool_call/handoff 事件 UI + 13 测试（`useStreamReducer`） |
-| F6 | Agent 自动评估 Pipeline | 基于 Evolution Signal + 评估维度的自动化质量评分 |
+| F6 | ~~Agent 自动评估 Pipeline~~ | ✅ 完成 — LLM-as-Judge 7 维评分 + `_resolve_judge_provider()` + E2E 验证 201 |
 
 ### 3.3 用户体验（P2）
 
@@ -158,6 +161,11 @@
 | Locust 性能测试 | 12 @task + 10+ API 覆盖 |
 | OTel + Jaeger | OTelTraceProcessor + FastAPI 中间件 + OTel Web SDK 前端追踪 |
 | Prometheus | docker-compose profile + scrape 配置 |
+| Loki 日志 | Promtail 3.0 docker_sd + Loki TSDB + AlertRule + Grafana 数据源 |
+| ckyclaw-cli | CLI MVP: login/version/agent/provider 子命令 + API client + 32 测试 |
+| Token 缓存 | Redis 统一缓存层 token_cache.py — 企微/微信/飞书/OAuth |
+| OpenAPI Tags | 37 个 API 分组描述，`/openapi.json` 121 路由 |
+| request_id 追踪 | contextvars + 日志 Filter 自动注入 + 响应头回传 |
 
 ---
 

@@ -69,8 +69,16 @@ class CkyClawClient:
     # ── Run ───────────────────────────────────────
 
     def run_agent(self, agent_id: str, message: str) -> dict[str, Any]:
-        """以同步模式运行一个 Agent。"""
-        return self._request("POST", f"/api/v1/sessions/run", {
+        """创建 Session 并运行 Agent（同步模式）。"""
+        # 1. 创建 Session
+        session = self._request("POST", "/api/v1/sessions", {
             "agent_id": agent_id,
+            "title": f"CLI run: {message[:40]}",
+        })
+        session_id = session["id"]
+
+        # 2. 运行
+        return self._request("POST", f"/api/v1/sessions/{session_id}/run", {
             "message": message,
+            "config": {"stream": False},
         })
