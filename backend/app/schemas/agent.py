@@ -42,6 +42,9 @@ class AgentCreate(BaseModel):
     skills: list[str] = Field(default_factory=list, description="已启用 Skill 名称")
     output_type: dict[str, Any] | None = Field(default=None, description="结构化输出 JSON Schema")
     metadata: dict[str, Any] = Field(default_factory=dict, description="自定义元数据")
+    prompt_variables: list[dict[str, Any]] = Field(
+        default_factory=list, description="Prompt 模板变量定义列表",
+    )
 
     @field_validator("name")
     @classmethod
@@ -76,6 +79,7 @@ class AgentUpdate(BaseModel):
     skills: list[str] | None = None
     output_type: dict[str, Any] | None = None
     metadata: dict[str, Any] | None = None
+    prompt_variables: list[dict[str, Any]] | None = None
 
     @field_validator("approval_mode")
     @classmethod
@@ -108,6 +112,7 @@ class AgentResponse(BaseModel):
     skills: list[str]
     output_type: dict[str, Any] | None
     metadata: dict[str, Any] = Field(alias="metadata_")
+    prompt_variables: list[dict[str, Any]]
     org_id: uuid.UUID | None
     is_active: bool
     created_by: uuid.UUID | None

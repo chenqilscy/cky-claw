@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Button, Card, Form, Input, Select, Space, App, Spin } from 'antd';
+import { Button, Card, Form, Input, Select, Space, App, Spin, Switch } from 'antd';
 import { ArrowLeftOutlined } from '@ant-design/icons';
 import { agentService } from '../../services/agentService';
 import type { AgentConfig, AgentCreateInput, AgentUpdateInput } from '../../services/agentService';
@@ -94,6 +94,7 @@ const AgentEditPage: React.FC = () => {
             name: agent.name,
             description: agent.description,
             instructions: agent.instructions,
+            prompt_variables: agent.prompt_variables || [],
             model: agent.model,
             provider_name: agent.provider_name || undefined,
             approval_mode: agent.approval_mode,
@@ -118,6 +119,7 @@ const AgentEditPage: React.FC = () => {
         name: values.name as string,
         description: (values.description as string) || '',
         instructions: (values.instructions as string) || '',
+        prompt_variables: (values.prompt_variables as Array<Record<string, unknown>> | undefined) || [],
         model: (values.model as string) || 'openai/glm-4-flash',
         provider_name: (values.provider_name as string) || null,
         approval_mode: (values.approval_mode as string) || 'suggest',
@@ -198,6 +200,50 @@ const AgentEditPage: React.FC = () => {
             <Form.Item name="instructions" label="系统指令">
               <TextArea rows={4} placeholder="Agent 的角色和行为指令" />
             </Form.Item>
+
+            <Form.List name="prompt_variables">
+              {(fields, { add, remove }) => (
+                <Card
+                  type="inner"
+                  title="模板变量"
+                  extra={<Button onClick={() => add({ type: 'string', required: false })}>新增变量</Button>}
+                  style={{ marginBottom: 16 }}
+                >
+                  {fields.map((field) => (
+                    <Space key={field.key} align="start" style={{ display: 'flex', marginBottom: 8 }} wrap>
+                      <Form.Item
+                        {...field}
+                        name={[field.name, 'name']}
+                        rules={[{ required: true, message: '变量名必填' }]}
+                      >
+                        <Input placeholder="name" style={{ width: 140 }} />
+                      </Form.Item>
+                      <Form.Item {...field} name={[field.name, 'type']} initialValue="string">
+                        <Select
+                          style={{ width: 110 }}
+                          options={[
+                            { label: 'string', value: 'string' },
+                            { label: 'number', value: 'number' },
+                            { label: 'boolean', value: 'boolean' },
+                            { label: 'enum', value: 'enum' },
+                          ]}
+                        />
+                      </Form.Item>
+                      <Form.Item {...field} name={[field.name, 'default']}>
+                        <Input placeholder="默认值" style={{ width: 140 }} />
+                      </Form.Item>
+                      <Form.Item {...field} name={[field.name, 'description']}>
+                        <Input placeholder="描述" style={{ width: 200 }} />
+                      </Form.Item>
+                      <Form.Item {...field} name={[field.name, 'required']} valuePropName="checked" initialValue={false}>
+                        <Switch checkedChildren="必填" unCheckedChildren="可选" />
+                      </Form.Item>
+                      <Button danger onClick={() => remove(field.name)}>删除</Button>
+                    </Space>
+                  ))}
+                </Card>
+              )}
+            </Form.List>
 
             <Form.Item name="model" label="模型">
               <Input placeholder="openai/glm-4-flash" />

@@ -1,5 +1,14 @@
 import { api, getToken, API_BASE } from './api';
 
+export interface PromptVariableDefinition {
+  name: string;
+  type: 'string' | 'number' | 'boolean' | 'enum';
+  default?: unknown;
+  description?: string;
+  required?: boolean;
+  options?: string[];
+}
+
 export interface AgentConfig {
   id: string;
   name: string;
@@ -21,6 +30,7 @@ export interface AgentConfig {
   skills: string[];
   output_type: Record<string, unknown> | null;
   metadata: Record<string, unknown>;
+  prompt_variables: PromptVariableDefinition[];
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -53,6 +63,7 @@ export interface AgentCreateInput {
   skills?: string[];
   output_type?: Record<string, unknown> | null;
   metadata?: Record<string, unknown>;
+  prompt_variables?: PromptVariableDefinition[];
 }
 
 export type AgentUpdateInput = Partial<AgentCreateInput>;
@@ -83,6 +94,18 @@ export interface AgentActivityTrendResponse {
   interval: number;
 }
 
+export interface PromptPreviewResponse {
+  rendered: string;
+  warnings: string[];
+}
+
+export interface PromptValidateResponse {
+  valid: boolean;
+  errors: string[];
+  warnings: string[];
+  referenced_variables: string[];
+}
+
 export const agentService = {
   list: (params?: { search?: string; limit?: number; offset?: number }) =>
     api.get<AgentListResponse>('/agents', params),
@@ -95,6 +118,15 @@ export const agentService = {
 
   update: (name: string, data: AgentUpdateInput) =>
     api.put<AgentConfig>(`/agents/${encodeURIComponent(name)}`, data),
+
+  previewPrompt: (name: string, variables: Record<string, unknown>) =>
+    api.post<PromptPreviewResponse>(`/agents/${encodeURIComponent(name)}/prompt/preview`, { variables }),
+
+  validatePrompt: (name: string, instructions: string, variables: PromptVariableDefinition[]) =>
+    api.post<PromptValidateResponse>(`/agents/${encodeURIComponent(name)}/prompt/validate`, {
+      instructions,
+      variables,
+    }),
 
   delete: (name: string) =>
     api.delete<undefined>(`/agents/${encodeURIComponent(name)}`),

@@ -88,6 +88,7 @@ async def create_agent(db: AsyncSession, data: AgentCreate) -> AgentConfig:
         skills=data.skills,
         output_type=data.output_type,
         metadata_=data.metadata,
+        prompt_variables=data.prompt_variables,
     )
     db.add(agent)
     try:

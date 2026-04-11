@@ -32,6 +32,7 @@ def _snapshot_from_agent(agent: AgentConfig) -> dict[str, Any]:
         "agent_tools": list(agent.agent_tools) if agent.agent_tools else [],
         "skills": list(agent.skills) if agent.skills else [],
         "metadata": agent.metadata_,
+        "prompt_variables": agent.prompt_variables or [],
     }
 
 

@@ -110,13 +110,20 @@ def _build_trim_config(config: RunConfig) -> HistoryTrimConfig | None:
     )
 
 
-async def _build_system_message(agent: Agent, run_context: RunContext) -> Message:
+async def _build_system_message(
+    agent: Agent,
+    run_context: RunContext,
+    config: RunConfig | None = None,
+) -> Message:
     """构建 system 消息，注入 Agent instructions。
 
     支持三种 instructions 类型：
     - str: 静态文本
     - Callable[[RunContext], str]: 同步动态指令
     - Callable[[RunContext], Awaitable[str]]: 异步动态指令
+
+    如果 config.template_variables 不为空且 instructions 包含 {{variable}}，
+    自动调用模板渲染器替换变量。
     """
     if callable(agent.instructions):
         result = agent.instructions(run_context)
@@ -127,6 +134,14 @@ async def _build_system_message(agent: Agent, run_context: RunContext) -> Messag
             text = result  # sync callable returns str directly
     else:
         text = agent.instructions or ""
+    # 模板变量渲染：当 config.template_variables 存在且 instructions 包含 {{ 时自动渲染
+    if config and config.template_variables and "{{" in text:
+        from ckyclaw_framework.agent.template import render_template
+
+        render_result = render_template(text, config.template_variables)
+        text = render_result.rendered
+        for warning in render_result.warnings:
+            logger.warning("Prompt 模板渲染: %s", warning)
     # output_type: 注入 JSON Schema 描述到 system prompt 作为 fallback 指引
     if agent.output_type is not None and hasattr(agent.output_type, "model_json_schema"):
         schema = agent.output_type.model_json_schema()
@@ -180,8 +195,8 @@ async def _build_system_messages(
         if memory_text:
             result.append(Message(role=MessageRole.SYSTEM, content=memory_text))
 
-    # Agent instructions（可能含动态内容）
-    instructions_msg = await _build_system_message(agent, run_context)
+    # Agent instructions（可能含动态内容 + 模板变量渲染）
+    instructions_msg = await _build_system_message(agent, run_context, config)
     if instructions_msg.content:
         result.append(instructions_msg)
 

@@ -166,3 +166,7 @@ class RunConfig:
     cancel_token: CancellationToken | None = None
     """取消令牌。配置后 Runner 在每次 LLM 调用和工具执行前检查令牌状态，
     已取消时抛出 asyncio.CancelledError 终止执行。支持父子级联取消。"""
+
+    template_variables: dict[str, Any] | None = None
+    """模板变量值。配置后 Runner 在构建 system 消息时，自动将 Agent instructions
+    中的 {{variable}} 占位符替换为对应值。变量值中的 {{ 和 }} 会被转义防止注入。"""

@@ -9,6 +9,7 @@ from app.models.audit_log import AuditLog
 from app.models.debug_session import DebugSession
 from app.models.evaluation import RunEvaluation, RunFeedback
 from app.models.evolution import EvolutionProposalRecord, EvolutionSignalRecord
+from app.models.environment import Environment, AgentEnvironmentBinding
 from app.models.guardrail import GuardrailRule
 from app.models.im_channel import IMChannel
 from app.models.mcp_server import MCPServerConfig
@@ -25,6 +26,7 @@ from app.models.workflow import WorkflowDefinition
 from app.models.token_usage import TokenUsageLog
 from app.models.tool_group import ToolGroupConfig
 from app.models.trace import SpanRecord, TraceRecord
+from app.models.mailbox import MailboxRecord
 from app.models.user import User
 from app.models.user_oauth import UserOAuthConnection
 
@@ -36,6 +38,8 @@ __all__ = [
     "ApprovalRequest",
     "AuditLog",
     "DebugSession",
+    "Environment",
+    "AgentEnvironmentBinding",
     "EvolutionProposalRecord",
     "EvolutionSignalRecord",
     "GuardrailRule",
@@ -56,6 +60,7 @@ __all__ = [
     "TokenUsageLog",
     "ToolGroupConfig",
     "TraceRecord",
+    "MailboxRecord",
     "User",
     "UserOAuthConnection",
     "WorkflowDefinition",

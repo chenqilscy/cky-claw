@@ -55,6 +55,8 @@ from app.api.debug import router as debug_router
 from app.api.intent import router as intent_router
 from app.api.ab_test import router as ab_test_router
 from app.api.mailbox import router as mailbox_router
+from app.api.prompt import router as prompt_router
+from app.api.environments import router as environments_router
 
 
 @asynccontextmanager
@@ -143,6 +145,8 @@ def create_app() -> FastAPI:
             {"name": "cost-router", "description": "成本路由策略"},
             {"name": "intent", "description": "意图识别与路由"},
             {"name": "ab-test", "description": "A/B 测试实验"},
+            {"name": "prompt", "description": "Prompt 模板预览与校验"},
+            {"name": "environments", "description": "多环境管理与发布回滚"},
             {"name": "export", "description": "数据导出（Token 用量 / 运行记录 CSV）"},
             {"name": "debug", "description": "Agent 调试器（交互式单步执行 + 运行时检查）"},
         ],
@@ -205,6 +209,8 @@ def create_app() -> FastAPI:
     app.include_router(intent_router)
     app.include_router(ab_test_router)
     app.include_router(mailbox_router)
+    app.include_router(prompt_router)
+    app.include_router(environments_router)
 
     # OTel FastAPI 自动埋点（最后添加）
     instrument_fastapi(app)
