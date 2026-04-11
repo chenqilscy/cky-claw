@@ -9,50 +9,30 @@ clients:
   - url: http://loki:3100/loki/api/v1/push
 
 scrape_configs:
-  # Docker Compose 标准日志（通过 Docker socket 采集）
+  # 通过 Docker API 采集 ckyclaw-backend 容器日志
   - job_name: docker-logs
     docker_sd_configs:
       - host: unix:///var/run/docker.sock
-        refresh_interval: 30s
+        refresh_interval: 10s
         filters:
-          - name: label
-            values: ["com.docker.compose.project=maf"]
+          - name: name
+            values: ["ckyclaw-backend"]
     relabel_configs:
-      # 使用容器名作为 service 标签
       - source_labels: [__meta_docker_container_name]
-        target_label: service
         regex: /(.*)
-        replacement: $1
-      # 使用 compose service 名作为 job
-      - source_labels: [__meta_docker_container_label_com_docker_compose_service]
-        target_label: job
-      # 只采集 ckyclaw-backend
-      - source_labels: [__meta_docker_container_label_com_docker_compose_service]
-        action: keep
-        regex: backend
+        target_label: container
+      - target_label: job
+        replacement: backend
+      - target_label: service
+        replacement: ckyclaw-backend
     pipeline_stages:
-      # 解析 Docker JSON 日志格式
+      - docker: {}
       - json:
-          expressions:
-            output: log
-            stream: stream
-            time: time
-      - timestamp:
-          source: time
-          format: RFC3339Nano
-      # 尝试解析应用层 JSON（python-json-logger 输出）
-      - json:
-          source: output
           expressions:
             level: level
             logger: logger
             message: message
-            timestamp: timestamp
           drop_malformed: true
-      # 标签注入
       - labels:
           level:
           logger:
-      # 最终日志内容
-      - output:
-          source: output
