@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -35,3 +35,17 @@ def _override_global_deps():
     yield
     app.dependency_overrides.pop(get_org_id, None)
     app.dependency_overrides.pop(get_current_user, None)
+
+
+@pytest.fixture(autouse=True)
+def _mock_token_cache_redis():
+    """全局 mock token_cache 使用的 Redis，确保每次测试都 cache miss。
+
+    避免真实 Redis 缓存干扰 httpx mock 测试。
+    """
+    mock_redis = AsyncMock()
+    mock_redis.get = AsyncMock(return_value=None)
+    mock_redis.setex = AsyncMock()
+
+    with patch("app.services.token_cache.get_redis", return_value=mock_redis):
+        yield

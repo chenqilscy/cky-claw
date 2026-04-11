@@ -252,24 +252,26 @@ def _generate_random_bytes(length: int) -> bytes:
 
 
 async def _get_access_token(corpid: str, corpsecret: str) -> str | None:
-    """获取企微 access_token。
-
-    TODO: 加入 Redis 缓存（有效期 7200 秒）。
-    """
+    """获取企微 access_token（Redis 缓存，TTL 7000 秒）。"""
     if not corpid or not corpsecret:
         return None
 
-    try:
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            resp = await client.get(
-                f"{_WECOM_API_BASE}/gettoken",
-                params={"corpid": corpid, "corpsecret": corpsecret},
-            )
-        data = resp.json()
-        if data.get("errcode", 0) != 0:
-            logger.error("获取企微 access_token 失败: %s", data.get("errmsg", ""))
+    from app.services.token_cache import get_or_fetch
+
+    async def _fetch() -> str | None:
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                resp = await client.get(
+                    f"{_WECOM_API_BASE}/gettoken",
+                    params={"corpid": corpid, "corpsecret": corpsecret},
+                )
+            data = resp.json()
+            if data.get("errcode", 0) != 0:
+                logger.error("获取企微 access_token 失败: %s", data.get("errmsg", ""))
+                return None
+            return str(data["access_token"])
+        except httpx.HTTPError as exc:
+            logger.error("获取企微 access_token 网络异常: %s", exc)
             return None
-        return str(data["access_token"])
-    except httpx.HTTPError as exc:
-        logger.error("获取企微 access_token 网络异常: %s", exc)
-        return None
+
+    return await get_or_fetch(f"wecom:{corpid}", _fetch)

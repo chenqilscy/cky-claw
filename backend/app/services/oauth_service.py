@@ -232,36 +232,40 @@ def _build_authorize_url_wecom(config: OAuthProviderConfig, state: str) -> str:
 async def _exchange_code_for_token_wecom(
     config: OAuthProviderConfig, code: str
 ) -> str:
-    """企微：获取企业 access_token（corp-level，非用户级）。
+    """企微：获取企业 access_token（Redis 缓存，TTL 7000 秒）。"""
+    from app.services.token_cache import get_or_fetch
 
-    TODO: 企微 corp access_token 有效期 2 小时，后续可加 Redis 缓存避免重复请求。
-    """
-    try:
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            resp = await client.get(
-                config.token_url,
-                params={
-                    "corpid": config.client_id,
-                    "corpsecret": config.client_secret,
-                },
+    async def _fetch() -> str | None:
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                resp = await client.get(
+                    config.token_url,
+                    params={
+                        "corpid": config.client_id,
+                        "corpsecret": config.client_secret,
+                    },
+                )
+        except httpx.HTTPError as exc:
+            logger.error("企微 access_token 获取网络异常: %s", exc)
+            raise AuthenticationError("OAuth 服务暂不可用，请稍后重试") from exc
+
+        if resp.status_code != 200:
+            raise AuthenticationError("企微 access_token 获取失败")
+
+        data = resp.json()
+        if data.get("errcode", 0) != 0:
+            raise AuthenticationError(
+                f"企微 access_token 获取失败: {data.get('errmsg', '未知错误')}"
             )
-    except httpx.HTTPError as exc:
-        logger.error("企微 access_token 获取网络异常: %s", exc)
-        raise AuthenticationError("OAuth 服务暂不可用，请稍后重试") from exc
+        token = data.get("access_token")
+        if not token:
+            raise AuthenticationError("企微响应中缺少 access_token")
+        return str(token)
 
-    if resp.status_code != 200:
-        raise AuthenticationError("企微 access_token 获取失败")
-
-    data = resp.json()
-    if data.get("errcode", 0) != 0:
-        raise AuthenticationError(
-            f"企微 access_token 获取失败: {data.get('errmsg', '未知错误')}"
-        )
-
-    token = data.get("access_token")
+    token = await get_or_fetch(f"wecom_oauth:{config.client_id}", _fetch)
     if not token:
-        raise AuthenticationError("企微响应中缺少 access_token")
-    return str(token)
+        raise AuthenticationError("企微 access_token 获取失败")
+    return token
 
 
 async def _fetch_user_info_wecom(

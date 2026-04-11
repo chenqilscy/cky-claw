@@ -195,30 +195,32 @@ class FeishuAdapter(ChannelAdapter):
     async def _get_tenant_access_token(
         self, app_config: dict[str, Any]
     ) -> str | None:
-        """获取飞书 tenant_access_token。
-
-        TODO: 缓存到 Redis，避免每次请求都获取新 token。
-        """
+        """获取飞书 tenant_access_token（Redis 缓存，TTL 7000 秒）。"""
         app_id = app_config.get("app_id", "")
         app_secret = app_config.get("app_secret", "")
         if not (app_id and app_secret):
             logger.error("飞书配置缺少 app_id 或 app_secret")
             return None
 
+        from app.services.token_cache import get_or_fetch
+
         url = "https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal"
         payload = {"app_id": app_id, "app_secret": app_secret}
 
-        try:
-            async with httpx.AsyncClient(timeout=10) as client:
-                resp = await client.post(url, json=payload)
-                result = resp.json()
-                if result.get("code") != 0:
-                    logger.error(
-                        "获取飞书 tenant_access_token 失败: %s",
-                        result.get("msg", "unknown"),
-                    )
-                    return None
-                return result.get("tenant_access_token")  # type: ignore[no-any-return]
-        except httpx.HTTPError as exc:
-            logger.error("获取飞书 token 网络错误: %s", exc)
-            return None
+        async def _fetch() -> str | None:
+            try:
+                async with httpx.AsyncClient(timeout=10) as client:
+                    resp = await client.post(url, json=payload)
+                    result = resp.json()
+                    if result.get("code") != 0:
+                        logger.error(
+                            "获取飞书 tenant_access_token 失败: %s",
+                            result.get("msg", "unknown"),
+                        )
+                        return None
+                    return result.get("tenant_access_token")  # type: ignore[no-any-return]
+            except httpx.HTTPError as exc:
+                logger.error("获取飞书 token 网络错误: %s", exc)
+                return None
+
+        return await get_or_fetch(f"feishu:{app_id}", _fetch)

@@ -333,31 +333,33 @@ def _decrypt_message(
 
 
 async def _get_access_token(appid: str, appsecret: str) -> str | None:
-    """获取微信公众号 access_token。
-
-    TODO: 加入 Redis 缓存（有效期 7200 秒）。
-    """
+    """获取微信公众号 access_token（Redis 缓存，TTL 7000 秒）。"""
     if not appid or not appsecret:
         return None
 
-    try:
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            resp = await client.get(
-                f"{_WECHAT_API_BASE}/token",
-                params={
-                    "grant_type": "client_credential",
-                    "appid": appid,
-                    "secret": appsecret,
-                },
-            )
-        data = resp.json()
-        if "access_token" not in data:
-            logger.error("获取微信 access_token 失败: %s", data.get("errmsg", ""))
+    from app.services.token_cache import get_or_fetch
+
+    async def _fetch() -> str | None:
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                resp = await client.get(
+                    f"{_WECHAT_API_BASE}/token",
+                    params={
+                        "grant_type": "client_credential",
+                        "appid": appid,
+                        "secret": appsecret,
+                    },
+                )
+            data = resp.json()
+            if "access_token" not in data:
+                logger.error("获取微信 access_token 失败: %s", data.get("errmsg", ""))
+                return None
+            return data["access_token"]  # type: ignore[no-any-return]
+        except httpx.HTTPError as exc:
+            logger.error("获取微信 access_token 网络异常: %s", exc)
             return None
-        return data["access_token"]  # type: ignore[no-any-return]
-    except httpx.HTTPError as exc:
-        logger.error("获取微信 access_token 网络异常: %s", exc)
-        return None
+
+    return await get_or_fetch(f"wechat:{appid}", _fetch)
 
 
 def _generate_random_bytes(length: int) -> bytes:
