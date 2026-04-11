@@ -119,6 +119,7 @@ services:
     image: grafana/loki:3.0.0
     container_name: ckyclaw-loki
     restart: unless-stopped
+    user: "0:0"
     ports:
       - "3100:3100"
     networks:
