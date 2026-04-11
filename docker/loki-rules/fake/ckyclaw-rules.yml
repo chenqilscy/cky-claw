@@ -4,7 +4,7 @@ groups:
     rules:
       - alert: CkyclawBackendHighErrorRate
         expr: |
-          sum(count_over_time({job="backend",level="ERROR"}[5m])) > 20
+          sum by (job) (count_over_time({job="backend",level="ERROR"}[5m])) > 20
         for: 5m
         labels:
           severity: warning
@@ -15,7 +15,7 @@ groups:
 
       - alert: CkyclawBackendHasFatal
         expr: |
-          sum(count_over_time({job="backend"} |= "Traceback" [10m])) > 0
+          sum by (job) (count_over_time({job="backend"} |= "Traceback" [10m])) > 0
         for: 1m
         labels:
           severity: critical
