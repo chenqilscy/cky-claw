@@ -6,16 +6,16 @@ CkyClaw 是基于自研 **CkyClaw Framework** 构建的 AI Agent 管理与运行
 
 ## 项目现状（M0–M7 全部完成）
 
-截至 2026-04-05，**M0–M7 共 8 个里程碑、60+ Phase 全部完成**。
+截至 2026-04-12，**M0–M7 共 8 个里程碑、60+ Phase 全部完成 + S1–S7 进化路线全部完成**。
 
 ### 关键指标
 
 | 指标 | 数值 |
 |------|------|
-| 测试总数 | **3220**（Backend 1670 + Framework 1197 + Frontend 353） |
+| 测试总数 | **3977**（Backend 1928 + Framework 1619 + Frontend 430） |
 | 测试覆盖率 | Backend **98%** · Framework **100%** |
-| Alembic 迁移 | 39 个（0001–0039） |
-| API 路由模块 | 31 个 |
+| Alembic 迁移 | 49 个（0001–0049） |
+| API 路由模块 | 32 个 |
 | 前端页面 | 26 个（React.lazy 懒加载） |
 | CI Job | 5 个 GitHub Actions + 5 Stage Jenkinsfile |
 | TypeScript 错误 | 0 |
@@ -41,6 +41,13 @@ CkyClaw 是基于自研 **CkyClaw Framework** 构建的 AI Agent 管理与运行
 | 用户认证 | ✅ | JWT + bcrypt + Admin/User 角色 + OAuth 2.0 框架 + GitHub OAuth |
 | Docker 部署 | ✅ | Docker Compose + 自动迁移 + 健康检查 |
 | GitHub Actions CI | ✅ | 5 Job 全激活 |
+| Context Engineering | ✅ | S1 上下文工程 — ContextBuilder + ContextBudget + ContextSource 三层抽象 |
+| Memory 三分类 | ✅ | S2 记忆系统 — Episodic / Semantic / Procedural 三类记忆模型 |
+| LLM 容错 | ✅ | S3 Circuit Breaker + RetryBudget + Tool Middleware Pipeline |
+| Event Sourcing | ✅ | S4 事件溯源 — EventStore + EventProjector + Replay 引擎 |
+| 自改进循环 | ✅ | S5 LearningLoop + RunReflector + 版本回滚检查 |
+| 取消与检查点 | ✅ | S6 CancellationToken 父子级联 + RunRegistry + Resume API |
+| 智能编排 | ✅ | S7 PlanGuard 5项验证 + Mailbox Agent 间通信 |
 
 ### 未完成 / 延期项
 

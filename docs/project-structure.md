@@ -69,7 +69,8 @@ ckyclaw-framework/
 │   │   ├── run_config.py                 # 运行配置
 │   │   ├── run_context.py                # 运行上下文
 │   │   ├── hooks.py                      # 生命周期钩子
-│   │   └── result.py                     # 运行结果
+│   │   ├── result.py                     # 运行结果
+│   │   └── cancellation.py              # S6 CancellationToken 父子级联取消
 │   ├── session/
 │   │   ├── session.py                    # Session 抽象接口
 │   │   ├── in_memory.py                  # 内存 Session 实现
@@ -85,6 +86,12 @@ ckyclaw-framework/
 │       ├── span.py                       # Span 定义
 │       ├── processor.py                  # Trace 处理器抽象
 │       └── console_processor.py          # 控制台 Trace 输出
+│   ├── evolution/                        # S5 自改进循环
+│   │   └── learning_loop.py              # LearningLoop + RunReflector + RunReflection
+│   ├── orchestration/                    # S7 智能编排
+│   │   └── plan_guard.py                 # PlanGuard 5项验证（DAG/能力/Token/可用性/超时）
+│   └── mailbox/                          # S7 Agent 间通信
+│       └── __init__.py                   # MailboxMessage + MailboxBackend + InMemoryMailboxBackend
 └── tests/                                # 单元测试与集成测试
     ├── test_smoke.py
     ├── test_runner.py
@@ -280,7 +287,10 @@ backend/
 │       ├── tool_group.py
 │       ├── trace.py
 │       ├── trace_processor.py
-│       └── workflow.py
+│       ├── workflow.py
+│       ├── evolution.py        # S5 自改进循环服务
+│       ├── run_registry.py     # S6 运行注册表（取消令牌管理）
+│       └── mailbox.py          # S7 Mailbox Agent 间通信服务
 ├── scripts/
 │   └── create_db.py            # 数据库初始化脚本
 └── tests/                      # 后端测试

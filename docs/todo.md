@@ -2,7 +2,7 @@
 
 > 本文件记录 CkyClaw 项目的当前状态、未来演进方向和历史交付归档。
 >
-> 最后更新：2026-04-11 · 文档版本 v3.3.0
+> 最后更新：2026-04-12 · 文档版本 v3.4.0
 
 ---
 
@@ -10,13 +10,13 @@
 
 | 指标 | 数值 |
 |------|------|
-| 测试通过 | **3140+**（Backend 1858 + Framework 1249 + Frontend 415 + CLI 32） |
+| 测试通过 | **4009+**（Backend 1928 + Framework 1619 + Frontend 430 + CLI 32） |
 | 测试覆盖率 | Backend **98%** · Framework **100%** |
-| Alembic 迁移 | **45** 个（0001–0045） |
-| API 路由模块 | **37** 个 |
+| Alembic 迁移 | **49** 个（0001–0049） |
+| API 路由模块 | **38** 个 |
 | 前端页面 | **38** 个（React.lazy 懒加载，含 29 菜单页 + 9 非菜单页） |
 | 前端测试文件 | **74** 个 |
-| 前端测试数 | **401** 个（Vitest） |
+| 前端测试数 | **430** 个（Vitest） |
 | CI Job | **6** 个 GitHub Actions + **5** Stage Jenkinsfile |
 | TypeScript 错误 | **0** |
 | Backend mypy | **0** 错误（166 源文件） |
@@ -51,13 +51,13 @@
 
 | # | Phase | 核心交付 | 版本 |
 |---|-------|---------|------|
-| S1 | **上下文工程革命** | 5 Tier 压缩 + Artifact Store + Cache-First Prompt | v3.0 |
-| S2 | **记忆系统三类化** | Episodic/Semantic/Procedural + 跨会话检索 | v3.1 |
-| S3 | **LLM 容错 + 工具中间件** | Circuit Breaker + FallbackChain + ToolMiddleware 管道 | v3.2 |
-| S4 | **事件溯源 + Replay** | Event Journal + 15+ 事件类型 + Projector + 前端回放 | v3.2 |
-| S5 | **自改进闭环** | Learning Loop + Skill Factory + Evolution 策略引擎 | v3.3 |
-| S6 | **取消传播 + Checkpoint 恢复** | CancellationToken + PostgresCheckpointBackend + auto-resume | v3.3 |
-| S7 | **智能编排升级** | Brain Coordinator + PlanGuard + Mailbox | v3.4 |
+| S1 | ~~**上下文工程革命**~~ | ✅ 完成 — ContextBuilder + ContextBudget + ContextSource 三层抽象 | v3.0 |
+| S2 | ~~**记忆系统三类化**~~ | ✅ 完成 — Episodic/Semantic/Procedural + 跨会话检索 | v3.1 |
+| S3 | ~~**LLM 容错 + 工具中间件**~~ | ✅ 完成 — Circuit Breaker + RetryBudget + Tool Middleware Pipeline | v3.2 |
+| S4 | ~~**事件溯源 + Replay**~~ | ✅ 完成 — EventStore + EventProjector + Replay 引擎 | v3.2 |
+| S5 | ~~**自改进闭环**~~ | ✅ 完成 — LearningLoop + RunReflector + 版本回滚检查 | v3.3 |
+| S6 | ~~**取消传播 + Checkpoint 恢复**~~ | ✅ 完成 — CancellationToken 父子级联 + RunRegistry + Resume API | v3.3 |
+| S7 | ~~**智能编排升级**~~ | ✅ 完成 — PlanGuard 5项验证 + Mailbox Agent 间通信 | v3.4 |
 
 ### 3.1 生产就绪
 
