@@ -10,6 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
 from app.core.exceptions import register_exception_handlers
+from app.core.logging import setup_logging
 from app.core.middleware import RequestIDMiddleware
 from app.core.audit_middleware import AuditLogMiddleware
 from app.core.otel import setup_otel, instrument_fastapi, get_metrics_app
@@ -90,6 +91,9 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
 def create_app() -> FastAPI:
     """创建 FastAPI 应用实例。"""
+    # 日志系统优先初始化（在 OTel 之前）
+    setup_logging()
+
     # OTel 必须在 app 创建前初始化
     setup_otel()
 

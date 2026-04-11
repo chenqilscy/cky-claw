@@ -114,6 +114,62 @@ services:
     profiles:
       - otel
 
+  # === 日志聚合（docker compose --profile loki up -d）===
+  loki:
+    image: grafana/loki:3.0.0
+    container_name: ckyclaw-loki
+    restart: unless-stopped
+    ports:
+      - "3100:3100"
+    networks:
+      - default
+      - 1panel-network
+    command: -config.file=/etc/loki/config.yml
+    volumes:
+      - ./docker/loki-config.yml:/etc/loki/config.yml:ro
+      - lokidata:/tmp/loki
+    profiles:
+      - loki
+
+  promtail:
+    image: grafana/promtail:3.0.0
+    container_name: ckyclaw-promtail
+    restart: unless-stopped
+    networks:
+      - default
+      - 1panel-network
+    volumes:
+      - ./docker/promtail-config.yml:/etc/promtail/config.yml:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /var/log/containers:/var/log/containers:ro
+    command: -config.file=/etc/promtail/config.yml
+    depends_on:
+      - loki
+    profiles:
+      - loki
+
+  grafana:
+    image: grafana/grafana:11.0.0
+    container_name: ckyclaw-grafana
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    networks:
+      - default
+      - 1panel-network
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-Admin888}
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+      GF_FEATURE_TOGGLES_ENABLE: "lokiExploreLogsPanel"
+    volumes:
+      - grafanadata:/var/lib/grafana
+      - ./docker/grafana-datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro
+    depends_on:
+      - loki
+    profiles:
+      - loki
+
   # === 定时备份（按需启用：docker-compose --profile backup up -d）===
   backup:
     image: postgres:16-alpine
@@ -148,6 +204,8 @@ volumes:
   # redisdata:  # 已注释（使用外部 Redis）
   promdata:
   backupdata:
+  lokidata:
+  grafanadata:
 
 networks:
   1panel-network:
