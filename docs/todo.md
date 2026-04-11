@@ -10,7 +10,7 @@
 
 | 指标 | 数值 |
 |------|------|
-| 测试通过 | **3059+**（Backend 1822 + Framework 1218 + CLI 32） |
+| 测试通过 | **3140+**（Backend 1858 + Framework 1249 + Frontend 415 + CLI 32） |
 | 测试覆盖率 | Backend **98%** · Framework **100%** |
 | Alembic 迁移 | **45** 个（0001–0045） |
 | API 路由模块 | **37** 个 |
@@ -65,7 +65,7 @@
 
 | # | 功能 | 说明 |
 |---|------|------|
-| F7 | Agent 调试器 | 交互式单步执行 Agent，查看每步 LLM 输入/输出/工具调用 |
+| F7 | ~~Agent 调试器~~ | ✅ 完成 — Framework DebugController(asyncio.Event) + Runner 3 检查点 + Backend REST API(7端点) + WebSocket + 前端调试面板 + 81 测试 |
 | F8 | 高级 Prompt Editor | 模板变量 + 版本管理 + A/B 测试集成 |
 | F9 | 移动端适配 | 关键页面（对话、审批）响应式优化 |
 

@@ -31,6 +31,7 @@ import {
   ThunderboltOutlined,
   HistoryOutlined,
   AimOutlined,
+  BugOutlined,
 } from '@ant-design/icons';
 import useThemeStore from '../stores/themeStore';
 
@@ -175,6 +176,11 @@ const menuRoutes = {
       path: '/ab-test',
       name: 'A/B 测试',
       icon: <ExperimentOutlined />,
+    },
+    {
+      path: '/debug',
+      name: 'Agent 调试器',
+      icon: <BugOutlined />,
     },
     {
       path: '/i18n',

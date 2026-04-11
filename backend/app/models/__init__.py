@@ -6,6 +6,7 @@ from app.models.agent_template import AgentTemplate
 from app.models.agent_version import AgentConfigVersion
 from app.models.approval import ApprovalRequest
 from app.models.audit_log import AuditLog
+from app.models.debug_session import DebugSession
 from app.models.evaluation import RunEvaluation, RunFeedback
 from app.models.evolution import EvolutionProposalRecord, EvolutionSignalRecord
 from app.models.guardrail import GuardrailRule
@@ -34,6 +35,7 @@ __all__ = [
     "AgentTemplate",
     "ApprovalRequest",
     "AuditLog",
+    "DebugSession",
     "EvolutionProposalRecord",
     "EvolutionSignalRecord",
     "GuardrailRule",

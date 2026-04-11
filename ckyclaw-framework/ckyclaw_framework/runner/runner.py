@@ -934,6 +934,9 @@ class Runner:
         _checkpoint_interval = config.checkpoint_interval
         _run_id = resume_from or uuid4().hex
 
+        # Debug: 调试控制器
+        _debug = config.debug_controller
+
         # Intent Drift: 意图飘移检测
         _intent_detector = config.intent_detector
         _drift_threshold = config.drift_threshold
@@ -1096,6 +1099,8 @@ class Runner:
                 # Hooks: on_run_end
                 if hooks:
                     await _invoke_hook(hooks.on_run_end, "on_run_end", run_ctx, _err_result)
+                if _debug is not None:
+                    _debug.mark_failed()
                 return _err_result
 
             _accumulate_usage(total_usage, response.token_usage)
@@ -1124,6 +1129,32 @@ class Runner:
                         )
                 except Exception:
                     logger.warning("Intent drift detection failed at turn %d", turn_count, exc_info=True)
+
+            # Debug: turn 结束后检查是否暂停
+            if _debug is not None:
+                _debug.snapshot_llm_response({
+                    "content": response.content,
+                    "tool_calls": [
+                        {"name": tc.name, "arguments": tc.arguments}
+                        for tc in (response.tool_calls or [])
+                    ],
+                    "token_usage": {
+                        "prompt_tokens": response.token_usage.prompt_tokens,
+                        "completion_tokens": response.token_usage.completion_tokens,
+                    } if response.token_usage else {},
+                })
+                _debug.clear_tool_snapshots()
+                await _debug.checkpoint(
+                    reason="turn_end",
+                    turn=turn_count,
+                    agent_name=current_agent.name,
+                    messages=messages,
+                    token_usage={
+                        "prompt_tokens": total_usage.prompt_tokens,
+                        "completion_tokens": total_usage.completion_tokens,
+                        "total_tokens": total_usage.total_tokens,
+                    },
+                )
 
             # 无工具调用 → 最终输出
             if not response.tool_calls:
@@ -1171,7 +1202,23 @@ class Runner:
                 # Hooks: on_run_end
                 if hooks:
                     await _invoke_hook(hooks.on_run_end, "on_run_end", run_ctx, _ok_result)
+                if _debug is not None:
+                    _debug.mark_completed()
                 return _ok_result
+
+            # Debug: 工具调用前检查是否暂停
+            if _debug is not None:
+                await _debug.checkpoint(
+                    reason="before_tool",
+                    turn=turn_count,
+                    agent_name=current_agent.name,
+                    messages=messages,
+                    token_usage={
+                        "prompt_tokens": total_usage.prompt_tokens,
+                        "completion_tokens": total_usage.completion_tokens,
+                        "total_tokens": total_usage.total_tokens,
+                    },
+                )
 
             # 执行工具调用
             handoff_result = await _execute_tool_calls(
@@ -1187,6 +1234,21 @@ class Runner:
             if handoff_result is not None:
                 target_agent, handoff_config = handoff_result
                 logger.info("Handoff: %s → %s", current_agent.name, target_agent.name)
+
+                # Debug: Handoff 前检查是否暂停
+                if _debug is not None:
+                    await _debug.checkpoint(
+                        reason="before_handoff",
+                        turn=turn_count,
+                        agent_name=current_agent.name,
+                        messages=messages,
+                        token_usage={
+                            "prompt_tokens": total_usage.prompt_tokens,
+                            "completion_tokens": total_usage.completion_tokens,
+                            "total_tokens": total_usage.total_tokens,
+                        },
+                    )
+
                 # Hooks: on_agent_end (handoff 旧 Agent)
                 if hooks:
                     await _invoke_hook(hooks.on_agent_end, "on_agent_end", run_ctx, current_agent.name)
@@ -1247,6 +1309,8 @@ class Runner:
         if hooks:
             _max_ctx = RunContext(agent=current_agent, config=config, context=context or {}, turn_count=turn_count)
             await _invoke_hook(hooks.on_run_end, "on_run_end", _max_ctx, _max_result)
+        if _debug is not None:
+            _debug.mark_completed()
         return _max_result
 
     @staticmethod

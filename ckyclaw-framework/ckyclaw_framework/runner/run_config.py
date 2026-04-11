@@ -9,6 +9,7 @@ if TYPE_CHECKING:
     from ckyclaw_framework.approval.handler import ApprovalHandler
     from ckyclaw_framework.approval.mode import ApprovalMode
     from ckyclaw_framework.checkpoint import CheckpointBackend
+    from ckyclaw_framework.debug.controller import DebugController
     from ckyclaw_framework.guardrails.input_guardrail import InputGuardrail
     from ckyclaw_framework.guardrails.output_guardrail import OutputGuardrail
     from ckyclaw_framework.guardrails.tool_guardrail import ToolGuardrail
@@ -108,3 +109,7 @@ class RunConfig:
 
     drift_threshold: float = 0.6
     """意图飘移阈值（0~1）。drift_score >= 此值时触发 on_intent_drift Hook。"""
+
+    debug_controller: DebugController | None = None
+    """调试控制器。配置后 Runner 在每轮 LLM 后、工具调用前、Handoff 前调用 checkpoint()，
+    DebugController 决定是否暂停执行。用于交互式单步调试 Agent 执行流程。"""
