@@ -21,9 +21,9 @@ $hasJob = $labels.data -contains "job"
 
 Write-Host "[F3] Step 4/4: run LogQL queries..."
 $queries = @(
-    @{ Name = "Recent backend logs"; Query = "{job=\"backend\"}" },
-    @{ Name = "Error count 5m"; Query = "sum(count_over_time({job=\"backend\", level=\"ERROR\"}[5m]))" },
-    @{ Name = "Traceback count 10m"; Query = "sum(count_over_time({job=\"backend\"} |= \"Traceback\" [10m]))" }
+    @{ Name = "Recent backend logs"; Query = '{job="backend"}' },
+    @{ Name = "Error count 5m"; Query = 'sum(count_over_time({job="backend", level="ERROR"}[5m]))' },
+    @{ Name = "Traceback count 10m"; Query = 'sum(count_over_time({job="backend"} |= "Traceback" [10m]))' }
 )
 
 foreach ($q in $queries) {
