@@ -34,6 +34,8 @@ ruler:
     local:
       directory: /etc/loki/rules
   alertmanager_url: http://alertmanager:9093
+  remote_write:
+    enabled: false
 
 limits_config:
   # 允许无序日志（容器重启可能导致时间戳乱序）
