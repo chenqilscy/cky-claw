@@ -9,16 +9,6 @@ clients:
   - url: http://loki:3100/loki/api/v1/push
 
 scrape_configs:
-  # 采集 ckyclaw-backend 容器日志
-  - job_name: ckyclaw-backend
-    static_configs:
-      - targets:
-          - localhost
-        labels:
-          job: ckyclaw-backend
-          service: backend
-          __path__: /var/log/containers/ckyclaw-backend*.log
-
   # Docker Compose 标准日志（通过 Docker socket 采集）
   - job_name: docker-logs
     docker_sd_configs:
