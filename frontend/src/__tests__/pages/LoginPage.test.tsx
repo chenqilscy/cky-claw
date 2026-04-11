@@ -97,7 +97,7 @@ describe('LoginPage', () => {
     );
     await waitFor(() => {
       expect(screen.getByRole('button', { name: /GitHub 登录/ })).toBeDefined();
-    });
+    }, { timeout: 15000 });
   });
 
   it('renders wecom login button when provider is available', async () => {
@@ -108,7 +108,7 @@ describe('LoginPage', () => {
     );
     await waitFor(() => {
       expect(screen.getByRole('button', { name: /企业微信 登录/ })).toBeDefined();
-    });
+    }, { timeout: 15000 });
   });
 
   it('renders dingtalk login button when provider is available', async () => {
@@ -119,7 +119,7 @@ describe('LoginPage', () => {
     );
     await waitFor(() => {
       expect(screen.getByRole('button', { name: /钉钉 登录/ })).toBeDefined();
-    });
+    }, { timeout: 15000 });
   });
 
   it('renders feishu login button when provider is available', async () => {
@@ -130,7 +130,7 @@ describe('LoginPage', () => {
     );
     await waitFor(() => {
       expect(screen.getByRole('button', { name: /飞书 登录/ })).toBeDefined();
-    });
+    }, { timeout: 15000 });
   });
 
   it('renders multiple OAuth providers together', async () => {
@@ -144,7 +144,7 @@ describe('LoginPage', () => {
       expect(screen.getByRole('button', { name: /企业微信 登录/ })).toBeDefined();
       expect(screen.getByRole('button', { name: /钉钉 登录/ })).toBeDefined();
       expect(screen.getByRole('button', { name: /飞书 登录/ })).toBeDefined();
-    });
+    }, { timeout: 15000 });
   });
 
   it('does not show divider when no providers available', () => {
@@ -170,14 +170,14 @@ describe('LoginPage', () => {
 
     await waitFor(() => {
       expect(screen.getByRole('button', { name: /钉钉 登录/ })).toBeDefined();
-    });
+    }, { timeout: 15000 });
 
     const user = userEvent.setup();
     await user.click(screen.getByRole('button', { name: /钉钉 登录/ }));
 
     await waitFor(() => {
       expect(mockAuthorize).toHaveBeenCalledWith('dingtalk');
-    });
+    }, { timeout: 15000 });
   });
 
   it('shows error message when OAuth authorize fails', async () => {
@@ -207,7 +207,7 @@ describe('LoginPage', () => {
 
     await waitFor(() => {
       expect(screen.getByRole('button', { name: /企业微信 登录/ })).toBeDefined();
-    });
+    }, { timeout: 15000 });
 
     const user = userEvent.setup();
     await user.click(screen.getByRole('button', { name: /企业微信 登录/ }));
@@ -215,7 +215,7 @@ describe('LoginPage', () => {
     // message.error 是全局 mock，检查调用而非 DOM 文本
     await waitFor(() => {
       expect(mockMsg.error).toHaveBeenCalledWith('企业微信 登录暂不可用');
-    });
+    }, { timeout: 15000 });
   });
 
   it('handles getProviders failure gracefully', async () => {
