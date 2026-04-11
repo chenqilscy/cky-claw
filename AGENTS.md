@@ -12,11 +12,11 @@ CkyClaw 是基于自研 **CkyClaw Framework** 构建的 AI Agent 管理与运行
 
 | 指标 | 数值 |
 |------|------|
-| 测试总数 | **3977**（Backend 1928 + Framework 1619 + Frontend 430） |
+| 测试总数 | **3984+**（Backend 1935 + Framework 1619 + Frontend 430） |
 | 测试覆盖率 | Backend **98%** · Framework **100%** |
-| Alembic 迁移 | 49 个（0001–0049） |
-| API 路由模块 | 32 个 |
-| 前端页面 | 26 个（React.lazy 懒加载） |
+| Alembic 迁移 | 51 个（0001–0051） |
+| API 路由模块 | 34 个 |
+| 前端页面 | 28 个（React.lazy 懒加载） |
 | CI Job | 5 个 GitHub Actions + 5 Stage Jenkinsfile |
 | TypeScript 错误 | 0 |
 
@@ -48,6 +48,8 @@ CkyClaw 是基于自研 **CkyClaw Framework** 构建的 AI Agent 管理与运行
 | 自改进循环 | ✅ | S5 LearningLoop + RunReflector + 版本回滚检查 |
 | 取消与检查点 | ✅ | S6 CancellationToken 父子级联 + RunRegistry + Resume API |
 | 智能编排 | ✅ | S7 PlanGuard 5项验证 + Mailbox Agent 间通信 |
+| Prompt 模板变量 | ✅ | F8 模板引擎（render/validate/extract）+ 前端变量编辑器 |
+| 多环境管理 | ✅ | F12 Dev/Staging/Prod 环境隔离 + Publish/Rollback/Diff |
 
 ### 未完成 / 延期项
 

@@ -1,6 +1,10 @@
+import { useState, useEffect } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { ProLayout } from '@ant-design/pro-components';
-import { Button, Grid, Tooltip } from 'antd';
+import { Button, Grid, Select, Tag, Tooltip } from 'antd';
+import useEnvironmentStore from '../stores/environmentStore';
+import { environmentService } from '../services/environmentService';
+import type { Environment } from '../services/environmentService';
 import {
   DashboardOutlined,
   MessageOutlined,
@@ -32,6 +36,7 @@ import {
   HistoryOutlined,
   AimOutlined,
   BugOutlined,
+  DeploymentUnitOutlined,
 } from '@ant-design/icons';
 import useThemeStore from '../stores/themeStore';
 
@@ -183,6 +188,11 @@ const menuRoutes = {
       icon: <BugOutlined />,
     },
     {
+      path: '/environments',
+      name: '环境管理',
+      icon: <DeploymentUnitOutlined />,
+    },
+    {
       path: '/i18n',
       name: '国际化设置',
       icon: <GlobalOutlined />,
@@ -197,6 +207,14 @@ const BasicLayout: React.FC = () => {
   const toggleTheme = useThemeStore((s: { toggle: () => void }) => s.toggle);
   const screens = Grid.useBreakpoint();
   const isMobile = !screens.md;
+
+  const currentEnv = useEnvironmentStore((s) => s.current);
+  const setCurrentEnv = useEnvironmentStore((s) => s.setCurrent);
+  const [envList, setEnvList] = useState<Environment[]>([]);
+
+  useEffect(() => {
+    environmentService.list().then((res) => setEnvList(res.data)).catch(() => {});
+  }, []);
 
   return (
     <ProLayout
@@ -220,6 +238,21 @@ const BasicLayout: React.FC = () => {
         </a>
       )}
       actionsRender={() => [
+        <Select
+          key="env"
+          value={currentEnv}
+          onChange={setCurrentEnv}
+          allowClear
+          placeholder="全部环境"
+          style={{ width: 130 }}
+          size="small"
+        >
+          {envList.map((e) => (
+            <Select.Option key={e.name} value={e.name}>
+              <Tag color={e.color} style={{ marginRight: 0 }}>{e.display_name}</Tag>
+            </Select.Option>
+          ))}
+        </Select>,
         <Tooltip key="theme" title={themeMode === 'dark' ? '切换亮色模式' : '切换暗色模式'}>
           <Button
             type="text"

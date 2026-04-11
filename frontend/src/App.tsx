@@ -43,6 +43,8 @@ const CheckpointPage = lazy(() => import('./pages/checkpoints/CheckpointPage'));
 const IntentDetectionPage = lazy(() => import('./pages/intent/IntentDetectionPage'));
 const ABTestPage = lazy(() => import('./pages/ab-test/ABTestPage'));
 const DebugPage = lazy(() => import('./pages/debug/DebugPage'));
+const EnvironmentListPage = lazy(() => import('./pages/environments/EnvironmentListPage'));
+const EnvironmentDetailPage = lazy(() => import('./pages/environments/EnvironmentDetailPage'));
 const I18nSettingsPage = lazy(() => import('./pages/agents/I18nSettingsPage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 const OAuthCallbackPage = lazy(() => import('./pages/oauth/OAuthCallbackPage'));
@@ -124,6 +126,8 @@ const App: React.FC = () => {
           <Route path="intent" element={guarded(<IntentDetectionPage />)} />
           <Route path="ab-test" element={guarded(<ABTestPage />)} />
           <Route path="debug" element={guarded(<DebugPage />)} />
+          <Route path="environments" element={guarded(<EnvironmentListPage />)} />
+          <Route path="environments/:envName" element={guarded(<EnvironmentDetailPage />)} />
           <Route path="i18n" element={guarded(<I18nSettingsPage />)} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
