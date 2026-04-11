@@ -128,7 +128,7 @@ services:
     command: -config.file=/etc/loki/config.yml
     volumes:
       - ./docker/loki-config.yml:/etc/loki/config.yml:ro
-      - ./docker/loki-rules.yml:/etc/loki/rules/ckyclaw-rules.yml:ro
+      - ./docker/loki-rules:/etc/loki/rules:ro
       - lokidata:/tmp/loki
     profiles:
       - loki
