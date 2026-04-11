@@ -548,8 +548,8 @@ class TestHistoryTrimmerTokenBudget:
 
 
 class TestHistoryTrimmerSummaryPrefix:
-    def test_summary_prefix_falls_back_to_token_budget(self) -> None:
-        """SUMMARY_PREFIX 降级为 TOKEN_BUDGET。"""
+    def test_summary_prefix_produces_summary_and_recent(self) -> None:
+        """SUMMARY_PREFIX 将被裁掉的消息浓缩为摘要 + 保留最近消息。"""
         msgs = [
             Message(role=MessageRole.USER, content="a" * 300),
             Message(role=MessageRole.ASSISTANT, content="b" * 300),
@@ -560,9 +560,15 @@ class TestHistoryTrimmerSummaryPrefix:
             max_history_tokens=150,
         )
         result = HistoryTrimmer.trim(msgs, config)
-        # 与 TOKEN_BUDGET 行为一致
-        assert len(result) == 1
-        assert result[0].content == "c" * 300
+        # 应有摘要 system msg + 最近的消息
+        assert len(result) >= 1
+        # 最后一条应是最新的用户消息
+        non_system = [m for m in result if m.role != MessageRole.SYSTEM]
+        assert non_system[-1].content == "c" * 300
+        # 有摘要 system 消息
+        summary_msgs = [m for m in result if m.role == MessageRole.SYSTEM]
+        assert len(summary_msgs) >= 1
+        assert "Conversation Summary" in summary_msgs[0].content
 
 
 # ── Session.trim() 测试 ─────────────────────────────────────────

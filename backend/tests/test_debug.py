@@ -260,24 +260,28 @@ class TestStepDebugSession:
 
     @patch("app.services.debug.update_session_state", new_callable=AsyncMock)
     @patch("app.services.debug.get_controller")
-    def test_step_success(self, mock_get_ctrl: MagicMock, mock_update: AsyncMock, client: TestClient) -> None:
+    @patch("app.services.debug.get_debug_session", new_callable=AsyncMock)
+    def test_step_success(self, mock_get_sess: AsyncMock, mock_get_ctrl: MagicMock, mock_update: AsyncMock, client: TestClient) -> None:
         """正常单步执行。"""
         ctrl = _make_controller_mock()
-        mock_get_ctrl.return_value = ctrl
         session = _make_debug_session_mock(state="paused")
+        mock_get_sess.return_value = session
+        mock_get_ctrl.return_value = ctrl
         mock_update.return_value = session
 
-        session_id = uuid.uuid4()
-        resp = client.post(f"/api/v1/debug/sessions/{session_id}/step")
+        resp = client.post(f"/api/v1/debug/sessions/{session.id}/step")
         assert resp.status_code == 200
         ctrl.step.assert_called_once()
 
     @patch("app.services.debug.get_controller")
-    def test_step_no_controller(self, mock_get_ctrl: MagicMock, client: TestClient) -> None:
+    @patch("app.services.debug.get_debug_session", new_callable=AsyncMock)
+    def test_step_no_controller(self, mock_get_sess: AsyncMock, mock_get_ctrl: MagicMock, client: TestClient) -> None:
         """无活跃控制器时返回 404。"""
+        session = _make_debug_session_mock()
+        mock_get_sess.return_value = session
         mock_get_ctrl.return_value = None
 
-        resp = client.post(f"/api/v1/debug/sessions/{uuid.uuid4()}/step")
+        resp = client.post(f"/api/v1/debug/sessions/{session.id}/step")
         assert resp.status_code == 404
         assert "未激活" in resp.json()["detail"]
 
@@ -291,23 +295,28 @@ class TestContinueDebugSession:
 
     @patch("app.services.debug.update_session_state", new_callable=AsyncMock)
     @patch("app.services.debug.get_controller")
-    def test_continue_success(self, mock_get_ctrl: MagicMock, mock_update: AsyncMock, client: TestClient) -> None:
+    @patch("app.services.debug.get_debug_session", new_callable=AsyncMock)
+    def test_continue_success(self, mock_get_sess: AsyncMock, mock_get_ctrl: MagicMock, mock_update: AsyncMock, client: TestClient) -> None:
         """正常继续执行。"""
         ctrl = _make_controller_mock()
-        mock_get_ctrl.return_value = ctrl
         session = _make_debug_session_mock(state="running")
+        mock_get_sess.return_value = session
+        mock_get_ctrl.return_value = ctrl
         mock_update.return_value = session
 
-        resp = client.post(f"/api/v1/debug/sessions/{uuid.uuid4()}/continue")
+        resp = client.post(f"/api/v1/debug/sessions/{session.id}/continue")
         assert resp.status_code == 200
         ctrl.resume.assert_called_once()
 
     @patch("app.services.debug.get_controller")
-    def test_continue_no_controller(self, mock_get_ctrl: MagicMock, client: TestClient) -> None:
+    @patch("app.services.debug.get_debug_session", new_callable=AsyncMock)
+    def test_continue_no_controller(self, mock_get_sess: AsyncMock, mock_get_ctrl: MagicMock, client: TestClient) -> None:
         """无活跃控制器时返回 404。"""
+        session = _make_debug_session_mock()
+        mock_get_sess.return_value = session
         mock_get_ctrl.return_value = None
 
-        resp = client.post(f"/api/v1/debug/sessions/{uuid.uuid4()}/continue")
+        resp = client.post(f"/api/v1/debug/sessions/{session.id}/continue")
         assert resp.status_code == 404
 
 
@@ -321,30 +330,34 @@ class TestStopDebugSession:
     @patch("app.services.debug.update_session_state", new_callable=AsyncMock)
     @patch("app.services.debug.cleanup_session", new_callable=AsyncMock)
     @patch("app.services.debug.get_controller")
+    @patch("app.services.debug.get_debug_session", new_callable=AsyncMock)
     def test_stop_success(
-        self, mock_get_ctrl: MagicMock, mock_cleanup: AsyncMock, mock_update: AsyncMock, client: TestClient,
+        self, mock_get_sess: AsyncMock, mock_get_ctrl: MagicMock, mock_cleanup: AsyncMock, mock_update: AsyncMock, client: TestClient,
     ) -> None:
         """正常终止会话。"""
         ctrl = _make_controller_mock()
-        mock_get_ctrl.return_value = ctrl
         session = _make_debug_session_mock(state="failed", error="用户终止")
+        mock_get_sess.return_value = session
+        mock_get_ctrl.return_value = ctrl
         mock_update.return_value = session
 
-        session_id = uuid.uuid4()
-        resp = client.post(f"/api/v1/debug/sessions/{session_id}/stop")
+        resp = client.post(f"/api/v1/debug/sessions/{session.id}/stop")
         assert resp.status_code == 200
         ctrl.stop.assert_called_once()
-        mock_cleanup.assert_called_once_with(session_id)
+        mock_cleanup.assert_called_once_with(session.id)
         body = resp.json()
         assert body["state"] == "failed"
         assert body["error"] == "用户终止"
 
     @patch("app.services.debug.get_controller")
-    def test_stop_no_controller(self, mock_get_ctrl: MagicMock, client: TestClient) -> None:
+    @patch("app.services.debug.get_debug_session", new_callable=AsyncMock)
+    def test_stop_no_controller(self, mock_get_sess: AsyncMock, mock_get_ctrl: MagicMock, client: TestClient) -> None:
         """无活跃控制器时返回 404。"""
+        session = _make_debug_session_mock()
+        mock_get_sess.return_value = session
         mock_get_ctrl.return_value = None
 
-        resp = client.post(f"/api/v1/debug/sessions/{uuid.uuid4()}/stop")
+        resp = client.post(f"/api/v1/debug/sessions/{session.id}/stop")
         assert resp.status_code == 404
 
 
@@ -356,13 +369,16 @@ class TestGetDebugContext:
     """调试上下文 API 测试。"""
 
     @patch("app.services.debug.get_controller")
-    def test_context_success(self, mock_get_ctrl: MagicMock, client: TestClient) -> None:
+    @patch("app.services.debug.get_debug_session", new_callable=AsyncMock)
+    def test_context_success(self, mock_get_sess: AsyncMock, mock_get_ctrl: MagicMock, client: TestClient) -> None:
         """暂停时正确返回上下文。"""
         ctrl = _make_controller_mock()
         ctrl.pause_context = _make_pause_context_mock()
+        session = _make_debug_session_mock()
+        mock_get_sess.return_value = session
         mock_get_ctrl.return_value = ctrl
 
-        resp = client.get(f"/api/v1/debug/sessions/{uuid.uuid4()}/context")
+        resp = client.get(f"/api/v1/debug/sessions/{session.id}/context")
         assert resp.status_code == 200
         body = resp.json()
         assert body["turn"] == 1
@@ -373,22 +389,28 @@ class TestGetDebugContext:
         assert body["token_usage"]["prompt_tokens"] == 100
 
     @patch("app.services.debug.get_controller")
-    def test_context_not_paused(self, mock_get_ctrl: MagicMock, client: TestClient) -> None:
+    @patch("app.services.debug.get_debug_session", new_callable=AsyncMock)
+    def test_context_not_paused(self, mock_get_sess: AsyncMock, mock_get_ctrl: MagicMock, client: TestClient) -> None:
         """非暂停状态时返回 400。"""
         ctrl = _make_controller_mock(state="running")
         ctrl.pause_context = None
+        session = _make_debug_session_mock()
+        mock_get_sess.return_value = session
         mock_get_ctrl.return_value = ctrl
 
-        resp = client.get(f"/api/v1/debug/sessions/{uuid.uuid4()}/context")
+        resp = client.get(f"/api/v1/debug/sessions/{session.id}/context")
         assert resp.status_code == 400
         assert "暂停" in resp.json()["detail"]
 
     @patch("app.services.debug.get_controller")
-    def test_context_no_controller(self, mock_get_ctrl: MagicMock, client: TestClient) -> None:
+    @patch("app.services.debug.get_debug_session", new_callable=AsyncMock)
+    def test_context_no_controller(self, mock_get_sess: AsyncMock, mock_get_ctrl: MagicMock, client: TestClient) -> None:
         """无活跃控制器时返回 404。"""
+        session = _make_debug_session_mock()
+        mock_get_sess.return_value = session
         mock_get_ctrl.return_value = None
 
-        resp = client.get(f"/api/v1/debug/sessions/{uuid.uuid4()}/context")
+        resp = client.get(f"/api/v1/debug/sessions/{session.id}/context")
         assert resp.status_code == 404
 
 

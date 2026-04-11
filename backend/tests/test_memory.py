@@ -30,6 +30,9 @@ def _make_memory_entry(**overrides: Any) -> MagicMock:
         "agent_name": "coding-agent",
         "source_session_id": None,
         "metadata_": {},
+        "embedding": None,
+        "tags": [],
+        "access_count": 0,
         "created_at": now,
         "updated_at": now,
     }
@@ -348,3 +351,137 @@ class TestDecayAPIWithMode:
         )
         assert resp.status_code == 200
         assert resp.json()["affected"] == 3
+
+
+# ═══════════════════════════════════════════════════════════════════
+# S2: 新增字段 + count + search_by_tags 测试
+# ═══════════════════════════════════════════════════════════════════
+
+
+class TestS2MemorySchemas:
+    """S2 新增字段 Schema 验证。"""
+
+    def test_memory_create_with_tags(self) -> None:
+        from app.schemas.memory import MemoryCreate
+        data = MemoryCreate(
+            type="structured_fact",
+            content="Python 偏好",
+            user_id="u1",
+            tags=["python", "dev"],
+        )
+        assert data.tags == ["python", "dev"]
+        assert data.embedding is None
+
+    def test_memory_create_with_embedding(self) -> None:
+        from app.schemas.memory import MemoryCreate
+        data = MemoryCreate(
+            type="user_profile",
+            content="向量测试",
+            user_id="u1",
+            embedding=[0.1, 0.2, 0.3],
+        )
+        assert data.embedding == [0.1, 0.2, 0.3]
+
+    def test_memory_update_with_tags(self) -> None:
+        from app.schemas.memory import MemoryUpdate
+        data = MemoryUpdate(tags=["new-tag"])
+        dumped = data.model_dump(exclude_unset=True)
+        assert dumped == {"tags": ["new-tag"]}
+
+    def test_memory_response_includes_new_fields(self) -> None:
+        from app.schemas.memory import MemoryResponse
+        mock = _make_memory_entry(tags=["a", "b"], access_count=5, embedding=[0.1])
+        resp = MemoryResponse.model_validate(mock)
+        assert resp.tags == ["a", "b"]
+        assert resp.access_count == 5
+        assert resp.embedding == [0.1]
+
+    def test_memory_tag_search_request(self) -> None:
+        from app.schemas.memory import MemoryTagSearchRequest
+        req = MemoryTagSearchRequest(user_id="u1", tags=["python", "dev"])
+        assert req.tags == ["python", "dev"]
+        assert req.limit == 10
+
+    def test_memory_count_response(self) -> None:
+        from app.schemas.memory import MemoryCountResponse
+        resp = MemoryCountResponse(user_id="u1", count=42)
+        assert resp.user_id == "u1"
+        assert resp.count == 42
+
+
+class TestS2MemoryAPI:
+    """S2 新增 API 端点测试。"""
+
+    @patch("app.api.memories.memory_service.search_by_tags", new_callable=AsyncMock)
+    @patch("app.api.memories.get_db")
+    def test_search_by_tags(self, mock_db: Any, mock_search: AsyncMock) -> None:
+        """POST /api/v1/memories/search-by-tags。"""
+        mock_search.return_value = [_make_memory_entry(tags=["python"])]
+        resp = client.post("/api/v1/memories/search-by-tags", json={
+            "user_id": "user-001",
+            "tags": ["python"],
+        })
+        assert resp.status_code == 200
+        data = resp.json()
+        assert len(data) == 1
+        assert data[0]["tags"] == ["python"]
+
+    @patch("app.api.memories.memory_service.count_memories", new_callable=AsyncMock)
+    @patch("app.api.memories.get_db")
+    def test_count_memories(self, mock_db: Any, mock_count: AsyncMock) -> None:
+        """GET /api/v1/memories/count/{user_id}。"""
+        mock_count.return_value = 15
+        resp = client.get("/api/v1/memories/count/user-001")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["user_id"] == "user-001"
+        assert data["count"] == 15
+
+    @patch("app.api.memories.memory_service.create_memory", new_callable=AsyncMock)
+    @patch("app.api.memories.get_db")
+    def test_create_memory_with_tags(self, mock_db: Any, mock_create: AsyncMock) -> None:
+        """创建记忆时支持传入 tags。"""
+        mock_create.return_value = _make_memory_entry(tags=["python", "async"])
+        resp = client.post("/api/v1/memories", json={
+            "type": "structured_fact",
+            "content": "Python async 偏好",
+            "user_id": "user-001",
+            "tags": ["python", "async"],
+        })
+        assert resp.status_code == 201
+        data = resp.json()
+        assert data["tags"] == ["python", "async"]
+
+
+class TestS2MemoryService:
+    """S2 Service 层新增功能测试。"""
+
+    @pytest.mark.asyncio
+    async def test_count_memories_service(self) -> None:
+        """count_memories 返回正确计数。"""
+        from app.services.memory import count_memories
+
+        mock_db = AsyncMock()
+        mock_result = MagicMock()
+        mock_result.scalar_one.return_value = 42
+        mock_db.execute = AsyncMock(return_value=mock_result)
+
+        count = await count_memories(mock_db, "u1")
+        assert count == 42
+
+    @pytest.mark.asyncio
+    async def test_search_by_tags_service(self) -> None:
+        """search_by_tags 调用 overlap 查询。"""
+        from app.schemas.memory import MemoryTagSearchRequest
+        from app.services.memory import search_by_tags
+
+        mock_db = AsyncMock()
+        mock_scalars = MagicMock()
+        mock_scalars.all.return_value = [_make_memory_entry(tags=["python"])]
+        mock_result = MagicMock()
+        mock_result.scalars.return_value = mock_scalars
+        mock_db.execute = AsyncMock(return_value=mock_result)
+
+        data = MemoryTagSearchRequest(user_id="u1", tags=["python"])
+        results = await search_by_tags(mock_db, data)
+        assert len(results) == 1

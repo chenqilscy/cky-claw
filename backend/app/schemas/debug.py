@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
@@ -14,7 +14,7 @@ class DebugSessionCreate(BaseModel):
 
     agent_id: uuid.UUID = Field(..., description="被调试的 Agent ID")
     input_message: str = Field(..., min_length=1, max_length=4096, description="调试输入消息")
-    mode: str = Field(default="step_turn", description="调试模式：step_turn / step_tool / continue")
+    mode: Literal["step_turn", "step_tool", "continue"] = Field(default="step_turn", description="调试模式")
 
     model_config = {"json_schema_extra": {"examples": [{"agent_id": "550e8400-e29b-41d4-a716-446655440000", "input_message": "你好", "mode": "step_turn"}]}}
 

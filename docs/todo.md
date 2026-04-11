@@ -45,7 +45,21 @@
 
 ## 三、未来演进方向
 
-### 3.1 生产就绪（P0）
+> **详细演进路线图**见 [plan/evolution-roadmap.md](plan/evolution-roadmap.md)（基于 Harness 理论 + NextCrab + Hermes 三份对比报告综合制定）。
+
+### 3.0 v3.x 演进路线（P0 — 框架核心升级）
+
+| # | Phase | 核心交付 | 版本 |
+|---|-------|---------|------|
+| S1 | **上下文工程革命** | 5 Tier 压缩 + Artifact Store + Cache-First Prompt | v3.0 |
+| S2 | **记忆系统三类化** | Episodic/Semantic/Procedural + 跨会话检索 | v3.1 |
+| S3 | **LLM 容错 + 工具中间件** | Circuit Breaker + FallbackChain + ToolMiddleware 管道 | v3.2 |
+| S4 | **事件溯源 + Replay** | Event Journal + 15+ 事件类型 + Projector + 前端回放 | v3.2 |
+| S5 | **自改进闭环** | Learning Loop + Skill Factory + Evolution 策略引擎 | v3.3 |
+| S6 | **取消传播 + Checkpoint 恢复** | CancellationToken + PostgresCheckpointBackend + auto-resume | v3.3 |
+| S7 | **智能编排升级** | Brain Coordinator + PlanGuard + Mailbox | v3.4 |
+
+### 3.1 生产就绪
 
 | # | 功能 | 说明 |
 |---|------|------|
@@ -53,7 +67,7 @@
 | F2 | Kubernetes 部署 | Helm Chart / Kustomize + HPA + PDB + Ingress |
 | F3 | ~~日志聚合~~ | ✅ 完成 — Promtail→Loki 日志管线 + JSON 结构化 + request_id 注入 + AlertRule + `f3-loki-verify.ps1` |
 
-### 3.2 框架能力增强（P1）
+### 3.2 框架能力增强
 
 | # | 功能 | 说明 |
 |---|------|------|
@@ -61,7 +75,7 @@
 | F5 | ~~流式输出端到端优化~~ | ✅ 完成 — RAF 批处理 text_delta + tool_call/handoff 事件 UI + 13 测试（`useStreamReducer`） |
 | F6 | ~~Agent 自动评估 Pipeline~~ | ✅ 完成 — LLM-as-Judge 7 维评分 + `_resolve_judge_provider()` + E2E 验证 201 |
 
-### 3.3 用户体验（P2）
+### 3.3 用户体验
 
 | # | 功能 | 说明 |
 |---|------|------|

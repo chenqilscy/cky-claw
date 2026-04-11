@@ -99,6 +99,21 @@ const buildColumns = (
     render: (v) => v || '-',
   },
   {
+    title: '标签',
+    dataIndex: 'tags',
+    width: 160,
+    render: (_, record) =>
+      record.tags && record.tags.length > 0
+        ? record.tags.map((t) => <Tag key={t} color="purple">{t}</Tag>)
+        : '-',
+  },
+  {
+    title: '访问次数',
+    dataIndex: 'access_count',
+    width: 90,
+    sorter: (a, b) => a.access_count - b.access_count,
+  },
+  {
     title: '更新时间',
     dataIndex: 'updated_at',
     width: 180,
@@ -136,6 +151,9 @@ const renderForm = (_form: FormInstance, editing: MemoryItem | null) => (
     </Form.Item>
     <Form.Item name="confidence" label="置信度">
       <Slider min={0} max={1} step={0.01} marks={{ 0: '0', 0.5: '0.5', 1: '1' }} />
+    </Form.Item>
+    <Form.Item name="tags" label="标签">
+      <Select mode="tags" placeholder="输入标签后按 Enter（可多个）" tokenSeparators={[',']} />
     </Form.Item>
     {!editing && (
       <Form.Item name="agent_name" label="Agent 名称">
@@ -212,6 +230,7 @@ const MemoryPage: React.FC = () => {
           confidence: record.confidence,
           user_id: record.user_id,
           agent_name: record.agent_name,
+          tags: record.tags ?? [],
         })}
         toCreatePayload={(values) => ({
           type: values.type as string,
@@ -219,6 +238,7 @@ const MemoryPage: React.FC = () => {
           confidence: (values.confidence as number) ?? 1.0,
           user_id: values.user_id as string,
           agent_name: values.agent_name as string | undefined,
+          tags: (values.tags as string[] | undefined) ?? [],
         })}
         toUpdatePayload={(values, record) => ({
           id: record.id,
@@ -226,6 +246,7 @@ const MemoryPage: React.FC = () => {
             content: values.content as string,
             confidence: values.confidence as number,
             type: values.type as string,
+            tags: (values.tags as string[] | undefined) ?? [],
           },
         })}
         extraToolbar={

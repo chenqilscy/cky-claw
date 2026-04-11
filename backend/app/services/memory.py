@@ -19,6 +19,7 @@ from app.schemas.memory import (
     MemoryDecayModeEnum,
     MemoryDecayRequest,
     MemorySearchRequest,
+    MemoryTagSearchRequest,
     MemoryUpdate,
 )
 
@@ -40,6 +41,8 @@ async def create_memory(db: AsyncSession, data: MemoryCreate) -> MemoryEntryReco
         agent_name=data.agent_name,
         source_session_id=data.source_session_id,
         metadata_=data.metadata,
+        embedding=data.embedding,
+        tags=data.tags,
     )
     db.add(record)
     await db.commit()
@@ -208,3 +211,41 @@ async def _decay_exponential(db: AsyncSession, data: MemoryDecayRequest) -> int:
     if count > 0:
         await db.commit()
     return count
+
+
+# ---------------------------------------------------------------------------
+# S2: count + search_by_tags
+# ---------------------------------------------------------------------------
+
+
+async def count_memories(db: AsyncSession, user_id: str) -> int:
+    """返回指定用户的记忆条目总数。"""
+    stmt = select(func.count()).where(
+        MemoryEntryRecord.user_id == user_id,
+        MemoryEntryRecord.is_deleted == False,  # noqa: E712
+    )
+    return (await db.execute(stmt)).scalar_one()
+
+
+async def search_by_tags(
+    db: AsyncSession, data: MemoryTagSearchRequest
+) -> list[MemoryEntryRecord]:
+    """按标签搜索记忆条目（OR 匹配：条目含任一标签即命中）。"""
+    from sqlalchemy.dialects.postgresql import ARRAY as PG_ARRAY
+    from sqlalchemy import String, cast
+
+    stmt = (
+        select(MemoryEntryRecord)
+        .where(
+            MemoryEntryRecord.user_id == data.user_id,
+            MemoryEntryRecord.is_deleted == False,  # noqa: E712
+            MemoryEntryRecord.tags.overlap(data.tags),
+        )
+        .order_by(
+            MemoryEntryRecord.confidence.desc(),
+            MemoryEntryRecord.updated_at.desc(),
+        )
+        .limit(data.limit)
+    )
+    rows = (await db.execute(stmt)).scalars().all()
+    return list(rows)

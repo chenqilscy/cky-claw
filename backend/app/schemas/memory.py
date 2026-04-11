@@ -34,6 +34,8 @@ class MemoryCreate(BaseModel):
     agent_name: str | None = Field(None, max_length=64, description="Agent 名称")
     source_session_id: str | None = Field(None, max_length=128, description="来源会话 ID")
     metadata: dict[str, Any] = Field(default_factory=dict, description="自定义元数据")
+    embedding: list[float] | None = Field(None, description="向量表示")
+    tags: list[str] = Field(default_factory=list, description="分类标签")
 
 
 class MemoryUpdate(BaseModel):
@@ -43,6 +45,8 @@ class MemoryUpdate(BaseModel):
     confidence: float | None = Field(None, ge=0.0, le=1.0, description="置信度")
     type: MemoryTypeEnum | None = Field(None, description="记忆类型")
     metadata: dict[str, Any] | None = Field(None, description="自定义元数据")
+    embedding: list[float] | None = Field(None, description="向量表示")
+    tags: list[str] | None = Field(None, description="分类标签")
 
 
 class MemorySearchRequest(BaseModel):
@@ -50,6 +54,14 @@ class MemorySearchRequest(BaseModel):
 
     user_id: str = Field(..., min_length=1, description="用户标识")
     query: str = Field(..., min_length=1, max_length=500, description="搜索关键词")
+    limit: int = Field(10, ge=1, le=100, description="返回上限")
+
+
+class MemoryTagSearchRequest(BaseModel):
+    """按标签搜索记忆请求体。"""
+
+    user_id: str = Field(..., min_length=1, description="用户标识")
+    tags: list[str] = Field(..., min_length=1, description="标签列表（OR 匹配）")
     limit: int = Field(10, ge=1, le=100, description="返回上限")
 
 
@@ -89,6 +101,9 @@ class MemoryResponse(BaseModel):
     agent_name: str | None = None
     source_session_id: str | None = None
     metadata: dict[str, Any] = Field(default_factory=dict, alias="metadata_")
+    embedding: list[float] | None = None
+    tags: list[str] = Field(default_factory=list)
+    access_count: int = 0
     created_at: datetime
     updated_at: datetime
 
@@ -106,3 +121,10 @@ class MemoryDecayResponse(BaseModel):
     """衰减操作响应。"""
 
     affected: int
+
+
+class MemoryCountResponse(BaseModel):
+    """记忆计数响应。"""
+
+    user_id: str
+    count: int

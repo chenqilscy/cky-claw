@@ -68,6 +68,15 @@ class MemoryEntry:
     updated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     """最后更新时间。"""
 
+    embedding: list[float] | None = None
+    """可选向量表示，用于语义相似度检索。"""
+
+    tags: list[str] = field(default_factory=list)
+    """分类标签，用于快速过滤和分组检索。"""
+
+    access_count: int = 0
+    """访问计数，用于热度排序和 LRU 淘汰。"""
+
 
 class MemoryBackend(ABC):
     """记忆存储后端抽象。
@@ -156,6 +165,36 @@ class MemoryBackend(ABC):
             受影响的条目数量。
         """
         ...
+
+    async def count(self, user_id: str) -> int:
+        """返回用户记忆条目总数。
+
+        默认实现通过 list_entries 计算。子类可覆盖为更高效实现。
+        """
+        entries = await self.list_entries(user_id)
+        return len(entries)
+
+    async def search_by_tags(
+        self,
+        user_id: str,
+        tags: list[str],
+        *,
+        limit: int = 10,
+    ) -> list[MemoryEntry]:
+        """按标签搜索用户记忆条目。
+
+        默认实现在 list_entries 结果中过滤。子类可覆盖为索引级查询。
+
+        Args:
+            user_id: 用户标识。
+            tags: 标签列表（OR 匹配：条目含任一标签即命中）。
+            limit: 返回条目上限。
+        """
+        entries = await self.list_entries(user_id)
+        tag_set = set(tags)
+        matched = [e for e in entries if tag_set & set(e.tags)]
+        matched.sort(key=lambda e: (-e.confidence, -e.updated_at.timestamp()))
+        return matched[:limit]
 
 
 def compute_exponential_decay(

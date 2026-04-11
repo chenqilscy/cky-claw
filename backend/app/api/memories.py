@@ -13,12 +13,14 @@ from app.core.database import get_db
 from app.core.deps import require_permission
 from app.core.tenant import check_quota, get_org_id
 from app.schemas.memory import (
+    MemoryCountResponse,
     MemoryCreate,
     MemoryDecayRequest,
     MemoryDecayResponse,
     MemoryListResponse,
     MemoryResponse,
     MemorySearchRequest,
+    MemoryTagSearchRequest,
     MemoryUpdate,
 )
 from app.services import memory as memory_service
@@ -138,6 +140,34 @@ async def search_memories(
     """搜索记忆条目。"""
     rows = await memory_service.search_memories(db, data)
     return [MemoryResponse.model_validate(r) for r in rows]
+
+
+@router.post(
+    "/search-by-tags",
+    response_model=list[MemoryResponse],
+    dependencies=[Depends(require_permission("memories", "read"))],
+)
+async def search_by_tags(
+    data: MemoryTagSearchRequest,
+    db: AsyncSession = Depends(get_db),
+) -> list[MemoryResponse]:
+    """按标签搜索记忆条目（OR 匹配）。"""
+    rows = await memory_service.search_by_tags(db, data)
+    return [MemoryResponse.model_validate(r) for r in rows]
+
+
+@router.get(
+    "/count/{user_id}",
+    response_model=MemoryCountResponse,
+    dependencies=[Depends(require_permission("memories", "read"))],
+)
+async def count_memories(
+    user_id: str,
+    db: AsyncSession = Depends(get_db),
+) -> MemoryCountResponse:
+    """获取用户记忆条目总数。"""
+    count = await memory_service.count_memories(db, user_id)
+    return MemoryCountResponse(user_id=user_id, count=count)
 
 
 @router.post(

@@ -8,17 +8,24 @@ from typing import TYPE_CHECKING, Any, Callable
 if TYPE_CHECKING:
     from ckyclaw_framework.approval.handler import ApprovalHandler
     from ckyclaw_framework.approval.mode import ApprovalMode
+    from ckyclaw_framework.artifacts.store import ArtifactStore
     from ckyclaw_framework.checkpoint import CheckpointBackend
     from ckyclaw_framework.debug.controller import DebugController
+    from ckyclaw_framework.events.journal import EventJournal
     from ckyclaw_framework.guardrails.input_guardrail import InputGuardrail
     from ckyclaw_framework.guardrails.output_guardrail import OutputGuardrail
     from ckyclaw_framework.guardrails.tool_guardrail import ToolGuardrail
     from ckyclaw_framework.intent import IntentDetector
+    from ckyclaw_framework.memory.injector import MemoryInjectionConfig
+    from ckyclaw_framework.memory.memory import MemoryBackend
+    from ckyclaw_framework.model.circuit_breaker import CircuitBreaker
+    from ckyclaw_framework.model.fallback import FallbackChainProvider
     from ckyclaw_framework.model.provider import ModelProvider
     from ckyclaw_framework.model.settings import ModelSettings
     from ckyclaw_framework.runner.hooks import RunHooks
     from ckyclaw_framework.session.history_trimmer import HistoryTrimStrategy
     from ckyclaw_framework.session.session import SessionBackend
+    from ckyclaw_framework.tools.middleware import ToolMiddleware
     from ckyclaw_framework.tracing.processor import TraceProcessor
 
 
@@ -113,3 +120,44 @@ class RunConfig:
     debug_controller: DebugController | None = None
     """调试控制器。配置后 Runner 在每轮 LLM 后、工具调用前、Handoff 前调用 checkpoint()，
     DebugController 决定是否暂停执行。用于交互式单步调试 Agent 执行流程。"""
+
+    artifact_store: ArtifactStore | None = None
+    """Artifact 存储后端。配置后 Runner 将超大工具结果外部化到 ArtifactStore，
+    上下文中只保留摘要 + artifact_id 引用，节约 Token 预算。"""
+
+    artifact_threshold: int = 5000
+    """工具结果 Token 阈值。估算 Token 数超过此值时触发 Artifact 外部化。"""
+
+    max_tool_result_chars: int | None = None
+    """工具结果字符数硬上限。超出时直接截断（在 Artifact 外部化之后生效）。
+    None 表示不截断。"""
+
+    system_prompt_prefix: str | None = None
+    """稳定的系统提示前缀。配置后作为独立 system 消息置于 Agent instructions 之前，
+    标记 cache_control 元数据以最大化 LLM KV 缓存命中率（Anthropic/OpenAI prefix caching）。
+    适合放入不随对话变化的全局指令、公司规范等。"""
+
+    memory_backend: MemoryBackend | None = None
+    """记忆存储后端。配置后 Runner 在每次 LLM 调用前自动检索并注入相关记忆到 system 消息。"""
+
+    memory_user_id: str | None = None
+    """记忆所属用户 ID。配合 memory_backend 使用。不设置时不注入记忆。"""
+
+    memory_injection_config: MemoryInjectionConfig | None = None
+    """记忆注入配置。不设置时使用 MemoryInjectionConfig 默认值。"""
+
+    circuit_breaker: CircuitBreaker | None = None
+    """LLM 调用熔断器。配置后在 provider.chat() 外层包装熔断逻辑，
+    连续失败超过阈值时自动切换到 OPEN 状态拒绝请求。"""
+
+    fallback_provider: FallbackChainProvider | None = None
+    """Provider 降级链。配置后替代 model_provider 使用，自动多级降级。
+    与 circuit_breaker 互斥——FallbackChainProvider 内部自带 per-entry CircuitBreaker。"""
+
+    tool_middleware: list[ToolMiddleware] = field(default_factory=list)
+    """工具执行中间件管道（追加到 Agent 级之后执行）。
+    按顺序执行 before_execute，逆序执行 after_execute（洋葱模型）。"""
+
+    event_journal: EventJournal | None = None
+    """事件日志。配置后自动创建 EventJournalProcessor 注入 trace_processors，
+    将 Trace/Span 生命周期事件转化为细粒度 EventEntry 并写入 Journal。"""

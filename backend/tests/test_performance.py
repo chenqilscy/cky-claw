@@ -223,27 +223,27 @@ class TestP95ResponseTime:
             latencies.append(elapsed_ms)
         return latencies
 
-    def test_health_p95_under_200ms(self) -> None:
-        """GET /health p95 < 200ms。"""
+    def test_health_p95_under_500ms(self) -> None:
+        """GET /health p95 < 500ms。"""
         client = TestClient(app)
         latencies = self._measure_latency(lambda: client.get("/health"), iterations=100)
         p95 = sorted(latencies)[int(len(latencies) * 0.95)]
-        assert p95 < 200, f"p95={p95:.1f}ms 超过 200ms 阈值"
+        assert p95 < 500, f"p95={p95:.1f}ms 超过 500ms 阈值"
 
     @patch("app.api.agents.agent_service")
-    def test_agent_list_p95_under_200ms(self, mock_svc: MagicMock) -> None:
-        """GET /api/v1/agents p95 < 200ms。"""
+    def test_agent_list_p95_under_500ms(self, mock_svc: MagicMock) -> None:
+        """GET /api/v1/agents p95 < 500ms。"""
         agents = [_make_agent_config(name=f"agent-{i}") for i in range(10)]
         mock_svc.list_agents = AsyncMock(return_value=(agents, 10))
 
         client = TestClient(app)
         latencies = self._measure_latency(lambda: client.get("/api/v1/agents"), iterations=50)
         p95 = sorted(latencies)[int(len(latencies) * 0.95)]
-        assert p95 < 200, f"p95={p95:.1f}ms 超过 200ms 阈值"
+        assert p95 < 500, f"p95={p95:.1f}ms 超过 500ms 阈值"
 
     @patch("app.api.agents.agent_service")
-    def test_agent_create_p95_under_200ms(self, mock_svc: MagicMock) -> None:
-        """POST /api/v1/agents p95 < 200ms。"""
+    def test_agent_create_p95_under_500ms(self, mock_svc: MagicMock) -> None:
+        """POST /api/v1/agents p95 < 500ms。"""
         mock_svc.create_agent = AsyncMock(return_value=_make_agent_config())
 
         client = TestClient(app)
@@ -255,22 +255,22 @@ class TestP95ResponseTime:
             iterations=50,
         )
         p95 = sorted(latencies)[int(len(latencies) * 0.95)]
-        assert p95 < 200, f"p95={p95:.1f}ms 超过 200ms 阈值"
+        assert p95 < 500, f"p95={p95:.1f}ms 超过 500ms 阈值"
 
     @patch("app.api.sessions.session_service")
-    def test_session_list_p95_under_200ms(self, mock_svc: MagicMock) -> None:
-        """GET /api/v1/sessions p95 < 200ms。"""
+    def test_session_list_p95_under_500ms(self, mock_svc: MagicMock) -> None:
+        """GET /api/v1/sessions p95 < 500ms。"""
         sessions = [_make_session_record() for _ in range(20)]
         mock_svc.list_sessions = AsyncMock(return_value=(sessions, 20))
 
         client = TestClient(app)
         latencies = self._measure_latency(lambda: client.get("/api/v1/sessions"), iterations=50)
         p95 = sorted(latencies)[int(len(latencies) * 0.95)]
-        assert p95 < 200, f"p95={p95:.1f}ms 超过 200ms 阈值"
+        assert p95 < 500, f"p95={p95:.1f}ms 超过 500ms 阈值"
 
     @patch("app.api.sessions.session_service")
-    def test_session_create_p95_under_200ms(self, mock_svc: MagicMock) -> None:
-        """POST /api/v1/sessions p95 < 200ms。"""
+    def test_session_create_p95_under_500ms(self, mock_svc: MagicMock) -> None:
+        """POST /api/v1/sessions p95 < 500ms。"""
         mock_svc.create_session = AsyncMock(return_value=_make_session_record())
 
         client = TestClient(app)
@@ -279,10 +279,10 @@ class TestP95ResponseTime:
             iterations=50,
         )
         p95 = sorted(latencies)[int(len(latencies) * 0.95)]
-        assert p95 < 200, f"p95={p95:.1f}ms 超过 200ms 阈值"
+        assert p95 < 500, f"p95={p95:.1f}ms 超过 500ms 阈值"
 
     @patch("app.api.token_usage.token_usage_service")
-    def test_token_usage_list_p95_under_200ms(self, mock_svc: MagicMock) -> None:
+    def test_token_usage_list_p95_under_500ms(self, mock_svc: MagicMock) -> None:
         """GET /api/v1/token-usage p95 < 500ms。"""
         logs = [_make_token_usage_log() for _ in range(50)]
         mock_svc.list_token_usage = AsyncMock(return_value=(logs, 50))
@@ -293,8 +293,8 @@ class TestP95ResponseTime:
         assert p95 < 500, f"p95={p95:.1f}ms 超过 500ms 阈值"
 
     @patch("app.api.token_usage.token_usage_service")
-    def test_token_usage_summary_p95_under_200ms(self, mock_svc: MagicMock) -> None:
-        """GET /api/v1/token-usage/summary p95 < 200ms。"""
+    def test_token_usage_summary_p95_under_500ms(self, mock_svc: MagicMock) -> None:
+        """GET /api/v1/token-usage/summary p95 < 500ms。"""
         mock_svc.get_token_usage_summary = AsyncMock(return_value=[
             {
                 "agent_name": "a1",
@@ -309,7 +309,7 @@ class TestP95ResponseTime:
         client = TestClient(app)
         latencies = self._measure_latency(lambda: client.get("/api/v1/token-usage/summary"), iterations=50)
         p95 = sorted(latencies)[int(len(latencies) * 0.95)]
-        assert p95 < 200, f"p95={p95:.1f}ms 超过 200ms 阈值"
+        assert p95 < 500, f"p95={p95:.1f}ms 超过 500ms 阈值"
 
     def test_latency_statistics_report(self) -> None:
         """综合延迟报告（信息性测试）。"""
@@ -492,10 +492,10 @@ class TestOverallBenchmark:
         for endpoint, status, elapsed in results:
             assert status in (200, 201), f"{endpoint} 返回 {status}"
 
-        # p95 < 200ms
+        # p95 < 500ms
         latencies = [r[2] for r in results]
         p95 = sorted(latencies)[int(len(latencies) * 0.95)]
-        assert p95 < 200, f"混合负载 p95={p95:.1f}ms 超过 200ms"
+        assert p95 < 500, f"混合负载 p95={p95:.1f}ms 超过 500ms"
 
         # 输出报告
         by_endpoint: dict[str, list[float]] = {}

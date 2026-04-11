@@ -7,8 +7,8 @@ from typing import Any
 import uuid
 from datetime import datetime, timezone
 
-from sqlalchemy import DateTime, Float, ForeignKey, String, Text, text
-from sqlalchemy.dialects.postgresql import JSONB, UUID
+from sqlalchemy import DateTime, Float, ForeignKey, Integer, String, Text, text
+from sqlalchemy.dialects.postgresql import ARRAY, JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.database import Base, SoftDeleteMixin
@@ -58,4 +58,13 @@ class MemoryEntryRecord(SoftDeleteMixin, Base):
         default=lambda: datetime.now(timezone.utc),
         server_default=text("now()"),
         onupdate=lambda: datetime.now(timezone.utc),
+    )
+    embedding: Mapped[list[float] | None] = mapped_column(
+        ARRAY(Float), nullable=True, default=None
+    )
+    tags: Mapped[list[str]] = mapped_column(
+        ARRAY(String), nullable=False, server_default=text("'{}'::varchar[]")
+    )
+    access_count: Mapped[int] = mapped_column(
+        Integer, nullable=False, server_default=text("0"), default=0
     )

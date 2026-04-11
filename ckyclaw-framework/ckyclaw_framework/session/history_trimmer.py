@@ -19,6 +19,9 @@ class HistoryTrimStrategy(str, Enum):
     TOKEN_BUDGET = "token_budget"
     """从最新消息向前累加 Token，超出预算截断。"""
 
+    PROGRESSIVE = "progressive"
+    """分级递进裁剪：TOKEN_BUDGET → 压缩长工具结果 → 再裁剪，在同等 Token 预算下保留更多对话轮次。"""
+
     SUMMARY_PREFIX = "summary_prefix"
     """摘要 + 最近消息（需要 LLM 调用，暂未实现）。"""
 
@@ -38,6 +41,9 @@ class HistoryTrimConfig:
 
     keep_system_messages: bool = True
     """裁剪时是否保留 system 消息"""
+
+    progressive_tool_result_limit: int = 500
+    """PROGRESSIVE 策略：长工具结果压缩到的最大字符数。"""
 
 
 def _estimate_tokens(msg: Message) -> int:
@@ -67,9 +73,10 @@ class HistoryTrimmer:
             return HistoryTrimmer._trim_sliding_window(messages, config)
         elif config.strategy == HistoryTrimStrategy.TOKEN_BUDGET:
             return HistoryTrimmer._trim_token_budget(messages, config)
+        elif config.strategy == HistoryTrimStrategy.PROGRESSIVE:
+            return HistoryTrimmer._trim_progressive(messages, config)
         elif config.strategy == HistoryTrimStrategy.SUMMARY_PREFIX:
-            # P2: 暂时回退到 TOKEN_BUDGET
-            return HistoryTrimmer._trim_token_budget(messages, config)
+            return HistoryTrimmer._trim_summary_prefix(messages, config)
         else:
             return list(messages)
 
@@ -136,3 +143,91 @@ class HistoryTrimmer:
 
         selected.reverse()
         return system_msgs + selected
+
+    @staticmethod
+    def _trim_progressive(messages: list[Message], config: HistoryTrimConfig) -> list[Message]:
+        """PROGRESSIVE：分级递进裁剪。
+
+        Phase 1: 用 TOKEN_BUDGET 策略裁剪。
+        Phase 2: 如果 Phase 1 丢弃了过多消息（>50%非系统消息被裁），
+                 先压缩长工具结果再重新 TOKEN_BUDGET 裁剪，在同等预算下保留更多轮次。
+        """
+        from ckyclaw_framework.model.message import Message as Msg, MessageRole
+
+        # Phase 1: 标准 TOKEN_BUDGET
+        phase1 = HistoryTrimmer._trim_token_budget(messages, config)
+
+        # 计算非系统消息保留率
+        non_system_total = sum(1 for m in messages if m.role != MessageRole.SYSTEM)
+        non_system_kept = sum(1 for m in phase1 if m.role != MessageRole.SYSTEM)
+
+        # 保留了一半以上，Phase 1 足够
+        if non_system_total == 0 or non_system_kept >= non_system_total * 0.5:
+            return phase1
+
+        # Phase 2: 压缩长工具/助手消息，然后重新裁剪
+        limit = config.progressive_tool_result_limit
+        compressed: list[Message] = []
+        for msg in messages:
+            if msg.role == MessageRole.TOOL and msg.content and len(msg.content) > limit:
+                truncated = msg.content[:limit] + "... [truncated]"
+                compressed.append(Msg(
+                    role=msg.role,
+                    content=truncated,
+                    tool_call_id=msg.tool_call_id,
+                    agent_name=msg.agent_name,
+                ))
+            else:
+                compressed.append(msg)
+
+        return HistoryTrimmer._trim_token_budget(compressed, config)
+
+    @staticmethod
+    def _trim_summary_prefix(messages: list[Message], config: HistoryTrimConfig) -> list[Message]:
+        """SUMMARY_PREFIX：被裁剪的消息浓缩为摘要前缀 + 保留最近消息。
+
+        不依赖 LLM，使用提取式摘要：每条被裁消息取首行（最多 80 字符）。
+        摘要作为 system 消息插在保留消息之前，提供对话历史概览。
+        """
+        from ckyclaw_framework.model.message import Message as Msg, MessageRole
+
+        # 用 TOKEN_BUDGET 确定保留哪些消息
+        kept = HistoryTrimmer._trim_token_budget(messages, config)
+        kept_set = set(id(m) for m in kept)
+
+        # 收集被裁掉的非 system 消息
+        pruned = [m for m in messages if id(m) not in kept_set and m.role != MessageRole.SYSTEM]
+
+        if not pruned:
+            return kept
+
+        # 提取式摘要：每条被裁消息取首行精简
+        summary_lines: list[str] = []
+        for m in pruned:
+            if not m.content:
+                continue
+            first_line = m.content.split("\n")[0][:80]
+            role_tag = m.role.value
+            summary_lines.append(f"[{role_tag}] {first_line}")
+
+        if not summary_lines:
+            return kept
+
+        # 限制摘要条目数，避免摘要本身太长
+        max_summary_items = 20
+        if len(summary_lines) > max_summary_items:
+            summary_lines = summary_lines[-max_summary_items:]
+            summary_lines.insert(0, f"... ({len(pruned) - max_summary_items} earlier messages omitted)")
+
+        summary_text = (
+            "[Conversation Summary - earlier messages condensed]\n"
+            + "\n".join(summary_lines)
+        )
+
+        summary_msg = Msg(role=MessageRole.SYSTEM, content=summary_text)
+
+        # 插入摘要：system 消息 + 摘要 + 保留的非 system 消息
+        system_msgs = [m for m in kept if m.role == MessageRole.SYSTEM]
+        non_system_kept = [m for m in kept if m.role != MessageRole.SYSTEM]
+
+        return system_msgs + [summary_msg] + non_system_kept

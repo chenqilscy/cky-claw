@@ -9,6 +9,9 @@ export interface MemoryItem {
   agent_name: string | null;
   source_session_id: string | null;
   metadata: Record<string, unknown>;
+  tags: string[];
+  access_count: number;
+  embedding: number[] | null;
   created_at: string;
   updated_at: string;
 }
@@ -26,6 +29,7 @@ export interface MemoryCreateParams {
   agent_name?: string;
   source_session_id?: string;
   metadata?: Record<string, unknown>;
+  tags?: string[];
 }
 
 export interface MemoryUpdateParams {
@@ -33,6 +37,18 @@ export interface MemoryUpdateParams {
   confidence?: number;
   type?: string;
   metadata?: Record<string, unknown>;
+  tags?: string[];
+}
+
+export interface MemoryTagSearchParams {
+  user_id: string;
+  tags: string[];
+  limit?: number;
+}
+
+export interface MemoryCountResponse {
+  user_id: string;
+  count: number;
 }
 
 export interface MemorySearchParams {
@@ -83,5 +99,13 @@ export const memoryService = {
 
   async decay(data: MemoryDecayParams): Promise<{ affected: number }> {
     return api.post<{ affected: number }>('/memories/decay', data);
+  },
+
+  async searchByTags(data: MemoryTagSearchParams): Promise<MemoryItem[]> {
+    return api.post<MemoryItem[]>('/memories/search-by-tags', data);
+  },
+
+  async count(userId: string): Promise<MemoryCountResponse> {
+    return api.get<MemoryCountResponse>(`/memories/count/${userId}`);
   },
 };

@@ -8,6 +8,7 @@ from ckyclaw_framework.debug.controller import (
     DebugEventType,
     DebugMode,
     DebugState,
+    DebugStoppedError,
     PauseContext,
 )
 
@@ -17,5 +18,6 @@ __all__ = [
     "DebugEventType",
     "DebugMode",
     "DebugState",
+    "DebugStoppedError",
     "PauseContext",
 ]

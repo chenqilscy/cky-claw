@@ -12,11 +12,13 @@ from uuid import uuid4
 from ckyclaw_framework.agent.agent import Agent
 from ckyclaw_framework.approval.handler import ApprovalHandler
 from ckyclaw_framework.approval.mode import ApprovalDecision, ApprovalMode, ApprovalRejectedError, classify_tool_risk
+from ckyclaw_framework.artifacts.store import ArtifactStore, _estimate_token_count, _make_summary
 from ckyclaw_framework.guardrails.input_guardrail import InputGuardrail
 from ckyclaw_framework.guardrails.output_guardrail import OutputGuardrail
 from ckyclaw_framework.guardrails.result import GuardrailResult, InputGuardrailTripwireError, OutputGuardrailTripwireError
 from ckyclaw_framework.guardrails.tool_guardrail import ToolGuardrail
 from ckyclaw_framework.checkpoint import Checkpoint, CheckpointBackend
+from ckyclaw_framework.debug.controller import DebugStoppedError
 from ckyclaw_framework.handoff.handoff import Handoff
 from ckyclaw_framework.model._converter import (
     messages_to_litellm,
@@ -137,6 +139,55 @@ async def _build_system_message(agent: Agent, run_context: RunContext) -> Messag
     return Message(role=MessageRole.SYSTEM, content=text)
 
 
+async def _build_system_messages(
+    agent: Agent,
+    run_context: RunContext,
+    config: RunConfig,
+    messages: list[Message] | None = None,
+) -> list[Message]:
+    """构建 system 消息列表，支持 Cache-First Prompt + 记忆注入。
+
+    消息顺序（全部启用时）：
+    1. [cache prefix]    — 稳定前缀（S1 Cache-First Prompt）
+    2. [memory context]  — 检索到的相关记忆（S2 Memory Injection）
+    3. [instructions]    — Agent 动态指令
+
+    返回 0~3 条 system 消息。
+    """
+    result: list[Message] = []
+
+    # Cache-First: 稳定前缀
+    if config.system_prompt_prefix:
+        result.append(Message(
+            role=MessageRole.SYSTEM,
+            content=config.system_prompt_prefix,
+            metadata={"cache_control": {"type": "ephemeral"}},
+        ))
+
+    # Memory Injection: 自动检索相关记忆
+    if config.memory_backend is not None and config.memory_user_id:
+        from ckyclaw_framework.memory.injector import MemoryInjector
+
+        injector = MemoryInjector(config.memory_backend, config.memory_injection_config)
+        # 提取最新用户消息作为检索 query
+        query = ""
+        if messages:
+            for msg in reversed(messages):
+                if msg.role == MessageRole.USER and msg.content:
+                    query = msg.content
+                    break
+        memory_text = await injector.build_memory_context(config.memory_user_id, query)
+        if memory_text:
+            result.append(Message(role=MessageRole.SYSTEM, content=memory_text))
+
+    # Agent instructions（可能含动态内容）
+    instructions_msg = await _build_system_message(agent, run_context)
+    if instructions_msg.content:
+        result.append(instructions_msg)
+
+    return result
+
+
 def _build_tool_schemas(agent: Agent, run_ctx: RunContext | None = None) -> list[dict[str, Any]]:
     """从 Agent 的 tools + handoffs 构建 OpenAI tool schemas。
 
@@ -192,9 +243,15 @@ def _resolve_settings(agent: Agent, config: RunConfig | None) -> ModelSettings |
 
 
 def _resolve_provider(config: RunConfig | None) -> ModelProvider:
-    """获取 ModelProvider 实例。"""
-    if config and config.model_provider:
-        return config.model_provider
+    """获取 ModelProvider 实例。
+
+    优先级：fallback_provider > model_provider > LiteLLMProvider()
+    """
+    if config:
+        if config.fallback_provider is not None:
+            return config.fallback_provider
+        if config.model_provider is not None:
+            return config.model_provider
     return LiteLLMProvider()
 
 
@@ -555,6 +612,7 @@ async def _execute_tool_calls(
     approval_handler: ApprovalHandler | None = None,
     approval_mode: ApprovalMode = ApprovalMode.FULL_AUTO,
     config: RunConfig | None = None,
+    run_id: str | None = None,
 ) -> tuple[Agent, Handoff | None] | None:
     """执行一组工具调用（并行），将结果追加到 messages。返回 (目标 Agent, Handoff 配置) 或 None。
 
@@ -568,6 +626,16 @@ async def _execute_tool_calls(
     _hooks = config.hooks if config and config.hooks else None
     _tool_timeout = config.tool_timeout if config else None
     _max_concurrency = config.max_tool_concurrency if config else None
+    _artifact_store: ArtifactStore | None = config.artifact_store if config else None
+    _artifact_threshold: int = config.artifact_threshold if config else 5000
+    _max_result_chars: int | None = config.max_tool_result_chars if config else None
+
+    # S3: 构建 ToolMiddleware 管道
+    _tool_middleware: list[Any] = config.tool_middleware if config else []
+    _middleware_pipeline: Any | None = None
+    if _tool_middleware:
+        from ckyclaw_framework.tools.middleware import ToolMiddlewarePipeline
+        _middleware_pipeline = ToolMiddlewarePipeline(_tool_middleware)
 
     # ── 1. 找到首个 Handoff 调用，分割出需要并行执行的普通工具 ──
     handoff_idx: int | None = None
@@ -642,7 +710,7 @@ async def _execute_tool_calls(
                     tool_results[tc.id] = tool_result_to_message(tc.id, f"Error: {blocked_msg}", agent.name)
                     return
 
-        # 执行工具（带 Tracing + Approval + Timeout）
+        # 执行工具（带 Tracing + Approval + Timeout + Middleware）
         tool_span = await tracing.start_tool_span(tc.name, arguments) if tracing else None
         if _hooks and run_context:
             await _invoke_hook(_hooks.on_tool_start, "on_tool_start", run_context, tc.name, arguments)
@@ -652,11 +720,31 @@ async def _execute_tool_calls(
                     run_context, approval_handler, approval_mode, tc.name, arguments,
                     tool_approval_required=getattr(tool, "approval_required", False),
                 )
-            # 超时优先级: tool.timeout（工具内部已处理）> RunConfig.tool_timeout > 无限
-            if tool.timeout is None and _tool_timeout is not None:
-                result = await asyncio.wait_for(tool.execute(arguments), timeout=_tool_timeout)
+
+            # S3: 通过中间件管道执行工具（如果配置了中间件）
+            if _middleware_pipeline is not None:
+                from ckyclaw_framework.tools.middleware import ToolExecutionContext as _TEC
+                _mw_ctx = _TEC(
+                    tool_name=tc.name,
+                    arguments=arguments,
+                    agent_name=agent.name,
+                    run_id=run_id,
+                )
+
+                async def _tool_fn(args: dict[str, Any]) -> str:
+                    """中间件管道的工具执行包装。"""
+                    if tool.timeout is None and _tool_timeout is not None:
+                        return await asyncio.wait_for(tool.execute(args), timeout=_tool_timeout)
+                    return await tool.execute(args)
+
+                result = await _middleware_pipeline.execute(_mw_ctx, _tool_fn, arguments)
             else:
-                result = await tool.execute(arguments)
+                # 无中间件，直接执行
+                # 超时优先级: tool.timeout（工具内部已处理）> RunConfig.tool_timeout > 无限
+                if tool.timeout is None and _tool_timeout is not None:
+                    result = await asyncio.wait_for(tool.execute(arguments), timeout=_tool_timeout)
+                else:
+                    result = await tool.execute(arguments)
         except asyncio.TimeoutError:
             timeout_val = tool.timeout or _tool_timeout
             error_result = f"Error: Tool '{tc.name}' timed out after {timeout_val}s."
@@ -715,6 +803,27 @@ async def _execute_tool_calls(
         # Hooks: on_tool_end
         if _hooks and run_context:
             await _invoke_hook(_hooks.on_tool_end, "on_tool_end", run_context, tc.name, result)
+
+        # Artifact 外部化：超大工具结果存入 ArtifactStore，上下文保留摘要引用
+        if _artifact_store is not None and run_id and _estimate_token_count(result) > _artifact_threshold:
+            artifact = await _artifact_store.save(
+                run_id=run_id,
+                content=result,
+                metadata={"tool_name": tc.name, "tool_call_id": tc.id},
+            )
+            result = (
+                f"[Artifact {artifact.artifact_id}] {artifact.summary}\n"
+                f"(Full content externalized, {artifact.token_count} tokens)"
+            )
+            logger.info(
+                "Tool '%s' result externalized to artifact %s (%d tokens)",
+                tc.name, artifact.artifact_id, artifact.token_count,
+            )
+
+        # 工具结果字符数硬截断
+        if _max_result_chars is not None and len(result) > _max_result_chars:
+            result = result[:_max_result_chars] + "... [truncated]"
+
         tool_results[tc.id] = tool_result_to_message(tc.id, result, agent.name)
         if tool_span and tracing:
             await tracing.end_span(tool_span, output=result)
@@ -921,6 +1030,22 @@ class Runner:
 
         # Tracing 上下文
         tracing = _TracingCtx(config, agent.name)
+
+        # Checkpoint: 从上次中断处恢复
+        _checkpoint_backend = config.checkpoint_backend
+        _checkpoint_interval = config.checkpoint_interval
+        _run_id = resume_from or uuid4().hex
+
+        # S4: EventJournal — 在 start_trace 之前注入，确保 RUN_START 被捕获
+        if config.event_journal is not None and tracing.active:
+            from ckyclaw_framework.events.processor import EventJournalProcessor
+            _ej_proc = EventJournalProcessor(
+                journal=config.event_journal,
+                run_id=_run_id,
+                session_id=str(session.session_id) if session else None,
+            )
+            tracing.processors.append(_ej_proc)
+
         if tracing.active:
             await tracing.start_trace(config.workflow_name)
 
@@ -929,13 +1054,9 @@ class Runner:
         current_agent = agent
         turn_count = 0
 
-        # Checkpoint: 从上次中断处恢复
-        _checkpoint_backend = config.checkpoint_backend
-        _checkpoint_interval = config.checkpoint_interval
-        _run_id = resume_from or uuid4().hex
-
         # Debug: 调试控制器
         _debug = config.debug_controller
+        _debug_stopped = False  # DebugStoppedError 标记：用于优雅退出
 
         # Intent Drift: 意图飘移检测
         _intent_detector = config.intent_detector
@@ -1028,10 +1149,8 @@ class Runner:
                 await _invoke_hook(hooks.on_agent_start, "on_agent_start", run_ctx, current_agent.name)
 
             # 准备 LLM 调用参数
-            system_msg = await _build_system_message(current_agent, run_ctx)
-            llm_messages: list[Message] = []
-            if system_msg.content:
-                llm_messages.append(system_msg)
+            system_msgs = await _build_system_messages(current_agent, run_ctx, config, messages)
+            llm_messages: list[Message] = list(system_msgs)
             llm_messages.extend(messages)
             tool_schemas = _build_tool_schemas(current_agent, run_ctx)
 
@@ -1046,20 +1165,32 @@ class Runner:
             if hooks:
                 await _invoke_hook(hooks.on_llm_start, "on_llm_start", run_ctx, model_name, llm_messages)
 
-            # 调用 LLM（含重试逻辑）
+            # 调用 LLM（含重试逻辑 + 可选 CircuitBreaker）
             _max_retries = config.max_retries
             _retry_delay = config.retry_delay
+            _circuit_breaker = config.circuit_breaker if config.fallback_provider is None else None
             _last_error: Exception | None = None
             for _attempt in range(_max_retries + 1):
                 try:
-                    response: ModelResponse = await provider.chat(
-                        model=model_name,
-                        messages=llm_messages,
-                        settings=settings,
-                        tools=tool_schemas or None,
-                        stream=False,
-                        response_format=response_format,
-                    )  # type: ignore[assignment]
+                    if _circuit_breaker is not None:
+                        response: ModelResponse = await _circuit_breaker.call(
+                            provider.chat,
+                            model_name,
+                            messages=llm_messages,
+                            settings=settings,
+                            tools=tool_schemas or None,
+                            stream=False,
+                            response_format=response_format,
+                        )  # type: ignore[assignment]
+                    else:
+                        response: ModelResponse = await provider.chat(
+                            model=model_name,
+                            messages=llm_messages,
+                            settings=settings,
+                            tools=tool_schemas or None,
+                            stream=False,
+                            response_format=response_format,
+                        )  # type: ignore[assignment]
                     _last_error = None
                     break
                 except Exception as e:
@@ -1144,17 +1275,21 @@ class Runner:
                     } if response.token_usage else {},
                 })
                 _debug.clear_tool_snapshots()
-                await _debug.checkpoint(
-                    reason="turn_end",
-                    turn=turn_count,
-                    agent_name=current_agent.name,
-                    messages=messages,
-                    token_usage={
-                        "prompt_tokens": total_usage.prompt_tokens,
-                        "completion_tokens": total_usage.completion_tokens,
-                        "total_tokens": total_usage.total_tokens,
-                    },
-                )
+                try:
+                    await _debug.checkpoint(
+                        reason="turn_end",
+                        turn=turn_count,
+                        agent_name=current_agent.name,
+                        messages=messages,
+                        token_usage={
+                            "prompt_tokens": total_usage.prompt_tokens,
+                            "completion_tokens": total_usage.completion_tokens,
+                            "total_tokens": total_usage.total_tokens,
+                        },
+                    )
+                except DebugStoppedError:
+                    _debug_stopped = True
+                    break
 
             # 无工具调用 → 最终输出
             if not response.tool_calls:
@@ -1208,37 +1343,9 @@ class Runner:
 
             # Debug: 工具调用前检查是否暂停
             if _debug is not None:
-                await _debug.checkpoint(
-                    reason="before_tool",
-                    turn=turn_count,
-                    agent_name=current_agent.name,
-                    messages=messages,
-                    token_usage={
-                        "prompt_tokens": total_usage.prompt_tokens,
-                        "completion_tokens": total_usage.completion_tokens,
-                        "total_tokens": total_usage.total_tokens,
-                    },
-                )
-
-            # 执行工具调用
-            handoff_result = await _execute_tool_calls(
-                current_agent, response.tool_calls, messages,
-                tracing=tracing if tracing.active else None,
-                run_context=run_ctx,
-                approval_handler=approval_handler,
-                approval_mode=approval_mode,
-                config=config,
-            )
-
-            # Handoff: 切换 Agent，不增加 turn_count
-            if handoff_result is not None:
-                target_agent, handoff_config = handoff_result
-                logger.info("Handoff: %s → %s", current_agent.name, target_agent.name)
-
-                # Debug: Handoff 前检查是否暂停
-                if _debug is not None:
+                try:
                     await _debug.checkpoint(
-                        reason="before_handoff",
+                        reason="before_tool",
                         turn=turn_count,
                         agent_name=current_agent.name,
                         messages=messages,
@@ -1248,6 +1355,43 @@ class Runner:
                             "total_tokens": total_usage.total_tokens,
                         },
                     )
+                except DebugStoppedError:
+                    _debug_stopped = True
+                    break
+
+            # 执行工具调用
+            handoff_result = await _execute_tool_calls(
+                current_agent, response.tool_calls, messages,
+                tracing=tracing if tracing.active else None,
+                run_context=run_ctx,
+                approval_handler=approval_handler,
+                approval_mode=approval_mode,
+                config=config,
+                run_id=_run_id,
+            )
+
+            # Handoff: 切换 Agent，不增加 turn_count
+            if handoff_result is not None:
+                target_agent, handoff_config = handoff_result
+                logger.info("Handoff: %s → %s", current_agent.name, target_agent.name)
+
+                # Debug: Handoff 前检查是否暂停
+                if _debug is not None:
+                    try:
+                        await _debug.checkpoint(
+                            reason="before_handoff",
+                            turn=turn_count,
+                            agent_name=current_agent.name,
+                            messages=messages,
+                            token_usage={
+                                "prompt_tokens": total_usage.prompt_tokens,
+                                "completion_tokens": total_usage.completion_tokens,
+                                "total_tokens": total_usage.total_tokens,
+                            },
+                        )
+                    except DebugStoppedError:
+                        _debug_stopped = True
+                        break
 
                 # Hooks: on_agent_end (handoff 旧 Agent)
                 if hooks:
@@ -1281,6 +1425,31 @@ class Runner:
                     await _checkpoint_backend.save(cp)
                 except Exception:
                     logger.warning("Failed to save checkpoint at turn %d", turn_count, exc_info=True)
+
+        # Debug 调试被终止（用户 stop 或暂停超时）→ 优雅退出
+        if _debug_stopped:
+            logger.info("Debug session stopped at turn %d", turn_count)
+            trace = await tracing.end_trace()
+            if session is not None:
+                await session.append(messages[history_offset:])
+            last_content = ""
+            for msg in reversed(messages):
+                if msg.role == MessageRole.ASSISTANT and msg.content:
+                    last_content = msg.content
+                    break
+            _stop_result = RunResult(
+                output=f"Debug stopped: {last_content}" if last_content else "Debug stopped",
+                messages=messages,
+                last_agent_name=current_agent.name,
+                token_usage=total_usage,
+                turn_count=turn_count,
+                trace=trace,
+                run_id=_run_id,
+            )
+            if hooks:
+                _stop_ctx = RunContext(agent=current_agent, config=config, context=context or {}, turn_count=turn_count)
+                await _invoke_hook(hooks.on_run_end, "on_run_end", _stop_ctx, _stop_result)
+            return _stop_result
 
         # 超过 max_turns
         logger.warning("Agent loop exceeded max_turns=%d", max_turns)
@@ -1355,9 +1524,21 @@ class Runner:
         turn_count = 0
         approval_mode = _resolve_approval_mode(agent, config)
         approval_handler = config.approval_handler
+        _stream_run_id = uuid4().hex
 
         # Tracing 上下文
         tracing = _TracingCtx(config, agent.name)
+
+        # S4: EventJournal — 在 start_trace 之前注入，确保 RUN_START 被捕获
+        if config.event_journal is not None and tracing.active:
+            from ckyclaw_framework.events.processor import EventJournalProcessor
+            _ej_proc_s = EventJournalProcessor(
+                journal=config.event_journal,
+                run_id=_stream_run_id,
+                session_id=str(session.session_id) if session else None,
+            )
+            tracing.processors.append(_ej_proc_s)
+
         if tracing.active:
             await tracing.start_trace(config.workflow_name)
 
@@ -1427,10 +1608,8 @@ class Runner:
             if hooks:
                 await _invoke_hook(hooks.on_agent_start, "on_agent_start", run_ctx, current_agent.name)
 
-            system_msg = await _build_system_message(current_agent, run_ctx)
-            llm_messages: list[Message] = []
-            if system_msg.content:
-                llm_messages.append(system_msg)
+            system_msgs = await _build_system_messages(current_agent, run_ctx, config, messages)
+            llm_messages: list[Message] = list(system_msgs)
             llm_messages.extend(messages)
             tool_schemas = _build_tool_schemas(current_agent, run_ctx)
 
@@ -1445,21 +1624,33 @@ class Runner:
             if hooks:
                 await _invoke_hook(hooks.on_llm_start, "on_llm_start", run_ctx, model_name, llm_messages)
 
-            # 流式调用 LLM（含重试逻辑）
+            # 流式调用 LLM（含重试逻辑 + 可选 CircuitBreaker）
             _max_retries_s = config.max_retries
             _retry_delay_s = config.retry_delay
+            _circuit_breaker_s = config.circuit_breaker if config.fallback_provider is None else None
             _last_error_s: Exception | None = None
             stream = None
             for _attempt_s in range(_max_retries_s + 1):
                 try:
-                    stream = await provider.chat(
-                        model=model_name,
-                        messages=llm_messages,
-                        settings=settings,
-                        tools=tool_schemas or None,
-                        stream=True,
-                        response_format=response_format,
-                    )
+                    if _circuit_breaker_s is not None:
+                        stream = await _circuit_breaker_s.call(
+                            provider.chat,
+                            model_name,
+                            messages=llm_messages,
+                            settings=settings,
+                            tools=tool_schemas or None,
+                            stream=True,
+                            response_format=response_format,
+                        )
+                    else:
+                        stream = await provider.chat(
+                            model=model_name,
+                            messages=llm_messages,
+                            settings=settings,
+                            tools=tool_schemas or None,
+                            stream=True,
+                            response_format=response_format,
+                        )
                     _last_error_s = None
                     break
                 except Exception as e:
@@ -1618,6 +1809,7 @@ class Runner:
                 approval_handler=approval_handler,
                 approval_mode=approval_mode,
                 config=config,
+                run_id=_stream_run_id,
             )
 
             for tc in aggregated_tool_calls:

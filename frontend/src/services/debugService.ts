@@ -27,7 +27,7 @@ export interface DebugSessionListResponse {
 export interface DebugSessionCreateInput {
   agent_id: string;
   input_message: string;
-  mode?: string;
+  mode?: 'step_turn' | 'step_tool' | 'continue';
 }
 
 export interface DebugContext {

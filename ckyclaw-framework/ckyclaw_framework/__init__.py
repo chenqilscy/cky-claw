@@ -81,7 +81,7 @@ from ckyclaw_framework.sandbox.local_sandbox import LocalSandbox
 from ckyclaw_framework.checkpoint import Checkpoint, CheckpointBackend, InMemoryCheckpointBackend
 
 # === Debug ===
-from ckyclaw_framework.debug.controller import DebugController, DebugEvent, DebugEventType, DebugMode, DebugState, PauseContext
+from ckyclaw_framework.debug.controller import DebugController, DebugEvent, DebugEventType, DebugMode, DebugState, DebugStoppedError, PauseContext
 
 # === Intent Detection ===
 from ckyclaw_framework.intent import IntentDetector, IntentSignal, KeywordIntentDetector
@@ -231,6 +231,7 @@ __all__ = [
     "DebugEventType",
     "DebugMode",
     "DebugState",
+    "DebugStoppedError",
     "PauseContext",
     # Intent Detection
     "IntentDetector",

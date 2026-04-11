@@ -375,10 +375,10 @@ class TestLocalSandboxProcessLookupError:
 
 
 class TestHistoryTrimmerSummaryPrefix:
-    """覆盖 history_trimmer.py line 74 — SUMMARY_PREFIX 策略回退到 TOKEN_BUDGET。"""
+    """覆盖 history_trimmer.py — SUMMARY_PREFIX 策略提取式摘要 + 保留最近消息。"""
 
-    def test_summary_prefix_fallback(self) -> None:
-        """SUMMARY_PREFIX 策略暂时回退到 TOKEN_BUDGET 逻辑。"""
+    def test_summary_prefix_produces_summary(self) -> None:
+        """SUMMARY_PREFIX 策略将被裁消息浓缩为摘要。"""
         from ckyclaw_framework.model.message import Message, MessageRole
         from ckyclaw_framework.session.history_trimmer import (
             HistoryTrimConfig,
@@ -398,8 +398,8 @@ class TestHistoryTrimmerSummaryPrefix:
         )
 
         result = HistoryTrimmer.trim(messages, config)
-        # 应该裁剪掉一些消息（回退到 TOKEN_BUDGET 逻辑）
-        assert len(result) <= len(messages)
+        # 应该裁剪掉一些消息并添加摘要 system message
+        assert len(result) <= len(messages) + 1  # +1 for possible summary
 
     def test_unknown_strategy_returns_copy(self) -> None:
         """未知策略 → else 分支，返回 list(messages) 副本（line 74）。"""

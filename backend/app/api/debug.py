@@ -76,10 +76,11 @@ async def create_debug_session(
 async def get_debug_session(
     session_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
 ) -> DebugSessionResponse:
     """获取调试会话详情。"""
     session = await debug_service.get_debug_session(db, session_id)
-    if session is None:
+    if session is None or session.user_id != user.id:
         raise HTTPException(status_code=404, detail="调试会话不存在")
     return DebugSessionResponse.model_validate(session)
 
@@ -92,11 +93,15 @@ async def get_debug_session(
 async def step_debug_session(
     session_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
 ) -> DebugSessionResponse:
     """单步执行 — 执行到下一个检查点后暂停。"""
+    session = await debug_service.get_debug_session(db, session_id)
+    if session is None or session.user_id != user.id:
+        raise HTTPException(status_code=404, detail="调试会话不存在")
     controller = debug_service.get_controller(session_id)
     if controller is None:
-        raise HTTPException(status_code=404, detail="调试会话未激活或不存在")
+        raise HTTPException(status_code=404, detail="调试会话未激活")
 
     await controller.step()
 
@@ -115,11 +120,15 @@ async def step_debug_session(
 async def continue_debug_session(
     session_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
 ) -> DebugSessionResponse:
     """继续执行 — 运行到结束或下一个断点。"""
+    session = await debug_service.get_debug_session(db, session_id)
+    if session is None or session.user_id != user.id:
+        raise HTTPException(status_code=404, detail="调试会话不存在")
     controller = debug_service.get_controller(session_id)
     if controller is None:
-        raise HTTPException(status_code=404, detail="调试会话未激活或不存在")
+        raise HTTPException(status_code=404, detail="调试会话未激活")
 
     await controller.resume()
 
@@ -137,11 +146,15 @@ async def continue_debug_session(
 async def stop_debug_session(
     session_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
 ) -> DebugSessionResponse:
     """终止调试会话。"""
+    session = await debug_service.get_debug_session(db, session_id)
+    if session is None or session.user_id != user.id:
+        raise HTTPException(status_code=404, detail="调试会话不存在")
     controller = debug_service.get_controller(session_id)
     if controller is None:
-        raise HTTPException(status_code=404, detail="调试会话未激活或不存在")
+        raise HTTPException(status_code=404, detail="调试会话未激活")
 
     await controller.stop()
     await debug_service.cleanup_session(session_id)
@@ -161,11 +174,16 @@ async def stop_debug_session(
 )
 async def get_debug_context(
     session_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
 ) -> DebugContextResponse:
     """获取当前暂停点的上下文详情。"""
+    session = await debug_service.get_debug_session(db, session_id)
+    if session is None or session.user_id != user.id:
+        raise HTTPException(status_code=404, detail="调试会话不存在")
     controller = debug_service.get_controller(session_id)
     if controller is None:
-        raise HTTPException(status_code=404, detail="调试会话未激活或不存在")
+        raise HTTPException(status_code=404, detail="调试会话未激活")
 
     ctx = controller.pause_context
     if ctx is None:

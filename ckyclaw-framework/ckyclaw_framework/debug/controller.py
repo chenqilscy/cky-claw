@@ -25,6 +25,13 @@ logger = logging.getLogger(__name__)
 DEFAULT_PAUSE_TIMEOUT = 1800  # 30 分钟
 
 
+class DebugStoppedError(Exception):
+    """调试会话被用户终止或暂停超时时抛出。
+
+    继承自 Exception（而非 BaseException），确保 Runner 的 except Exception 能正确捕获。
+    """
+
+
 class DebugMode(str, Enum):
     """调试模式。"""
 
@@ -237,6 +244,12 @@ class DebugController:
         if self._state in (DebugState.COMPLETED, DebugState.FAILED, DebugState.TIMEOUT):
             return
 
+        # 检查是否有待处理的 stop 操作（stop() 在 RUNNING 状态被调用）
+        if self._pending_action == "stop":
+            self._state = DebugState.FAILED
+            self._pending_action = None
+            raise DebugStoppedError("Debug session stopped by user")
+
         self._state = DebugState.RUNNING
 
         should_pause = False
@@ -287,13 +300,13 @@ class DebugController:
         except asyncio.TimeoutError:
             self._state = DebugState.TIMEOUT
             await self._emit(DebugEvent(type=DebugEventType.TIMEOUT))
-            raise asyncio.CancelledError("Debug session timed out") from None
+            raise DebugStoppedError("Debug session timed out") from None
 
         # 检查是否是 stop 操作
         if self._pending_action == "stop":
             self._state = DebugState.FAILED
             self._pending_action = None
-            raise asyncio.CancelledError("Debug session stopped by user")
+            raise DebugStoppedError("Debug session stopped by user")
 
         self._state = DebugState.RUNNING
         self._pause_context = None
@@ -322,8 +335,7 @@ class DebugController:
         self._pending_action = "stop"
         if self._state == DebugState.PAUSED:
             self._resume_event.set()
-        else:
-            self._state = DebugState.FAILED
+        # RUNNING 状态：设置 pending_action，下一次 checkpoint() 会检查并抛出异常
 
     def mark_completed(self) -> None:
         """Runner 执行完成时调用。"""

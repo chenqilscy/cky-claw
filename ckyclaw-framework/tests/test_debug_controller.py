@@ -12,6 +12,7 @@ from ckyclaw_framework.debug.controller import (
     DebugEventType,
     DebugMode,
     DebugState,
+    DebugStoppedError,
     PauseContext,
 )
 from ckyclaw_framework.model.message import Message, MessageRole
@@ -249,7 +250,7 @@ class TestControlActions:
         assert ctrl.state == DebugState.PAUSED
 
         await ctrl.stop()
-        with pytest.raises(asyncio.CancelledError, match="stopped by user"):
+        with pytest.raises(DebugStoppedError, match="stopped by user"):
             await task
 
 
@@ -350,7 +351,7 @@ class TestPauseTimeout:
         ctrl = DebugController(mode=DebugMode.STEP_TURN, pause_timeout=0.1)
         msgs = _make_messages()
 
-        with pytest.raises(asyncio.CancelledError, match="timed out"):
+        with pytest.raises(DebugStoppedError, match="timed out"):
             await ctrl.checkpoint(reason="turn_end", turn=1, agent_name="a", messages=msgs)
 
         assert ctrl.state == DebugState.TIMEOUT
@@ -455,10 +456,17 @@ class TestStopWhenRunning:
 
     @pytest.mark.asyncio
     async def test_stop_when_not_paused(self) -> None:
-        """运行中调用 stop 直接设 FAILED。"""
+        """运行中调用 stop 设置 pending_action，下次 checkpoint 时抛异常。"""
         ctrl = DebugController(mode=DebugMode.STEP_TURN)
         ctrl._state = DebugState.RUNNING
         await ctrl.stop()
+        # stop 在 RUNNING 状态只设 pending_action，不立即改 state
+        assert ctrl._pending_action == "stop"
+
+        # 下一次 checkpoint 会检查 pending_action 并抛出 DebugStoppedError
+        msgs = _make_messages()
+        with pytest.raises(DebugStoppedError, match="stopped by user"):
+            await ctrl.checkpoint(reason="turn_end", turn=1, agent_name="a", messages=msgs)
         assert ctrl.state == DebugState.FAILED
 
 

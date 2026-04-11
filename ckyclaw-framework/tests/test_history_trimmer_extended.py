@@ -23,8 +23,8 @@ def _make_msg(role: MessageRole, content: str, tokens: int | None = None) -> Mes
 
 class TestHistoryTrimmerSummaryPrefix:
 
-    def test_summary_prefix_falls_back_to_token_budget(self) -> None:
-        """SUMMARY_PREFIX 回退到 TOKEN_BUDGET 行为。"""
+    def test_summary_prefix_produces_summary_and_recent(self) -> None:
+        """SUMMARY_PREFIX 将被裁消息浓缩为摘要 + 保留最近消息。"""
         msgs = [
             _make_msg(MessageRole.USER, "a" * 300),
             _make_msg(MessageRole.ASSISTANT, "b" * 300),
@@ -35,9 +35,10 @@ class TestHistoryTrimmerSummaryPrefix:
             max_history_tokens=200,
         )
         result = HistoryTrimmer.trim(msgs, config)
-        # 应该和 TOKEN_BUDGET 行为一致：只保留最新的 ~200 tokens
+        # 应该保留最新消息 + 被裁消息生成摘要
         assert len(result) >= 1
-        assert result[-1].content == "c" * 300
+        non_system = [m for m in result if m.role != MessageRole.SYSTEM]
+        assert non_system[-1].content == "c" * 300
 
 
 class TestSlidingWindowSystemOverflow:

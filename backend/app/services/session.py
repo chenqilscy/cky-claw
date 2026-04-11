@@ -657,6 +657,40 @@ async def _save_trace_from_processor(
         await db.rollback()
 
 
+async def _save_events_from_journal(
+    db: AsyncSession,
+    journal: Any,
+) -> None:
+    """从 InMemoryEventJournal 收集的事件写入 events 表。
+
+    使用 savepoint 隔离，避免写入失败影响已有的 trace 数据。
+    """
+    from app.models.event import EventRecord
+
+    try:
+        entries = await journal.get_events()
+        if not entries:
+            return
+
+        records = [
+            EventRecord(
+                sequence=e.sequence,
+                event_type=e.event_type.value if hasattr(e.event_type, "value") else str(e.event_type),
+                run_id=e.run_id,
+                session_id=e.session_id,
+                agent_name=e.agent_name,
+                span_id=e.span_id,
+                timestamp=e.timestamp,
+                payload=e.payload,
+            )
+            for e in entries
+        ]
+        async with db.begin_nested():
+            db.add_all(records)
+    except Exception:
+        logger.exception("Failed to save event journal data")
+
+
 # ---------------------------------------------------------------------------
 # 会话消息查询
 # ---------------------------------------------------------------------------
@@ -885,6 +919,63 @@ async def execute_run(
             approval_handler=approval_handler,
         )
 
+        # S2: 记忆注入 — 配置 memory_user_id 时自动注入
+        if request.config.memory_user_id:
+            from app.services.memory_backend import SQLAlchemyMemoryBackend
+
+            framework_config.memory_backend = SQLAlchemyMemoryBackend(db)
+            framework_config.memory_user_id = request.config.memory_user_id
+
+        # S3: CircuitBreaker — 配置后包装 LLM 调用
+        if request.config.circuit_breaker_enabled:
+            from ckyclaw_framework.model.circuit_breaker import CircuitBreaker, CircuitBreakerConfig
+
+            framework_config.circuit_breaker = CircuitBreaker(
+                name=f"run-{agent.name}",
+                config=CircuitBreakerConfig(
+                    failure_threshold=request.config.cb_failure_threshold,
+                    recovery_timeout=request.config.cb_recovery_timeout,
+                ),
+            )
+
+        # S3: FallbackChain — 配置降级 Provider 列表
+        if request.config.fallback_provider_ids:
+            from ckyclaw_framework.model.fallback import FallbackChainProvider, FallbackEntry
+
+            fallback_entries: list[FallbackEntry] = []
+            for idx, pid in enumerate(request.config.fallback_provider_ids):
+                try:
+                    _stub = type("_C", (), {"provider_name": pid, "name": f"fallback-{pid}"})()  # noqa: E501
+                    fb_kwargs, _ = await _resolve_provider(db, _stub)
+                    fb_provider = LiteLLMProvider(**{k: v for k, v in fb_kwargs.items() if v is not None})
+                    fallback_entries.append(FallbackEntry(provider=fb_provider, priority=idx))
+                except Exception:
+                    logger.warning("Fallback provider '%s' resolve failed, skipping", pid)
+            if fallback_entries:
+                framework_config.fallback_provider = FallbackChainProvider(fallback_entries)
+
+        # S3: ToolMiddleware — 工具执行中间件管道
+        _tool_mw: list[Any] = []
+        if request.config.tool_cache_enabled:
+            from ckyclaw_framework.tools.middleware import CacheMiddleware
+            _tool_mw.append(CacheMiddleware(ttl=request.config.tool_cache_ttl))
+        if request.config.tool_loop_guard_enabled:
+            from ckyclaw_framework.tools.middleware import LoopGuardMiddleware
+            _tool_mw.append(LoopGuardMiddleware(max_repeats=request.config.tool_loop_guard_max_repeats))
+        if request.config.tool_rate_limit_enabled:
+            from ckyclaw_framework.tools.middleware import RateLimitMiddleware
+            _tool_mw.append(RateLimitMiddleware(
+                max_calls=request.config.tool_rate_limit_max_calls,
+                window_seconds=request.config.tool_rate_limit_window,
+            ))
+        if _tool_mw:
+            framework_config.tool_middleware = _tool_mw
+
+        # S4: EventJournal — 配置后自动记录运行事件
+        if request.config.event_journal_enabled:
+            from ckyclaw_framework.events.journal import InMemoryEventJournal
+            framework_config.event_journal = InMemoryEventJournal()
+
         # 执行
         start_time = time.monotonic()
 
@@ -933,6 +1024,10 @@ async def execute_run(
 
     # Trace 持久化：写入 traces/spans 表
     await _save_trace_from_processor(db, trace_processor)
+
+    # S4: EventJournal 持久化 — 将内存事件写入数据库
+    if request.config.event_journal_enabled and framework_config.event_journal is not None:
+        await _save_events_from_journal(db, framework_config.event_journal)
 
     # 更新 session 的 updated_at
     session_record.updated_at = datetime.now(timezone.utc)
@@ -1060,6 +1155,63 @@ async def execute_run_stream(
         approval_handler=approval_handler,
     )
 
+    # S2: 记忆注入 — 配置 memory_user_id 时自动注入
+    if request.config.memory_user_id:
+        from app.services.memory_backend import SQLAlchemyMemoryBackend
+
+        framework_config.memory_backend = SQLAlchemyMemoryBackend(db)
+        framework_config.memory_user_id = request.config.memory_user_id
+
+    # S3: CircuitBreaker — 配置后包装 LLM 调用
+    if request.config.circuit_breaker_enabled:
+        from ckyclaw_framework.model.circuit_breaker import CircuitBreaker, CircuitBreakerConfig
+
+        framework_config.circuit_breaker = CircuitBreaker(
+            name=f"stream-{agent.name}",
+            config=CircuitBreakerConfig(
+                failure_threshold=request.config.cb_failure_threshold,
+                recovery_timeout=request.config.cb_recovery_timeout,
+            ),
+        )
+
+    # S3: FallbackChain — 配置降级 Provider 列表
+    if request.config.fallback_provider_ids:
+        from ckyclaw_framework.model.fallback import FallbackChainProvider, FallbackEntry
+
+        fallback_entries_s: list[FallbackEntry] = []
+        for idx, pid in enumerate(request.config.fallback_provider_ids):
+            try:
+                _stub = type("_C", (), {"provider_name": pid, "name": f"fallback-{pid}"})()  # noqa: E501
+                fb_kwargs, _ = await _resolve_provider(db, _stub)
+                fb_provider = LiteLLMProvider(**{k: v for k, v in fb_kwargs.items() if v is not None})
+                fallback_entries_s.append(FallbackEntry(provider=fb_provider, priority=idx))
+            except Exception:
+                logger.warning("Fallback provider '%s' resolve failed, skipping", pid)
+        if fallback_entries_s:
+            framework_config.fallback_provider = FallbackChainProvider(fallback_entries_s)
+
+    # S3: ToolMiddleware — 工具执行中间件管道
+    _tool_mw_s: list[Any] = []
+    if request.config.tool_cache_enabled:
+        from ckyclaw_framework.tools.middleware import CacheMiddleware
+        _tool_mw_s.append(CacheMiddleware(ttl=request.config.tool_cache_ttl))
+    if request.config.tool_loop_guard_enabled:
+        from ckyclaw_framework.tools.middleware import LoopGuardMiddleware
+        _tool_mw_s.append(LoopGuardMiddleware(max_repeats=request.config.tool_loop_guard_max_repeats))
+    if request.config.tool_rate_limit_enabled:
+        from ckyclaw_framework.tools.middleware import RateLimitMiddleware
+        _tool_mw_s.append(RateLimitMiddleware(
+            max_calls=request.config.tool_rate_limit_max_calls,
+            window_seconds=request.config.tool_rate_limit_window,
+        ))
+    if _tool_mw_s:
+        framework_config.tool_middleware = _tool_mw_s
+
+    # S4: EventJournal — 配置后自动记录运行事件
+    if request.config.event_journal_enabled:
+        from ckyclaw_framework.events.journal import InMemoryEventJournal
+        framework_config.event_journal = InMemoryEventJournal()
+
     start_time = time.monotonic()
     run_result = None  # 用于提取 trace → token_usage_logs
 
@@ -1136,6 +1288,10 @@ async def execute_run_stream(
 
     # Trace 持久化：写入 traces/spans 表
     await _save_trace_from_processor(db, trace_processor)
+
+    # S4: EventJournal 持久化 — 将内存事件写入数据库
+    if request.config.event_journal_enabled and framework_config.event_journal is not None:
+        await _save_events_from_journal(db, framework_config.event_journal)
 
     # 更新 session
     session_record.updated_at = datetime.now(timezone.utc)

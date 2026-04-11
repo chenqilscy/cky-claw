@@ -26,6 +26,7 @@ from app.api.auth import router as auth_router
 from app.api.oauth import router as oauth_router
 from app.api.evaluations import router as evaluations_router
 from app.api.evolution import router as evolution_router
+from app.api.events import router as events_router
 from app.api.health import router as health_router
 from app.api.providers import router as providers_router
 from app.api.provider_models import router as provider_models_router
@@ -175,6 +176,7 @@ def create_app() -> FastAPI:
     app.include_router(approvals_router)
     app.include_router(evaluations_router)
     app.include_router(evolution_router)
+    app.include_router(events_router)
     app.include_router(providers_router)
     app.include_router(provider_models_router)
     app.include_router(roles_router)

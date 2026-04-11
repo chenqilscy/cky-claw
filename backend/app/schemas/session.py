@@ -88,6 +88,27 @@ class RunConfig(BaseModel):
     model_override: str | None = Field(default=None, description="覆盖 Agent 默认模型")
     max_turns: int = Field(default=10, ge=1, le=100, description="最大执行轮次")
     stream: bool = Field(default=True, description="是否流式输出")
+    memory_user_id: str | None = Field(default=None, max_length=128, description="记忆注入用户 ID。设置后自动检索并注入相关记忆到上下文。")
+
+    # S3: CircuitBreaker 配置
+    circuit_breaker_enabled: bool = Field(default=False, description="是否启用 LLM 调用熔断器")
+    cb_failure_threshold: int = Field(default=5, ge=1, le=50, description="连续失败 N 次后打开熔断器")
+    cb_recovery_timeout: float = Field(default=30.0, gt=0, le=300, description="OPEN 状态恢复超时（秒）")
+
+    # S3: FallbackChain 配置
+    fallback_provider_ids: list[str] | None = Field(default=None, description="降级 Provider ID 列表（按优先级排序）")
+
+    # S3: ToolMiddleware 配置
+    tool_cache_enabled: bool = Field(default=False, description="是否启用工具结果缓存中间件")
+    tool_cache_ttl: float = Field(default=60.0, gt=0, le=3600, description="工具缓存 TTL（秒）")
+    tool_loop_guard_enabled: bool = Field(default=False, description="是否启用循环调用检测中间件")
+    tool_loop_guard_max_repeats: int = Field(default=3, ge=1, le=20, description="循环调用最大重复次数")
+    tool_rate_limit_enabled: bool = Field(default=False, description="是否启用工具频率限制中间件")
+    tool_rate_limit_max_calls: int = Field(default=10, ge=1, le=1000, description="频率限制窗口内最大调用次数")
+    tool_rate_limit_window: float = Field(default=60.0, gt=0, le=3600, description="频率限制时间窗口（秒）")
+
+    # S4: EventJournal 配置
+    event_journal_enabled: bool = Field(default=False, description="是否启用事件日志（用于回放和审计）")
 
 
 class RunRequest(BaseModel):

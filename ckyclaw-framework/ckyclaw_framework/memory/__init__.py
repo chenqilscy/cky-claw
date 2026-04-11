@@ -2,6 +2,7 @@
 
 from ckyclaw_framework.memory.hooks import MemoryExtractionHook
 from ckyclaw_framework.memory.in_memory import InMemoryMemoryBackend
+from ckyclaw_framework.memory.injector import MemoryInjectionConfig, MemoryInjector
 from ckyclaw_framework.memory.memory import (
     DecayMode,
     MemoryBackend,
@@ -17,6 +18,8 @@ __all__ = [
     "MemoryBackend",
     "MemoryEntry",
     "MemoryExtractionHook",
+    "MemoryInjectionConfig",
+    "MemoryInjector",
     "MemoryRetriever",
     "MemoryType",
     "compute_exponential_decay",

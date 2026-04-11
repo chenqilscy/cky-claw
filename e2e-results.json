@@ -1,0 +1,2304 @@
+{
+  "config": {
+    "configFile": "E:\\QP\\maf\\frontend\\playwright.remote.config.ts",
+    "rootDir": "E:/QP/maf/frontend/e2e",
+    "forbidOnly": false,
+    "fullyParallel": true,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "E:/QP/maf/frontend/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "E:/QP/maf/frontend/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "../e2e-results.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "3way",
+    "version": "1.59.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "smoke.spec.ts",
+      "file": "smoke.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "关键页面加载",
+          "file": "smoke.spec.ts",
+          "line": 7,
+          "column": 6,
+          "specs": [
+            {
+              "title": "登录页可访问",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 3600,
+                      "error": {
+                        "message": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/login\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/login\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/login\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/login\", waiting until \"load\"\u001b[22m\n\n    at E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts:9:16",
+                        "location": {
+                          "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                          "column": 16,
+                          "line": 9
+                        },
+                        "snippet": "\u001b[0m \u001b[90m  7 |\u001b[39m test\u001b[33m.\u001b[39mdescribe(\u001b[32m'关键页面加载'\u001b[39m\u001b[33m,\u001b[39m () \u001b[33m=>\u001b[39m {\n \u001b[90m  8 |\u001b[39m   test(\u001b[32m'登录页可访问'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m  9 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/login'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 10 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'body'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m 11 |\u001b[39m     \u001b[90m// 登录页应包含登录按钮或输入框\u001b[39m\n \u001b[90m 12 |\u001b[39m     \u001b[36mconst\u001b[39m loginInput \u001b[33m=\u001b[39m page\u001b[33m.\u001b[39mlocator(\u001b[32m'input[type=\"text\"], input[type=\"email\"], input[id=\"username\"]'\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                            "column": 16,
+                            "line": 9
+                          },
+                          "message": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/login\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/login\", waiting until \"load\"\u001b[22m\n\n\n\u001b[0m \u001b[90m  7 |\u001b[39m test\u001b[33m.\u001b[39mdescribe(\u001b[32m'关键页面加载'\u001b[39m\u001b[33m,\u001b[39m () \u001b[33m=>\u001b[39m {\n \u001b[90m  8 |\u001b[39m   test(\u001b[32m'登录页可访问'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m  9 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/login'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 10 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'body'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m 11 |\u001b[39m     \u001b[90m// 登录页应包含登录按钮或输入框\u001b[39m\n \u001b[90m 12 |\u001b[39m     \u001b[36mconst\u001b[39m loginInput \u001b[33m=\u001b[39m page\u001b[33m.\u001b[39mlocator(\u001b[32m'input[type=\"text\"], input[type=\"email\"], input[id=\"username\"]'\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m\n\u001b[2m    at E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts:9:16\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-11T10:45:57.439Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "E:\\QP\\maf\\frontend\\test-results\\smoke-关键页面加载-登录页可访问-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "E:\\QP\\maf\\frontend\\test-results\\smoke-关键页面加载-登录页可访问-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                        "column": 16,
+                        "line": 9
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "4219922fea2e2bd3c691-2eda1e0c32bc615b83fd",
+              "file": "smoke.spec.ts",
+              "line": 8,
+              "column": 3
+            },
+            {
+              "title": "未认证用户重定向到登录页",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 2850,
+                      "error": {
+                        "message": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/dashboard\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/dashboard\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/dashboard\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/dashboard\", waiting until \"load\"\u001b[22m\n\n    at E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts:17:16",
+                        "location": {
+                          "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                          "column": 16,
+                          "line": 17
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 15 |\u001b[39m\n \u001b[90m 16 |\u001b[39m   test(\u001b[32m'未认证用户重定向到登录页'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 17 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/dashboard'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 18 |\u001b[39m     \u001b[90m// 应被重定向到登录页\u001b[39m\n \u001b[90m 19 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page)\u001b[33m.\u001b[39mtoHaveURL(\u001b[35m/login/\u001b[39m\u001b[33m,\u001b[39m { timeout\u001b[33m:\u001b[39m \u001b[35m10\u001b[39m_000 })\u001b[33m;\u001b[39m\n \u001b[90m 20 |\u001b[39m   })\u001b[33m;\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                            "column": 16,
+                            "line": 17
+                          },
+                          "message": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/dashboard\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/dashboard\", waiting until \"load\"\u001b[22m\n\n\n\u001b[0m \u001b[90m 15 |\u001b[39m\n \u001b[90m 16 |\u001b[39m   test(\u001b[32m'未认证用户重定向到登录页'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 17 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/dashboard'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 18 |\u001b[39m     \u001b[90m// 应被重定向到登录页\u001b[39m\n \u001b[90m 19 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page)\u001b[33m.\u001b[39mtoHaveURL(\u001b[35m/login/\u001b[39m\u001b[33m,\u001b[39m { timeout\u001b[33m:\u001b[39m \u001b[35m10\u001b[39m_000 })\u001b[33m;\u001b[39m\n \u001b[90m 20 |\u001b[39m   })\u001b[33m;\u001b[39m\u001b[0m\n\u001b[2m    at E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts:17:16\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-11T10:46:10.762Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "E:\\QP\\maf\\frontend\\test-results\\smoke-关键页面加载-未认证用户重定向到登录页-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "E:\\QP\\maf\\frontend\\test-results\\smoke-关键页面加载-未认证用户重定向到登录页-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                        "column": 16,
+                        "line": 17
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "4219922fea2e2bd3c691-1eb6105a26980ef0516c",
+              "file": "smoke.spec.ts",
+              "line": 16,
+              "column": 3
+            },
+            {
+              "title": "404 页面显示未找到提示",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 3187,
+                      "error": {
+                        "message": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/nonexistent-page-xyz\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/nonexistent-page-xyz\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/nonexistent-page-xyz\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/nonexistent-page-xyz\", waiting until \"load\"\u001b[22m\n\n    at E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts:23:16",
+                        "location": {
+                          "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                          "column": 16,
+                          "line": 23
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 21 |\u001b[39m\n \u001b[90m 22 |\u001b[39m   test(\u001b[32m'404 页面显示未找到提示'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 23 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/nonexistent-page-xyz'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 24 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page)\u001b[33m.\u001b[39mtoHaveURL(\u001b[35m/login/\u001b[39m\u001b[33m,\u001b[39m { timeout\u001b[33m:\u001b[39m \u001b[35m10\u001b[39m_000 })\u001b[33m;\u001b[39m\n \u001b[90m 25 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 26 |\u001b[39m })\u001b[33m;\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                            "column": 16,
+                            "line": 23
+                          },
+                          "message": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/nonexistent-page-xyz\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/nonexistent-page-xyz\", waiting until \"load\"\u001b[22m\n\n\n\u001b[0m \u001b[90m 21 |\u001b[39m\n \u001b[90m 22 |\u001b[39m   test(\u001b[32m'404 页面显示未找到提示'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 23 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/nonexistent-page-xyz'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 24 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page)\u001b[33m.\u001b[39mtoHaveURL(\u001b[35m/login/\u001b[39m\u001b[33m,\u001b[39m { timeout\u001b[33m:\u001b[39m \u001b[35m10\u001b[39m_000 })\u001b[33m;\u001b[39m\n \u001b[90m 25 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 26 |\u001b[39m })\u001b[33m;\u001b[39m\u001b[0m\n\u001b[2m    at E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts:23:16\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-11T10:46:27.977Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "E:\\QP\\maf\\frontend\\test-results\\smoke-关键页面加载-404-页面显示未找到提示-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "E:\\QP\\maf\\frontend\\test-results\\smoke-关键页面加载-404-页面显示未找到提示-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                        "column": 16,
+                        "line": 23
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "4219922fea2e2bd3c691-07900e1d6023f414de20",
+              "file": "smoke.spec.ts",
+              "line": 22,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "认证后页面",
+          "file": "smoke.spec.ts",
+          "line": 28,
+          "column": 6,
+          "specs": [
+            {
+              "title": "Dashboard 页面渲染标题",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 4,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 3208,
+                      "error": {
+                        "message": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/dashboard\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/dashboard\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/dashboard\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/dashboard\", waiting until \"load\"\u001b[22m\n\n    at E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts:40:16",
+                        "location": {
+                          "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                          "column": 16,
+                          "line": 40
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 38 |\u001b[39m\n \u001b[90m 39 |\u001b[39m   test(\u001b[32m'Dashboard 页面渲染标题'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 40 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/dashboard'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 41 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'#root'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible({ timeout\u001b[33m:\u001b[39m \u001b[35m10\u001b[39m_000 })\u001b[33m;\u001b[39m\n \u001b[90m 42 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 43 |\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                            "column": 16,
+                            "line": 40
+                          },
+                          "message": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/dashboard\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/dashboard\", waiting until \"load\"\u001b[22m\n\n\n\u001b[0m \u001b[90m 38 |\u001b[39m\n \u001b[90m 39 |\u001b[39m   test(\u001b[32m'Dashboard 页面渲染标题'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 40 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/dashboard'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 41 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'#root'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible({ timeout\u001b[33m:\u001b[39m \u001b[35m10\u001b[39m_000 })\u001b[33m;\u001b[39m\n \u001b[90m 42 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 43 |\u001b[39m\u001b[0m\n\u001b[2m    at E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts:40:16\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-11T10:46:46.072Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "E:\\QP\\maf\\frontend\\test-results\\smoke-认证后页面-Dashboard-页面渲染标题-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "E:\\QP\\maf\\frontend\\test-results\\smoke-认证后页面-Dashboard-页面渲染标题-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                        "column": 16,
+                        "line": 40
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "4219922fea2e2bd3c691-8974468121516b39e0d6",
+              "file": "smoke.spec.ts",
+              "line": 39,
+              "column": 3
+            },
+            {
+              "title": "Agent 列表页可加载",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 5,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 4669,
+                      "error": {
+                        "message": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/agents\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/agents\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/agents\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/agents\", waiting until \"load\"\u001b[22m\n\n    at E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts:45:16",
+                        "location": {
+                          "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                          "column": 16,
+                          "line": 45
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 43 |\u001b[39m\n \u001b[90m 44 |\u001b[39m   test(\u001b[32m'Agent 列表页可加载'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 45 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/agents'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 46 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'#root'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible({ timeout\u001b[33m:\u001b[39m \u001b[35m10\u001b[39m_000 })\u001b[33m;\u001b[39m\n \u001b[90m 47 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 48 |\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                            "column": 16,
+                            "line": 45
+                          },
+                          "message": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/agents\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/agents\", waiting until \"load\"\u001b[22m\n\n\n\u001b[0m \u001b[90m 43 |\u001b[39m\n \u001b[90m 44 |\u001b[39m   test(\u001b[32m'Agent 列表页可加载'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 45 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/agents'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 46 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'#root'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible({ timeout\u001b[33m:\u001b[39m \u001b[35m10\u001b[39m_000 })\u001b[33m;\u001b[39m\n \u001b[90m 47 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 48 |\u001b[39m\u001b[0m\n\u001b[2m    at E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts:45:16\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-11T10:46:59.680Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "E:\\QP\\maf\\frontend\\test-results\\smoke-认证后页面-Agent-列表页可加载-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "E:\\QP\\maf\\frontend\\test-results\\smoke-认证后页面-Agent-列表页可加载-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                        "column": 16,
+                        "line": 45
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "4219922fea2e2bd3c691-f51a15132303796ca6f7",
+              "file": "smoke.spec.ts",
+              "line": 44,
+              "column": 3
+            },
+            {
+              "title": "A/B 测试页可加载",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 6,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 3744,
+                      "error": {
+                        "message": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/ab-test\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/ab-test\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/ab-test\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/ab-test\", waiting until \"load\"\u001b[22m\n\n    at E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts:50:16",
+                        "location": {
+                          "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                          "column": 16,
+                          "line": 50
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 48 |\u001b[39m\n \u001b[90m 49 |\u001b[39m   test(\u001b[32m'A/B 测试页可加载'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 50 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/ab-test'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 51 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'#root'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible({ timeout\u001b[33m:\u001b[39m \u001b[35m10\u001b[39m_000 })\u001b[33m;\u001b[39m\n \u001b[90m 52 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'text=A/B'\u001b[39m)\u001b[33m.\u001b[39mfirst())\u001b[33m.\u001b[39mtoBeVisible({ timeout\u001b[33m:\u001b[39m \u001b[35m10\u001b[39m_000 })\u001b[33m;\u001b[39m\n \u001b[90m 53 |\u001b[39m   })\u001b[33m;\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                            "column": 16,
+                            "line": 50
+                          },
+                          "message": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/ab-test\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/ab-test\", waiting until \"load\"\u001b[22m\n\n\n\u001b[0m \u001b[90m 48 |\u001b[39m\n \u001b[90m 49 |\u001b[39m   test(\u001b[32m'A/B 测试页可加载'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 50 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/ab-test'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 51 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'#root'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible({ timeout\u001b[33m:\u001b[39m \u001b[35m10\u001b[39m_000 })\u001b[33m;\u001b[39m\n \u001b[90m 52 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'text=A/B'\u001b[39m)\u001b[33m.\u001b[39mfirst())\u001b[33m.\u001b[39mtoBeVisible({ timeout\u001b[33m:\u001b[39m \u001b[35m10\u001b[39m_000 })\u001b[33m;\u001b[39m\n \u001b[90m 53 |\u001b[39m   })\u001b[33m;\u001b[39m\u001b[0m\n\u001b[2m    at E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts:50:16\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-11T10:47:21.414Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "E:\\QP\\maf\\frontend\\test-results\\smoke-认证后页面-A-B-测试页可加载-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "E:\\QP\\maf\\frontend\\test-results\\smoke-认证后页面-A-B-测试页可加载-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                        "column": 16,
+                        "line": 50
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "4219922fea2e2bd3c691-da1665dd1405c11e756f",
+              "file": "smoke.spec.ts",
+              "line": 49,
+              "column": 3
+            },
+            {
+              "title": "Traces 页可加载",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 7,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 2872,
+                      "error": {
+                        "message": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/traces\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/traces\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/traces\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/traces\", waiting until \"load\"\u001b[22m\n\n    at E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts:56:16",
+                        "location": {
+                          "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                          "column": 16,
+                          "line": 56
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 54 |\u001b[39m\n \u001b[90m 55 |\u001b[39m   test(\u001b[32m'Traces 页可加载'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 56 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/traces'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 57 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'#root'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible({ timeout\u001b[33m:\u001b[39m \u001b[35m10\u001b[39m_000 })\u001b[33m;\u001b[39m\n \u001b[90m 58 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 59 |\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                            "column": 16,
+                            "line": 56
+                          },
+                          "message": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/traces\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/traces\", waiting until \"load\"\u001b[22m\n\n\n\u001b[0m \u001b[90m 54 |\u001b[39m\n \u001b[90m 55 |\u001b[39m   test(\u001b[32m'Traces 页可加载'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 56 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/traces'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 57 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'#root'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible({ timeout\u001b[33m:\u001b[39m \u001b[35m10\u001b[39m_000 })\u001b[33m;\u001b[39m\n \u001b[90m 58 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 59 |\u001b[39m\u001b[0m\n\u001b[2m    at E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts:56:16\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-11T10:47:40.814Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "E:\\QP\\maf\\frontend\\test-results\\smoke-认证后页面-Traces-页可加载-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "E:\\QP\\maf\\frontend\\test-results\\smoke-认证后页面-Traces-页可加载-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                        "column": 16,
+                        "line": 56
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "4219922fea2e2bd3c691-632db686a9c8846c0718",
+              "file": "smoke.spec.ts",
+              "line": 55,
+              "column": 3
+            },
+            {
+              "title": "Chat 对话页可加载",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 8,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 3530,
+                      "error": {
+                        "message": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/chat\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/chat\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/chat\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/chat\", waiting until \"load\"\u001b[22m\n\n    at E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts:61:16",
+                        "location": {
+                          "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                          "column": 16,
+                          "line": 61
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 59 |\u001b[39m\n \u001b[90m 60 |\u001b[39m   test(\u001b[32m'Chat 对话页可加载'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 61 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/chat'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 62 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'#root'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible({ timeout\u001b[33m:\u001b[39m \u001b[35m10\u001b[39m_000 })\u001b[33m;\u001b[39m\n \u001b[90m 63 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 64 |\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                            "column": 16,
+                            "line": 61
+                          },
+                          "message": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/chat\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/chat\", waiting until \"load\"\u001b[22m\n\n\n\u001b[0m \u001b[90m 59 |\u001b[39m\n \u001b[90m 60 |\u001b[39m   test(\u001b[32m'Chat 对话页可加载'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 61 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/chat'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 62 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'#root'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible({ timeout\u001b[33m:\u001b[39m \u001b[35m10\u001b[39m_000 })\u001b[33m;\u001b[39m\n \u001b[90m 63 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 64 |\u001b[39m\u001b[0m\n\u001b[2m    at E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts:61:16\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-11T10:47:53.292Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "E:\\QP\\maf\\frontend\\test-results\\smoke-认证后页面-Chat-对话页可加载-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "E:\\QP\\maf\\frontend\\test-results\\smoke-认证后页面-Chat-对话页可加载-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                        "column": 16,
+                        "line": 61
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "4219922fea2e2bd3c691-7fc8fc607f7e3f4c0499",
+              "file": "smoke.spec.ts",
+              "line": 60,
+              "column": 3
+            },
+            {
+              "title": "Runs 运行列表页可加载",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 9,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 15947,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator:  locator('#root')\nExpected: visible\nReceived: hidden\nTimeout:  10000ms\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 10000ms\u001b[22m\n\u001b[2m  - waiting for locator('#root')\u001b[22m\n\u001b[2m    12 × locator resolved to <div id=\"root\"></div>\u001b[22m\n\u001b[2m       - unexpected value \"hidden\"\u001b[22m\n",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator:  locator('#root')\nExpected: visible\nReceived: hidden\nTimeout:  10000ms\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 10000ms\u001b[22m\n\u001b[2m  - waiting for locator('#root')\u001b[22m\n\u001b[2m    12 × locator resolved to <div id=\"root\"></div>\u001b[22m\n\u001b[2m       - unexpected value \"hidden\"\u001b[22m\n\n    at E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts:67:41",
+                        "location": {
+                          "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                          "column": 41,
+                          "line": 67
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 65 |\u001b[39m   test(\u001b[32m'Runs 运行列表页可加载'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n \u001b[90m 66 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/runs'\u001b[39m)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 67 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'#root'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible({ timeout\u001b[33m:\u001b[39m \u001b[35m10\u001b[39m_000 })\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                                         \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 68 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 69 |\u001b[39m\n \u001b[90m 70 |\u001b[39m   test(\u001b[32m'Providers 模型提供商页可加载'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                            "column": 41,
+                            "line": 67
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator:  locator('#root')\nExpected: visible\nReceived: hidden\nTimeout:  10000ms\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 10000ms\u001b[22m\n\u001b[2m  - waiting for locator('#root')\u001b[22m\n\u001b[2m    12 × locator resolved to <div id=\"root\"></div>\u001b[22m\n\u001b[2m       - unexpected value \"hidden\"\u001b[22m\n\n\n\u001b[0m \u001b[90m 65 |\u001b[39m   test(\u001b[32m'Runs 运行列表页可加载'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n \u001b[90m 66 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/runs'\u001b[39m)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 67 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'#root'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible({ timeout\u001b[33m:\u001b[39m \u001b[35m10\u001b[39m_000 })\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                                         \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 68 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 69 |\u001b[39m\n \u001b[90m 70 |\u001b[39m   test(\u001b[32m'Providers 模型提供商页可加载'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\u001b[0m\n\u001b[2m    at E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts:67:41\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-11T10:48:11.655Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "E:\\QP\\maf\\frontend\\test-results\\smoke-认证后页面-Runs-运行列表页可加载-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "E:\\QP\\maf\\frontend\\test-results\\smoke-认证后页面-Runs-运行列表页可加载-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                        "column": 41,
+                        "line": 67
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "4219922fea2e2bd3c691-86d2de5a1263df1bd2a3",
+              "file": "smoke.spec.ts",
+              "line": 65,
+              "column": 3
+            },
+            {
+              "title": "Providers 模型提供商页可加载",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 10,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 2917,
+                      "error": {
+                        "message": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/providers\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/providers\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/providers\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/providers\", waiting until \"load\"\u001b[22m\n\n    at E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts:71:16",
+                        "location": {
+                          "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                          "column": 16,
+                          "line": 71
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 69 |\u001b[39m\n \u001b[90m 70 |\u001b[39m   test(\u001b[32m'Providers 模型提供商页可加载'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 71 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/providers'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 72 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'#root'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible({ timeout\u001b[33m:\u001b[39m \u001b[35m10\u001b[39m_000 })\u001b[33m;\u001b[39m\n \u001b[90m 73 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 74 |\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                            "column": 16,
+                            "line": 71
+                          },
+                          "message": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/providers\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/providers\", waiting until \"load\"\u001b[22m\n\n\n\u001b[0m \u001b[90m 69 |\u001b[39m\n \u001b[90m 70 |\u001b[39m   test(\u001b[32m'Providers 模型提供商页可加载'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 71 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/providers'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 72 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'#root'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible({ timeout\u001b[33m:\u001b[39m \u001b[35m10\u001b[39m_000 })\u001b[33m;\u001b[39m\n \u001b[90m 73 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 74 |\u001b[39m\u001b[0m\n\u001b[2m    at E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts:71:16\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-11T10:49:23.842Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "E:\\QP\\maf\\frontend\\test-results\\smoke-认证后页面-Providers-模型提供商页可加载-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "E:\\QP\\maf\\frontend\\test-results\\smoke-认证后页面-Providers-模型提供商页可加载-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                        "column": 16,
+                        "line": 71
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "4219922fea2e2bd3c691-826082b666582b52c50d",
+              "file": "smoke.spec.ts",
+              "line": 70,
+              "column": 3
+            },
+            {
+              "title": "Guardrails 护栏页可加载",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 11,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 3194,
+                      "error": {
+                        "message": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/guardrails\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/guardrails\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/guardrails\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/guardrails\", waiting until \"load\"\u001b[22m\n\n    at E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts:76:16",
+                        "location": {
+                          "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                          "column": 16,
+                          "line": 76
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 74 |\u001b[39m\n \u001b[90m 75 |\u001b[39m   test(\u001b[32m'Guardrails 护栏页可加载'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 76 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/guardrails'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 77 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'#root'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible({ timeout\u001b[33m:\u001b[39m \u001b[35m10\u001b[39m_000 })\u001b[33m;\u001b[39m\n \u001b[90m 78 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 79 |\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                            "column": 16,
+                            "line": 76
+                          },
+                          "message": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/guardrails\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/guardrails\", waiting until \"load\"\u001b[22m\n\n\n\u001b[0m \u001b[90m 74 |\u001b[39m\n \u001b[90m 75 |\u001b[39m   test(\u001b[32m'Guardrails 护栏页可加载'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 76 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/guardrails'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 77 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'#root'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible({ timeout\u001b[33m:\u001b[39m \u001b[35m10\u001b[39m_000 })\u001b[33m;\u001b[39m\n \u001b[90m 78 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 79 |\u001b[39m\u001b[0m\n\u001b[2m    at E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts:76:16\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-11T10:49:48.107Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "E:\\QP\\maf\\frontend\\test-results\\smoke-认证后页面-Guardrails-护栏页可加载-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "E:\\QP\\maf\\frontend\\test-results\\smoke-认证后页面-Guardrails-护栏页可加载-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                        "column": 16,
+                        "line": 76
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "4219922fea2e2bd3c691-fbb7a78fab6338734598",
+              "file": "smoke.spec.ts",
+              "line": 75,
+              "column": 3
+            },
+            {
+              "title": "Approvals 审批页可加载",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 12,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 4093,
+                      "error": {
+                        "message": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/approvals\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/approvals\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/approvals\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/approvals\", waiting until \"load\"\u001b[22m\n\n    at E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts:81:16",
+                        "location": {
+                          "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                          "column": 16,
+                          "line": 81
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 79 |\u001b[39m\n \u001b[90m 80 |\u001b[39m   test(\u001b[32m'Approvals 审批页可加载'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 81 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/approvals'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 82 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'#root'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible({ timeout\u001b[33m:\u001b[39m \u001b[35m10\u001b[39m_000 })\u001b[33m;\u001b[39m\n \u001b[90m 83 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 84 |\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                            "column": 16,
+                            "line": 81
+                          },
+                          "message": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/approvals\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/approvals\", waiting until \"load\"\u001b[22m\n\n\n\u001b[0m \u001b[90m 79 |\u001b[39m\n \u001b[90m 80 |\u001b[39m   test(\u001b[32m'Approvals 审批页可加载'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 81 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/approvals'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 82 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'#root'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible({ timeout\u001b[33m:\u001b[39m \u001b[35m10\u001b[39m_000 })\u001b[33m;\u001b[39m\n \u001b[90m 83 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 84 |\u001b[39m\u001b[0m\n\u001b[2m    at E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts:81:16\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-11T10:50:06.342Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "E:\\QP\\maf\\frontend\\test-results\\smoke-认证后页面-Approvals-审批页可加载-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "E:\\QP\\maf\\frontend\\test-results\\smoke-认证后页面-Approvals-审批页可加载-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                        "column": 16,
+                        "line": 81
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "4219922fea2e2bd3c691-ef5d24d4afe514802ef5",
+              "file": "smoke.spec.ts",
+              "line": 80,
+              "column": 3
+            },
+            {
+              "title": "MCP Servers 页可加载",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 13,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 2859,
+                      "error": {
+                        "message": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/mcp-servers\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/mcp-servers\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/mcp-servers\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/mcp-servers\", waiting until \"load\"\u001b[22m\n\n    at E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts:86:16",
+                        "location": {
+                          "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                          "column": 16,
+                          "line": 86
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 84 |\u001b[39m\n \u001b[90m 85 |\u001b[39m   test(\u001b[32m'MCP Servers 页可加载'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 86 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/mcp-servers'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 87 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'#root'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible({ timeout\u001b[33m:\u001b[39m \u001b[35m10\u001b[39m_000 })\u001b[33m;\u001b[39m\n \u001b[90m 88 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 89 |\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                            "column": 16,
+                            "line": 86
+                          },
+                          "message": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/mcp-servers\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/mcp-servers\", waiting until \"load\"\u001b[22m\n\n\n\u001b[0m \u001b[90m 84 |\u001b[39m\n \u001b[90m 85 |\u001b[39m   test(\u001b[32m'MCP Servers 页可加载'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 86 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/mcp-servers'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 87 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'#root'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible({ timeout\u001b[33m:\u001b[39m \u001b[35m10\u001b[39m_000 })\u001b[33m;\u001b[39m\n \u001b[90m 88 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 89 |\u001b[39m\u001b[0m\n\u001b[2m    at E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts:86:16\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-11T10:50:24.102Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "E:\\QP\\maf\\frontend\\test-results\\smoke-认证后页面-MCP-Servers-页可加载-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "E:\\QP\\maf\\frontend\\test-results\\smoke-认证后页面-MCP-Servers-页可加载-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                        "column": 16,
+                        "line": 86
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "4219922fea2e2bd3c691-29dc0a35e49357d87ceb",
+              "file": "smoke.spec.ts",
+              "line": 85,
+              "column": 3
+            },
+            {
+              "title": "Tool Groups 工具组页可加载",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 14,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 3078,
+                      "error": {
+                        "message": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/tool-groups\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/tool-groups\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/tool-groups\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/tool-groups\", waiting until \"load\"\u001b[22m\n\n    at E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts:91:16",
+                        "location": {
+                          "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                          "column": 16,
+                          "line": 91
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 89 |\u001b[39m\n \u001b[90m 90 |\u001b[39m   test(\u001b[32m'Tool Groups 工具组页可加载'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 91 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/tool-groups'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 92 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'#root'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible({ timeout\u001b[33m:\u001b[39m \u001b[35m10\u001b[39m_000 })\u001b[33m;\u001b[39m\n \u001b[90m 93 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 94 |\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                            "column": 16,
+                            "line": 91
+                          },
+                          "message": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/tool-groups\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/tool-groups\", waiting until \"load\"\u001b[22m\n\n\n\u001b[0m \u001b[90m 89 |\u001b[39m\n \u001b[90m 90 |\u001b[39m   test(\u001b[32m'Tool Groups 工具组页可加载'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 91 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/tool-groups'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 92 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'#root'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible({ timeout\u001b[33m:\u001b[39m \u001b[35m10\u001b[39m_000 })\u001b[33m;\u001b[39m\n \u001b[90m 93 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 94 |\u001b[39m\u001b[0m\n\u001b[2m    at E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts:91:16\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-11T10:50:37.264Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "E:\\QP\\maf\\frontend\\test-results\\smoke-认证后页面-Tool-Groups-工具组页可加载-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "E:\\QP\\maf\\frontend\\test-results\\smoke-认证后页面-Tool-Groups-工具组页可加载-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                        "column": 16,
+                        "line": 91
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "4219922fea2e2bd3c691-6f4dd7bfaa2421532211",
+              "file": "smoke.spec.ts",
+              "line": 90,
+              "column": 3
+            },
+            {
+              "title": "Memories 记忆页可加载",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 15,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 3376,
+                      "error": {
+                        "message": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/memories\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/memories\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/memories\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/memories\", waiting until \"load\"\u001b[22m\n\n    at E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts:96:16",
+                        "location": {
+                          "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                          "column": 16,
+                          "line": 96
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 94 |\u001b[39m\n \u001b[90m 95 |\u001b[39m   test(\u001b[32m'Memories 记忆页可加载'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 96 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/memories'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 97 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'#root'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible({ timeout\u001b[33m:\u001b[39m \u001b[35m10\u001b[39m_000 })\u001b[33m;\u001b[39m\n \u001b[90m 98 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 99 |\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                            "column": 16,
+                            "line": 96
+                          },
+                          "message": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/memories\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/memories\", waiting until \"load\"\u001b[22m\n\n\n\u001b[0m \u001b[90m 94 |\u001b[39m\n \u001b[90m 95 |\u001b[39m   test(\u001b[32m'Memories 记忆页可加载'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 96 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/memories'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 97 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'#root'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible({ timeout\u001b[33m:\u001b[39m \u001b[35m10\u001b[39m_000 })\u001b[33m;\u001b[39m\n \u001b[90m 98 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 99 |\u001b[39m\u001b[0m\n\u001b[2m    at E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts:96:16\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-11T10:50:59.110Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "E:\\QP\\maf\\frontend\\test-results\\smoke-认证后页面-Memories-记忆页可加载-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "E:\\QP\\maf\\frontend\\test-results\\smoke-认证后页面-Memories-记忆页可加载-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                        "column": 16,
+                        "line": 96
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "4219922fea2e2bd3c691-93c2c183290e5f3f7348",
+              "file": "smoke.spec.ts",
+              "line": 95,
+              "column": 3
+            },
+            {
+              "title": "Skills 技能页可加载",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 16,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 3873,
+                      "error": {
+                        "message": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/skills\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/skills\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/skills\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/skills\", waiting until \"load\"\u001b[22m\n\n    at E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts:101:16",
+                        "location": {
+                          "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                          "column": 16,
+                          "line": 101
+                        },
+                        "snippet": "\u001b[0m \u001b[90m  99 |\u001b[39m\n \u001b[90m 100 |\u001b[39m   test(\u001b[32m'Skills 技能页可加载'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 101 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/skills'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 102 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'#root'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible({ timeout\u001b[33m:\u001b[39m \u001b[35m10\u001b[39m_000 })\u001b[33m;\u001b[39m\n \u001b[90m 103 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 104 |\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                            "column": 16,
+                            "line": 101
+                          },
+                          "message": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/skills\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/skills\", waiting until \"load\"\u001b[22m\n\n\n\u001b[0m \u001b[90m  99 |\u001b[39m\n \u001b[90m 100 |\u001b[39m   test(\u001b[32m'Skills 技能页可加载'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 101 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/skills'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 102 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'#root'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible({ timeout\u001b[33m:\u001b[39m \u001b[35m10\u001b[39m_000 })\u001b[33m;\u001b[39m\n \u001b[90m 103 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 104 |\u001b[39m\u001b[0m\n\u001b[2m    at E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts:101:16\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-11T10:51:19.522Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "E:\\QP\\maf\\frontend\\test-results\\smoke-认证后页面-Skills-技能页可加载-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "E:\\QP\\maf\\frontend\\test-results\\smoke-认证后页面-Skills-技能页可加载-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                        "column": 16,
+                        "line": 101
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "4219922fea2e2bd3c691-eaa1ba1b60fe6c6b5488",
+              "file": "smoke.spec.ts",
+              "line": 100,
+              "column": 3
+            },
+            {
+              "title": "Templates 模板页可加载",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 17,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 2900,
+                      "error": {
+                        "message": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/templates\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/templates\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/templates\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/templates\", waiting until \"load\"\u001b[22m\n\n    at E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts:106:16",
+                        "location": {
+                          "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                          "column": 16,
+                          "line": 106
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 104 |\u001b[39m\n \u001b[90m 105 |\u001b[39m   test(\u001b[32m'Templates 模板页可加载'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 106 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/templates'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 107 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'#root'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible({ timeout\u001b[33m:\u001b[39m \u001b[35m10\u001b[39m_000 })\u001b[33m;\u001b[39m\n \u001b[90m 108 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 109 |\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                            "column": 16,
+                            "line": 106
+                          },
+                          "message": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/templates\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/templates\", waiting until \"load\"\u001b[22m\n\n\n\u001b[0m \u001b[90m 104 |\u001b[39m\n \u001b[90m 105 |\u001b[39m   test(\u001b[32m'Templates 模板页可加载'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 106 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/templates'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 107 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'#root'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible({ timeout\u001b[33m:\u001b[39m \u001b[35m10\u001b[39m_000 })\u001b[33m;\u001b[39m\n \u001b[90m 108 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 109 |\u001b[39m\u001b[0m\n\u001b[2m    at E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts:106:16\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-11T10:52:02.145Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "E:\\QP\\maf\\frontend\\test-results\\smoke-认证后页面-Templates-模板页可加载-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "E:\\QP\\maf\\frontend\\test-results\\smoke-认证后页面-Templates-模板页可加载-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                        "column": 16,
+                        "line": 106
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "4219922fea2e2bd3c691-d377c551ccd1a4f3c35f",
+              "file": "smoke.spec.ts",
+              "line": 105,
+              "column": 3
+            },
+            {
+              "title": "Workflows 工作流页可加载",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 18,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 4511,
+                      "error": {
+                        "message": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/workflows\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/workflows\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/workflows\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/workflows\", waiting until \"load\"\u001b[22m\n\n    at E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts:111:16",
+                        "location": {
+                          "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                          "column": 16,
+                          "line": 111
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 109 |\u001b[39m\n \u001b[90m 110 |\u001b[39m   test(\u001b[32m'Workflows 工作流页可加载'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 111 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/workflows'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 112 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'#root'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible({ timeout\u001b[33m:\u001b[39m \u001b[35m10\u001b[39m_000 })\u001b[33m;\u001b[39m\n \u001b[90m 113 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 114 |\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                            "column": 16,
+                            "line": 111
+                          },
+                          "message": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/workflows\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/workflows\", waiting until \"load\"\u001b[22m\n\n\n\u001b[0m \u001b[90m 109 |\u001b[39m\n \u001b[90m 110 |\u001b[39m   test(\u001b[32m'Workflows 工作流页可加载'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 111 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/workflows'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 112 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'#root'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible({ timeout\u001b[33m:\u001b[39m \u001b[35m10\u001b[39m_000 })\u001b[33m;\u001b[39m\n \u001b[90m 113 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 114 |\u001b[39m\u001b[0m\n\u001b[2m    at E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts:111:16\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-11T10:52:15.944Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "E:\\QP\\maf\\frontend\\test-results\\smoke-认证后页面-Workflows-工作流页可加载-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "E:\\QP\\maf\\frontend\\test-results\\smoke-认证后页面-Workflows-工作流页可加载-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                        "column": 16,
+                        "line": 111
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "4219922fea2e2bd3c691-a249a82a0aa25d42b3cd",
+              "file": "smoke.spec.ts",
+              "line": 110,
+              "column": 3
+            },
+            {
+              "title": "Teams 团队页可加载",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 19,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 2611,
+                      "error": {
+                        "message": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/teams\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/teams\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/teams\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/teams\", waiting until \"load\"\u001b[22m\n\n    at E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts:116:16",
+                        "location": {
+                          "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                          "column": 16,
+                          "line": 116
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 114 |\u001b[39m\n \u001b[90m 115 |\u001b[39m   test(\u001b[32m'Teams 团队页可加载'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 116 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/teams'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 117 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'#root'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible({ timeout\u001b[33m:\u001b[39m \u001b[35m10\u001b[39m_000 })\u001b[33m;\u001b[39m\n \u001b[90m 118 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 119 |\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                            "column": 16,
+                            "line": 116
+                          },
+                          "message": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/teams\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/teams\", waiting until \"load\"\u001b[22m\n\n\n\u001b[0m \u001b[90m 114 |\u001b[39m\n \u001b[90m 115 |\u001b[39m   test(\u001b[32m'Teams 团队页可加载'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 116 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/teams'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 117 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'#root'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible({ timeout\u001b[33m:\u001b[39m \u001b[35m10\u001b[39m_000 })\u001b[33m;\u001b[39m\n \u001b[90m 118 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 119 |\u001b[39m\u001b[0m\n\u001b[2m    at E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts:116:16\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-11T10:53:03.935Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "E:\\QP\\maf\\frontend\\test-results\\smoke-认证后页面-Teams-团队页可加载-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "E:\\QP\\maf\\frontend\\test-results\\smoke-认证后页面-Teams-团队页可加载-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                        "column": 16,
+                        "line": 116
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "4219922fea2e2bd3c691-3212d204ac8d58e98ed3",
+              "file": "smoke.spec.ts",
+              "line": 115,
+              "column": 3
+            },
+            {
+              "title": "Audit Logs 审计日志页可加载",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 20,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 2970,
+                      "error": {
+                        "message": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/audit-logs\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/audit-logs\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/audit-logs\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/audit-logs\", waiting until \"load\"\u001b[22m\n\n    at E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts:121:16",
+                        "location": {
+                          "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                          "column": 16,
+                          "line": 121
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 119 |\u001b[39m\n \u001b[90m 120 |\u001b[39m   test(\u001b[32m'Audit Logs 审计日志页可加载'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 121 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/audit-logs'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 122 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'#root'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible({ timeout\u001b[33m:\u001b[39m \u001b[35m10\u001b[39m_000 })\u001b[33m;\u001b[39m\n \u001b[90m 123 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 124 |\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                            "column": 16,
+                            "line": 121
+                          },
+                          "message": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/audit-logs\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/audit-logs\", waiting until \"load\"\u001b[22m\n\n\n\u001b[0m \u001b[90m 119 |\u001b[39m\n \u001b[90m 120 |\u001b[39m   test(\u001b[32m'Audit Logs 审计日志页可加载'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 121 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/audit-logs'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 122 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'#root'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible({ timeout\u001b[33m:\u001b[39m \u001b[35m10\u001b[39m_000 })\u001b[33m;\u001b[39m\n \u001b[90m 123 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 124 |\u001b[39m\u001b[0m\n\u001b[2m    at E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts:121:16\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-11T10:53:45.807Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "E:\\QP\\maf\\frontend\\test-results\\smoke-认证后页面-Audit-Logs-审计日志页可加载-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "E:\\QP\\maf\\frontend\\test-results\\smoke-认证后页面-Audit-Logs-审计日志页可加载-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                        "column": 16,
+                        "line": 121
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "4219922fea2e2bd3c691-2ea32a21304e010b17cc",
+              "file": "smoke.spec.ts",
+              "line": 120,
+              "column": 3
+            },
+            {
+              "title": "Roles 角色管理页可加载",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 21,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 2748,
+                      "error": {
+                        "message": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/roles\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/roles\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/roles\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/roles\", waiting until \"load\"\u001b[22m\n\n    at E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts:126:16",
+                        "location": {
+                          "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                          "column": 16,
+                          "line": 126
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 124 |\u001b[39m\n \u001b[90m 125 |\u001b[39m   test(\u001b[32m'Roles 角色管理页可加载'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 126 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/roles'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 127 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'#root'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible({ timeout\u001b[33m:\u001b[39m \u001b[35m10\u001b[39m_000 })\u001b[33m;\u001b[39m\n \u001b[90m 128 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 129 |\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                            "column": 16,
+                            "line": 126
+                          },
+                          "message": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/roles\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/roles\", waiting until \"load\"\u001b[22m\n\n\n\u001b[0m \u001b[90m 124 |\u001b[39m\n \u001b[90m 125 |\u001b[39m   test(\u001b[32m'Roles 角色管理页可加载'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 126 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/roles'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 127 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'#root'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible({ timeout\u001b[33m:\u001b[39m \u001b[35m10\u001b[39m_000 })\u001b[33m;\u001b[39m\n \u001b[90m 128 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 129 |\u001b[39m\u001b[0m\n\u001b[2m    at E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts:126:16\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-11T10:54:09.605Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "E:\\QP\\maf\\frontend\\test-results\\smoke-认证后页面-Roles-角色管理页可加载-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "E:\\QP\\maf\\frontend\\test-results\\smoke-认证后页面-Roles-角色管理页可加载-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                        "column": 16,
+                        "line": 126
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "4219922fea2e2bd3c691-73bb0a149e5ed3af43b0",
+              "file": "smoke.spec.ts",
+              "line": 125,
+              "column": 3
+            },
+            {
+              "title": "IM Channels 渠道页可加载",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 22,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 2993,
+                      "error": {
+                        "message": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/im-channels\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/im-channels\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/im-channels\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/im-channels\", waiting until \"load\"\u001b[22m\n\n    at E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts:131:16",
+                        "location": {
+                          "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                          "column": 16,
+                          "line": 131
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 129 |\u001b[39m\n \u001b[90m 130 |\u001b[39m   test(\u001b[32m'IM Channels 渠道页可加载'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 131 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/im-channels'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 132 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'#root'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible({ timeout\u001b[33m:\u001b[39m \u001b[35m10\u001b[39m_000 })\u001b[33m;\u001b[39m\n \u001b[90m 133 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 134 |\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                            "column": 16,
+                            "line": 131
+                          },
+                          "message": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/im-channels\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/im-channels\", waiting until \"load\"\u001b[22m\n\n\n\u001b[0m \u001b[90m 129 |\u001b[39m\n \u001b[90m 130 |\u001b[39m   test(\u001b[32m'IM Channels 渠道页可加载'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 131 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/im-channels'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 132 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'#root'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible({ timeout\u001b[33m:\u001b[39m \u001b[35m10\u001b[39m_000 })\u001b[33m;\u001b[39m\n \u001b[90m 133 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 134 |\u001b[39m\u001b[0m\n\u001b[2m    at E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts:131:16\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-11T10:54:26.921Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "E:\\QP\\maf\\frontend\\test-results\\smoke-认证后页面-IM-Channels-渠道页可加载-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "E:\\QP\\maf\\frontend\\test-results\\smoke-认证后页面-IM-Channels-渠道页可加载-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                        "column": 16,
+                        "line": 131
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "4219922fea2e2bd3c691-f0479f8ce27e39d854cf",
+              "file": "smoke.spec.ts",
+              "line": 130,
+              "column": 3
+            },
+            {
+              "title": "Evaluations 评估页可加载",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 23,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 3310,
+                      "error": {
+                        "message": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/evaluations\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/evaluations\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/evaluations\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/evaluations\", waiting until \"load\"\u001b[22m\n\n    at E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts:136:16",
+                        "location": {
+                          "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                          "column": 16,
+                          "line": 136
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 134 |\u001b[39m\n \u001b[90m 135 |\u001b[39m   test(\u001b[32m'Evaluations 评估页可加载'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 136 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/evaluations'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 137 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'#root'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible({ timeout\u001b[33m:\u001b[39m \u001b[35m10\u001b[39m_000 })\u001b[33m;\u001b[39m\n \u001b[90m 138 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 139 |\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                            "column": 16,
+                            "line": 136
+                          },
+                          "message": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/evaluations\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/evaluations\", waiting until \"load\"\u001b[22m\n\n\n\u001b[0m \u001b[90m 134 |\u001b[39m\n \u001b[90m 135 |\u001b[39m   test(\u001b[32m'Evaluations 评估页可加载'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 136 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/evaluations'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 137 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'#root'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible({ timeout\u001b[33m:\u001b[39m \u001b[35m10\u001b[39m_000 })\u001b[33m;\u001b[39m\n \u001b[90m 138 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 139 |\u001b[39m\u001b[0m\n\u001b[2m    at E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts:136:16\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-11T10:54:53.620Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "E:\\QP\\maf\\frontend\\test-results\\smoke-认证后页面-Evaluations-评估页可加载-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "E:\\QP\\maf\\frontend\\test-results\\smoke-认证后页面-Evaluations-评估页可加载-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                        "column": 16,
+                        "line": 136
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "4219922fea2e2bd3c691-ecae1019bc3f94a473d7",
+              "file": "smoke.spec.ts",
+              "line": 135,
+              "column": 3
+            },
+            {
+              "title": "Evolution 进化页可加载",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 24,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 3525,
+                      "error": {
+                        "message": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/evolution\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/evolution\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/evolution\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/evolution\", waiting until \"load\"\u001b[22m\n\n    at E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts:141:16",
+                        "location": {
+                          "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                          "column": 16,
+                          "line": 141
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 139 |\u001b[39m\n \u001b[90m 140 |\u001b[39m   test(\u001b[32m'Evolution 进化页可加载'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 141 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/evolution'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 142 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'#root'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible({ timeout\u001b[33m:\u001b[39m \u001b[35m10\u001b[39m_000 })\u001b[33m;\u001b[39m\n \u001b[90m 143 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 144 |\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                            "column": 16,
+                            "line": 141
+                          },
+                          "message": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/evolution\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/evolution\", waiting until \"load\"\u001b[22m\n\n\n\u001b[0m \u001b[90m 139 |\u001b[39m\n \u001b[90m 140 |\u001b[39m   test(\u001b[32m'Evolution 进化页可加载'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 141 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/evolution'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 142 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'#root'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible({ timeout\u001b[33m:\u001b[39m \u001b[35m10\u001b[39m_000 })\u001b[33m;\u001b[39m\n \u001b[90m 143 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 144 |\u001b[39m\u001b[0m\n\u001b[2m    at E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts:141:16\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-11T10:55:05.378Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "E:\\QP\\maf\\frontend\\test-results\\smoke-认证后页面-Evolution-进化页可加载-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "E:\\QP\\maf\\frontend\\test-results\\smoke-认证后页面-Evolution-进化页可加载-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                        "column": 16,
+                        "line": 141
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "4219922fea2e2bd3c691-afc2797874df844ce026",
+              "file": "smoke.spec.ts",
+              "line": 140,
+              "column": 3
+            },
+            {
+              "title": "Organizations 组织页可加载",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 25,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 3304,
+                      "error": {
+                        "message": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/organizations\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/organizations\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/organizations\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/organizations\", waiting until \"load\"\u001b[22m\n\n    at E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts:146:16",
+                        "location": {
+                          "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                          "column": 16,
+                          "line": 146
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 144 |\u001b[39m\n \u001b[90m 145 |\u001b[39m   test(\u001b[32m'Organizations 组织页可加载'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 146 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/organizations'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 147 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'#root'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible({ timeout\u001b[33m:\u001b[39m \u001b[35m10\u001b[39m_000 })\u001b[33m;\u001b[39m\n \u001b[90m 148 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 149 |\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                            "column": 16,
+                            "line": 146
+                          },
+                          "message": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/organizations\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/organizations\", waiting until \"load\"\u001b[22m\n\n\n\u001b[0m \u001b[90m 144 |\u001b[39m\n \u001b[90m 145 |\u001b[39m   test(\u001b[32m'Organizations 组织页可加载'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 146 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/organizations'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 147 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'#root'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible({ timeout\u001b[33m:\u001b[39m \u001b[35m10\u001b[39m_000 })\u001b[33m;\u001b[39m\n \u001b[90m 148 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 149 |\u001b[39m\u001b[0m\n\u001b[2m    at E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts:146:16\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-11T10:55:16.002Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "E:\\QP\\maf\\frontend\\test-results\\smoke-认证后页面-Organizations-组织页可加载-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "E:\\QP\\maf\\frontend\\test-results\\smoke-认证后页面-Organizations-组织页可加载-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                        "column": 16,
+                        "line": 146
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "4219922fea2e2bd3c691-bb925c510600a0762eb9",
+              "file": "smoke.spec.ts",
+              "line": 145,
+              "column": 3
+            },
+            {
+              "title": "Scheduled Tasks 定时任务页可加载",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 26,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 3030,
+                      "error": {
+                        "message": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/scheduled-tasks\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/scheduled-tasks\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/scheduled-tasks\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/scheduled-tasks\", waiting until \"load\"\u001b[22m\n\n    at E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts:151:16",
+                        "location": {
+                          "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                          "column": 16,
+                          "line": 151
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 149 |\u001b[39m\n \u001b[90m 150 |\u001b[39m   test(\u001b[32m'Scheduled Tasks 定时任务页可加载'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 151 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/scheduled-tasks'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 152 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'#root'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible({ timeout\u001b[33m:\u001b[39m \u001b[35m10\u001b[39m_000 })\u001b[33m;\u001b[39m\n \u001b[90m 153 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 154 |\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                            "column": 16,
+                            "line": 151
+                          },
+                          "message": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/scheduled-tasks\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/scheduled-tasks\", waiting until \"load\"\u001b[22m\n\n\n\u001b[0m \u001b[90m 149 |\u001b[39m\n \u001b[90m 150 |\u001b[39m   test(\u001b[32m'Scheduled Tasks 定时任务页可加载'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 151 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/scheduled-tasks'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 152 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'#root'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible({ timeout\u001b[33m:\u001b[39m \u001b[35m10\u001b[39m_000 })\u001b[33m;\u001b[39m\n \u001b[90m 153 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 154 |\u001b[39m\u001b[0m\n\u001b[2m    at E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts:151:16\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-11T10:55:39.300Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "E:\\QP\\maf\\frontend\\test-results\\smoke-认证后页面-Scheduled-Tasks-定时任务页可加载-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "E:\\QP\\maf\\frontend\\test-results\\smoke-认证后页面-Scheduled-Tasks-定时任务页可加载-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                        "column": 16,
+                        "line": 151
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "4219922fea2e2bd3c691-bb99ab0f83a31ac94913",
+              "file": "smoke.spec.ts",
+              "line": 150,
+              "column": 3
+            },
+            {
+              "title": "APM 仪表盘页可加载",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 27,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 3226,
+                      "error": {
+                        "message": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/apm\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/apm\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/apm\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/apm\", waiting until \"load\"\u001b[22m\n\n    at E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts:156:16",
+                        "location": {
+                          "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                          "column": 16,
+                          "line": 156
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 154 |\u001b[39m\n \u001b[90m 155 |\u001b[39m   test(\u001b[32m'APM 仪表盘页可加载'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 156 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/apm'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 157 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'#root'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible({ timeout\u001b[33m:\u001b[39m \u001b[35m10\u001b[39m_000 })\u001b[33m;\u001b[39m\n \u001b[90m 158 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 159 |\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                            "column": 16,
+                            "line": 156
+                          },
+                          "message": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/apm\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/apm\", waiting until \"load\"\u001b[22m\n\n\n\u001b[0m \u001b[90m 154 |\u001b[39m\n \u001b[90m 155 |\u001b[39m   test(\u001b[32m'APM 仪表盘页可加载'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 156 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/apm'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 157 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'#root'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible({ timeout\u001b[33m:\u001b[39m \u001b[35m10\u001b[39m_000 })\u001b[33m;\u001b[39m\n \u001b[90m 158 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 159 |\u001b[39m\u001b[0m\n\u001b[2m    at E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts:156:16\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-11T10:55:49.708Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "E:\\QP\\maf\\frontend\\test-results\\smoke-认证后页面-APM-仪表盘页可加载-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "E:\\QP\\maf\\frontend\\test-results\\smoke-认证后页面-APM-仪表盘页可加载-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                        "column": 16,
+                        "line": 156
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "4219922fea2e2bd3c691-d2e0ed4f8c9b796221b6",
+              "file": "smoke.spec.ts",
+              "line": 155,
+              "column": 3
+            },
+            {
+              "title": "Cost Router 成本路由页可加载",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 28,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 3656,
+                      "error": {
+                        "message": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/cost-router\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/cost-router\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/cost-router\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/cost-router\", waiting until \"load\"\u001b[22m\n\n    at E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts:161:16",
+                        "location": {
+                          "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                          "column": 16,
+                          "line": 161
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 159 |\u001b[39m\n \u001b[90m 160 |\u001b[39m   test(\u001b[32m'Cost Router 成本路由页可加载'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 161 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/cost-router'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 162 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'#root'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible({ timeout\u001b[33m:\u001b[39m \u001b[35m10\u001b[39m_000 })\u001b[33m;\u001b[39m\n \u001b[90m 163 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 164 |\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                            "column": 16,
+                            "line": 161
+                          },
+                          "message": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/cost-router\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/cost-router\", waiting until \"load\"\u001b[22m\n\n\n\u001b[0m \u001b[90m 159 |\u001b[39m\n \u001b[90m 160 |\u001b[39m   test(\u001b[32m'Cost Router 成本路由页可加载'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 161 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/cost-router'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 162 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'#root'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible({ timeout\u001b[33m:\u001b[39m \u001b[35m10\u001b[39m_000 })\u001b[33m;\u001b[39m\n \u001b[90m 163 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 164 |\u001b[39m\u001b[0m\n\u001b[2m    at E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts:161:16\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-11T10:56:09.659Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "E:\\QP\\maf\\frontend\\test-results\\smoke-认证后页面-Cost-Router-成本路由页可加载-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "E:\\QP\\maf\\frontend\\test-results\\smoke-认证后页面-Cost-Router-成本路由页可加载-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                        "column": 16,
+                        "line": 161
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "4219922fea2e2bd3c691-5a7644f3859a1ad1963f",
+              "file": "smoke.spec.ts",
+              "line": 160,
+              "column": 3
+            },
+            {
+              "title": "Checkpoints 检查点页可加载",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 29,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 3707,
+                      "error": {
+                        "message": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/checkpoints\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/checkpoints\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/checkpoints\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/checkpoints\", waiting until \"load\"\u001b[22m\n\n    at E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts:166:16",
+                        "location": {
+                          "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                          "column": 16,
+                          "line": 166
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 164 |\u001b[39m\n \u001b[90m 165 |\u001b[39m   test(\u001b[32m'Checkpoints 检查点页可加载'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 166 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/checkpoints'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 167 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'#root'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible({ timeout\u001b[33m:\u001b[39m \u001b[35m10\u001b[39m_000 })\u001b[33m;\u001b[39m\n \u001b[90m 168 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 169 |\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                            "column": 16,
+                            "line": 166
+                          },
+                          "message": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/checkpoints\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/checkpoints\", waiting until \"load\"\u001b[22m\n\n\n\u001b[0m \u001b[90m 164 |\u001b[39m\n \u001b[90m 165 |\u001b[39m   test(\u001b[32m'Checkpoints 检查点页可加载'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 166 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/checkpoints'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 167 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'#root'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible({ timeout\u001b[33m:\u001b[39m \u001b[35m10\u001b[39m_000 })\u001b[33m;\u001b[39m\n \u001b[90m 168 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 169 |\u001b[39m\u001b[0m\n\u001b[2m    at E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts:166:16\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-11T10:56:20.936Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "E:\\QP\\maf\\frontend\\test-results\\smoke-认证后页面-Checkpoints-检查点页可加载-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "E:\\QP\\maf\\frontend\\test-results\\smoke-认证后页面-Checkpoints-检查点页可加载-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                        "column": 16,
+                        "line": 166
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "4219922fea2e2bd3c691-a84e79dee01c6c4b954c",
+              "file": "smoke.spec.ts",
+              "line": 165,
+              "column": 3
+            },
+            {
+              "title": "Intent Detection 意图检测页可加载",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 30,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 3319,
+                      "error": {
+                        "message": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/intent\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/intent\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/intent\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/intent\", waiting until \"load\"\u001b[22m\n\n    at E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts:171:16",
+                        "location": {
+                          "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                          "column": 16,
+                          "line": 171
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 169 |\u001b[39m\n \u001b[90m 170 |\u001b[39m   test(\u001b[32m'Intent Detection 意图检测页可加载'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 171 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/intent'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 172 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'#root'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible({ timeout\u001b[33m:\u001b[39m \u001b[35m10\u001b[39m_000 })\u001b[33m;\u001b[39m\n \u001b[90m 173 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 174 |\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                            "column": 16,
+                            "line": 171
+                          },
+                          "message": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/intent\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/intent\", waiting until \"load\"\u001b[22m\n\n\n\u001b[0m \u001b[90m 169 |\u001b[39m\n \u001b[90m 170 |\u001b[39m   test(\u001b[32m'Intent Detection 意图检测页可加载'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 171 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/intent'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 172 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'#root'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible({ timeout\u001b[33m:\u001b[39m \u001b[35m10\u001b[39m_000 })\u001b[33m;\u001b[39m\n \u001b[90m 173 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 174 |\u001b[39m\u001b[0m\n\u001b[2m    at E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts:171:16\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-11T10:56:31.005Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "E:\\QP\\maf\\frontend\\test-results\\smoke-认证后页面-Intent-Detection-意图检测页可加载-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "E:\\QP\\maf\\frontend\\test-results\\smoke-认证后页面-Intent-Detection-意图检测页可加载-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                        "column": 16,
+                        "line": 171
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "4219922fea2e2bd3c691-819bf13910ec8b7cc649",
+              "file": "smoke.spec.ts",
+              "line": 170,
+              "column": 3
+            },
+            {
+              "title": "Supervision 监管页可加载",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 31,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 3240,
+                      "error": {
+                        "message": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/supervision\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/supervision\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/supervision\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/supervision\", waiting until \"load\"\u001b[22m\n\n    at E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts:176:16",
+                        "location": {
+                          "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                          "column": 16,
+                          "line": 176
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 174 |\u001b[39m\n \u001b[90m 175 |\u001b[39m   test(\u001b[32m'Supervision 监管页可加载'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 176 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/supervision'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 177 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'#root'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible({ timeout\u001b[33m:\u001b[39m \u001b[35m10\u001b[39m_000 })\u001b[33m;\u001b[39m\n \u001b[90m 178 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 179 |\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                            "column": 16,
+                            "line": 176
+                          },
+                          "message": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/supervision\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/supervision\", waiting until \"load\"\u001b[22m\n\n\n\u001b[0m \u001b[90m 174 |\u001b[39m\n \u001b[90m 175 |\u001b[39m   test(\u001b[32m'Supervision 监管页可加载'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 176 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/supervision'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 177 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'#root'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible({ timeout\u001b[33m:\u001b[39m \u001b[35m10\u001b[39m_000 })\u001b[33m;\u001b[39m\n \u001b[90m 178 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 179 |\u001b[39m\u001b[0m\n\u001b[2m    at E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts:176:16\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-11T10:56:46.371Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "E:\\QP\\maf\\frontend\\test-results\\smoke-认证后页面-Supervision-监管页可加载-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "E:\\QP\\maf\\frontend\\test-results\\smoke-认证后页面-Supervision-监管页可加载-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                        "column": 16,
+                        "line": 176
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "4219922fea2e2bd3c691-336e182a7d01727959ad",
+              "file": "smoke.spec.ts",
+              "line": 175,
+              "column": 3
+            },
+            {
+              "title": "I18n 国际化设置页可加载",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 32,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 4006,
+                      "error": {
+                        "message": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/i18n\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/i18n\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/i18n\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/i18n\", waiting until \"load\"\u001b[22m\n\n    at E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts:181:16",
+                        "location": {
+                          "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                          "column": 16,
+                          "line": 181
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 179 |\u001b[39m\n \u001b[90m 180 |\u001b[39m   test(\u001b[32m'I18n 国际化设置页可加载'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 181 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/i18n'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 182 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'#root'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible({ timeout\u001b[33m:\u001b[39m \u001b[35m10\u001b[39m_000 })\u001b[33m;\u001b[39m\n \u001b[90m 183 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 184 |\u001b[39m })\u001b[33m;\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                            "column": 16,
+                            "line": 181
+                          },
+                          "message": "Error: page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://fn.cky:3000/i18n\nCall log:\n\u001b[2m  - navigating to \"http://fn.cky:3000/i18n\", waiting until \"load\"\u001b[22m\n\n\n\u001b[0m \u001b[90m 179 |\u001b[39m\n \u001b[90m 180 |\u001b[39m   test(\u001b[32m'I18n 国际化设置页可加载'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 181 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/i18n'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 182 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'#root'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible({ timeout\u001b[33m:\u001b[39m \u001b[35m10\u001b[39m_000 })\u001b[33m;\u001b[39m\n \u001b[90m 183 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 184 |\u001b[39m })\u001b[33m;\u001b[39m\u001b[0m\n\u001b[2m    at E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts:181:16\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-11T10:56:59.374Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "E:\\QP\\maf\\frontend\\test-results\\smoke-认证后页面-I18n-国际化设置页可加载-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "E:\\QP\\maf\\frontend\\test-results\\smoke-认证后页面-I18n-国际化设置页可加载-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "E:\\QP\\maf\\frontend\\e2e\\smoke.spec.ts",
+                        "column": 16,
+                        "line": 181
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "4219922fea2e2bd3c691-f1cbb560e29fd1628c42",
+              "file": "smoke.spec.ts",
+              "line": 180,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-04-11T10:45:42.950Z",
+    "duration": 685916.949000001,
+    "expected": 0,
+    "skipped": 0,
+    "unexpected": 32,
+    "flaky": 0
+  }
+}
