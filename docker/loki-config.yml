@@ -27,6 +27,12 @@ schema_config:
         period: 24h
 
 ruler:
+  enable_api: true
+  rule_path: /tmp/loki/rules-temp
+  storage:
+    type: local
+    local:
+      directory: /etc/loki/rules
   alertmanager_url: http://localhost:9093
 
 limits_config:
