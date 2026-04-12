@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 from uuid import uuid4
 
 if TYPE_CHECKING:
@@ -18,6 +18,7 @@ class Trace:
     trace_id: str = field(default_factory=lambda: str(uuid4()))
     workflow_name: str = "default"
     group_id: str | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
     spans: list[Span] = field(default_factory=list)
     start_time: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     end_time: datetime | None = None

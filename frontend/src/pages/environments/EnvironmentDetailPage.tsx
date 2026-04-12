@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, Descriptions, Tag, Table, Button, App, Space, Modal, Form, Input, Select, Typography } from 'antd';
-import { ArrowLeftOutlined, RocketOutlined, RollbackOutlined } from '@ant-design/icons';
+import { ArrowLeftOutlined, RocketOutlined } from '@ant-design/icons';
 import { environmentService } from '../../services/environmentService';
 import type { Environment, BindingResponse } from '../../services/environmentService';
 
@@ -54,25 +54,14 @@ const EnvironmentDetailPage: React.FC = () => {
       const values = await publishForm.validateFields();
       if (!envName) return;
       await environmentService.publishAgent(envName, values.agent_name, {
-        version_id: values.version_id || undefined,
-        notes: values.notes || '',
+        version_id: values.version_id?.trim() || undefined,
+        notes: values.notes?.trim() || '',
       });
       message.success('发布成功');
       setPublishOpen(false);
       fetchDetail();
     } catch {
       message.error('发布失败');
-    }
-  };
-
-  const handleRollback = async (agentName: string) => {
-    if (!envName) return;
-    try {
-      await environmentService.rollbackAgent(envName, agentName, { notes: '从详情页回滚' });
-      message.success('回滚成功');
-      fetchDetail();
-    } catch {
-      message.error('回滚失败');
     }
   };
 
@@ -117,15 +106,8 @@ const EnvironmentDetailPage: React.FC = () => {
     {
       title: '操作',
       width: 100,
-      render: (_: unknown, record: BindingResponse) => (
-        <Button
-          type="link"
-          size="small"
-          icon={<RollbackOutlined />}
-          onClick={() => handleRollback(record.agent_config_id)}
-        >
-          回滚
-        </Button>
+      render: () => (
+        <Tag color="default">已发布</Tag>
       ),
     },
   ];

@@ -896,10 +896,12 @@ class _TracingCtx:
     def active(self) -> bool:
         return self._enabled
 
-    async def start_trace(self, workflow_name: str) -> None:
+    async def start_trace(self, workflow_name: str, *, metadata: dict[str, Any] | None = None) -> None:
         if not self.active:
             return
         self.trace = Trace(workflow_name=workflow_name)
+        if metadata:
+            self.trace.metadata.update(metadata)
         for p in self.processors:
             await p.on_trace_start(self.trace)
 
@@ -1061,9 +1063,9 @@ class Runner:
             )
             tracing.processors.append(_ej_proc)
 
+        _trace_meta = {"environment": config.environment} if config.environment else None
         if tracing.active:
-            await tracing.start_trace(config.workflow_name)
-
+            await tracing.start_trace(config.workflow_name, metadata=_trace_meta)
         # 初始化消息历史
         messages = _normalize_input(input)
         current_agent = agent
@@ -1560,8 +1562,9 @@ class Runner:
             )
             tracing.processors.append(_ej_proc_s)
 
+        _trace_meta_s = {"environment": config.environment} if config.environment else None
         if tracing.active:
-            await tracing.start_trace(config.workflow_name)
+            await tracing.start_trace(config.workflow_name, metadata=_trace_meta_s)
 
         # Session: 加载历史消息
         history_offset = 0

@@ -170,3 +170,7 @@ class RunConfig:
     template_variables: dict[str, Any] | None = None
     """模板变量值。配置后 Runner 在构建 system 消息时，自动将 Agent instructions
     中的 {{variable}} 占位符替换为对应值。变量值中的 {{ 和 }} 会被转义防止注入。"""
+
+    environment: str | None = None
+    """运行环境标识（如 'dev'、'staging'、'prod'）。配置后 Runner 在 Trace 中
+    记录环境信息，上层可根据此字段加载环境特定的 Agent 绑定配置。"""
