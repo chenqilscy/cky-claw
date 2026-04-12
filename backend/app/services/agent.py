@@ -14,6 +14,7 @@ from app.core.exceptions import ConflictError, NotFoundError
 from app.models.agent import AgentConfig
 from app.schemas.agent import AgentCreate, AgentUpdate
 from app.services.agent_version import _snapshot_from_agent, create_version
+from app.services import query_cache
 
 
 def _escape_like(value: str) -> str:
@@ -136,6 +137,7 @@ async def update_agent(db: AsyncSession, name: str, data: AgentUpdate) -> AgentC
     agent.updated_at = datetime.now(timezone.utc)
     await db.commit()
     await db.refresh(agent)
+    await query_cache.invalidate(f"agent:{name}")
     return agent
 
 
@@ -147,6 +149,7 @@ async def delete_agent(db: AsyncSession, name: str) -> None:
     agent.deleted_at = datetime.now(timezone.utc)
     agent.updated_at = datetime.now(timezone.utc)
     await db.commit()
+    await query_cache.invalidate(f"agent:{name}")
 
 
 async def get_agent_realtime_status(
