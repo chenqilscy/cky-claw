@@ -44,6 +44,7 @@ class TokenResponse(BaseModel):
     """Token 响应。"""
 
     access_token: str
+    refresh_token: str | None = None
     token_type: str = "Bearer"
     expires_in: int
 
@@ -62,3 +63,29 @@ class UserResponse(BaseModel):
     is_active: bool
     created_at: datetime
     updated_at: datetime
+
+
+class ChangePasswordRequest(BaseModel):
+    """修改密码请求体。"""
+
+    current_password: str = Field(..., description="当前密码")
+    new_password: str = Field(..., min_length=6, max_length=128, description="新密码")
+
+
+class RefreshTokenRequest(BaseModel):
+    """刷新 Token 请求体。"""
+
+    refresh_token: str = Field(..., description="Refresh Token")
+
+
+class PasswordResetRequest(BaseModel):
+    """密码重置请求——提交邮箱。"""
+
+    email: str = Field(..., description="注册邮箱")
+
+
+class PasswordResetConfirm(BaseModel):
+    """密码重置确认——设置新密码。"""
+
+    token: str = Field(..., description="重置令牌")
+    new_password: str = Field(..., min_length=6, max_length=128, description="新密码")

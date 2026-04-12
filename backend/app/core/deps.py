@@ -11,7 +11,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.auth import decode_access_token
+from app.core.auth import decode_access_token, is_token_blacklisted
 from app.core.database import get_db as get_db  # noqa: PLC0414 — explicit re-export
 from app.models.user import User
 
@@ -23,12 +23,24 @@ async def get_current_user(
     db: AsyncSession = Depends(get_db),
 ) -> User:
     """从 JWT Token 获取当前用户。"""
-    payload = decode_access_token(credentials.credentials)
+    token = credentials.credentials
+    payload = decode_access_token(token)
     if payload is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail={"code": "UNAUTHORIZED", "message": "Token 无效或已过期"},
         )
+
+    # 检查 token 黑名单（服务端登出）
+    try:
+        if await is_token_blacklisted(token):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail={"code": "UNAUTHORIZED", "message": "Token 已登出"},
+            )
+    except Exception:
+        # Redis 不可用时降级到不检查黑名单
+        pass
 
     user_id = payload.get("sub")
     if user_id is None:

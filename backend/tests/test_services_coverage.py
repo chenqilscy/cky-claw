@@ -159,9 +159,11 @@ class TestAuthService:
         )
         db = _mock_db(_scalar_one_or_none(mock_user))
         with patch("app.services.auth.verify_password", return_value=True), \
-             patch("app.services.auth.create_access_token", return_value="tok123"):
-            token = await authenticate_user(db, "bob", "secret")
-        assert token == "tok123"
+             patch("app.services.auth.create_access_token", return_value="tok123"), \
+             patch("app.services.auth.create_refresh_token", return_value="ref456"):
+            access_token, refresh_token = await authenticate_user(db, "bob", "secret")
+        assert access_token == "tok123"
+        assert refresh_token == "ref456"
 
     @pytest.mark.asyncio
     async def test_authenticate_user_not_found(self) -> None:
