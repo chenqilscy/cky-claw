@@ -1324,3 +1324,158 @@ class TestE2ENewEndpoints:
         finally:
             _app.dependency_overrides.pop(get_db, None)
             _app.dependency_overrides.pop(get_current_user, None)
+
+    # ---- Marketplace 端到端 ----
+
+    def test_marketplace_browse_and_install(self, client: "TestClient") -> None:
+        """Marketplace 浏览 + 安装 端到端流程。"""
+        import uuid
+        from datetime import datetime, timezone
+        from app.main import app as _app
+
+        now = datetime.now(timezone.utc)
+        tpl_id = uuid.uuid4()
+        tpl = MagicMock()
+        for k, v in {
+            "id": tpl_id, "name": "demo-tpl", "display_name": "Demo",
+            "description": "A demo template", "category": "general", "icon": "robot",
+            "published": True, "downloads": 5, "rating": 4.0, "rating_count": 1,
+            "author_org_id": None, "is_builtin": False,
+            "config": {"instructions": "hi"}, "is_deleted": False,
+            "created_at": now, "updated_at": now,
+        }.items():
+            setattr(tpl, k, v)
+
+        with patch("app.api.marketplace.mp_svc") as mock_svc:
+            mock_svc.list_marketplace = AsyncMock(return_value=([tpl], 1))
+            mock_svc.install_template = AsyncMock(return_value=MagicMock(
+                id=uuid.uuid4(), name="my-agent", created_at=now, updated_at=now,
+            ))
+
+            # 浏览
+            resp = client.get("/api/v1/marketplace")
+            assert resp.status_code == 200
+            assert resp.json()["total"] == 1
+            assert resp.json()["data"][0]["name"] == "demo-tpl"
+
+            # 安装
+            resp2 = client.post(
+                f"/api/v1/marketplace/{tpl_id}/install",
+                json={"agent_name": "my-installed-agent"},
+            )
+            assert resp2.status_code == 200
+
+    def test_marketplace_review_flow(self, client: "TestClient") -> None:
+        """Marketplace 评价流程。"""
+        import uuid
+        from datetime import datetime, timezone
+
+        tpl_id = uuid.uuid4()
+        now = datetime.now(timezone.utc)
+        review = MagicMock()
+        for k, v in {
+            "id": uuid.uuid4(), "template_id": tpl_id,
+            "user_id": uuid.UUID("00000000-0000-0000-0000-000000000001"),
+            "score": 5, "comment": "Excellent!", "is_deleted": False, "created_at": now,
+        }.items():
+            setattr(review, k, v)
+
+        with patch("app.api.marketplace.mp_svc") as mock_svc:
+            mock_svc.create_review = AsyncMock(return_value=review)
+            mock_svc.list_reviews = AsyncMock(return_value=([review], 1))
+
+            resp = client.post(
+                f"/api/v1/marketplace/{tpl_id}/reviews",
+                json={"score": 5, "comment": "Excellent!"},
+            )
+            assert resp.status_code == 201
+
+            resp2 = client.get(f"/api/v1/marketplace/{tpl_id}/reviews")
+            assert resp2.status_code == 200
+            assert resp2.json()["total"] == 1
+
+    # ---- Compliance 端到端 ----
+
+    def test_compliance_label_create_and_list(self, client: "TestClient") -> None:
+        """Compliance 数据分类标签创建 + 列表。"""
+        import uuid
+        from datetime import datetime, timezone
+
+        now = datetime.now(timezone.utc)
+        label = MagicMock()
+        for k, v in {
+            "id": uuid.uuid4(), "resource_type": "trace", "resource_id": "t-123",
+            "classification": "pii", "auto_detected": False, "reason": "email",
+            "is_deleted": False, "created_at": now,
+        }.items():
+            setattr(label, k, v)
+
+        with patch("app.api.compliance.comp_svc") as mock_svc:
+            mock_svc.create_label = AsyncMock(return_value=label)
+            mock_svc.list_labels = AsyncMock(return_value=([label], 1))
+
+            resp = client.post("/api/v1/compliance/labels", json={
+                "resource_type": "trace", "resource_id": "t-123", "classification": "pii",
+            })
+            assert resp.status_code == 201
+
+            resp2 = client.get("/api/v1/compliance/labels")
+            assert resp2.status_code == 200
+            assert resp2.json()["total"] == 1
+
+    def test_compliance_erasure_flow(self, client: "TestClient") -> None:
+        """Compliance 删除请求创建 + 处理。"""
+        import uuid
+        from datetime import datetime, timezone
+
+        now = datetime.now(timezone.utc)
+        req_id = uuid.uuid4()
+        erasure = MagicMock()
+        for k, v in {
+            "id": req_id, "requester_user_id": uuid.UUID("00000000-0000-0000-0000-000000000001"),
+            "target_user_id": uuid.uuid4(), "status": "pending",
+            "scanned_resources": 0, "deleted_resources": 0, "report": None,
+            "completed_at": None, "is_deleted": False, "created_at": now, "updated_at": now,
+        }.items():
+            setattr(erasure, k, v)
+
+        completed = MagicMock()
+        for k, v in {
+            "id": req_id, "requester_user_id": erasure.requester_user_id,
+            "target_user_id": erasure.target_user_id, "status": "completed",
+            "scanned_resources": 100, "deleted_resources": 95,
+            "report": {"details": "done"}, "completed_at": now,
+            "is_deleted": False, "created_at": now, "updated_at": now,
+        }.items():
+            setattr(completed, k, v)
+
+        with patch("app.api.compliance.comp_svc") as mock_svc:
+            mock_svc.create_erasure_request = AsyncMock(return_value=erasure)
+            mock_svc.process_erasure_request = AsyncMock(return_value=completed)
+
+            resp = client.post("/api/v1/compliance/erasure-requests", json={
+                "target_user_id": str(erasure.target_user_id),
+            })
+            assert resp.status_code == 201
+            assert resp.json()["status"] == "pending"
+
+            resp2 = client.post(
+                f"/api/v1/compliance/erasure-requests/{req_id}/complete",
+            )
+            assert resp2.status_code == 200
+            assert resp2.json()["status"] == "completed"
+
+    def test_compliance_dashboard(self, client: "TestClient") -> None:
+        """Compliance 仪表盘汇总。"""
+        with patch("app.api.compliance.comp_svc") as mock_svc:
+            mock_svc.get_dashboard = AsyncMock(return_value={
+                "total_control_points": 20, "satisfied_control_points": 15,
+                "satisfaction_rate": 0.75, "active_retention_policies": 5,
+                "pending_erasure_requests": 2,
+                "classification_summary": {"pii": 10, "internal": 30},
+            })
+            resp = client.get("/api/v1/compliance/dashboard")
+            assert resp.status_code == 200
+            body = resp.json()
+            assert body["satisfaction_rate"] == 0.75
+            assert body["classification_summary"]["pii"] == 10

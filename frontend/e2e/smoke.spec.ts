@@ -206,4 +206,39 @@ test.describe('认证后页面', () => {
     await page.goto('/compliance');
     await expect(page.locator('#root')).toBeVisible({ timeout: 10_000 });
   });
+
+  test('Agent 创建页可加载', async ({ page }) => {
+    await page.goto('/agents/new');
+    await expect(page.locator('#root')).toBeVisible({ timeout: 10_000 });
+  });
+
+  test('Handoff 编排页可加载', async ({ page }) => {
+    await page.goto('/agents/handoff-editor');
+    await expect(page.locator('#root')).toBeVisible({ timeout: 10_000 });
+  });
+
+  test('Provider 创建页可加载', async ({ page }) => {
+    await page.goto('/providers/new');
+    await expect(page.locator('#root')).toBeVisible({ timeout: 10_000 });
+  });
+
+  test('Workflow 编辑器页可加载', async ({ page }) => {
+    await page.goto('/workflow-editor');
+    await expect(page.locator('#root')).toBeVisible({ timeout: 10_000 });
+  });
+
+  test('Team Flow 页可加载', async ({ page }) => {
+    await page.goto('/teams/flow');
+    await expect(page.locator('#root')).toBeVisible({ timeout: 10_000 });
+  });
+
+  test('Debug 调试页可加载', async ({ page }) => {
+    await page.goto('/debug');
+    await expect(page.locator('#root')).toBeVisible({ timeout: 10_000 });
+  });
+
+  test('Environments 环境列表页可加载', async ({ page }) => {
+    await page.goto('/environments');
+    await expect(page.locator('#root')).toBeVisible({ timeout: 10_000 });
+  });
 });
