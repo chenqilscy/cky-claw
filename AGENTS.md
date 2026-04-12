@@ -6,13 +6,13 @@ CkyClaw 是基于自研 **CkyClaw Framework** 构建的 AI Agent 管理与运行
 
 ## 项目现状（M0–M7 全部完成）
 
-截至 2026-04-12，**M0–M7 共 8 个里程碑、60+ Phase 全部完成 + S1–S7 进化路线全部完成**。
+截至 2026-04-13，**M0–M7 共 8 个里程碑、60+ Phase 全部完成 + S1–S7 进化路线全部完成**。
 
 ### 关键指标
 
 | 指标 | 数值 |
 |------|------|
-| 测试总数 | **4502+**（Backend 2138 + Framework 1882 + Frontend 441 + CLI 41） |
+| 测试总数 | **4589+**（Backend 2181 + Framework 1882 + Frontend 485 + CLI 41） |
 | 测试覆盖率 | Backend **98%** · Framework **100%** |
 | Alembic 迁移 | 57 个（0001–0057） |
 | API 路由模块 | 48 个（含 12 个 Benchmark 端点） |
