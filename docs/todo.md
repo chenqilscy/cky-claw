@@ -355,7 +355,7 @@ Boss 要求重点分析 Hermes 的多终端架构：
 | N1 | **RAG 知识库** | Embedding + VectorStore + DocumentLoader + ChunkStrategy + RAG Pipeline + KnowledgeBaseTool | **P0** | ✅ Framework + Backend + Frontend(MVP) |
 | N2 | **Multi-Modal 消息模型** | ContentBlock 多态消息体 + Message 扩展 + LiteLLM 格式转换 | **P1** | ✅ Framework + Backend + Frontend(MVP) |
 | N3 | **Agent Visual Builder** | 拖拽式 Agent 拼装器（工具/护栏/Handoff/MCP 可视化配置） + Canvas→JSON 单向同步 | **P1** | ✅ Phase 1(MVP) |
-| N4 | **A2A Protocol** | Agent Card 发现协议 + Task Lifecycle + A2AClient/Server + 隔离适配层 | **P2** | ❌ |
+| N4 | **A2A Protocol** | Agent Card 发现协议 + Task Lifecycle + A2AClient/Server + 隔离适配层 | **P2** | ✅ Framework + Backend + Frontend(MVP) |
 | N5 | **Agent Marketplace** | Agent 模板发布/发现/评分/收藏 + 跨组织共享 + 版本管理 + 一键实例化 | **P2** | ❌ |
 | N6 | **Compliance 合规框架** | 数据分类标签 + 保留策略自动执行 + Right-to-Erasure 工作流 + SOC2 控制点映射 + 合规报表 | **P2** | ❌ |
 | N7 | **Agent Benchmarking** | 标准化评估套件，E2 成熟度模型的自然延伸 | **P3** | ❌ |
@@ -434,16 +434,14 @@ ContentBlock (Union)
 **Phase 2 双向同步**（后续优化）
 - JSON → Canvas 反向渲染，编辑 JSON 后画布自动更新
 
-### 8.5 N4: A2A Protocol（P2 — 跨平台互操作）
+### 8.5 N4: A2A Protocol（P2 — 跨平台互操作）✅ 已完成
 
 **动机**：Google 2024 发布 Agent-to-Agent 协议，是跨平台 Agent 互操作的未来标准。提前布局可建立先发优势。
 
-**交付物**
-- Framework: A2AServer（接收外部 Agent 请求） + A2AClient（调用外部 Agent）
-- Agent Card 发现协议实现（/.well-known/agent.json）
-- Task 生命周期管理（submitted → working → completed / failed）
-- A2AAdapter 隔离层，规范变动时只改适配器
-- Backend: A2A 端点注册 + 服务发现 API
+**交付物**（已完成）
+- Framework: `ckyclaw_framework/a2a/` — AgentCard + A2ATask(状态机) + A2AAdapter + A2AClient(httpx) + A2AServer(JSON-RPC) + 31 测试
+- Backend: ORM(a2a_agent_cards + a2a_tasks) + Pydantic Schema + Service + API(10 端点) + 迁移 0053 + 23 测试
+- Frontend: A2APage(Agent Card CRUD + Task 管理 + 服务发现) + a2aService + 路由菜单注册 + smoke 测试
 
 ### 8.6 N5: Agent Marketplace（P2 — 生态护城河）
 

@@ -12,11 +12,11 @@ CkyClaw 是基于自研 **CkyClaw Framework** 构建的 AI Agent 管理与运行
 
 | 指标 | 数值 |
 |------|------|
-| 测试总数 | **4300+**（Backend 1969 + Framework 1850 + Frontend 441 + CLI 41） |
+| 测试总数 | **4380+**（Backend 2016 + Framework 1881 + Frontend 441 + CLI 41） |
 | 测试覆盖率 | Backend **98%** · Framework **100%** |
-| Alembic 迁移 | 51 个（0001–0051） |
-| API 路由模块 | 43 个 |
-| 前端页面 | 31 个（React.lazy 懒加载） |
+| Alembic 迁移 | 53 个（0001–0053） |
+| API 路由模块 | 44 个 |
+| 前端页面 | 32 个（React.lazy 懒加载） |
 | CI Job | 5 个 GitHub Actions + 5 Stage Jenkinsfile |
 | TypeScript 错误 | 0 |
 
@@ -56,6 +56,7 @@ CkyClaw 是基于自研 **CkyClaw Framework** 构建的 AI Agent 管理与运行
 | RAG 知识库 | ✅ | N1 Framework + Backend(knowledge-bases API/ORM) + Frontend(KB 管理页) MVP |
 | Multi-Modal 消息 | ✅ | N2 ContentBlock + session_messages.content_blocks + media upload + Chat 附件发送 MVP |
 | Agent Visual Builder | ✅ | N3 Phase 1：ReactFlow Canvas→JSON 单向可视化搭建器 |
+| A2A Protocol | ✅ | N4 AgentCard + Task状态机 + Client/Server(JSON-RPC) + Adapter 隔离层 |
 | Prompt 模板变量 | ✅ | F8 模板引擎（render/validate/extract）+ 前端变量编辑器 |
 | 多环境管理 | ✅ | F12 Dev/Staging/Prod 环境隔离 + Publish/Rollback/Diff |
 | 移动端适配 | ✅ | F9 useResponsive Hook + 审批/对话/仪表盘/布局 4 页面响应式 |
@@ -125,12 +126,12 @@ cky-claw/
 │   └── tests/                   # 1134 个测试
 ├── backend/                     # CkyClaw Backend — FastAPI 后端服务
 │   ├── app/
-│   │   ├── api/                 # 43 个 REST API 路由模块
+│   │   ├── api/                 # 44 个 REST API 路由模块
 │   │   ├── models/              # SQLAlchemy ORM（35 张表）
 │   │   ├── schemas/             # Pydantic v2 Schema
 │   │   ├── services/            # 业务逻辑层
 │   │   └── core/                # 基础设施（config/auth/crypto/database）
-│   ├── alembic/versions/        # 51 个 Alembic 迁移
+│   ├── alembic/versions/        # 53 个 Alembic 迁移
 │   └── tests/                   # 1185 个测试
 ├── frontend/                    # CkyClaw Frontend — React Web 前端
 │   └── src/
