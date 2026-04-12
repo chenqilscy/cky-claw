@@ -246,6 +246,15 @@ Boss 要求重点分析 Hermes 的多终端架构：
 | Skill 技能系统 | v2.2 | Framework + Backend + Frontend 全栈 |
 | Agent Team 协作 | v2.3 | Sequential/Parallel/Coordinator + UI 可视化 |
 | Sandbox 沙箱 | v2.6 | SandboxConfig + LocalSandbox |
+| Guardrail 并行 | v2.1 | RunConfig.guardrail_parallel + TaskGroup |
+| Runner 重试 | v2.1 | max_retries + 指数退避 |
+| Tool 并发限流 | v2.1 | Semaphore |
+| 条件启用 | v2.1 | Guardrail/Tool/Agent 三级 condition |
+| Lifecycle Hooks | M7 | 10 个触发点 + 非阻塞异步 |
+| Evolution 自动进化 | M8 | SignalCollector + StrategyEngine + EvolutionHook |
+| Checkpoint 机制 | v2.6 | InMemory/Postgres + Runner resume_from |
+| Intent Detection | v2.6 | IntentDetector + KeywordIntentDetector + 意图飘移 Hook |
+| Cost Router | v2.6 | ModelTierEnum + CostRouter 规则分类器 |
 | S1 上下文工程 | v3.0 | ContextBuilder + ContextBudget + ContextSource |
 | S2 记忆三分类 | v3.1 | Episodic / Semantic / Procedural |
 | S3 LLM 容错 | v3.2 | CircuitBreaker + RetryBudget + ToolMiddleware |
@@ -271,6 +280,17 @@ Boss 要求重点分析 Hermes 的多终端架构：
 | 配置热更新 | ConfigChangeLog + 审计 + 回滚 |
 | 环境管理 | Dev/Staging/Prod + 发布/回滚/对比 + Agent 绑定 |
 | 模板变量 | prompt_template API + render/validate/extract |
+| Agent 评估 | 7 维评分 + 反馈 + 汇总 |
+| Agent 国际化 | LocalizedInstructions + locale |
+| 灾备策略 | backup/restore/verify 脚本 + cron |
+| 深度健康检查 | /health/deep + DB/Redis 探测 |
+| Agent 实时状态 | TraceRecord 聚合 + Dashboard 卡片 |
+| WebSocket 统一事件 | /api/ws/events + Redis PubSub |
+| Span 火焰图 | build_flame_tree + GET /flame |
+| Trace 回放 | build_replay_timeline + Timeline 组件 |
+| A/B 模型测试 | POST /ab-test 并行调用 |
+| Session 消息搜索 | LIKE 通配符转义 |
+| Agent 模板 10 个 | 4 垂直模板（code-reviewer/devops/bi-analyst/complaint） |
 
 ### 6.3 前端（Frontend）— 31 页面
 
@@ -282,8 +302,11 @@ Boss 要求重点分析 Hermes 的多终端架构：
 | 审批队列 | ProTable + WebSocket 实时 + 响应式 Dropdown 操作 |
 | 环境管理 | 列表/详情/发布/Diff + 全局环境选择器 |
 | 移动端适配 | useResponsive Hook + 4 页面响应式优化 |
-| 可视化 | ReactFlow + ECharts（响应式高度） |
+| 可视化 | ReactFlow（Handoff/Team/Workflow）+ ECharts（Dashboard/APM/Flame） |
 | 暗色模式 | themeStore + ConfigProvider |
+| Playwright E2E | 32 烟雾测试 + playwright.config + 远程站点配置 |
+| pre-commit | ruff + mypy + 6 hooks |
+| Vendor 分包 | antd/charts/markdown/flow/query 5 路 manualChunks |
 
 ### 6.4 基础设施
 
@@ -294,8 +317,11 @@ Boss 要求重点分析 Hermes 的多终端架构：
 | Jenkinsfile | 5 Stage 容器化流水线 |
 | ckyclaw-cli | CLI MVP: login/version/agent/provider + 32 测试 |
 | Token 缓存 | Redis 统一缓存层 |
-| OTel + Jaeger | 全栈分布式追踪 |
-| Prometheus + Loki | 监控 + 日志聚合 |
+| OTel + Jaeger | OTelTraceProcessor + FastAPI 中间件 + OTel Web SDK 前端追踪 |
+| Prometheus + Loki | Promtail 3.0 docker_sd + Loki TSDB + AlertRule + Grafana 数据源 |
+| Locust 性能测试 | 12 @task + 10+ API 覆盖 |
+| OpenAPI Tags | 43 个 API 分组描述，`/openapi.json` |
+| request_id 追踪 | contextvars + 日志 Filter 自动注入 + 响应头回传 |
 
 ---
 
