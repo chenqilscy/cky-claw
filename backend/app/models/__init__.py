@@ -27,6 +27,11 @@ from app.models.token_usage import TokenUsageLog
 from app.models.tool_group import ToolGroupConfig
 from app.models.trace import SpanRecord, TraceRecord
 from app.models.mailbox import MailboxRecord
+from app.models.knowledge_base import (
+    KnowledgeBaseRecord,
+    KnowledgeChunkRecord,
+    KnowledgeDocumentRecord,
+)
 from app.models.user import User
 from app.models.user_oauth import UserOAuthConnection
 
@@ -61,6 +66,9 @@ __all__ = [
     "ToolGroupConfig",
     "TraceRecord",
     "MailboxRecord",
+    "KnowledgeBaseRecord",
+    "KnowledgeDocumentRecord",
+    "KnowledgeChunkRecord",
     "User",
     "UserOAuthConnection",
     "WorkflowDefinition",

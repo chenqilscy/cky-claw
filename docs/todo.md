@@ -350,9 +350,9 @@ Boss 要求重点分析 Hermes 的多终端架构：
 
 | # | Phase | 核心交付 | 优先级 | 状态 |
 |---|-------|---------|:------:|:----:|
-| N1 | **RAG 知识库** | Embedding + VectorStore + DocumentLoader + ChunkStrategy + RAG Pipeline + KnowledgeBaseTool | **P0** | ⚠️ Framework ✅, Backend/Frontend 待实现 |
-| N2 | **Multi-Modal 消息模型** | ContentBlock 多态消息体 + Message 扩展 + LiteLLM 格式转换 | **P1** | ⚠️ Framework ✅, Backend/Frontend 待实现 |
-| N3 | **Agent Visual Builder** | 拖拽式 Agent 拼装器（工具/护栏/Handoff/MCP 可视化配置） + Canvas→JSON 单向同步 | **P1** | ❌ |
+| N1 | **RAG 知识库** | Embedding + VectorStore + DocumentLoader + ChunkStrategy + RAG Pipeline + KnowledgeBaseTool | **P0** | ✅ Framework + Backend + Frontend(MVP) |
+| N2 | **Multi-Modal 消息模型** | ContentBlock 多态消息体 + Message 扩展 + LiteLLM 格式转换 | **P1** | ✅ Framework + Backend + Frontend(MVP) |
+| N3 | **Agent Visual Builder** | 拖拽式 Agent 拼装器（工具/护栏/Handoff/MCP 可视化配置） + Canvas→JSON 单向同步 | **P1** | ✅ Phase 1(MVP) |
 | N4 | **A2A Protocol** | Agent Card 发现协议 + Task Lifecycle + A2AClient/Server + 隔离适配层 | **P2** | ❌ |
 | N5 | **Agent Marketplace** | Agent 模板发布/发现/评分/收藏 + 跨组织共享 + 版本管理 + 一键实例化 | **P2** | ❌ |
 | N6 | **Compliance 合规框架** | 数据分类标签 + 保留策略自动执行 + Right-to-Erasure 工作流 + SOC2 控制点映射 + 合规报表 | **P2** | ❌ |
@@ -489,7 +489,8 @@ ContentBlock (Union)
 | v3.7 | E2 Agent 成熟度模型 + E3 规划-评估分离 |
 | v3.8 | E4 Terminal Gateway + E5 Telegram/Discord 消息网关（E1-E5 全部完成） |
 | v4.0 | N1 RAG 知识库 + N2 Multi-Modal 消息模型（Framework 层完成） |
+| v4.1 | N1/N2 Backend+Frontend(MVP) + N3 Visual Builder Phase 1(MVP) |
 
 ---
 
-*基于：PRD v2.0.9 / M0–M7 + v2.1–v2.8 + v3.0–v3.8 + v4.0 全部完成*
+*基于：PRD v2.0.9 / M0–M7 + v2.1–v2.8 + v3.0–v3.8 + v4.0–v4.1 全部完成*

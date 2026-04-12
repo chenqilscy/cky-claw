@@ -137,6 +137,7 @@ async def get_session_messages(
             id=row.id,
             role=row.role,
             content=row.content or "",
+            content_blocks=row.content_blocks,
             agent_name=row.agent_name,
             tool_call_id=row.tool_call_id,
             tool_calls=row.tool_calls,

@@ -53,8 +53,9 @@ CkyClaw 是基于自研 **CkyClaw Framework** 构建的 AI Agent 管理与运行
 | 规划-评估分离 | ✅ | E3 PlanEvaluator 三角审查 + PlanGuard 集成 + 自定义标准 + 异步 |
 | Terminal Gateway | ✅ | E4 TerminalBackend ABC + PlainTerminalBackend + 结构化输出 |
 | 海外消息网关 | ✅ | E5 Telegram + Discord 适配器 + 签名验证 + Webhook |
-| RAG 知识库 | ✅ | N1 RAGPipeline + Document/Chunker/Embedding/VectorStore + KnowledgeBaseTool（Framework 层） |
-| Multi-Modal 消息 | ✅ | N2 ContentBlock(Text/Image/Audio/File) + Message.content_blocks + LiteLLM 格式转换（Framework 层） |
+| RAG 知识库 | ✅ | N1 Framework + Backend(knowledge-bases API/ORM) + Frontend(KB 管理页) MVP |
+| Multi-Modal 消息 | ✅ | N2 ContentBlock + session_messages.content_blocks + media upload + Chat 附件发送 MVP |
+| Agent Visual Builder | ✅ | N3 Phase 1：ReactFlow Canvas→JSON 单向可视化搭建器 |
 | Prompt 模板变量 | ✅ | F8 模板引擎（render/validate/extract）+ 前端变量编辑器 |
 | 多环境管理 | ✅ | F12 Dev/Staging/Prod 环境隔离 + Publish/Rollback/Diff |
 | 移动端适配 | ✅ | F9 useResponsive Hook + 审批/对话/仪表盘/布局 4 页面响应式 |

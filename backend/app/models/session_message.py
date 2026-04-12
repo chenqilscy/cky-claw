@@ -22,6 +22,7 @@ class SessionMessage(Base):
     session_id: Mapped[str] = mapped_column(String(128), nullable=False, index=True)
     role: Mapped[str] = mapped_column(String(16), nullable=False)
     content: Mapped[str] = mapped_column(Text, nullable=False, server_default=text("''"))
+    content_blocks: Mapped[list[dict[str, Any]] | None] = mapped_column(JSONB, nullable=True)
     agent_name: Mapped[str | None] = mapped_column(String(64), nullable=True)
     tool_call_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
     tool_calls: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)

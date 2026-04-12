@@ -21,6 +21,7 @@ import {
   BulbFilled,
   BookOutlined,
   AppstoreOutlined,
+  DatabaseOutlined,
   BranchesOutlined,
   TeamOutlined,
   FileSearchOutlined,
@@ -57,6 +58,11 @@ const menuRoutes = {
       path: '/agents',
       name: 'Agent 管理',
       icon: <RobotOutlined />,
+    },
+    {
+      path: '/agents/visual-builder',
+      name: 'Agent 可视化搭建',
+      icon: <BranchesOutlined />,
     },
     {
       path: '/providers',
@@ -112,6 +118,11 @@ const menuRoutes = {
       path: '/templates',
       name: '模板市场',
       icon: <AppstoreOutlined />,
+    },
+    {
+      path: '/knowledge-bases',
+      name: '知识库',
+      icon: <DatabaseOutlined />,
     },
     {
       path: '/workflows',

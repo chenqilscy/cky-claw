@@ -13,6 +13,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ckyclaw_framework.model.message import Message, MessageRole, TokenUsage
+from ckyclaw_framework.model.content_block import content_block_from_dict
 from ckyclaw_framework.session.session import SessionBackend, SessionMetadata
 
 from app.models.session_message import SessionMessage, SessionMetadataRecord
@@ -56,6 +57,7 @@ class SQLAlchemySessionBackend(SessionBackend):  # type: ignore[misc]
             messages.append(Message(
                 role=MessageRole(row.role),
                 content=row.content or "",
+                content_blocks=[content_block_from_dict(b) for b in row.content_blocks] if row.content_blocks else None,
                 agent_name=row.agent_name,
                 tool_call_id=row.tool_call_id,
                 tool_calls=row.tool_calls,
@@ -75,6 +77,7 @@ class SQLAlchemySessionBackend(SessionBackend):  # type: ignore[misc]
                 session_id=session_id,
                 role=msg.role.value,
                 content=msg.content,
+                content_blocks=[b.to_dict() for b in msg.content_blocks] if msg.content_blocks else None,
                 agent_name=msg.agent_name,
                 tool_call_id=msg.tool_call_id,
                 tool_calls=msg.tool_calls,

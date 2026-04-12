@@ -57,6 +57,8 @@ from app.api.ab_test import router as ab_test_router
 from app.api.mailbox import router as mailbox_router
 from app.api.prompt import router as prompt_router
 from app.api.environments import router as environments_router
+from app.api.knowledge_bases import router as knowledge_bases_router
+from app.api.media import router as media_router
 
 
 @asynccontextmanager
@@ -134,6 +136,8 @@ def create_app() -> FastAPI:
             {"name": "roles", "description": "角色与权限管理"},
             {"name": "组织", "description": "多租户组织管理"},
             {"name": "memories", "description": "Agent 记忆管理"},
+            {"name": "knowledge-bases", "description": "RAG 知识库管理与检索"},
+            {"name": "media", "description": "多模态媒体上传与访问"},
             {"name": "token-usage", "description": "Token 用量审计与统计"},
             {"name": "audit-logs", "description": "操作审计日志"},
             {"name": "alerts", "description": "告警规则管理"},
@@ -195,6 +199,8 @@ def create_app() -> FastAPI:
     app.include_router(im_channels_router)
     app.include_router(mcp_servers_router)
     app.include_router(memories_router)
+    app.include_router(knowledge_bases_router)
+    app.include_router(media_router)
     app.include_router(organizations_router)
     app.include_router(skills_router)
     app.include_router(tool_groups_router)

@@ -14,6 +14,7 @@ const AgentListPage = lazy(() => import('./pages/agents/AgentListPage'));
 const AgentEditPage = lazy(() => import('./pages/agents/AgentEditPage'));
 const AgentVersionPage = lazy(() => import('./pages/agents/AgentVersionPage'));
 const HandoffEditorPage = lazy(() => import('./pages/agents/HandoffEditorPage'));
+const VisualBuilderPage = lazy(() => import('./pages/agents/VisualBuilderPage'));
 const RunListPage = lazy(() => import('./pages/runs/RunListPage'));
 const SupervisionPage = lazy(() => import('./pages/supervision/SupervisionPage'));
 const ProviderListPage = lazy(() => import('./pages/providers/ProviderListPage'));
@@ -26,6 +27,7 @@ const ToolGroupPage = lazy(() => import('./pages/tool-groups/ToolGroupPage'));
 const MemoryPage = lazy(() => import('./pages/memories/MemoryPage'));
 const SkillPage = lazy(() => import('./pages/skills/SkillPage'));
 const TemplatePage = lazy(() => import('./pages/templates/TemplatePage'));
+const KnowledgeBasePage = lazy(() => import('./pages/knowledge-bases/KnowledgeBasePage'));
 const WorkflowPage = lazy(() => import('./pages/workflows/WorkflowPage'));
 const WorkflowEditorPage = lazy(() => import('./pages/workflows/WorkflowEditorPage'));
 const TeamPage = lazy(() => import('./pages/teams/TeamPage'));
@@ -96,6 +98,7 @@ const App: React.FC = () => {
           <Route path="agents/:name/edit" element={guarded(<AgentEditPage />)} />
           <Route path="agents/:agentId/versions" element={guarded(<AgentVersionPage />)} />
           <Route path="agents/handoff-editor" element={guarded(<HandoffEditorPage />)} />
+          <Route path="agents/visual-builder" element={guarded(<VisualBuilderPage />)} />
           <Route path="runs" element={guarded(<RunListPage />)} />
           <Route path="supervision" element={guarded(<SupervisionPage />)} />
           <Route path="providers" element={guarded(<ProviderListPage />)} />
@@ -109,6 +112,7 @@ const App: React.FC = () => {
           <Route path="memories" element={guarded(<MemoryPage />)} />
           <Route path="skills" element={guarded(<SkillPage />)} />
           <Route path="templates" element={guarded(<TemplatePage />)} />
+          <Route path="knowledge-bases" element={guarded(<KnowledgeBasePage />)} />
           <Route path="workflows" element={guarded(<WorkflowPage />)} />
           <Route path="workflow-editor" element={guarded(<WorkflowEditorPage />)} />
           <Route path="teams" element={guarded(<TeamPage />)} />

@@ -1,7 +1,8 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react';
-import { Button, Input, Space, Spin, Tag, Typography, App, theme } from 'antd';
-import { SendOutlined, ToolOutlined, SwapOutlined } from '@ant-design/icons';
+import { Button, Input, Space, Spin, Tag, Typography, App, theme, Upload } from 'antd';
+import { SendOutlined, ToolOutlined, SwapOutlined, PaperClipOutlined } from '@ant-design/icons';
 import { chatService } from '../../services/chatService';
+import { knowledgeBaseService } from '../../services/knowledgeBaseService';
 import { useStreamReducer } from './useStreamReducer';
 import { useResponsive } from '../../hooks/useResponsive';
 import type { StreamMessage } from './useStreamReducer';
@@ -9,6 +10,12 @@ import type { StreamMessage } from './useStreamReducer';
 const MarkdownRenderer = lazy(() => import('../../components/MarkdownRenderer'));
 
 const { Text } = Typography;
+
+interface AttachedFile {
+  filename: string;
+  mediaType: string;
+  url: string;
+}
 
 interface ChatWindowProps {
   sessionId: string | null;
@@ -34,6 +41,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     cancelPendingFlush,
   } = useStreamReducer();
   const [input, setInput] = useState('');
+  const [attachments, setAttachments] = useState<AttachedFile[]>([]);
+  const [uploading, setUploading] = useState(false);
   const [sending, setSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
@@ -58,7 +67,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
   const handleSend = async () => {
     const text = input.trim();
-    if (!text || sending) return;
+    if ((!text && attachments.length === 0) || sending) return;
     if (!agentName) {
       message.warning('请先选择一个 Agent');
       return;
@@ -67,8 +76,14 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     setInput('');
     setSending(true);
 
+    const attachmentText = attachments
+      .map((f) => (f.mediaType.startsWith('image/') ? `![${f.filename}](${f.url})` : `[文件: ${f.filename}](${f.url})`))
+      .join('\n');
+    const finalText = [text, attachmentText].filter(Boolean).join('\n\n');
+    setAttachments([]);
+
     // 添加用户消息
-    appendUserMessage(text);
+    appendUserMessage(finalText);
 
     try {
       // 如果没有 session，先创建
@@ -85,7 +100,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       // SSE 流式请求（text_delta 通过 RAF 批处理优化）
       const controller = chatService.runStream(
         sid,
-        text,
+        finalText,
         (event) => {
           if (event.type === 'error') {
             const data = event.data as { code?: string; message?: string };
@@ -121,6 +136,23 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       e.preventDefault();
       handleSend();
     }
+  };
+
+  const handleUpload = async (file: File): Promise<boolean> => {
+    try {
+      setUploading(true);
+      const uploaded = await knowledgeBaseService.uploadMedia(file);
+      setAttachments((prev) => [
+        ...prev,
+        { filename: uploaded.filename, mediaType: uploaded.media_type, url: uploaded.url },
+      ]);
+      message.success(`${uploaded.filename} 上传成功`);
+    } catch {
+      message.error('附件上传失败');
+    } finally {
+      setUploading(false);
+    }
+    return false;
   };
 
   return (
@@ -214,12 +246,28 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         borderTop: `1px solid ${token.colorBorderSecondary}`,
         background: token.colorBgContainer,
       }}>
+        {attachments.length > 0 && (
+          <div style={{ marginBottom: 8 }}>
+            {attachments.map((f) => (
+              <Tag
+                key={`${f.url}-${f.filename}`}
+                closable
+                onClose={() => setAttachments((prev) => prev.filter((item) => item.url !== f.url))}
+              >
+                {f.filename}
+              </Tag>
+            ))}
+          </div>
+        )}
         <Space.Compact style={{ width: '100%' }}>
+          <Upload beforeUpload={handleUpload} showUploadList={false} disabled={uploading || sending}>
+            <Button icon={<PaperClipOutlined />} loading={uploading} disabled={!agentName || sending} />
+          </Upload>
           <Input.TextArea
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={agentName ? '输入消息...' : '请先选择 Agent'}
+            placeholder={agentName ? '输入消息，可上传图片/文件...' : '请先选择 Agent'}
             disabled={!agentName || sending}
             autoSize={{ minRows: 1, maxRows: 4 }}
             style={{ resize: 'none' }}
@@ -229,7 +277,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
             icon={<SendOutlined />}
             onClick={handleSend}
             loading={sending}
-            disabled={!agentName || !input.trim()}
+            disabled={!agentName || (!input.trim() && attachments.length === 0)}
           />
         </Space.Compact>
       </div>
