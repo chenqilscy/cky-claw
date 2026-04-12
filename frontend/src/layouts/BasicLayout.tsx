@@ -40,6 +40,7 @@ import {
   DeploymentUnitOutlined,
   SwapOutlined,
   ShopOutlined,
+  SafetyCertificateOutlined,
 } from '@ant-design/icons';
 import useThemeStore from '../stores/themeStore';
 import { useResponsive } from '../hooks/useResponsive';
@@ -215,6 +216,11 @@ const menuRoutes = {
       path: '/marketplace',
       name: '模板市场',
       icon: <ShopOutlined />,
+    },
+    {
+      path: '/compliance',
+      name: '合规管理',
+      icon: <SafetyCertificateOutlined />,
     },
     {
       path: '/i18n',

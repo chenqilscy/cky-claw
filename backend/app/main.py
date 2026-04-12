@@ -61,6 +61,7 @@ from app.api.knowledge_bases import router as knowledge_bases_router
 from app.api.media import router as media_router
 from app.api.a2a import router as a2a_router
 from app.api.marketplace import router as marketplace_router
+from app.api.compliance import router as compliance_router
 
 
 @asynccontextmanager
@@ -142,6 +143,7 @@ def create_app() -> FastAPI:
             {"name": "media", "description": "多模态媒体上传与访问"},
             {"name": "a2a", "description": "A2A (Agent-to-Agent) 跨平台互操作协议"},
             {"name": "marketplace", "description": "Agent 模板市场：浏览/发布/安装/评价"},
+            {"name": "compliance", "description": "合规框架：数据分类/保留策略/删除请求/SOC2控制点"},
             {"name": "token-usage", "description": "Token 用量审计与统计"},
             {"name": "audit-logs", "description": "操作审计日志"},
             {"name": "alerts", "description": "告警规则管理"},
@@ -207,6 +209,7 @@ def create_app() -> FastAPI:
     app.include_router(media_router)
     app.include_router(a2a_router)
     app.include_router(marketplace_router)
+    app.include_router(compliance_router)
     app.include_router(organizations_router)
     app.include_router(skills_router)
     app.include_router(tool_groups_router)

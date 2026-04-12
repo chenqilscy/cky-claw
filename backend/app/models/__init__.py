@@ -33,6 +33,12 @@ from app.models.knowledge_base import (
     KnowledgeDocumentRecord,
 )
 from app.models.a2a import A2AAgentCardRecord, A2ATaskRecord
+from app.models.compliance import (
+    ComplianceControlPoint,
+    DataClassificationLabel,
+    ErasureRequest,
+    RetentionPolicy,
+)
 from app.models.user import User
 from app.models.user_oauth import UserOAuthConnection
 
@@ -73,6 +79,10 @@ __all__ = [
     "KnowledgeChunkRecord",
     "A2AAgentCardRecord",
     "A2ATaskRecord",
+    "ComplianceControlPoint",
+    "DataClassificationLabel",
+    "ErasureRequest",
+    "RetentionPolicy",
     "User",
     "UserOAuthConnection",
     "WorkflowDefinition",

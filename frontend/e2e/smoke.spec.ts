@@ -201,4 +201,9 @@ test.describe('认证后页面', () => {
     await page.goto('/marketplace');
     await expect(page.locator('#root')).toBeVisible({ timeout: 10_000 });
   });
+
+  test('合规管理页可加载', async ({ page }) => {
+    await page.goto('/compliance');
+    await expect(page.locator('#root')).toBeVisible({ timeout: 10_000 });
+  });
 });
