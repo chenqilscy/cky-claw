@@ -85,7 +85,8 @@ class TestChannelAdapterBase:
         from app.services.channel_adapters import get_adapter
 
         assert get_adapter("unknown") is None
-        assert get_adapter("telegram") is None
+        assert get_adapter("telegram") is not None
+        assert get_adapter("discord") is not None
 
     def test_adapter_registry_exports(self) -> None:
         """__init__ 导出完整。"""
