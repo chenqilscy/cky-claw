@@ -39,6 +39,7 @@ import {
   BugOutlined,
   DeploymentUnitOutlined,
   SwapOutlined,
+  ShopOutlined,
 } from '@ant-design/icons';
 import useThemeStore from '../stores/themeStore';
 import { useResponsive } from '../hooks/useResponsive';
@@ -209,6 +210,11 @@ const menuRoutes = {
       path: '/a2a',
       name: 'A2A 协议',
       icon: <SwapOutlined />,
+    },
+    {
+      path: '/marketplace',
+      name: '模板市场',
+      icon: <ShopOutlined />,
     },
     {
       path: '/i18n',

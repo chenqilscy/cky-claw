@@ -16,6 +16,7 @@ const AgentVersionPage = lazy(() => import('./pages/agents/AgentVersionPage'));
 const HandoffEditorPage = lazy(() => import('./pages/agents/HandoffEditorPage'));
 const VisualBuilderPage = lazy(() => import('./pages/agents/VisualBuilderPage'));
 const A2APage = lazy(() => import('./pages/a2a/A2APage'));
+const MarketplacePage = lazy(() => import('./pages/marketplace/MarketplacePage'));
 const RunListPage = lazy(() => import('./pages/runs/RunListPage'));
 const SupervisionPage = lazy(() => import('./pages/supervision/SupervisionPage'));
 const ProviderListPage = lazy(() => import('./pages/providers/ProviderListPage'));
@@ -134,6 +135,7 @@ const App: React.FC = () => {
           <Route path="environments" element={guarded(<EnvironmentListPage />)} />
           <Route path="environments/:envName" element={guarded(<EnvironmentDetailPage />)} />
           <Route path="a2a" element={guarded(<A2APage />)} />
+          <Route path="marketplace" element={guarded(<MarketplacePage />)} />
           <Route path="i18n" element={guarded(<I18nSettingsPage />)} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>

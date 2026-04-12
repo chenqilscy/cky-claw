@@ -196,4 +196,9 @@ test.describe('认证后页面', () => {
     await page.goto('/a2a');
     await expect(page.locator('#root')).toBeVisible({ timeout: 10_000 });
   });
+
+  test('模板市场页可加载', async ({ page }) => {
+    await page.goto('/marketplace');
+    await expect(page.locator('#root')).toBeVisible({ timeout: 10_000 });
+  });
 });
