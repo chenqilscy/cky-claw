@@ -12,7 +12,7 @@ CkyClaw 是基于自研 **CkyClaw Framework** 构建的 AI Agent 管理与运行
 
 | 指标 | 数值 |
 |------|------|
-| 测试总数 | **4036+**（Backend 1934 + Framework 1665 + Frontend 437） |
+| 测试总数 | **4072+**（Backend 1934 + Framework 1665 + Frontend 441） |
 | 测试覆盖率 | Backend **98%** · Framework **100%** |
 | Alembic 迁移 | 51 个（0001–0051） |
 | API 路由模块 | 43 个 |
@@ -50,6 +50,7 @@ CkyClaw 是基于自研 **CkyClaw Framework** 构建的 AI Agent 管理与运行
 | 智能编排 | ✅ | S7 PlanGuard 5项验证 + Mailbox Agent 间通信 |
 | Prompt 模板变量 | ✅ | F8 模板引擎（render/validate/extract）+ 前端变量编辑器 |
 | 多环境管理 | ✅ | F12 Dev/Staging/Prod 环境隔离 + Publish/Rollback/Diff |
+| 移动端适配 | ✅ | F9 useResponsive Hook + 审批/对话/仪表盘/布局 4 页面响应式 |
 
 ### 未完成 / 延期项
 

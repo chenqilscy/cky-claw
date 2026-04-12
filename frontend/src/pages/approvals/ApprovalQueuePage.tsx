@@ -1,12 +1,13 @@
 import { useState, useCallback } from 'react';
-import { Tag, Button, Space, Modal, Input, App, Popconfirm, Badge, theme } from 'antd';
-import { CheckOutlined, CloseOutlined, ReloadOutlined, WifiOutlined } from '@ant-design/icons';
+import { Tag, Button, Space, Modal, Input, App, Popconfirm, Badge, theme, Dropdown } from 'antd';
+import { CheckOutlined, CloseOutlined, ReloadOutlined, WifiOutlined, MoreOutlined } from '@ant-design/icons';
 import type { ProColumns, ActionType } from '@ant-design/pro-components';
 import { ProTable } from '@ant-design/pro-components';
 import { useRef } from 'react';
 import { approvalService } from '../../services/approvalService';
 import { useApprovalWs } from '../../hooks/useApprovalWs';
 import type { ApprovalItem } from '../../services/approvalService';
+import { useResponsive } from '../../hooks/useResponsive';
 
 const statusColorMap: Record<string, string> = {
   pending: 'orange',
@@ -24,6 +25,7 @@ const triggerLabelMap: Record<string, string> = {
 const ApprovalQueuePage: React.FC = () => {
   const { message } = App.useApp();
   const { token } = theme.useToken();
+  const { isMobile } = useResponsive();
   const actionRef = useRef<ActionType>(null);
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
   const [rejectingId, setRejectingId] = useState<string>('');
@@ -94,6 +96,7 @@ const ApprovalQueuePage: React.FC = () => {
       ellipsis: true,
       width: 260,
       search: false,
+      hideInTable: isMobile,
       render: (_, record) => {
         const content = record.content as Record<string, unknown>;
         const toolName = content.tool_name as string | undefined;
@@ -134,6 +137,7 @@ const ApprovalQueuePage: React.FC = () => {
       width: 150,
       ellipsis: true,
       search: false,
+      hideInTable: isMobile,
     },
     {
       title: '创建时间',
@@ -142,14 +146,50 @@ const ApprovalQueuePage: React.FC = () => {
       valueType: 'dateTime',
       search: false,
       sorter: true,
+      hideInTable: isMobile,
     },
     {
       title: '操作',
       key: 'action',
-      width: 160,
+      width: isMobile ? 60 : 160,
       search: false,
       render: (_, record) => {
         if (record.status !== 'pending') return <span style={{ color: token.colorTextQuaternary }}>—</span>;
+        if (isMobile) {
+          return (
+            <Dropdown
+              menu={{
+                items: [
+                  {
+                    key: 'approve',
+                    label: '批准',
+                    icon: <CheckOutlined />,
+                    onClick: () => {
+                      Modal.confirm({
+                        title: '确认批准此请求？',
+                        onOk: () => handleApprove(record.id),
+                      });
+                    },
+                  },
+                  {
+                    key: 'reject',
+                    label: '拒绝',
+                    icon: <CloseOutlined />,
+                    danger: true,
+                    onClick: () => {
+                      setRejectingId(record.id);
+                      setRejectComment('');
+                      setRejectModalOpen(true);
+                    },
+                  },
+                ],
+              }}
+              trigger={['click']}
+            >
+              <Button type="text" icon={<MoreOutlined />} style={{ minWidth: 44, minHeight: 44 }} />
+            </Dropdown>
+          );
+        }
         return (
           <Space>
             <Popconfirm
@@ -225,7 +265,7 @@ const ApprovalQueuePage: React.FC = () => {
         ]}
         search={{
           labelWidth: 'auto',
-          defaultCollapsed: false,
+          defaultCollapsed: isMobile,
         }}
       />
       <Modal

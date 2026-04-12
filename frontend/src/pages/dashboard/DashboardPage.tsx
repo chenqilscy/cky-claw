@@ -32,6 +32,7 @@ import { traceService } from '../../services/traceService';
 import type { TraceStatsResponse } from '../../services/traceService';
 import { tokenUsageService } from '../../services/tokenUsageService';
 import type { TokenUsageByModelItem, TokenUsageTrendItem } from '../../services/tokenUsageService';
+import { useResponsive } from '../../hooks/useResponsive';
 
 const { Title, Text } = Typography;
 
@@ -41,6 +42,7 @@ const DashboardPage: React.FC = () => {
   const { message } = App.useApp();
   const { token } = theme.useToken();
   const navigate = useNavigate();
+  const { isMobile } = useResponsive();
   const [loading, setLoading] = useState(true);
   const [agentCount, setAgentCount] = useState(0);
   const [sessionCount, setSessionCount] = useState(0);
@@ -127,18 +129,20 @@ const DashboardPage: React.FC = () => {
       key: 'model',
       render: (v: string) => <Tag color="processing">{v}</Tag>,
     },
-    {
-      title: 'Prompt Tokens',
-      dataIndex: 'total_prompt_tokens',
-      key: 'total_prompt_tokens',
-      render: (v: number) => v.toLocaleString(),
-    },
-    {
-      title: 'Completion Tokens',
-      dataIndex: 'total_completion_tokens',
-      key: 'total_completion_tokens',
-      render: (v: number) => v.toLocaleString(),
-    },
+    ...(!isMobile ? [
+      {
+        title: 'Prompt Tokens',
+        dataIndex: 'total_prompt_tokens',
+        key: 'total_prompt_tokens',
+        render: (v: number) => v.toLocaleString(),
+      },
+      {
+        title: 'Completion Tokens',
+        dataIndex: 'total_completion_tokens',
+        key: 'total_completion_tokens',
+        render: (v: number) => v.toLocaleString(),
+      },
+    ] : []),
     {
       title: '总 Tokens',
       dataIndex: 'total_tokens',
@@ -422,12 +426,12 @@ const DashboardPage: React.FC = () => {
                       key: 'error_count',
                       render: (v: number) => v > 0 ? <Text type="danger">{v}</Text> : v,
                     },
-                    {
+                    ...(!isMobile ? [{
                       title: '最近活跃',
                       dataIndex: 'last_active_at',
                       key: 'last_active_at',
                       render: (v: string | null) => v ? new Date(v).toLocaleString() : '-',
-                    },
+                    }] : []),
                     {
                       title: '状态',
                       dataIndex: 'status',
@@ -449,7 +453,7 @@ const DashboardPage: React.FC = () => {
             <Card title="Agent 活动趋势（近 1 小时）" size="small">
               {activityTrend.length > 0 ? (
                 <ReactECharts
-                  style={{ height: 260 }}
+                  style={{ height: isMobile ? 200 : 260 }}
                   option={{
                     tooltip: { trigger: 'axis' },
                     legend: { data: ['运行次数', '错误次数'], top: 0 },
@@ -495,7 +499,7 @@ const DashboardPage: React.FC = () => {
             <Card title="Token 消耗趋势（近 7 天）" size="small">
               {tokenTrend.length > 0 ? (
                 <ReactECharts
-                  style={{ height: 280 }}
+                  style={{ height: isMobile ? 220 : 280 }}
                   option={{
                     tooltip: {
                       trigger: 'axis',

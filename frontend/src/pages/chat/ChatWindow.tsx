@@ -3,6 +3,7 @@ import { Button, Input, Space, Spin, Tag, Typography, App, theme } from 'antd';
 import { SendOutlined, ToolOutlined, SwapOutlined } from '@ant-design/icons';
 import { chatService } from '../../services/chatService';
 import { useStreamReducer } from './useStreamReducer';
+import { useResponsive } from '../../hooks/useResponsive';
 import type { StreamMessage } from './useStreamReducer';
 
 const MarkdownRenderer = lazy(() => import('../../components/MarkdownRenderer'));
@@ -22,6 +23,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 }) => {
   const { message } = App.useApp();
   const { token } = theme.useToken();
+  const { isMobile } = useResponsive();
   const {
     messages,
     setMessages,
@@ -155,7 +157,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
             }}
           >
             <div style={{
-              maxWidth: '70%',
+              maxWidth: isMobile ? '85%' : '70%',
               padding: '10px 14px',
               borderRadius: 12,
               background: msg.role === 'user' ? token.colorPrimary : token.colorBgContainer,

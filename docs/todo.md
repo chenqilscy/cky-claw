@@ -10,13 +10,13 @@
 
 | 指标 | 数值 |
 |------|------|
-| 测试通过 | **4068+**（Backend 1934 + Framework 1665 + Frontend 437 + CLI 32） |
+| 测试通过 | **4072+**（Backend 1934 + Framework 1665 + Frontend 441 + CLI 32） |
 | 测试覆盖率 | Backend **98%** · Framework **100%** |
 | Alembic 迁移 | **51** 个（0001–0051） |
 | API 路由模块 | **43** 个 |
 | 前端页面 | **40** 个（React.lazy 懒加载，含 31 菜单页 + 9 非菜单页） |
-| 前端测试文件 | **48** 个 |
-| 前端测试数 | **437** 个（Vitest） |
+| 前端测试文件 | **49** 个 |
+| 前端测试数 | **441** 个（Vitest） |
 | CI Job | **6** 个 GitHub Actions + **5** Stage Jenkinsfile |
 | TypeScript 错误 | **0** |
 | Backend mypy | **0** 错误（166 源文件） |
@@ -81,7 +81,7 @@
 |---|------|------|
 | F7 | ~~Agent 调试器~~ | ✅ 完成 — Framework DebugController(asyncio.Event) + Runner 3 检查点 + Backend REST API(7端点) + WebSocket + 前端调试面板 + 81 测试 |
 | F8 | 高级 Prompt Editor | 模板变量 + 版本管理 + A/B 测试集成 |
-| F9 | 移动端适配 | 关键页面（对话、审批）响应式优化 |
+| F9 | 移动端适配 | 关键页面（对话、审批）响应式优化 ✅ |
 
 ### 3.4 企业能力（P2）
 

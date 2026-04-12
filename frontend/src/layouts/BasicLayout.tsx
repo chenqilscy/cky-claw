@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { ProLayout } from '@ant-design/pro-components';
-import { Button, Grid, Select, Tag, Tooltip } from 'antd';
+import { Button, Select, Tag, Tooltip } from 'antd';
 import useEnvironmentStore from '../stores/environmentStore';
 import { environmentService } from '../services/environmentService';
 import type { Environment } from '../services/environmentService';
@@ -39,6 +39,7 @@ import {
   DeploymentUnitOutlined,
 } from '@ant-design/icons';
 import useThemeStore from '../stores/themeStore';
+import { useResponsive } from '../hooks/useResponsive';
 
 const menuRoutes = {
   routes: [
@@ -205,8 +206,7 @@ const BasicLayout: React.FC = () => {
   const location = useLocation();
   const themeMode = useThemeStore((s: { mode: 'light' | 'dark' }) => s.mode);
   const toggleTheme = useThemeStore((s: { toggle: () => void }) => s.toggle);
-  const screens = Grid.useBreakpoint();
-  const isMobile = !screens.md;
+  const { isMobile } = useResponsive();
 
   const currentEnv = useEnvironmentStore((s) => s.current);
   const setCurrentEnv = useEnvironmentStore((s) => s.setCurrent);
@@ -243,8 +243,8 @@ const BasicLayout: React.FC = () => {
           value={currentEnv}
           onChange={setCurrentEnv}
           allowClear
-          placeholder="全部环境"
-          style={{ width: 130 }}
+          placeholder={isMobile ? '环境' : '全部环境'}
+          style={{ width: isMobile ? 90 : 130 }}
           size="small"
         >
           {envList.map((e) => (
