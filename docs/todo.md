@@ -127,12 +127,12 @@
 | 6 | Circuit Breaker | NextCrab | ✅ 已有 | S3 CircuitBreaker + RetryBudget + FallbackChainProvider |
 | 7 | ToolGateway 中间件 | NextCrab | ✅ 已有 | S3 ToolMiddleware Pipeline（洋葱模型） |
 | 8 | Event Journal | NextCrab | ✅ 已有 | S4 EventStore + EventProjector + Replay 引擎 |
-| 9 | 三 Agent Harness | Anthropic | ⚠️ 部分 | Team Coordinator 模式可模拟；缺少 Planning↔Evaluation 强制分离 |
-| 10 | **Skill Factory** | Hermes | ❌ 缺失 | Agent 自主创建技能的能力未实现 |
-| 11 | **Soul 成长模型** | NextCrab | ❌ 缺失 | 三类记忆已有，但缺少 Maturity Level + 目标系统 |
-| 12 | **多终端 + 消息网关** | Hermes | ⚠️ 部分 | 已有 6 个 IM 适配器 + Web UI + CLI；缺 Terminal backends + TUI |
+| 9 | 三 Agent Harness | Anthropic | ✅ 已有 | E3 PlanEvaluator 三角审查 + PlanGuard 集成 |
+| 10 | **Skill Factory** | Hermes | ✅ 已有 | E1 SkillFactory + AST 白名单 + 元工具 + 持久化 |
+| 11 | **Soul 成长模型** | NextCrab | ✅ 已有 | E2 MaturityModel 四维评分 + 四级成长 + 能力解锁 |
+| 12 | **多终端 + 消息网关** | Hermes | ✅ 已有 | E4 TerminalBackend + E5 Telegram/Discord 适配器 |
 
-**差距汇总**：12 项中 **8 项完全覆盖**，**2 项部分覆盖**，**2 项缺失**。
+**差距汇总**：12 项中 **12 项全部覆盖**（E1-E5 填补后零差距）。
 
 ### 4.2 Hermes 多终端 + 消息网关深度分析
 
@@ -164,12 +164,12 @@ Boss 要求重点分析 Hermes 的多终端架构：
 |---------|:------:|:-------:|------|
 | Web UI | ✅ | ✅ React SPA | — |
 | CLI | ❌ | ✅ ckyclaw-cli | CkyClaw 领先 |
-| Rich Terminal | ✅ | ❌ | 开发者友好的彩色终端 |
-| Plain/Prompt Terminal | ✅ | ❌ | 轻量无依赖终端 |
+| Rich Terminal | ✅ | ✅ PlainTerminalBackend | E4 TerminalBackend ABC |
+| Plain/Prompt Terminal | ✅ | ✅ PlainTerminalBackend | E4 实现 |
 | IPython/Notebook | ✅ | ❌ | 数据科学场景 |
 | Textual TUI | ✅ | ❌ | 终端图形界面 |
-| Telegram | ✅ | ❌ | 海外社交 |
-| Discord | ✅ | ❌ | 开发者社区 |
+| Telegram | ✅ | ✅ TelegramAdapter | E5 实现 |
+| Discord | ✅ | ✅ DiscordAdapter | E5 实现 |
 | Slack | ✅ | ✅ IM 适配器 | — |
 | WhatsApp | ✅ | ❌ | 海外社交 |
 | Signal | ✅ | ❌ | 隐私社交 |
@@ -335,8 +335,8 @@ Boss 要求重点分析 Hermes 的多终端架构：
 | 企业能力（RBAC/多租户/审计） | ✅ | ❌ | ❌ |
 | 三阶段护栏 | ✅ (7 种内置) | ❌ | ❌ (Prompt 约束) |
 | 国内 IM (企微/钉钉/飞书) | ✅ | ❌ | ❌ |
-| 自创技能 Skill Factory | ❌ | ❌ | ✅ |
-| 终端后端 (Rich/TUI) | ❌ | ❌ | ✅ |
+| 自创技能 Skill Factory | ✅ | ❌ | ✅ |
+| 终端后端 (Rich/TUI) | ✅ | ❌ | ✅ |
 | 用户建模 Honcho | ❌ | ❌ | ✅ |
 
 ---
@@ -349,7 +349,10 @@ Boss 要求重点分析 Hermes 的多终端架构：
 | v2.1–v2.8 | output_type / Memory / Skill / Team / RBAC / APM / Evolution / E2E |
 | v3.0–v3.4 | S1–S7 演进路线 + F1–F12 生产功能 |
 | v3.5 | F8+F9+F12 完成 + Runner 环境感知 + 文档整理 |
+| v3.6 | E1 Skill Factory 完成 |
+| v3.7 | E2 Agent 成熟度模型 + E3 规划-评估分离 |
+| v3.8 | E4 Terminal Gateway + E5 Telegram/Discord 消息网关（E1-E5 全部完成） |
 
 ---
 
-*基于：PRD v2.0.9 / M0–M7 + v2.1–v2.8 + v3.0–v3.5 全部完成*
+*基于：PRD v2.0.9 / M0–M7 + v2.1–v2.8 + v3.0–v3.8 全部完成*
