@@ -241,4 +241,9 @@ test.describe('认证后页面', () => {
     await page.goto('/environments');
     await expect(page.locator('#root')).toBeVisible({ timeout: 10_000 });
   });
+
+  test('Benchmark 评测页可加载', async ({ page }) => {
+    await page.goto('/benchmark');
+    await expect(page.locator('#root')).toBeVisible({ timeout: 10_000 });
+  });
 });

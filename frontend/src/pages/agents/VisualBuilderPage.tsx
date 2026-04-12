@@ -1,6 +1,6 @@
-import { useMemo } from 'react';
-import { Button, Card, Divider, Space, Typography } from 'antd';
-import { SaveOutlined, PlusOutlined } from '@ant-design/icons';
+import { useMemo, useCallback } from 'react';
+import { Button, Card, Divider, Space, Typography, App } from 'antd';
+import { SaveOutlined, PlusOutlined, CopyOutlined } from '@ant-design/icons';
 import {
   ReactFlow,
   Background,
@@ -24,6 +24,7 @@ const initialNodes: Node[] = [
 const initialEdges: Edge[] = [];
 
 const VisualBuilderPage: React.FC = () => {
+  const { message } = App.useApp();
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
@@ -59,6 +60,15 @@ const VisualBuilderPage: React.FC = () => {
     };
   }, [edges, nodes]);
 
+  const handleSave = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(configJson, null, 2));
+      message.success('Agent JSON 已复制到剪贴板，可在 Agent 编辑页粘贴使用');
+    } catch {
+      message.info('请手动复制下方 JSON 配置');
+    }
+  }, [configJson, message]);
+
   return (
     <Space direction="vertical" size={16} style={{ width: '100%' }}>
       <Card>
@@ -68,8 +78,8 @@ const VisualBuilderPage: React.FC = () => {
           <Button icon={<PlusOutlined />} onClick={() => addNode('handoff')}>添加 Handoff</Button>
           <Button icon={<PlusOutlined />} onClick={() => addNode('mcp')}>添加 MCP</Button>
           <Divider type="vertical" />
-          <Button type="primary" icon={<SaveOutlined />}>
-            保存（生成 JSON）
+          <Button type="primary" icon={<SaveOutlined />} onClick={handleSave}>
+            保存（复制 JSON）
           </Button>
         </Space>
       </Card>

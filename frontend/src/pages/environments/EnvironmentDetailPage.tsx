@@ -201,18 +201,14 @@ const EnvironmentDetailPage: React.FC = () => {
         {diffResult && (
           <div style={{ display: 'flex', gap: 16 }}>
             <Card title="环境 1 快照" style={{ flex: 1 }} size="small">
-              <Text>
-                <pre style={{ fontSize: 12, maxHeight: 400, overflow: 'auto' }}>
-                  {JSON.stringify(diffResult.snapshot_env1, null, 2)}
-                </pre>
-              </Text>
+              <pre style={{ fontSize: 12, maxHeight: 400, overflow: 'auto', background: '#f5f5f5', padding: 8, borderRadius: 4, whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
+                {JSON.stringify(diffResult.snapshot_env1, null, 2)}
+              </pre>
             </Card>
             <Card title="环境 2 快照" style={{ flex: 1 }} size="small">
-              <Text>
-                <pre style={{ fontSize: 12, maxHeight: 400, overflow: 'auto' }}>
-                  {JSON.stringify(diffResult.snapshot_env2, null, 2)}
-                </pre>
-              </Text>
+              <pre style={{ fontSize: 12, maxHeight: 400, overflow: 'auto', background: '#f5f5f5', padding: 8, borderRadius: 4, whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
+                {JSON.stringify(diffResult.snapshot_env2, null, 2)}
+              </pre>
             </Card>
           </div>
         )}

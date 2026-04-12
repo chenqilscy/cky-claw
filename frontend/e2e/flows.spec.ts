@@ -106,4 +106,43 @@ test.describe('认证后导航', () => {
       expect(url).toBeTruthy();
     }
   });
+
+  test('Benchmark 页 — 统计卡片和 Tab 渲染', async ({ page }) => {
+    await page.goto('/benchmark');
+    await expect(page.locator('#root')).toBeVisible({ timeout: 10_000 });
+    const content = page.locator('.ant-card, .ant-tabs, .ant-statistic');
+    await expect(content.first()).toBeVisible({ timeout: 15_000 });
+  });
+
+  test('Benchmark 页 — 创建套件弹窗可打开', async ({ page }) => {
+    await page.goto('/benchmark');
+    await expect(page.locator('#root')).toBeVisible({ timeout: 10_000 });
+    const createBtn = page.locator('button:has-text("创建套件"), button:has-text("新建")');
+    if (await createBtn.first().isVisible({ timeout: 5_000 }).catch(() => false)) {
+      await createBtn.first().click();
+      const modal = page.locator('.ant-modal');
+      await expect(modal.first()).toBeVisible({ timeout: 5_000 });
+    }
+  });
+
+  test('Visual Builder 页 — 画布和工具栏渲染', async ({ page }) => {
+    await page.goto('/agents/visual-builder');
+    await expect(page.locator('#root')).toBeVisible({ timeout: 10_000 });
+    const canvas = page.locator('.react-flow, .react-flow__renderer');
+    await expect(canvas.first()).toBeVisible({ timeout: 15_000 });
+  });
+
+  test('Debug 页 — 调试器列表渲染', async ({ page }) => {
+    await page.goto('/debug');
+    await expect(page.locator('#root')).toBeVisible({ timeout: 10_000 });
+    const content = page.locator('.ant-table, .ant-empty, .ant-pro-table, .ant-card');
+    await expect(content.first()).toBeVisible({ timeout: 15_000 });
+  });
+
+  test('Environment 列表页 — 表格渲染', async ({ page }) => {
+    await page.goto('/environments');
+    await expect(page.locator('#root')).toBeVisible({ timeout: 10_000 });
+    const content = page.locator('.ant-table, .ant-empty, .ant-pro-table');
+    await expect(content.first()).toBeVisible({ timeout: 15_000 });
+  });
 });
