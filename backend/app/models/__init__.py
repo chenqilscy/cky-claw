@@ -32,6 +32,7 @@ from app.models.knowledge_base import (
     KnowledgeChunkRecord,
     KnowledgeDocumentRecord,
 )
+from app.models.a2a import A2AAgentCardRecord, A2ATaskRecord
 from app.models.user import User
 from app.models.user_oauth import UserOAuthConnection
 
@@ -69,6 +70,8 @@ __all__ = [
     "KnowledgeBaseRecord",
     "KnowledgeDocumentRecord",
     "KnowledgeChunkRecord",
+    "A2AAgentCardRecord",
+    "A2ATaskRecord",
     "User",
     "UserOAuthConnection",
     "WorkflowDefinition",

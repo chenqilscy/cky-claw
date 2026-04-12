@@ -181,4 +181,19 @@ test.describe('认证后页面', () => {
     await page.goto('/i18n');
     await expect(page.locator('#root')).toBeVisible({ timeout: 10_000 });
   });
+
+  test('Knowledge Bases 知识库页可加载', async ({ page }) => {
+    await page.goto('/knowledge-bases');
+    await expect(page.locator('#root')).toBeVisible({ timeout: 10_000 });
+  });
+
+  test('Agent Visual Builder 可视化搭建页可加载', async ({ page }) => {
+    await page.goto('/agents/visual-builder');
+    await expect(page.locator('#root')).toBeVisible({ timeout: 10_000 });
+  });
+
+  test('A2A 协议页可加载', async ({ page }) => {
+    await page.goto('/a2a');
+    await expect(page.locator('#root')).toBeVisible({ timeout: 10_000 });
+  });
 });

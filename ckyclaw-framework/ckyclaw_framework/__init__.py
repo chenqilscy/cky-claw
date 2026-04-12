@@ -137,6 +137,13 @@ from ckyclaw_framework.model.settings import ModelSettings
 from ckyclaw_framework.model.message import Message, MessageRole, TokenUsage
 from ckyclaw_framework.model.litellm_provider import LiteLLMProvider
 
+# === A2A ===
+from ckyclaw_framework.a2a.agent_card import AgentCard, AgentCapability, AgentSkillCard
+from ckyclaw_framework.a2a.task import A2ATask, TaskArtifact, TaskState, TaskStatus
+from ckyclaw_framework.a2a.client import A2AClient, A2AClientError
+from ckyclaw_framework.a2a.server import A2AServer
+from ckyclaw_framework.a2a.adapter import A2AAdapter
+
 __all__ = [
     # Core
     "Agent",
@@ -295,6 +302,18 @@ __all__ = [
     "content_block_from_dict",
     "content_blocks_to_text",
     "content_blocks_to_litellm",
+    # A2A (Agent-to-Agent Protocol)
+    "AgentCard",
+    "AgentCapability",
+    "AgentSkillCard",
+    "A2ATask",
+    "TaskArtifact",
+    "TaskState",
+    "TaskStatus",
+    "A2AClient",
+    "A2AClientError",
+    "A2AServer",
+    "A2AAdapter",
 ]
 
 __version__ = "0.1.0"

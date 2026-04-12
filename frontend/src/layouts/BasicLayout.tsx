@@ -38,6 +38,7 @@ import {
   AimOutlined,
   BugOutlined,
   DeploymentUnitOutlined,
+  SwapOutlined,
 } from '@ant-design/icons';
 import useThemeStore from '../stores/themeStore';
 import { useResponsive } from '../hooks/useResponsive';
@@ -203,6 +204,11 @@ const menuRoutes = {
       path: '/environments',
       name: '环境管理',
       icon: <DeploymentUnitOutlined />,
+    },
+    {
+      path: '/a2a',
+      name: 'A2A 协议',
+      icon: <SwapOutlined />,
     },
     {
       path: '/i18n',
