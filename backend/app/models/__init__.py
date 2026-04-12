@@ -33,6 +33,7 @@ from app.models.knowledge_base import (
     KnowledgeDocumentRecord,
 )
 from app.models.a2a import A2AAgentCardRecord, A2ATaskRecord
+from app.models.benchmark import BenchmarkRun, BenchmarkSuite
 from app.models.compliance import (
     ComplianceControlPoint,
     DataClassificationLabel,
@@ -79,6 +80,8 @@ __all__ = [
     "KnowledgeChunkRecord",
     "A2AAgentCardRecord",
     "A2ATaskRecord",
+    "BenchmarkRun",
+    "BenchmarkSuite",
     "ComplianceControlPoint",
     "DataClassificationLabel",
     "ErasureRequest",
