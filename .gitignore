@@ -69,6 +69,7 @@ ehthumbs.db
 # === Logs ===
 *.log
 logs/
+backend/uploads/
 
 # === Graphify ===
 graphify-out/
