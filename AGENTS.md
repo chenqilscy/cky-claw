@@ -12,11 +12,11 @@ CkyClaw 是基于自研 **CkyClaw Framework** 构建的 AI Agent 管理与运行
 
 | 指标 | 数值 |
 |------|------|
-| 测试总数 | **4462+**（Backend 2098 + Framework 1882 + Frontend 441 + CLI 41） |
+| 测试总数 | **4502+**（Backend 2138 + Framework 1882 + Frontend 441 + CLI 41） |
 | 测试覆盖率 | Backend **98%** · Framework **100%** |
-| Alembic 迁移 | 55 个（0001–0055） |
-| API 路由模块 | 46 个 |
-| 前端页面 | 34 个（React.lazy 懒加载） |
+| Alembic 迁移 | 57 个（0001–0057） |
+| API 路由模块 | 48 个（含 12 个 Benchmark 端点） |
+| 前端页面 | 35 个（React.lazy 懒加载） |
 | CI Job | 5 个 GitHub Actions + 5 Stage Jenkinsfile |
 | TypeScript 错误 | 0 |
 
@@ -59,6 +59,8 @@ CkyClaw 是基于自研 **CkyClaw Framework** 构建的 AI Agent 管理与运行
 | A2A Protocol | ✅ | N4 AgentCard + Task状态机 + Client/Server(JSON-RPC) + Adapter 隔离层 |
 | Agent Marketplace | ✅ | N5 模板发布/发现/评分/安装 + 7 API + Card 列表 + 安装/评价弹窗 |
 | Compliance 合规框架 | ✅ | N6 数据分类 + 保留策略 + Right-to-Erasure + SOC2 控制点 + 合规仪表盘 |
+| Agent Benchmarking | ✅ | N7 评测套件(Case/Suite/Runner/Report) + 12 API 端点 + BenchmarkPage |
+| 性能优化 | ✅ | 5 组合索引 + 通用查询缓存 query_cache + Agent 缓存失效 |
 | Prompt 模板变量 | ✅ | F8 模板引擎（render/validate/extract）+ 前端变量编辑器 |
 | 多环境管理 | ✅ | F12 Dev/Staging/Prod 环境隔离 + Publish/Rollback/Diff |
 | 移动端适配 | ✅ | F9 useResponsive Hook + 审批/对话/仪表盘/布局 4 页面响应式 |

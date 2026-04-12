@@ -2,7 +2,7 @@
 
 > 本文件记录 CkyClaw 项目的当前状态、未来演进方向和历史交付归档。
 >
-> 最后更新：2026-04-13 · 文档版本 v3.8.0
+> 最后更新：2026-04-13 · 文档版本 v3.9.0
 
 ---
 
@@ -10,11 +10,11 @@
 
 | 指标 | 数值 |
 |------|------|
-| 测试通过 | **4422+**（Backend 2098 + Framework 1882 + Frontend 441 + CLI 41） |
+| 测试通过 | **4502+**（Backend 2138 + Framework 1882 + Frontend 441 + CLI 41） |
 | 测试覆盖率 | Backend **98%** · Framework **100%** |
-| Alembic 迁移 | **55** 个（0001–0055） |
-| API 路由模块 | **46** 个 |
-| 前端页面 | **34** 个（React.lazy 懒加载） |
+| Alembic 迁移 | **57** 个（0001–0057） |
+| API 路由模块 | **48** 个（含 12 个 Benchmark 端点） |
+| 前端页面 | **35** 个（React.lazy 懒加载） |
 | 前端测试文件 | **49** 个 |
 | 前端测试数 | **441** 个（Vitest） |
 | CI Job | **6** 个 GitHub Actions + **5** Stage Jenkinsfile |
@@ -283,6 +283,8 @@ Boss 要求重点分析 Hermes 的多终端架构：
 | 环境管理 | Dev/Staging/Prod + 发布/回滚/对比 + Agent 绑定 |
 | 模板变量 | prompt_template API + render/validate/extract |
 | Agent 评估 | 7 维评分 + 反馈 + 汇总 |
+| Agent Benchmarking | 评测套件/运行/报告 12 端点 + Dashboard |
+| 性能优化 | 5 组合索引 + 通用查询缓存 query_cache + Agent 缓存失效 |
 | Agent 国际化 | LocalizedInstructions + locale |
 | 灾备策略 | backup/restore/verify 脚本 + cron |
 | 深度健康检查 | /health/deep + DB/Redis 探测 |
@@ -358,7 +360,7 @@ Boss 要求重点分析 Hermes 的多终端架构：
 | N4 | **A2A Protocol** | Agent Card 发现协议 + Task Lifecycle + A2AClient/Server + 隔离适配层 | **P2** | ✅ Framework + Backend + Frontend(MVP) |
 | N5 | **Agent Marketplace** | Agent 模板发布/发现/评分/收藏 + 跨组织共享 + 版本管理 + 一键实例化 | **P2** | ✅ Backend(7 API + 26 测试) + Frontend(Card 列表 + 安装/评价弹窗) |
 | N6 | **Compliance 合规框架** | 数据分类标签 + 保留策略自动执行 + Right-to-Erasure 工作流 + SOC2 控制点映射 + 合规报表 | **P2** | ✅ Backend(11 API + 29 测试) + Frontend(仪表盘 + 4 Tab 管理页) |
-| N7 | **Agent Benchmarking** | 标准化评估套件，E2 成熟度模型的自然延伸 | **P3** | ❌ |
+| N7 | **Agent Benchmarking** | 标准化评估套件，E2 成熟度模型的自然延伸 | **P3** | ✅ Framework(Case/Suite/Runner/Report 23测试) + Backend(12 API + 29测试) + Frontend(BenchmarkPage) |
 
 ### 8.2 N1: RAG 知识库（P0 — Agent 平台核心原语）
 
