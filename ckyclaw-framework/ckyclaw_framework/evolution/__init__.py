@@ -18,6 +18,12 @@ from ckyclaw_framework.evolution.learning_loop import (
     RunReflection,
     RunReflector,
 )
+from ckyclaw_framework.evolution.maturity import (
+    MaturityConfig,
+    MaturityLevel,
+    MaturityModel,
+    ReflectionScore,
+)
 from ckyclaw_framework.evolution.proposal import (
     EvolutionProposal,
     ProposalStatus,
@@ -41,9 +47,13 @@ __all__ = [
     "EvolutionStrategy",
     "FeedbackSignal",
     "LearningLoop",
+    "MaturityConfig",
+    "MaturityLevel",
+    "MaturityModel",
     "MetricSignal",
     "ProposalStatus",
     "ProposalType",
+    "ReflectionScore",
     "RunReflection",
     "RunReflector",
     "SignalCollector",

@@ -2,7 +2,7 @@
 
 > 本文件记录 CkyClaw 项目的当前状态、未来演进方向和历史交付归档。
 >
-> 最后更新：2026-04-13 · 文档版本 v3.6.0
+> 最后更新：2026-04-13 · 文档版本 v3.7.0
 
 ---
 
@@ -10,7 +10,7 @@
 
 | 指标 | 数值 |
 |------|------|
-| 测试通过 | **4114+**（Backend 1940 + Framework 1692 + Frontend 441 + CLI 41） |
+| 测试通过 | **4181+**（Backend 1940 + Framework 1759 + Frontend 441 + CLI 41） |
 | 测试覆盖率 | Backend **98%** · Framework **100%** |
 | Alembic 迁移 | **51** 个（0001–0051） |
 | API 路由模块 | **43** 个 |
@@ -209,8 +209,8 @@ Boss 要求重点分析 Hermes 的多终端架构：
 | # | Phase | 核心交付 | 优先级 | 依赖 |
 |---|-------|---------|:------:|------|
 | E1 | ~~**Skill Factory**~~ | ✅ 完成 — SkillFactory + SkillDefinition + AST 白名单 + 元工具 + 持久化 | P1 | S5 LearningLoop |
-| E2 | **Agent Maturity Model** | 成熟度等级（Newborn→Expert）+ 自主升级条件 + 能力解锁 | P2 | S5 + Memory |
-| E3 | **Planning-Evaluation 分离** | PlannerAgent + EvaluatorAgent 强制三角审查 | P2 | S7 PlanGuard |
+| E2 | ~~**Agent Maturity Model**~~ | ✅ 完成 — MaturityModel 四维评分 + 四级成长(Newborn→Expert) + 能力解锁 + 自动升降级 | P2 | S5 + Memory |
+| E3 | ~~**Planning-Evaluation 分离**~~ | ✅ 完成 — PlanEvaluator 三角审查 + PlanGuard 集成 + 自定义标准 + async | P2 | S7 PlanGuard |
 | E4 | **Terminal Gateway** | Rich/Textual/IPython Terminal Backend 统一抽象 | P3 | CLI |
 | E5 | **海外消息网关** | Telegram + Discord 适配器（复用 IM Channel 抽象） | P3 | IM Channels |
 
