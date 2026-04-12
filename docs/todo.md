@@ -10,12 +10,12 @@
 
 | 指标 | 数值 |
 |------|------|
-| 测试通过 | **4016+**（Backend 1935 + Framework 1619 + Frontend 430 + CLI 32） |
+| 测试通过 | **4068+**（Backend 1934 + Framework 1665 + Frontend 437 + CLI 32） |
 | 测试覆盖率 | Backend **98%** · Framework **100%** |
 | Alembic 迁移 | **51** 个（0001–0051） |
-| API 路由模块 | **40** 个 |
+| API 路由模块 | **43** 个 |
 | 前端页面 | **40** 个（React.lazy 懒加载，含 31 菜单页 + 9 非菜单页） |
-| 前端测试文件 | **76** 个 |
+| 前端测试文件 | **48** 个 |
 | 前端测试数 | **437** 个（Vitest） |
 | CI Job | **6** 个 GitHub Actions + **5** Stage Jenkinsfile |
 | TypeScript 错误 | **0** |
