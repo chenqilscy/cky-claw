@@ -5,8 +5,10 @@ from __future__ import annotations
 from .base import ChannelAdapter, ChannelMessage
 from .custom_webhook import CustomWebhookAdapter
 from .dingtalk import DingTalkAdapter
+from .discord import DiscordAdapter
 from .feishu import FeishuAdapter
 from .slack import SlackAdapter
+from .telegram import TelegramAdapter
 from .wechat_official import WeChatOfficialAdapter
 from .wecom import WeComAdapter
 
@@ -18,6 +20,8 @@ _ADAPTER_REGISTRY: dict[str, ChannelAdapter] = {
     "custom_webhook": CustomWebhookAdapter(),
     "wechat_official": WeChatOfficialAdapter(),
     "slack": SlackAdapter(),
+    "telegram": TelegramAdapter(),
+    "discord": DiscordAdapter(),
 }
 
 
@@ -31,8 +35,10 @@ __all__ = [
     "ChannelMessage",
     "CustomWebhookAdapter",
     "DingTalkAdapter",
+    "DiscordAdapter",
     "FeishuAdapter",
     "SlackAdapter",
+    "TelegramAdapter",
     "WeChatOfficialAdapter",
     "WeComAdapter",
     "get_adapter",

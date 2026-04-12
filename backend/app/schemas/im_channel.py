@@ -9,7 +9,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-VALID_CHANNEL_TYPES = {"wecom", "dingtalk", "slack", "telegram", "feishu", "webhook"}
+VALID_CHANNEL_TYPES = {"wecom", "dingtalk", "slack", "telegram", "feishu", "webhook", "discord", "wechat_official"}
 
 _SENSITIVE_CONFIG_FIELDS = {"token", "secret", "api_key", "app_secret", "client_secret", "password"}
 
