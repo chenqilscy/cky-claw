@@ -341,7 +341,143 @@ Boss 要求重点分析 Hermes 的多终端架构：
 
 ---
 
-## 八、版本历史
+## 八、Next Wave v2 演进路线（N1–N7）
+
+> 基于 v3.8 能力差距分析 + 十角色团队评审，下一波演进方向。  
+> 排序依据：AI Agent 平台核心性 × 中国企业需求优先级。
+
+### 8.1 总览
+
+| # | Phase | 核心交付 | 优先级 | 状态 |
+|---|-------|---------|:------:|:----:|
+| N1 | **RAG 知识库** | Embedding + VectorStore + DocumentLoader + ChunkStrategy + RAG Pipeline + KnowledgeBaseTool | **P0** | ⚠️ Framework ✅, Backend/Frontend 待实现 |
+| N2 | **Multi-Modal 消息模型** | ContentBlock 多态消息体 + Message 扩展 + LiteLLM 格式转换 | **P1** | ⚠️ Framework ✅, Backend/Frontend 待实现 |
+| N3 | **Agent Visual Builder** | 拖拽式 Agent 拼装器（工具/护栏/Handoff/MCP 可视化配置） + Canvas→JSON 单向同步 | **P1** | ❌ |
+| N4 | **A2A Protocol** | Agent Card 发现协议 + Task Lifecycle + A2AClient/Server + 隔离适配层 | **P2** | ❌ |
+| N5 | **Agent Marketplace** | Agent 模板发布/发现/评分/收藏 + 跨组织共享 + 版本管理 + 一键实例化 | **P2** | ❌ |
+| N6 | **Compliance 合规框架** | 数据分类标签 + 保留策略自动执行 + Right-to-Erasure 工作流 + SOC2 控制点映射 + 合规报表 | **P2** | ❌ |
+| N7 | **Agent Benchmarking** | 标准化评估套件，E2 成熟度模型的自然延伸 | **P3** | ❌ |
+
+### 8.2 N1: RAG 知识库（P0 — Agent 平台核心原语）
+
+**动机**：知识密集型场景（客服/法律/医疗/技术文档）是 AI Agent 最高频应用，缺少 RAG 等于砍掉 50% 场景。
+
+**Framework 层** — `ckyclaw_framework/rag/`
+
+| 模块 | 职责 |
+|------|------|
+| `embedding.py` | EmbeddingProvider ABC + LiteLLMEmbeddingProvider（复用 LiteLLM 适配 10+ 厂商） |
+| `chunker.py` | ChunkStrategy ABC + FixedSizeChunker + RecursiveCharacterChunker + MarkdownChunker |
+| `document.py` | DocumentLoader ABC + TextLoader + MarkdownLoader + PDFLoader（可选 pymupdf4llm） |
+| `vector_store.py` | VectorStore ABC + InMemoryVectorStore + PgVectorStore（pgvector 扩展） |
+| `pipeline.py` | RAGPipeline：retrieve(query, top_k) → augment(context+prompt) → 返回增强消息 |
+| `tool.py` | `@function_tool` 包装的 knowledge_base_search 工具，Agent 可直接调用 |
+
+**Backend 层**
+
+| 模块 | 职责 |
+|------|------|
+| KnowledgeBase ORM | 知识库元数据（名称/描述/embedding模型/chunk策略） |
+| Document ORM | 文档记录（文件名/大小/chunk数/状态） |
+| Chunk ORM | 分块记录（content + embedding vector(1536)） |
+| REST API | CRUD 知识库 + 上传文档 + 触发索引 + 搜索测试 |
+| Agent 绑定 | Agent.knowledge_base_ids 多对多关联 |
+
+**Frontend 层**
+
+| 页面 | 功能 |
+|------|------|
+| KnowledgeBasePage | ProTable 列表 + 创建/编辑 Modal |
+| KnowledgeBaseDetailPage | 文档列表 + 上传 + 索引状态 + 搜索测试面板 |
+| AgentEditPage 增强 | 知识库选择器（多选） |
+
+**前置依赖**：
+- PostgreSQL 需启用 `pgvector` 扩展
+- `MemoryEntry.embedding` 字段已存在，可复用 Embedding 基础设施
+
+### 8.3 N2: Multi-Modal 消息模型（P1 — 现代 AI 基础能力）
+
+**动机**：GPT-4o/Claude 3.5/通义千问-VL 均支持多模态，Framework 消息模型仍为纯文本是硬伤。
+
+**Framework 层** — 扩展消息模型
+
+```
+ContentBlock (Union)
+├── TextContent      {type: "text", text: str}
+├── ImageContent     {type: "image", url: str | None, base64: str | None, media_type: str}
+├── AudioContent     {type: "audio", url: str | None, base64: str | None, format: str}
+├── FileContent      {type: "file", url: str, filename: str, media_type: str}
+└── ToolResultContent {type: "tool_result", tool_call_id: str, output: str}
+```
+
+- Runner 消息从 `str` 扩展为 `str | list[ContentBlock]`
+- LiteLLMProvider 适配多模态消息格式转换
+- Session 持久化支持 ContentBlock JSON 序列化
+
+**Frontend 层**
+- ChatPage 支持图片/文件拖拽上传
+- 消息气泡渲染 ImageContent（内联预览）、FileContent（下载链接）、AudioContent（播放器）
+
+### 8.4 N3: Agent Visual Builder（P1 — 降低使用门槛）
+
+**动机**：对标 Dify/Coze 的无代码 Agent 构建体验，当前 AgentEditPage 仅为表单。
+
+**交付物（Phase 1 单向同步）**
+- ReactFlow 画布：中心 Agent 节点 + 周围可拖入的组件节点（Tool / Guardrail / Handoff / MCP Server）
+- 左侧 Palette 面板：可用组件列表（从平台已注册的 Tool/Guardrail/MCP 动态加载）
+- 右侧属性面板：选中节点后编辑属性
+- Canvas → JSON 单向转换（画布为视图层，JSON 为数据层）
+- 保存时生成等效 Agent 配置 JSON，调用现有 Agent CRUD API
+
+**Phase 2 双向同步**（后续优化）
+- JSON → Canvas 反向渲染，编辑 JSON 后画布自动更新
+
+### 8.5 N4: A2A Protocol（P2 — 跨平台互操作）
+
+**动机**：Google 2024 发布 Agent-to-Agent 协议，是跨平台 Agent 互操作的未来标准。提前布局可建立先发优势。
+
+**交付物**
+- Framework: A2AServer（接收外部 Agent 请求） + A2AClient（调用外部 Agent）
+- Agent Card 发现协议实现（/.well-known/agent.json）
+- Task 生命周期管理（submitted → working → completed / failed）
+- A2AAdapter 隔离层，规范变动时只改适配器
+- Backend: A2A 端点注册 + 服务发现 API
+
+### 8.6 N5: Agent Marketplace（P2 — 生态护城河）
+
+**动机**：竞品 Hermes 有 Skill Marketplace、NextCrab 有远端 Marketplace API，CkyClaw 仅有内部模板。
+
+**交付物**
+- AgentTemplate 扩展：新增 `published`、`downloads`、`rating`、`author_org_id` 字段
+- 发布流程：组织内模板 → 审核 → 公开发布
+- 发现机制：分类标签 + 搜索 + 热门排行 + 推荐
+- 一键安装：从市场模板实例化 Agent 到当前组织
+- 评分评论：用户评分 + 使用反馈
+
+### 8.7 N6: Compliance 合规框架（P2 — 企业准入）
+
+**动机**：企业客户（金融/医疗/政府）需要合规认证才能采购。
+
+**交付物**
+- 数据分类标签系统：PII / PHI / 敏感 / 公开，自动标记 + 手动标记
+- 数据保留策略：按数据分类 + 时间维度自动清理（Trace / Session / AuditLog）
+- Right-to-Erasure 工作流：用户请求 → 自动扫描所有子系统 → 删除/脱敏 → 生成合规报告
+- SOC2 控制点映射：将现有安全措施（加密/RBAC/审计）映射到 SOC2 TSC
+- 合规仪表盘：控制点完成率 + 数据保留状态 + 删除请求处理队列
+
+### 8.8 N7: Agent Benchmarking（P3 — 量化评估）
+
+**动机**：E2 成熟度模型提供了四维评分，但缺少标准化评估套件。
+
+**交付物**
+- BenchmarkSuite：定义评估场景（工具调用准确率 / 多轮对话连贯性 / 拒答合规性 / 幻觉率）
+- BenchmarkRunner：自动批量执行 + 结果采集 + 报告生成
+- 与 E2 MaturityModel 集成：评测结果自动影响成熟度评分
+- Frontend: 评测仪表盘 + 历史对比图表
+
+---
+
+## 九、版本历史
 
 | 版本 | 里程碑摘要 |
 |------|-----------|
@@ -352,7 +488,8 @@ Boss 要求重点分析 Hermes 的多终端架构：
 | v3.6 | E1 Skill Factory 完成 |
 | v3.7 | E2 Agent 成熟度模型 + E3 规划-评估分离 |
 | v3.8 | E4 Terminal Gateway + E5 Telegram/Discord 消息网关（E1-E5 全部完成） |
+| v4.0 | N1 RAG 知识库 + N2 Multi-Modal 消息模型（Framework 层完成） |
 
 ---
 
-*基于：PRD v2.0.9 / M0–M7 + v2.1–v2.8 + v3.0–v3.8 全部完成*
+*基于：PRD v2.0.9 / M0–M7 + v2.1–v2.8 + v3.0–v3.8 + v4.0 全部完成*

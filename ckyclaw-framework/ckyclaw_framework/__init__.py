@@ -89,6 +89,17 @@ from ckyclaw_framework.intent import IntentDetector, IntentSignal, KeywordIntent
 # === Model ===
 from ckyclaw_framework.model.provider import ModelProvider, ToolCall, ToolCallChunk
 from ckyclaw_framework.model.cost_router import CostRouter, ModelTier, ProviderCandidate, classify_complexity
+from ckyclaw_framework.model.content_block import (
+    AudioContent,
+    ContentBlock,
+    ContentType,
+    FileContent,
+    ImageContent,
+    TextContent,
+    content_block_from_dict,
+    content_blocks_to_litellm,
+    content_blocks_to_text,
+)
 
 # === Evolution ===
 from ckyclaw_framework.evolution.config import EvolutionConfig
@@ -102,6 +113,26 @@ from ckyclaw_framework.evolution.signals import (
     ToolPerformanceSignal,
 )
 from ckyclaw_framework.evolution.strategy import EvolutionStrategy, StrategyEngine
+
+# === RAG ===
+from ckyclaw_framework.rag import (
+    ChunkStrategy,
+    Chunk,
+    Document,
+    DocumentLoader,
+    EmbeddingProvider,
+    FixedSizeChunker,
+    InMemoryEmbeddingProvider,
+    InMemoryVectorStore,
+    MarkdownChunker,
+    RAGPipeline,
+    RAGResult,
+    RecursiveCharacterChunker,
+    SearchResult,
+    TextLoader,
+    VectorStore,
+    create_knowledge_base_tool,
+)
 from ckyclaw_framework.model.settings import ModelSettings
 from ckyclaw_framework.model.message import Message, MessageRole, TokenUsage
 from ckyclaw_framework.model.litellm_provider import LiteLLMProvider
@@ -237,6 +268,33 @@ __all__ = [
     "IntentDetector",
     "IntentSignal",
     "KeywordIntentDetector",
+    # RAG
+    "Document",
+    "DocumentLoader",
+    "TextLoader",
+    "Chunk",
+    "ChunkStrategy",
+    "FixedSizeChunker",
+    "MarkdownChunker",
+    "RecursiveCharacterChunker",
+    "EmbeddingProvider",
+    "InMemoryEmbeddingProvider",
+    "VectorStore",
+    "InMemoryVectorStore",
+    "SearchResult",
+    "RAGPipeline",
+    "RAGResult",
+    "create_knowledge_base_tool",
+    # ContentBlock (Multi-Modal)
+    "ContentType",
+    "TextContent",
+    "ImageContent",
+    "AudioContent",
+    "FileContent",
+    "ContentBlock",
+    "content_block_from_dict",
+    "content_blocks_to_text",
+    "content_blocks_to_litellm",
 ]
 
 __version__ = "0.1.0"
