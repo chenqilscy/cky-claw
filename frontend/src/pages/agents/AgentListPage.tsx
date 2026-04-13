@@ -57,6 +57,7 @@ const AgentListPage: React.FC = () => {
     {
       title: '名称',
       dataIndex: 'name',
+      width: 180,
       render: (_, record) => (
         <a onClick={() => navigate(`/agents/${record.name}/edit`)}>{record.name}</a>
       ),
@@ -65,6 +66,7 @@ const AgentListPage: React.FC = () => {
       title: '描述',
       dataIndex: 'description',
       ellipsis: true,
+      width: 200,
     },
     {
       title: '模型',
@@ -118,6 +120,7 @@ const AgentListPage: React.FC = () => {
         dataSource={data}
         loading={loading}
         search={false}
+        scroll={{ x: 'max-content' }}
         pagination={{
           current: pagination.current,
           pageSize: pagination.pageSize,
