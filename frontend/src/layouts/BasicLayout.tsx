@@ -57,179 +57,87 @@ const menuRoutes = {
       icon: <MessageOutlined />,
     },
     {
-      path: '/agents',
-      name: 'Agent 管理',
+      name: 'Agent',
       icon: <RobotOutlined />,
+      children: [
+        { path: '/agents', name: 'Agent 管理' },
+        { path: '/agents/visual-builder', name: '可视化搭建', icon: <BranchesOutlined /> },
+        { path: '/evaluations', name: 'Agent 评估', icon: <StarOutlined /> },
+        { path: '/evolution', name: '自动进化', icon: <ExperimentOutlined /> },
+        { path: '/debug', name: 'Agent 调试器', icon: <BugOutlined /> },
+      ],
     },
     {
-      path: '/agents/visual-builder',
-      name: 'Agent 可视化搭建',
-      icon: <BranchesOutlined />,
-    },
-    {
-      path: '/providers',
-      name: '模型厂商',
+      name: '模型与工具',
       icon: <CloudServerOutlined />,
+      children: [
+        { path: '/providers', name: '模型厂商' },
+        { path: '/mcp-servers', name: 'MCP Server', icon: <ApiOutlined /> },
+        { path: '/tool-groups', name: '工具组', icon: <ToolOutlined /> },
+        { path: '/cost-router', name: '成本路由', icon: <ThunderboltOutlined /> },
+      ],
     },
     {
-      path: '/runs',
-      name: '执行记录',
-      icon: <UnorderedListOutlined />,
-    },
-    {
-      path: '/supervision',
-      name: '监督面板',
-      icon: <EyeOutlined />,
-    },
-    {
-      path: '/traces',
-      name: 'Trace 追踪',
-      icon: <ApartmentOutlined />,
-    },
-    {
-      path: '/guardrails',
-      name: 'Guardrail 护栏',
-      icon: <SafetyCertificateOutlined />,
-    },
-    {
-      path: '/approvals',
-      name: '审批队列',
-      icon: <AuditOutlined />,
-    },
-    {
-      path: '/mcp-servers',
-      name: 'MCP Server',
-      icon: <ApiOutlined />,
-    },
-    {
-      path: '/tool-groups',
-      name: '工具组',
-      icon: <ToolOutlined />,
-    },
-    {
-      path: '/memories',
-      name: '记忆管理',
+      name: '知识与记忆',
       icon: <BulbOutlined />,
+      children: [
+        { path: '/knowledge-bases', name: '知识库', icon: <DatabaseOutlined /> },
+        { path: '/memories', name: '记忆管理' },
+        { path: '/skills', name: '技能管理', icon: <BookOutlined /> },
+      ],
     },
     {
-      path: '/skills',
-      name: '技能管理',
-      icon: <BookOutlined />,
+      name: '监控与追踪',
+      icon: <EyeOutlined />,
+      children: [
+        { path: '/runs', name: '执行记录', icon: <UnorderedListOutlined /> },
+        { path: '/traces', name: 'Trace 追踪', icon: <ApartmentOutlined /> },
+        { path: '/supervision', name: '监督面板' },
+        { path: '/apm', name: 'APM 仪表盘', icon: <LineChartOutlined /> },
+        { path: '/checkpoints', name: '检查点', icon: <HistoryOutlined /> },
+      ],
     },
     {
-      path: '/templates',
-      name: '模板市场',
-      icon: <AppstoreOutlined />,
-    },
-    {
-      path: '/knowledge-bases',
-      name: '知识库',
-      icon: <DatabaseOutlined />,
-    },
-    {
-      path: '/workflows',
-      name: '工作流',
-      icon: <BranchesOutlined />,
-    },
-    {
-      path: '/teams',
-      name: '团队管理',
-      icon: <TeamOutlined />,
-    },
-    {
-      path: '/audit-logs',
-      name: '审计日志',
-      icon: <FileSearchOutlined />,
-    },
-    {
-      path: '/roles',
-      name: '角色权限',
-      icon: <CrownOutlined />,
-    },
-    {
-      path: '/im-channels',
-      name: 'IM 渠道',
-      icon: <LinkOutlined />,
-    },
-    {
-      path: '/evaluations',
-      name: 'Agent 评估',
-      icon: <StarOutlined />,
-    },
-    {
-      path: '/evolution',
-      name: '自动进化',
-      icon: <ExperimentOutlined />,
-    },
-    {
-      path: '/organizations',
-      name: '组织管理',
-      icon: <BankOutlined />,
-    },
-    {
-      path: '/scheduled-tasks',
-      name: '定时任务',
-      icon: <ClockCircleOutlined />,
-    },
-    {
-      path: '/apm',
-      name: 'APM 仪表盘',
-      icon: <LineChartOutlined />,
-    },
-    {
-      path: '/cost-router',
-      name: '成本路由',
-      icon: <ThunderboltOutlined />,
-    },
-    {
-      path: '/checkpoints',
-      name: '检查点',
-      icon: <HistoryOutlined />,
-    },
-    {
-      path: '/intent',
-      name: '意图检测',
-      icon: <AimOutlined />,
-    },
-    {
-      path: '/ab-test',
-      name: 'A/B 测试',
-      icon: <ExperimentOutlined />,
-    },
-    {
-      path: '/debug',
-      name: 'Agent 调试器',
-      icon: <BugOutlined />,
-    },
-    {
-      path: '/environments',
-      name: '环境管理',
-      icon: <DeploymentUnitOutlined />,
-    },
-    {
-      path: '/a2a',
-      name: 'A2A 协议',
-      icon: <SwapOutlined />,
-    },
-    {
-      path: '/marketplace',
-      name: '模板市场',
-      icon: <ShopOutlined />,
-    },
-    {
-      path: '/compliance',
-      name: '合规管理',
+      name: '安全与治理',
       icon: <SafetyCertificateOutlined />,
+      children: [
+        { path: '/guardrails', name: 'Guardrail 护栏' },
+        { path: '/approvals', name: '审批队列', icon: <AuditOutlined /> },
+        { path: '/intent', name: '意图检测', icon: <AimOutlined /> },
+        { path: '/compliance', name: '合规管理' },
+      ],
     },
     {
-      path: '/benchmark',
-      name: 'Agent 评测',
-      icon: <ExperimentOutlined />,
+      name: '市场与评测',
+      icon: <ShopOutlined />,
+      children: [
+        { path: '/templates', name: '模板市场', icon: <AppstoreOutlined /> },
+        { path: '/marketplace', name: 'Agent 市场' },
+        { path: '/benchmark', name: 'Agent 评测', icon: <ExperimentOutlined /> },
+        { path: '/ab-test', name: 'A/B 测试' },
+      ],
     },
     {
-      path: '/i18n',
-      name: '国际化设置',
-      icon: <GlobalOutlined />,
+      name: '集成与渠道',
+      icon: <LinkOutlined />,
+      children: [
+        { path: '/im-channels', name: 'IM 渠道' },
+        { path: '/a2a', name: 'A2A 协议', icon: <SwapOutlined /> },
+        { path: '/workflows', name: '工作流', icon: <BranchesOutlined /> },
+        { path: '/scheduled-tasks', name: '定时任务', icon: <ClockCircleOutlined /> },
+      ],
+    },
+    {
+      name: '系统管理',
+      icon: <BankOutlined />,
+      children: [
+        { path: '/teams', name: '团队管理', icon: <TeamOutlined /> },
+        { path: '/organizations', name: '组织管理' },
+        { path: '/roles', name: '角色权限', icon: <CrownOutlined /> },
+        { path: '/audit-logs', name: '审计日志', icon: <FileSearchOutlined /> },
+        { path: '/environments', name: '环境管理', icon: <DeploymentUnitOutlined /> },
+        { path: '/i18n', name: '国际化设置', icon: <GlobalOutlined /> },
+      ],
     },
   ],
 };
@@ -279,6 +187,7 @@ const BasicLayout: React.FC = () => {
           placeholder={isMobile ? '环境' : '全部环境'}
           style={{ width: isMobile ? 90 : 130 }}
           size="small"
+          variant="borderless"
         >
           {envList.map((e) => (
             <Select.Option key={e.name} value={e.name}>

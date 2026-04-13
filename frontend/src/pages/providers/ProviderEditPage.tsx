@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Button, Card, Form, Input, InputNumber, Select, Space, App, Spin } from 'antd';
-import { ArrowLeftOutlined } from '@ant-design/icons';
+import { Button, Card, Form, Input, InputNumber, Modal, Select, Space, App, Spin } from 'antd';
+import { ArrowLeftOutlined, ApiOutlined } from '@ant-design/icons';
 import { providerService, PROVIDER_TYPES, AUTH_TYPES, PROVIDER_BASE_URLS } from '../../services/providerService';
 import type { ProviderCreateRequest, ProviderUpdateRequest } from '../../services/providerService';
 
@@ -13,6 +13,7 @@ const ProviderEditPage: React.FC = () => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [testing, setTesting] = useState(false);
 
   /** 切换厂商类型时自动填写 Base URL（仅当 base_url 为空或匹配已知厂商 URL 时覆盖） */
   const handleProviderTypeChange = (type: string) => {
@@ -77,6 +78,30 @@ const ProviderEditPage: React.FC = () => {
       message.error(isEdit ? '更新失败' : '注册失败');
     } finally {
       setSaving(false);
+    }
+  };
+
+  /** 测试连接（仅编辑模式可用） */
+  const handleTestConnection = async () => {
+    if (!id) return;
+    setTesting(true);
+    try {
+      const result = await providerService.testConnection(id);
+      if (result.success) {
+        Modal.success({
+          title: '连接成功',
+          content: `模型: ${result.model_used ?? '-'}，延迟: ${result.latency_ms}ms`,
+        });
+      } else {
+        Modal.error({
+          title: '连接失败',
+          content: result.error ?? '未知错误',
+        });
+      }
+    } catch {
+      message.error('测试请求失败');
+    } finally {
+      setTesting(false);
     }
   };
 
@@ -151,6 +176,15 @@ const ProviderEditPage: React.FC = () => {
                 <Button type="primary" htmlType="submit" loading={saving}>
                   {isEdit ? '保存' : '注册'}
                 </Button>
+                {isEdit && (
+                  <Button
+                    icon={<ApiOutlined />}
+                    loading={testing}
+                    onClick={handleTestConnection}
+                  >
+                    测试连接
+                  </Button>
+                )}
                 <Button onClick={() => navigate('/providers')}>取消</Button>
               </Space>
             </Form.Item>
