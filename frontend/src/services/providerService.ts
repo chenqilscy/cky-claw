@@ -93,6 +93,25 @@ export interface ProviderTestResult {
   model_used: string | null;
 }
 
+export interface ProviderModelResponse {
+  id: string;
+  provider_id: string;
+  model_name: string;
+  display_name: string;
+  context_window: number;
+  max_output_tokens: number | null;
+  prompt_price_per_1k: number;
+  completion_price_per_1k: number;
+  is_enabled: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ProviderModelListResponse {
+  data: ProviderModelResponse[];
+  total: number;
+}
+
 export const providerService = {
   list: (params?: ProviderListParams) =>
     api.get<ProviderListResponse>('/providers', params ? { ...params } as Record<string, string | number | undefined> : undefined),
@@ -117,4 +136,7 @@ export const providerService = {
 
   rotateKey: (id: string, data: RotateKeyRequest) =>
     api.post<ProviderResponse>(`/providers/${id}/rotate-key`, data),
+
+  listModels: (providerId: string, isEnabled?: boolean) =>
+    api.get<ProviderModelListResponse>(`/providers/${providerId}/models`, isEnabled != null ? { is_enabled: isEnabled } as Record<string, string | number | undefined> : undefined),
 };
