@@ -37,7 +37,7 @@ def upgrade() -> None:
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("now()")),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("now()")),
         sa.PrimaryKeyConstraint("id"),
-        sa.ForeignKeyConstraint(["agent_id"], ["agents.id"]),
+        sa.ForeignKeyConstraint(["agent_id"], ["agent_configs.id"]),
         sa.ForeignKeyConstraint(["org_id"], ["organizations.id"]),
     )
     op.create_index("ix_a2a_agent_cards_agent_id", "a2a_agent_cards", ["agent_id"])

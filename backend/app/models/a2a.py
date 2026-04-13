@@ -20,7 +20,7 @@ class A2AAgentCardRecord(SoftDeleteMixin, Base):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     agent_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("agents.id"), nullable=False, index=True
+        UUID(as_uuid=True), ForeignKey("agent_configs.id"), nullable=False, index=True
     )
     name: Mapped[str] = mapped_column(String(128), nullable=False, index=True)
     description: Mapped[str] = mapped_column(Text, nullable=False, server_default=text("''"))
