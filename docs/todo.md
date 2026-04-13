@@ -10,9 +10,9 @@
 
 | 指标 | 数值 |
 |------|------|
-| 测试通过 | **4502+**（Backend 2138 + Framework 1882 + Frontend 441 + CLI 41） |
+| 测试通过 | **4689+**（Backend 2236 + Framework 1919 + Frontend 493 + CLI 41） |
 | 测试覆盖率 | Backend **98%** · Framework **100%** |
-| Alembic 迁移 | **57** 个（0001–0057） |
+| Alembic 迁移 | **58** 个（0001–0058） |
 | API 路由模块 | **48** 个（含 12 个 Benchmark 端点） |
 | 前端页面 | **35** 个（React.lazy 懒加载） |
 | 前端测试文件 | **49** 个 |
