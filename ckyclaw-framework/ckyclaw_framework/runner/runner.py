@@ -142,6 +142,15 @@ async def _build_system_message(
         text = render_result.rendered
         for warning in render_result.warnings:
             logger.warning("Prompt 模板渲染: %s", warning)
+
+    # response_style: 在 instructions 前注入输出风格规则
+    if agent.response_style:
+        from ckyclaw_framework.agent.response_style import get_response_style_prompt
+
+        style_prompt = get_response_style_prompt(agent.response_style)
+        if style_prompt:
+            text = f"{style_prompt}\n\n{text}" if text else style_prompt
+
     # output_type: 注入 JSON Schema 描述到 system prompt 作为 fallback 指引
     if agent.output_type is not None and hasattr(agent.output_type, "model_json_schema"):
         schema = agent.output_type.model_json_schema()

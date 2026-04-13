@@ -31,6 +31,7 @@ export interface AgentConfig {
   output_type: Record<string, unknown> | null;
   metadata: Record<string, unknown>;
   prompt_variables: PromptVariableDefinition[];
+  response_style: string | null;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -64,6 +65,7 @@ export interface AgentCreateInput {
   output_type?: Record<string, unknown> | null;
   metadata?: Record<string, unknown>;
   prompt_variables?: PromptVariableDefinition[];
+  response_style?: string | null;
 }
 
 export type AgentUpdateInput = Partial<AgentCreateInput>;

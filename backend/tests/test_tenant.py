@@ -288,6 +288,8 @@ def _make_agent_mock(**overrides) -> MagicMock:
         "approval_mode": "suggest",
         "approval_config": None,
         "metadata_": {},
+        "prompt_variables": [],
+        "response_style": None,
         "output_type": None,
         "provider_id": None,
         "org_id": None,

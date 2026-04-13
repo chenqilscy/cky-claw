@@ -123,6 +123,7 @@ class TestAgentGetNotFound:
         mock_agent.output_type = None
         mock_agent.metadata_ = {}
         mock_agent.prompt_variables = []
+        mock_agent.response_style = None
         mock_agent.org_id = None
         mock_agent.is_active = True
         mock_agent.created_by = None
@@ -179,6 +180,7 @@ class TestAgentCreateEdgeCases:
         mock_agent.output_type = None
         mock_agent.metadata_ = {}
         mock_agent.prompt_variables = []
+        mock_agent.response_style = None
         mock_agent.org_id = None
         mock_agent.is_active = True
         mock_agent.created_by = None

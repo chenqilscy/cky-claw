@@ -1,0 +1,38 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mE:/QP/maf/frontend[39m
+
+ [32m✓[39m src/__tests__/pages/TraceComponents.test.tsx[2m > [22mSpanDetailsPanel[2m > [22m渲染 Span 名称[33m 522[2mms[22m[39m
+ [32m✓[39m src/__tests__/pages/TraceComponents.test.tsx[2m > [22mSpanDetailsPanel[2m > [22m渲染基本字段[32m 69[2mms[22m[39m
+ [32m✓[39m src/__tests__/pages/TraceComponents.test.tsx[2m > [22mSpanDetailsPanel[2m > [22m渲染 token 使用量[32m 66[2mms[22m[39m
+ [32m✓[39m src/__tests__/pages/TraceComponents.test.tsx[2m > [22mSpanDetailsPanel[2m > [22mguardrail 拦截时显示告警[32m 89[2mms[22m[39m
+[90mstderr[2m | src/__tests__/pages/MarketplacePage.test.tsx[2m > [22m[2mMarketplacePage[2m > [22m[2m渲染页面标题
+[22m[39mWarning: [antd: Spin] `tip` only work in nest or fullscreen pattern.
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ [32m✓[39m src/__tests__/pages/TraceComponents.test.tsx[2m > [22mSpanDetailsPanel[2m > [22m无 input/output 时不崩溃[32m 39[2mms[22m[39m
+ [32m✓[39m src/__tests__/pages/TraceComponents.test.tsx[2m > [22mTraceStatsPanel[2m > [22m渲染总 Trace 数[32m 226[2mms[22m[39m
+ [32m✓[39m src/__tests__/pages/TraceComponents.test.tsx[2m > [22mTraceStatsPanel[2m > [22m渲染总 Span 数[32m 66[2mms[22m[39m
+ [32m✓[39m src/__tests__/pages/TraceComponents.test.tsx[2m > [22mTraceStatsPanel[2m > [22m渲染平均耗时[32m 70[2mms[22m[39m
+ [32m✓[39m src/__tests__/pages/TraceComponents.test.tsx[2m > [22mTraceStatsPanel[2m > [22m渲染 Guardrail 拦截统计[32m 54[2mms[22m[39m
+ [32m✓[39m src/__tests__/pages/TraceComponents.test.tsx[2m > [22mTraceStatsPanel[2m > [22m渲染错误率[32m 62[2mms[22m[39m
+ [32m✓[39m src/__tests__/pages/TraceComponents.test.tsx[2m > [22mTraceStatsPanel[2m > [22m零值不崩溃[32m 61[2mms[22m[39m
+[90mstderr[2m | src/__tests__/pages/MarketplacePage.test.tsx[2m > [22m[2mMarketplacePage[2m > [22m[2m渲染搜索和筛选区域
+[22m[39mWarning: [antd: Spin] `tip` only work in nest or fullscreen pattern.
+
+ [32m✓[39m src/__tests__/pages/MarketplacePage.test.tsx[2m > [22mMarketplacePage[2m > [22m渲染页面标题[33m 1174[2mms[22m[39m
+[90mstderr[2m | src/__tests__/pages/MarketplacePage.test.tsx[2m > [22m[2mMarketplacePage[2m > [22m[2m渲染模板卡片列表
+[22m[39mWarning: [antd: Spin] `tip` only work in nest or fullscreen pattern.
+
+ [32m✓[39m src/__tests__/pages/MarketplacePage.test.tsx[2m > [22mMarketplacePage[2m > [22m渲染搜索和筛选区域[32m 199[2mms[22m[39m
+[90mstderr[2m | src/__tests__/pages/MarketplacePage.test.tsx[2m > [22m[2mMarketplacePage[2m > [22m[2m空数据不崩溃
+[22m[39mWarning: [antd: Spin] `tip` only work in nest or fullscreen pattern.
+
+ [32m✓[39m src/__tests__/pages/MarketplacePage.test.tsx[2m > [22mMarketplacePage[2m > [22m渲染模板卡片列表[32m 224[2mms[22m[39m
+ [32m✓[39m src/__tests__/pages/MarketplacePage.test.tsx[2m > [22mMarketplacePage[2m > [22m空数据不崩溃[32m 92[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m2 passed[39m[22m[90m (2)[39m
+[2m      Tests [22m [1m[32m15 passed[39m[22m[90m (15)[39m
+[2m   Start at [22m 04:45:51
+[2m   Duration [22m 18.04s[2m (transform 256ms, setup 739ms, collect 17.81s, tests 3.02s, environment 3.95s, prepare 502ms)[22m
+

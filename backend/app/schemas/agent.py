@@ -45,12 +45,25 @@ class AgentCreate(BaseModel):
     prompt_variables: list[dict[str, Any]] = Field(
         default_factory=list, description="Prompt 模板变量定义列表",
     )
+    response_style: str | None = Field(
+        default=None, max_length=32,
+        description="输出风格（concise 等），null 表示默认",
+    )
 
     @field_validator("name")
     @classmethod
     def validate_name(cls, v: str) -> str:
         if not _AGENT_NAME_PATTERN.match(v):
             raise ValueError("名称只能包含小写字母、数字和连字符，且以字母或数字开头结尾，长度 3-64")
+        return v
+
+    @field_validator("response_style")
+    @classmethod
+    def validate_response_style(cls, v: str | None) -> str | None:
+        if v is not None:
+            allowed = {"concise"}
+            if v not in allowed:
+                raise ValueError(f"response_style 必须是 {allowed} 之一或 null")
         return v
 
     @field_validator("approval_mode")
@@ -80,6 +93,7 @@ class AgentUpdate(BaseModel):
     output_type: dict[str, Any] | None = None
     metadata: dict[str, Any] | None = None
     prompt_variables: list[dict[str, Any]] | None = None
+    response_style: str | None = None
 
     @field_validator("approval_mode")
     @classmethod
@@ -113,6 +127,7 @@ class AgentResponse(BaseModel):
     output_type: dict[str, Any] | None
     metadata: dict[str, Any] = Field(alias="metadata_")
     prompt_variables: list[dict[str, Any]]
+    response_style: str | None
     org_id: uuid.UUID | None
     is_active: bool
     created_by: uuid.UUID | None

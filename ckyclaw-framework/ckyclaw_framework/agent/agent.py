@@ -66,6 +66,10 @@ class Agent:
     output_type: type | None = None
     """结构化输出类型（Pydantic BaseModel 子类）"""
 
+    response_style: str | None = None
+    """输出风格标识。内置支持 "concise"（基于 talk-normal 的简洁风格）。
+    None 表示不启用任何输出风格修饰。"""
+
     def as_tool(
         self,
         tool_name: str | None = None,

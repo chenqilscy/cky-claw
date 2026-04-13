@@ -1,0 +1,237 @@
+
+ RUN  v3.2.4 E:/QP/maf/frontend
+
+ ✓ src/__tests__/pages/DashboardPage.test.tsx (8 tests) 25085ms
+   ✓ DashboardPage > renders dashboard title  4684ms
+   ✓ DashboardPage > shows agent count after loading  2555ms
+   ✓ DashboardPage > shows session count after loading  3080ms
+   ✓ DashboardPage > renders ECharts component  4160ms
+   ✓ DashboardPage > renders token trend card title  3128ms
+   ✓ DashboardPage > renders agent realtime status card  1929ms
+   ✓ DashboardPage > renders agent activity trend card  3237ms
+   ✓ DashboardPage > shows auto-refresh switch  2308ms
+ ✓ src/__tests__/pages/ApmDashboardPage.test.tsx (5 tests) 20845ms
+   ✓ ApmDashboardPage > 渲染页面标题  9021ms
+   ✓ ApmDashboardPage > 渲染统计卡片  4025ms
+   ✓ ApmDashboardPage > 渲染 ECharts 图表  7639ms
+ ✓ src/__tests__/pages/ProviderKeyRotation.test.tsx (6 tests) 24896ms
+   ✓ ProviderListPage — 密钥轮换与到期 > 渲染密钥状态列  6965ms
+   ✓ ProviderListPage — 密钥轮换与到期 > 显示已过期标签  4460ms
+   ✓ ProviderListPage — 密钥轮换与到期 > 显示有效标签  2796ms
+   ✓ ProviderListPage — 密钥轮换与到期 > 显示永久标签（无过期时间）  1912ms
+   ✓ ProviderListPage — 密钥轮换与到期 > 渲染轮换按钮  2134ms
+   ✓ ProviderListPage — 密钥轮换与到期 > 点击轮换按钮显示弹窗  6562ms
+ ✓ src/__tests__/pages/DebugPage.test.tsx (14 tests) 31351ms
+   ✓ DebugPage > 渲染页面标题  8601ms
+   ✓ DebugPage > 渲染新建调试按钮  2019ms
+   ✓ DebugPage > 渲染刷新按钮  2403ms
+   ✓ DebugPage > 点击刷新按钮调用 list 接口  3078ms
+   ✓ DebugPage > 点击新建调试打开模态框  3110ms
+   ✓ DebugPage > 模态框包含输入消息和调试模式选择  3056ms
+   ✓ DebugPage > 列表展示会话数据  4308ms
+   ✓ DebugPage > 创建调试会话成功  2279ms
+   ✓ DebugPage > 调试按钮存在于列表行  2484ms
+ ✓ src/__tests__/pages/LoginPage.test.tsx (12 tests) 52241ms
+   ✓ LoginPage > renders login form  3556ms
+   ✓ LoginPage > renders login button  2247ms
+   ✓ LoginPage > shows error message when store has error  451ms
+   ✓ LoginPage > renders GitHub login button when provider is available  4991ms
+   ✓ LoginPage > renders wecom login button when provider is available  5440ms
+   ✓ LoginPage > renders dingtalk login button when provider is available  5113ms
+   ✓ LoginPage > renders feishu login button when provider is available  5297ms
+   ✓ LoginPage > renders multiple OAuth providers together  6917ms
+   ✓ LoginPage > does not show divider when no providers available  1214ms
+   ✓ LoginPage > clicks OAuth button and calls authorize  5771ms
+   ✓ LoginPage > shows error message when OAuth authorize fails  7780ms
+   ✓ LoginPage > handles getProviders failure gracefully  3458ms
+ ✓ src/__tests__/pages/OrganizationPage.test.tsx (4 tests) 11157ms
+   ✓ OrganizationPage > renders page title  6463ms
+   ✓ OrganizationPage > calls organizationService.list on mount  1277ms
+   ✓ OrganizationPage > renders organization data  2021ms
+   ✓ OrganizationPage > renders create button  1385ms
+ ✓ src/__tests__/pages/EvolutionPage.test.tsx (7 tests) 36070ms
+   ✓ EvolutionPage > renders page title  9098ms
+   ✓ EvolutionPage > shows proposal in table after loading  4254ms
+   ✓ EvolutionPage > shows proposal type tag  3314ms
+   ✓ EvolutionPage > shows status tag  4412ms
+   ✓ EvolutionPage > renders filter inputs  1360ms
+   ✓ EvolutionPage > renders create button  5960ms
+   ✓ EvolutionPage > renders refresh button  7667ms
+ ✓ src/__tests__/pages/EvaluationPage.test.tsx (4 tests) 27263ms
+   ✓ EvaluationPage > 渲染 Tabs  12537ms
+   ✓ EvaluationPage > 渲染评估列表  6331ms
+   ✓ EvaluationPage > 渲染新建评估按钮  5326ms
+   ✓ EvaluationPage > 加载失败不崩溃  3066ms
+ ✓ src/__tests__/pages/AuditLogPage.test.tsx (4 tests) 20945ms
+   ✓ AuditLogPage > renders page title  10599ms
+   ✓ AuditLogPage > renders audit log data in table  2712ms
+   ✓ AuditLogPage > renders table columns  3338ms
+   ✓ AuditLogPage > calls listAuditLogs on mount  4294ms
+ ✓ src/__tests__/pages/ProviderEditPage.test.tsx (5 tests) 11667ms
+   ✓ ProviderEditPage > 新建模式渲染注册标题  7107ms
+   ✓ ProviderEditPage > 新建模式包含返回按钮  1015ms
+   ✓ ProviderEditPage > 新建模式包含表单字段  1094ms
+   ✓ ProviderEditPage > 编辑模式渲染编辑标题  990ms
+   ✓ ProviderEditPage > 编辑模式调用 get 接口  1457ms
+ ✓ src/__tests__/pages/WorkflowPage.test.tsx (4 tests) 22808ms
+   ✓ WorkflowPage > 渲染页面标题  12155ms
+   ✓ WorkflowPage > 渲染新建按钮  3716ms
+   ✓ WorkflowPage > 渲染工作流列表记录  2909ms
+   ✓ WorkflowPage > 渲染操作按钮  4026ms
+ ✓ src/__tests__/pages/RolePage.test.tsx (4 tests) 14139ms
+   ✓ RolePage > renders page title  5832ms
+   ✓ RolePage > calls roleService.list on mount  1466ms
+   ✓ RolePage > renders role data  4619ms
+   ✓ RolePage > renders permission resources  2219ms
+ ✓ src/__tests__/pages/IntentDetectionPage.test.tsx (6 tests) 14566ms
+   ✓ IntentDetectionPage > renders page title  4112ms
+   ✓ IntentDetectionPage > renders form labels  932ms
+   ✓ IntentDetectionPage > renders detect button  1906ms
+   ✓ IntentDetectionPage > calls detect API and shows drifted result  2463ms
+   ✓ IntentDetectionPage > shows not-drifted result  2366ms
+   ✓ IntentDetectionPage > displays keyword tags  2784ms
+ ✓ src/__tests__/pages/IMChannelPage.test.tsx (4 tests) 16203ms
+   ✓ IMChannelPage > 渲染页面标题  8199ms
+   ✓ IMChannelPage > 渲染新建按钮  3204ms
+   ✓ IMChannelPage > 调用列表接口  2402ms
+   ✓ IMChannelPage > 加载失败不崩溃  2394ms
+ ✓ src/__tests__/pages/TemplatePage.test.tsx (6 tests) 12363ms
+   ✓ TemplatePage > renders page title  6355ms
+   ✓ TemplatePage > loads and displays template card  1908ms
+   ✓ TemplatePage > shows template description  1636ms
+   ✓ TemplatePage > shows category tag  1096ms
+   ✓ TemplatePage > calls list API on mount  717ms
+   ✓ TemplatePage > shows empty state when no templates  647ms
+ ✓ src/__tests__/pages/CostRouterPage.test.tsx (8 tests) 12017ms
+   ✓ CostRouterPage > 渲染页面标题  6903ms
+   ✓ CostRouterPage > 渲染层级说明卡片  496ms
+   ✓ CostRouterPage > 空输入时分析按钮禁用  988ms
+   ✓ CostRouterPage > 输入文本后点击分析按钮调用 classify 和 recommend  515ms
+   ✓ CostRouterPage > 显示分类结果  422ms
+   ✓ CostRouterPage > 显示 Provider 推荐  895ms
+   ✓ CostRouterPage > 无匹配 Provider 时显示警告  835ms
+   ✓ CostRouterPage > classify 失败时显示错误提示  952ms
+ ✓ src/__tests__/pages/ChatWindow.test.tsx (4 tests) 8812ms
+   ✓ ChatWindow > 渲染 Agent 名称  6673ms
+   ✓ ChatWindow > 无 Agent 时显示提示  646ms
+   ✓ ChatWindow > 无消息时显示引导文本  616ms
+   ✓ ChatWindow > 渲染发送按钮  870ms
+ ✓ src/__tests__/pages/AgentEditPage.test.tsx (5 tests) 19741ms
+   ✓ AgentEditPage > 创建模式渲染标题  10295ms
+   ✓ AgentEditPage > 编辑模式渲染标题  4525ms
+   ✓ AgentEditPage > 渲染表单字段  2051ms
+   ✓ AgentEditPage > 编辑模式加载 Agent 详情  1633ms
+   ✓ AgentEditPage > 加载下拉选项  1233ms
+ ✓ src/__tests__/pages/TeamPage.test.tsx (4 tests) 14299ms
+   ✓ TeamPage > renders page title  7782ms
+   ✓ TeamPage > calls listTeams on mount  1194ms
+   ✓ TeamPage > renders team data  2668ms
+   ✓ TeamPage > renders protocol tag  2652ms
+ ✓ src/__tests__/pages/CheckpointPage.test.tsx (6 tests) 14204ms
+   ✓ CheckpointPage > 渲染页面标题  5610ms
+   ✓ CheckpointPage > 输入 Run ID 后点击查询调用 list 接口  325ms
+   ✓ CheckpointPage > 显示检查点列表数据  5734ms
+   ✓ CheckpointPage > 显示消息数和 Token 使用  2371ms
+ ✓ src/__tests__/pages/EventReplayTimeline.test.tsx (6 tests) 9862ms
+   ✓ EventReplayTimeline > 空事件显示空状态  2523ms
+   ✓ EventReplayTimeline > 渲染事件列表  3930ms
+   ✓ EventReplayTimeline > 点击播放按钮  700ms
+   ✓ EventReplayTimeline > 点击单步前进  2252ms
+   ✓ EventReplayTimeline > 显示事件类型 Tag  322ms
+ ✓ src/__tests__/pages/TracesPage.test.tsx (4 tests) 15359ms
+   ✓ TracesPage > 渲染页面标题  8836ms
+   ✓ TracesPage > 渲染统计卡片  2757ms
+   ✓ TracesPage > 调用列表和统计接口  2070ms
+   ✓ TracesPage > 加载失败不崩溃  1691ms
+ ✓ src/__tests__/pages/ChatSidebar.test.tsx (4 tests) 10760ms
+   ✓ ChatSidebar > 渲染选择 Agent 标签  8242ms
+   ✓ ChatSidebar > 渲染新建对话按钮  1051ms
+   ✓ ChatSidebar > 渲染历史对话标签  637ms
+   ✓ ChatSidebar > 加载 Agent 列表  826ms
+ ✓ src/__tests__/pages/ChatPage.test.tsx (4 tests) 4783ms
+   ✓ ChatPage > 渲染侧边栏  4030ms
+   ✓ ChatPage > 渲染聊天窗口  384ms
+   ✓ ChatPage > 包含 Layout 结构  364ms
+ ✓ src/__tests__/components/CrudTable.test.tsx (18 tests) 10449ms
+   ✓ CrudTable > 渲染标题和图标  2707ms
+   ✓ CrudTable > 显示加载状态  300ms
+   ✓ CrudTable > 默认显示新建按钮  4060ms
+   ✓ CrudTable > 点击新建按钮打开 Modal  1128ms
+   ✓ CrudTable > modalTitle 自定义  755ms
+ ✓ src/__tests__/pages/SupervisionPage.test.tsx (4 tests) 7110ms
+   ✓ SupervisionPage > 渲染页面标题  5352ms
+   ✓ SupervisionPage > 渲染统计卡片  751ms
+   ✓ SupervisionPage > 调用列表接口  415ms
+   ✓ SupervisionPage > 加载失败不崩溃  589ms
+ ✓ src/__tests__/pages/ScheduledTasksPage.test.tsx (4 tests) 7442ms
+   ✓ ScheduledTasksPage > renders page title  6557ms
+   ✓ ScheduledTasksPage > calls scheduledTaskService.list on mount  378ms
+   ✓ ScheduledTasksPage > renders create button  360ms
+ ✓ src/__tests__/pages/TeamFlowPage.test.tsx (3 tests) 5648ms
+   ✓ TeamFlowPage > 渲染页面标题  4795ms
+   ✓ TeamFlowPage > 渲染 ReactFlow 画布  710ms
+ ✓ src/__tests__/pages/I18nSettingsPage.test.tsx (4 tests) 5482ms
+   ✓ I18nSettingsPage > 渲染页面标题  4438ms
+   ✓ I18nSettingsPage > 加载 Agent 列表  383ms
+   ✓ I18nSettingsPage > 渲染 Agent 下拉选择器  381ms
+ ✓ src/__tests__/pages/ApprovalQueuePage.test.tsx (4 tests) 4544ms
+   ✓ ApprovalQueuePage > 渲染审批队列标题  3590ms
+   ✓ ApprovalQueuePage > 渲染刷新按钮  383ms
+   ✓ ApprovalQueuePage > 渲染 WebSocket 连接状态  304ms
+ ✓ src/__tests__/pages/WorkflowEditorPage.test.tsx (4 tests) 6379ms
+   ✓ WorkflowEditorPage > 渲染页面标题  4987ms
+   ✓ WorkflowEditorPage > 渲染 ReactFlow 画布  470ms
+   ✓ WorkflowEditorPage > 渲染创建按钮  451ms
+   ✓ WorkflowEditorPage > 渲染步骤类型选项  397ms
+ ✓ src/__tests__/pages/MemoryPage.test.tsx (4 tests) 4156ms
+   ✓ MemoryPage > renders page title  3294ms
+   ✓ MemoryPage > renders create button  403ms
+ ✓ src/__tests__/pages/GuardrailRulesPage.test.tsx (4 tests) 3898ms
+   ✓ GuardrailRulesPage > 渲染页面标题  2815ms
+   ✓ GuardrailRulesPage > 渲染新建按钮  364ms
+   ✓ GuardrailRulesPage > 调用列表接口  380ms
+   ✓ GuardrailRulesPage > 加载失败不崩溃  336ms
+ ✓ src/__tests__/pages/SkillPage.test.tsx (4 tests) 4955ms
+   ✓ SkillPage > renders page title  3101ms
+   ✓ SkillPage > calls skillService.list via ProTable request  467ms
+   ✓ SkillPage > renders create button  901ms
+   ✓ SkillPage > renders search button  482ms
+ ✓ src/__tests__/pages/AgentVersionPage.test.tsx (4 tests) 8353ms
+   ✓ AgentVersionPage > 渲染返回按钮  7158ms
+   ✓ AgentVersionPage > 渲染版本历史表格标题  475ms
+   ✓ AgentVersionPage > 调用版本列表接口  484ms
+ ✓ src/__tests__/pages/NotFoundPage.test.tsx (2 tests) 5229ms
+   ✓ NotFoundPage > renders 404 text  3852ms
+   ✓ NotFoundPage > renders back button  1373ms
+ ✓ src/__tests__/pages/EnvironmentDetailPage.test.tsx (4 tests) 12006ms
+   ✓ EnvironmentDetailPage > renders environment detail page  6719ms
+   ✓ EnvironmentDetailPage > displays environment info  1942ms
+   ✓ EnvironmentDetailPage > shows publish and diff buttons  1660ms
+   ✓ EnvironmentDetailPage > shows back button  1680ms
+ ✓ src/__tests__/pages/HandoffEditorPage.test.tsx (4 tests) 3915ms
+   ✓ HandoffEditorPage > 渲染页面标题  3334ms
+   ✓ HandoffEditorPage > 加载失败不崩溃  412ms
+ ✓ src/__tests__/pages/RunListPage.test.tsx (5 tests) 3568ms
+   ✓ RunListPage > 渲染页面标题  2190ms
+   ✓ RunListPage > 渲染统计卡片  462ms
+   ✓ RunListPage > 调用列表和汇总接口  349ms
+ ✓ src/__tests__/pages/ToolGroupPage.test.tsx (4 tests) 4043ms
+   ✓ ToolGroupPage > 渲染页面标题  3373ms
+ ✓ src/__tests__/pages/MCPServerPage.test.tsx (4 tests) 4221ms
+   ✓ MCPServerPage > 渲染 MCP Server 管理标题  3303ms
+   ✓ MCPServerPage > 调用列表接口  370ms
+ ✓ src/__tests__/pages/OAuthCallbackPage.test.tsx (6 tests) 3458ms
+   ✓ OAuthCallbackPage > shows loading state during callback  1875ms
+   ✓ OAuthCallbackPage > shows error when missing code param  693ms
+   ✓ OAuthCallbackPage > renders back to login link on error  349ms
+ ✓ src/__tests__/pages/useStreamReducer.test.tsx (13 tests) 298ms
+ ✓ src/__tests__/authStore.test.ts (5 tests) 449ms
+   ✓ authStore > 初始状态 token 为 null  408ms
+ ✓ src/__tests__/pages/WorkflowGraphView.test.tsx (3 tests) 1224ms
+   ✓ WorkflowGraphView > 渲染 ReactFlow 画布  598ms
+   ✓ WorkflowGraphView > 传入空步骤不崩溃  359ms
+ ✓ src/__tests__/themeStore.test.ts (4 tests) 643ms
+   ✓ themeStore > 默认 mode 为 light（无 localStorage、系统偏好为 light）  637ms
+ ✓ src/__tests__/pages/EnvironmentListPage.test.tsx (3 tests) 3460ms
+   ✓ EnvironmentListPage > renders and fetches environments on mount  2891ms
+   ✓ EnvironmentListPage > displays environment data in the table  367ms

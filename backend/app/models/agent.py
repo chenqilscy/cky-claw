@@ -63,6 +63,9 @@ class AgentConfig(SoftDeleteMixin, Base):
         JSONB, nullable=False, server_default=text("'[]'::jsonb"),
         comment="Prompt 模板变量定义列表",
     )
+    response_style: Mapped[str | None] = mapped_column(
+        String(32), nullable=True, comment="输出风格（concise 等），null 表示默认",
+    )
     org_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("organizations.id"), nullable=True, index=True
     )

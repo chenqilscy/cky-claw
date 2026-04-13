@@ -17,6 +17,11 @@ const APPROVAL_MODES = [
   { label: 'Full Auto', value: 'full-auto' },
 ];
 
+const RESPONSE_STYLES = [
+  { label: '默认', value: '' },
+  { label: '简洁模式 (talk-normal)', value: 'concise' },
+];
+
 const AgentEditPage: React.FC = () => {
   const { message } = App.useApp();
   const navigate = useNavigate();
@@ -123,6 +128,7 @@ const AgentEditPage: React.FC = () => {
         model: (values.model as string) || 'openai/glm-4-flash',
         provider_name: (values.provider_name as string) || null,
         approval_mode: (values.approval_mode as string) || 'suggest',
+        response_style: (values.response_style as string) || null,
         tool_groups: (values.tool_groups as string[]) || [],
         handoffs: (values.handoffs as string)
           ? (values.handoffs as string).split(',').map((s) => s.trim()).filter(Boolean)
@@ -259,6 +265,10 @@ const AgentEditPage: React.FC = () => {
 
             <Form.Item name="approval_mode" label="审批模式">
               <Select options={APPROVAL_MODES} />
+            </Form.Item>
+
+            <Form.Item name="response_style" label="输出风格">
+              <Select options={RESPONSE_STYLES} allowClear placeholder="默认" />
             </Form.Item>
 
             <Form.Item name="tool_groups" label="工具组">

@@ -52,6 +52,7 @@ def _make_agent_config(**overrides: Any) -> MagicMock:
         "agent_tools": [],
         "skills": [],
         "metadata_": {},
+        "response_style": None,
         "is_active": True,
     }
     defaults.update(overrides)

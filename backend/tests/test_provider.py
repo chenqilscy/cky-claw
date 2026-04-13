@@ -618,6 +618,7 @@ class TestAgentProviderNameSchema:
             output_type=None,
             metadata_={},
             prompt_variables=[],
+            response_style=None,
             org_id=None,
             is_active=True,
             created_by=None,
