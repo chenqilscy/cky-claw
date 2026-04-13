@@ -20,6 +20,8 @@ const APPROVAL_MODES = [
 const RESPONSE_STYLES = [
   { label: '默认', value: '' },
   { label: '简洁模式 (talk-normal)', value: 'concise' },
+  { label: '正式模式', value: 'formal' },
+  { label: '创意模式', value: 'creative' },
 ];
 
 const AgentEditPage: React.FC = () => {

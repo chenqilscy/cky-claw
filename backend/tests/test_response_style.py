@@ -66,6 +66,16 @@ class TestResponseStyleSchema:
         data = AgentCreate(name="test-abc", response_style="concise")
         assert data.response_style == "concise"
 
+    def test_create_formal(self) -> None:
+        """允许设置 formal。"""
+        data = AgentCreate(name="test-abc", response_style="formal")
+        assert data.response_style == "formal"
+
+    def test_create_creative(self) -> None:
+        """允许设置 creative。"""
+        data = AgentCreate(name="test-abc", response_style="creative")
+        assert data.response_style == "creative"
+
     def test_create_invalid_style(self) -> None:
         """不允许的 style 报错。"""
         with pytest.raises(Exception):

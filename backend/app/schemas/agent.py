@@ -61,7 +61,7 @@ class AgentCreate(BaseModel):
     @classmethod
     def validate_response_style(cls, v: str | None) -> str | None:
         if v is not None:
-            allowed = {"concise"}
+            allowed = {"concise", "formal", "creative"}
             if v not in allowed:
                 raise ValueError(f"response_style 必须是 {allowed} 之一或 null")
         return v
@@ -94,6 +94,15 @@ class AgentUpdate(BaseModel):
     metadata: dict[str, Any] | None = None
     prompt_variables: list[dict[str, Any]] | None = None
     response_style: str | None = None
+
+    @field_validator("response_style")
+    @classmethod
+    def validate_response_style(cls, v: str | None) -> str | None:
+        if v is not None:
+            allowed = {"concise", "formal", "creative"}
+            if v not in allowed:
+                raise ValueError(f"response_style 必须是 {allowed} 之一或 null")
+        return v
 
     @field_validator("approval_mode")
     @classmethod
