@@ -10,8 +10,9 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.core.deps import require_permission
+from app.core.deps import get_current_user, require_permission
 from app.core.tenant import check_quota, get_org_id
+from app.models.user import User
 from app.schemas.session import (
     RunRequest,
     RunResponse,
@@ -30,31 +31,35 @@ router = APIRouter(prefix="/api/v1/sessions", tags=["sessions"])
     "",
     response_model=SessionResponse,
     status_code=201,
-    dependencies=[Depends(require_permission("sessions", "write"))],
 )
 async def create_session(
     data: SessionCreate,
+    user: User = Depends(require_permission("sessions", "write")),
     db: AsyncSession = Depends(get_db),
     org_id: uuid.UUID | None = Depends(get_org_id),
 ) -> SessionResponse:
     """创建 Session。"""
     await check_quota(db, org_id, "max_sessions")
-    session = await session_service.create_session(db, data)
+    session = await session_service.create_session(db, data, user_id=user.id)
     return SessionResponse.model_validate(session)
 
 
-@router.get("", response_model=SessionListResponse, dependencies=[Depends(require_permission("sessions", "read"))])
+@router.get("", response_model=SessionListResponse)
 async def list_sessions(
     agent_name: str | None = Query(None, description="按 Agent 筛选"),
     status: str | None = Query(None, description="按状态筛选"),
     limit: int = Query(20, ge=1, le=100, description="分页大小"),
     offset: int = Query(0, ge=0, description="偏移量"),
+    user: User = Depends(require_permission("sessions", "read")),
     db: AsyncSession = Depends(get_db),
     org_id: uuid.UUID | None = Depends(get_org_id),
 ) -> SessionListResponse:
     """获取 Session 列表。"""
+    # Admin 用户可查看所有会话，普通用户只能看自己的
+    user_filter = None if user.role == "admin" else user.id
     sessions, total = await session_service.list_sessions(
-        db, agent_name=agent_name, status=status, limit=limit, offset=offset, org_id=org_id
+        db, agent_name=agent_name, status=status, limit=limit, offset=offset,
+        org_id=org_id, user_id=user_filter,
     )
     return SessionListResponse(
         data=[SessionResponse.model_validate(s) for s in sessions],

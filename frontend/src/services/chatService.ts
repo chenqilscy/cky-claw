@@ -67,6 +67,10 @@ export const chatService = {
   deleteSession: (sessionId: string) =>
     api.delete<undefined>(`/sessions/${sessionId}`),
 
+  /** 取消正在运行的 Run。 */
+  cancelRun: (runId: string) =>
+    api.post<undefined>(`/sessions/runs/${runId}/cancel`),
+
   /** 获取会话消息历史。 */
   getMessages: (sessionId: string, search?: string) =>
     api.get<SessionMessagesResponse>(`/sessions/${sessionId}/messages`, search ? { search } : undefined),

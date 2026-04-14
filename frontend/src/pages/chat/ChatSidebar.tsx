@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Button, Divider, List, Select, Typography, App, theme } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
+import { Button, Divider, List, Modal, Select, Typography, App, theme } from 'antd';
+import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import { agentService } from '../../services/agentService';
 import { chatService } from '../../services/chatService';
 import type { AgentConfig } from '../../services/agentService';
@@ -10,12 +10,14 @@ const { Text } = Typography;
 
 interface ChatSidebarProps {
   currentSessionId: string | null;
+  refreshKey?: number;
   onSelectSession: (sessionId: string, agentName: string) => void;
   onNewSession: (agentName: string) => void;
 }
 
 const ChatSidebar: React.FC<ChatSidebarProps> = ({
   currentSessionId,
+  refreshKey,
   onSelectSession,
   onNewSession,
 }) => {
@@ -48,7 +50,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
       .then((res) => setSessions(res.data))
       .catch(() => message.error('加载会话列表失败'))
       .finally(() => setLoadingSessions(false));
-  }, [selectedAgent, message]);
+  }, [selectedAgent, refreshKey, message]);
 
   const handleNewSession = () => {
     if (!selectedAgent) {
@@ -56,6 +58,29 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
       return;
     }
     onNewSession(selectedAgent);
+  };
+
+  const handleDeleteSession = (sessionId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    Modal.confirm({
+      title: '确认删除',
+      content: '删除后对话记录将无法恢复，确定删除？',
+      okText: '删除',
+      okType: 'danger',
+      cancelText: '取消',
+      onOk: async () => {
+        try {
+          await chatService.deleteSession(sessionId);
+          setSessions((prev) => prev.filter((s) => s.id !== sessionId));
+          if (currentSessionId === sessionId) {
+            onNewSession(selectedAgent);
+          }
+          message.success('对话已删除');
+        } catch {
+          message.error('删除对话失败');
+        }
+      },
+    });
   };
 
   return (
@@ -97,13 +122,23 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
               background: item.id === currentSessionId ? token.colorPrimaryBg : undefined,
             }}
           >
-            <div style={{ width: '100%', overflow: 'hidden' }}>
-              <Text ellipsis style={{ display: 'block', fontSize: 13 }}>
-                {item.title || item.agent_name}
-              </Text>
-              <Text type="secondary" style={{ fontSize: 11 }}>
-                {new Date(item.created_at).toLocaleString('zh-CN')}
-              </Text>
+            <div style={{ width: '100%', overflow: 'hidden', display: 'flex', alignItems: 'center' }}>
+              <div style={{ flex: 1, overflow: 'hidden' }}>
+                <Text ellipsis style={{ display: 'block', fontSize: 13 }}>
+                  {item.title || item.agent_name}
+                </Text>
+                <Text type="secondary" style={{ fontSize: 11 }}>
+                  {new Date(item.created_at).toLocaleString('zh-CN')}
+                </Text>
+              </div>
+              <Button
+                type="text"
+                size="small"
+                danger
+                icon={<DeleteOutlined />}
+                onClick={(e) => handleDeleteSession(item.id, e)}
+                style={{ flexShrink: 0, marginLeft: 4 }}
+              />
             </div>
           </List.Item>
         )}

@@ -88,3 +88,5 @@ vitest-out.json
 test-results.json
 vitest-n7.txt
 vitest-n7b.txt
+
+/docs/bugs/

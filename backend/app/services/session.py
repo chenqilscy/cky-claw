@@ -27,7 +27,12 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 
 
-async def create_session(db: AsyncSession, data: SessionCreate) -> SessionRecord:
+async def create_session(
+    db: AsyncSession,
+    data: SessionCreate,
+    *,
+    user_id: uuid.UUID | None = None,
+) -> SessionRecord:
     """创建 Session，校验 Agent 存在性。"""
     # 校验 Agent 存在
     stmt = select(AgentConfig).where(AgentConfig.name == data.agent_name, AgentConfig.is_active == True)  # noqa: E712
@@ -38,6 +43,7 @@ async def create_session(db: AsyncSession, data: SessionCreate) -> SessionRecord
     session = SessionRecord(
         agent_name=data.agent_name,
         metadata_=data.metadata,
+        user_id=user_id,
     )
     db.add(session)
     await db.commit()
@@ -64,11 +70,14 @@ async def list_sessions(
     limit: int = 20,
     offset: int = 0,
     org_id: uuid.UUID | None = None,
+    user_id: uuid.UUID | None = None,
 ) -> tuple[list[SessionRecord], int]:
     """获取 Session 列表（分页）。"""
     base = select(SessionRecord).where(SessionRecord.is_deleted == False)  # noqa: E712
     if org_id is not None:
         base = base.where(SessionRecord.org_id == org_id)
+    if user_id is not None:
+        base = base.where(SessionRecord.user_id == user_id)
     if agent_name:
         base = base.where(SessionRecord.agent_name == agent_name)
     if status:
@@ -832,8 +841,14 @@ async def execute_run(
     db: AsyncSession,
     session_id: uuid.UUID,
     request: RunRequest,
+    *,
+    resume_from: str | None = None,
 ) -> RunResponse:
-    """非流式执行 Run：加载 Agent 配置 → Runner.run。"""
+    """非流式执行 Run：加载 Agent 配置 → Runner.run。
+
+    Args:
+        resume_from: 若提供，从该 run_id 的最近 checkpoint 恢复执行。
+    """
     from ckyclaw_framework.model.litellm_provider import LiteLLMProvider
     from ckyclaw_framework.runner.run_config import RunConfig as FrameworkRunConfig
     from ckyclaw_framework.runner.runner import Runner
@@ -977,6 +992,12 @@ async def execute_run(
             from ckyclaw_framework.events.journal import InMemoryEventJournal
             framework_config.event_journal = InMemoryEventJournal()
 
+        # S6: Checkpoint 恢复 — 配置 checkpoint_backend 以支持 resume_from
+        if resume_from:
+            from app.services.checkpoint_backend import PostgresCheckpointBackend
+
+            framework_config.checkpoint_backend = PostgresCheckpointBackend(db)
+
         # 执行
         start_time = time.monotonic()
 
@@ -1001,6 +1022,7 @@ async def execute_run(
                 session=framework_session,
                 config=framework_config,
                 max_turns=request.config.max_turns,
+                resume_from=resume_from,
             )
         except InputGuardrailTripwireError as exc:
             duration_ms = int((time.monotonic() - start_time) * 1000)
@@ -1235,6 +1257,15 @@ async def execute_run_stream(
         from ckyclaw_framework.events.journal import InMemoryEventJournal
         framework_config.event_journal = InMemoryEventJournal()
 
+    # S6: CancellationToken — 注册到 RunRegistry 以支持外部取消
+    from ckyclaw_framework.runner.cancellation import CancellationToken
+
+    from app.services.run_registry import run_registry
+
+    cancel_token = CancellationToken()
+    framework_config.cancel_token = cancel_token
+    run_registry.register(run_id, cancel_token)
+
     start_time = time.monotonic()
     run_result = None  # 用于提取 trace → token_usage_logs
 
@@ -1283,6 +1314,8 @@ async def execute_run_stream(
 
             yield _sse_event(event_name, payload)
 
+    except asyncio.CancelledError:
+        yield _sse_event("error", {"code": "RUN_CANCELLED", "message": "Run 已被取消"})
     except Exception as exc:
         from ckyclaw_framework.guardrails.result import (
             InputGuardrailTripwireError,
@@ -1304,6 +1337,8 @@ async def execute_run_stream(
     finally:
         # 关闭 MCP 连接
         await mcp_stack.__aexit__(None, None, None)
+        # S6: 注销 RunRegistry
+        run_registry.unregister(run_id)
 
     # Token 审计：从 Trace 提取 LLM Span token_usage 写入
     if run_result and hasattr(run_result, "trace"):
@@ -1353,7 +1388,8 @@ async def resume_from_checkpoint(
 ) -> RunResponse:
     """从 Checkpoint 恢复执行。
 
-    加载指定 run_id 的最新 checkpoint，以其消息历史恢复 Run。
+    验证指定 run_id 存在可用 checkpoint，然后调用 execute_run
+    并传递 resume_from 参数，由 Framework Runner 自动恢复执行状态。
 
     Args:
         db: 数据库会话。
@@ -1371,12 +1407,4 @@ async def resume_from_checkpoint(
     if checkpoint is None:
         raise NotFoundError(f"Run '{run_id}' 无可用 checkpoint")
 
-    # 将 checkpoint 的消息上下文注入到新 run 的输入中
-    # 恢复点：使用 checkpoint.messages 作为 resume_from
-    from ckyclaw_framework.runner.run_config import RunConfig as FrameworkRunConfig
-
-    resume_config = request.config.model_copy() if request.config else type(request.config)()
-
-    # 调用 execute_run 但注入 checkpoint 的 resume 上下文
-    # 通过 framework RunConfig 的 resume_from 参数传递 checkpoint
-    return await execute_run(db, session_id, request)
+    return await execute_run(db, session_id, request, resume_from=run_id)

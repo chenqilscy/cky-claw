@@ -1,6 +1,6 @@
-import { lazy, Suspense, useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { Button, Input, Space, Spin, Tag, Typography, App, theme, Upload } from 'antd';
-import { SendOutlined, ToolOutlined, SwapOutlined, PaperClipOutlined } from '@ant-design/icons';
+import { SendOutlined, StopOutlined, ToolOutlined, SwapOutlined, PaperClipOutlined } from '@ant-design/icons';
 import { chatService } from '../../services/chatService';
 import { knowledgeBaseService } from '../../services/knowledgeBaseService';
 import { useStreamReducer } from './useStreamReducer';
@@ -44,6 +44,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   const [attachments, setAttachments] = useState<AttachedFile[]>([]);
   const [uploading, setUploading] = useState(false);
   const [sending, setSending] = useState(false);
+  const sendingRef = useRef(false);
+  const currentRunIdRef = useRef<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
 
@@ -52,8 +54,9 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // session 切换时加载历史消息
+  // session 切换时加载历史消息（流式发送期间跳过，避免覆盖正在生成的内容）
   useEffect(() => {
+    if (sendingRef.current) return;
     setMessages([]);
     if (!sessionId) return;
     let cancelled = false;
@@ -70,7 +73,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         }));
       setMessages(history);
     }).catch(() => {
-      // 加载失败时静默，用户仍可正常发送消息
+      if (!cancelled) message.error('加载历史消息失败');
     });
     return () => { cancelled = true; };
   }, [sessionId, setMessages]);
@@ -93,6 +96,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
     setInput('');
     setSending(true);
+    sendingRef.current = true;
 
     const attachmentText = attachments
       .map((f) => (f.mediaType.startsWith('image/') ? `![${f.filename}](${f.url})` : `[文件: ${f.filename}](${f.url})`))
@@ -116,17 +120,23 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       const assistantMsgId = createAssistantMessage(agentName);
 
       // SSE 流式请求（text_delta 通过 RAF 批处理优化）
+      currentRunIdRef.current = null;
       const controller = chatService.runStream(
         sid,
         finalText,
         (event) => {
+          // 捕获 run_id 用于取消
+          if (event.type === 'run_start') {
+            const runId = (event.data as { run_id?: string }).run_id;
+            if (runId) currentRunIdRef.current = runId;
+          }
           if (event.type === 'error') {
             const data = event.data as { code?: string; message?: string };
             const code = data.code || '';
             const errMsg = data.message || '执行出错';
             if (code === 'INPUT_GUARDRAIL_TRIGGERED' || code === 'OUTPUT_GUARDRAIL_TRIGGERED') {
               message.warning(errMsg);
-            } else {
+            } else if (code !== 'RUN_CANCELLED') {
               message.error(errMsg);
             }
           } else {
@@ -134,20 +144,39 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
           }
         },
         () => {
+          sendingRef.current = false;
           setSending(false);
+          currentRunIdRef.current = null;
           finalizeStream(assistantMsgId);
         },
         () => {
+          sendingRef.current = false;
           setSending(false);
+          currentRunIdRef.current = null;
           finalizeStream(assistantMsgId);
         },
       );
       abortRef.current = controller;
     } catch {
       message.error('发送失败');
+      sendingRef.current = false;
       setSending(false);
     }
   };
+
+  const handleStop = useCallback(() => {
+    // 中断前端 SSE 连接
+    abortRef.current?.abort();
+    abortRef.current = null;
+    // 通知后端取消 Run
+    const runId = currentRunIdRef.current;
+    if (runId && sessionId) {
+      chatService.cancelRun(runId).catch(() => {/* 忽略取消失败 */});
+      currentRunIdRef.current = null;
+    }
+    sendingRef.current = false;
+    setSending(false);
+  }, [sessionId]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -290,13 +319,20 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
             autoSize={{ minRows: 1, maxRows: 4 }}
             style={{ resize: 'none' }}
           />
-          <Button
-            type="primary"
-            icon={<SendOutlined />}
-            onClick={handleSend}
-            loading={sending}
-            disabled={!agentName || (!input.trim() && attachments.length === 0)}
-          />
+          {sending ? (
+            <Button
+              danger
+              icon={<StopOutlined />}
+              onClick={handleStop}
+            />
+          ) : (
+            <Button
+              type="primary"
+              icon={<SendOutlined />}
+              onClick={handleSend}
+              disabled={!agentName || (!input.trim() && attachments.length === 0)}
+            />
+          )}
         </Space.Compact>
       </div>
     </div>

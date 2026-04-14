@@ -12,15 +12,19 @@ import type { SSEEvent } from '../../services/chatService';
 
 /** 工具调用状态 */
 export interface ToolCallInfo {
+  id?: string;
   name: string;
   status: 'running' | 'done';
   result?: string;
 }
 
-/** 扩展消息类型：增加 toolCalls 与 statusText */
+/** 扩展消息类型：增加 toolCalls、statusText、runId、执行统计 */
 export interface StreamMessage extends ChatMessage {
   toolCalls?: ToolCallInfo[];
   statusText?: string;
+  runId?: string;
+  durationMs?: number;
+  totalTokens?: number;
 }
 
 interface UseStreamReducerReturn {
@@ -79,7 +83,7 @@ export function useStreamReducer(): UseStreamReducerReturn {
 
   const appendUserMessage = useCallback((text: string) => {
     const msg: StreamMessage = {
-      id: `user-${Date.now()}`,
+      id: `user-${crypto.randomUUID()}`,
       role: 'user',
       content: text,
       timestamp: Date.now(),
@@ -88,7 +92,7 @@ export function useStreamReducer(): UseStreamReducerReturn {
   }, []);
 
   const createAssistantMessage = useCallback((agentName: string): string => {
-    const id = `assistant-${Date.now()}`;
+    const id = `assistant-${crypto.randomUUID()}`;
     const msg: StreamMessage = {
       id,
       role: 'assistant',
@@ -109,6 +113,17 @@ export function useStreamReducer(): UseStreamReducerReturn {
       const data = event.data as Record<string, unknown>;
 
       switch (event.type) {
+        case 'run_start': {
+          // run_start 携带 run_id，存储在消息元数据中备用（如取消运行）
+          const runId = data.run_id as string | undefined;
+          if (runId) {
+            setMessages(prev =>
+              prev.map(m => (m.id === msgId ? { ...m, runId } : m)),
+            );
+          }
+          break;
+        }
+
         case 'text_delta': {
           const delta = (data.delta as string) || '';
           if (delta) {
@@ -129,12 +144,13 @@ export function useStreamReducer(): UseStreamReducerReturn {
         }
 
         case 'tool_call_start': {
-          const toolName = (data.tool_name as string) || (data.name as string) || 'tool';
+          const toolName = (data.tool_name as string) || (data.tool as string) || (data.name as string) || 'tool';
+          const toolCallId = data.tool_call_id as string | undefined;
           setMessages(prev =>
             prev.map(m => {
               if (m.id !== msgId) return m;
               const calls = [...(m.toolCalls || [])];
-              calls.push({ name: toolName, status: 'running' });
+              calls.push({ id: toolCallId, name: toolName, status: 'running' });
               return { ...m, toolCalls: calls, statusText: `调用工具: ${toolName}...` };
             }),
           );
@@ -142,15 +158,19 @@ export function useStreamReducer(): UseStreamReducerReturn {
         }
 
         case 'tool_call_end': {
-          const toolName = (data.tool_name as string) || (data.name as string) || 'tool';
+          const toolName = (data.tool_name as string) || (data.tool as string) || (data.name as string) || 'tool';
+          const toolCallId = data.tool_call_id as string | undefined;
           setMessages(prev =>
             prev.map(m => {
               if (m.id !== msgId) return m;
-              const calls = (m.toolCalls || []).map(tc =>
-                tc.name === toolName && tc.status === 'running'
-                  ? { ...tc, status: 'done' as const }
-                  : tc,
-              );
+              const calls = (m.toolCalls || []).map(tc => {
+                if (tc.status !== 'running') return tc;
+                // 优先按 tool_call_id 匹配，回退到按名称匹配
+                const matched = toolCallId
+                  ? tc.id === toolCallId
+                  : tc.name === toolName;
+                return matched ? { ...tc, status: 'done' as const } : tc;
+              });
               const running = calls.filter(tc => tc.status === 'running');
               return {
                 ...m,
@@ -178,13 +198,20 @@ export function useStreamReducer(): UseStreamReducerReturn {
           break;
         }
 
+        case 'agent_end': {
+          // agent_end 标记当前 agent 执行完成（Handoff 前或最终结束前）
+          break;
+        }
+
         case 'run_end': {
           // 先刷新残余 delta
           cancelPendingFlush();
+          const durationMs = data.duration_ms as number | undefined;
+          const totalTokens = data.total_tokens as number | undefined;
           setMessages(prev =>
             prev.map(m =>
               m.id === msgId
-                ? { ...m, streaming: false, statusText: undefined }
+                ? { ...m, streaming: false, statusText: undefined, durationMs, totalTokens }
                 : m,
             ),
           );

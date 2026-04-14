@@ -1833,7 +1833,7 @@ class Runner:
             for tc in aggregated_tool_calls:
                 yield StreamEvent(
                     type=StreamEventType.TOOL_CALL_START,
-                    data={"tool": tc.name, "arguments": tc.arguments},
+                    data={"tool": tc.name, "tool_call_id": tc.id, "arguments": tc.arguments},
                     agent_name=current_agent.name,
                 )
 
@@ -1854,7 +1854,7 @@ class Runner:
             for tc in aggregated_tool_calls:
                 yield StreamEvent(
                     type=StreamEventType.TOOL_CALL_END,
-                    data={"tool": tc.name},
+                    data={"tool": tc.name, "tool_call_id": tc.id},
                     agent_name=current_agent.name,
                 )
 

@@ -140,8 +140,18 @@ const components: Components = {
   },
 };
 
+/** 移除 LLM 推理过程标签 <think>...</think> 及其内容（含流式传输中尚未闭合的情况）。 */
+function stripThinkTags(text: string): string {
+  // 移除完整的 <think>...</think> 块
+  let cleaned = text.replace(/<think>[\s\S]*?<\/think>/g, '');
+  // 移除流式传输中尚未闭合的 <think>... 部分
+  cleaned = cleaned.replace(/<think>[\s\S]*$/g, '');
+  return cleaned.trimStart();
+}
+
 const MarkdownRenderer: React.FC<MarkdownRendererProps> = memo(({ content }) => {
   const { token } = theme.useToken();
+  const cleaned = useMemo(() => stripThinkTags(content), [content]);
 
   const mdComponents = useMemo<Components>(() => ({
     ...components,
@@ -207,7 +217,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = memo(({ content }) => 
   return (
     <div className="markdown-body" style={{ lineHeight: 1.7, fontSize: 14 }}>
       <ReactMarkdown remarkPlugins={[remarkGfm]} components={mdComponents}>
-        {content}
+        {cleaned}
       </ReactMarkdown>
     </div>
   );

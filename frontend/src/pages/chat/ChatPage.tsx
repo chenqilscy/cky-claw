@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Button, Drawer, Grid, Layout, theme } from 'antd';
 import { MenuOutlined } from '@ant-design/icons';
 import ChatSidebar from './ChatSidebar';
@@ -20,13 +20,20 @@ const ChatPage: React.FC = () => {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [agentName, setAgentName] = useState<string>('');
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
   const screens = useBreakpoint();
   const { token } = theme.useToken();
   const isMobile = !screens.md;
 
+  const handleSessionCreated = useCallback((sid: string) => {
+    setSessionId(sid);
+    setRefreshKey((k) => k + 1);
+  }, []);
+
   const sidebarContent = (
     <ChatSidebar
       currentSessionId={sessionId}
+      refreshKey={refreshKey}
       onSelectSession={(sid, agent) => {
         setSessionId(sid);
         setAgentName(agent);
@@ -74,7 +81,7 @@ const ChatPage: React.FC = () => {
         <ChatWindow
           sessionId={sessionId}
           agentName={agentName}
-          onSessionCreated={(sid) => setSessionId(sid)}
+          onSessionCreated={handleSessionCreated}
         />
       </Content>
     </Layout>
