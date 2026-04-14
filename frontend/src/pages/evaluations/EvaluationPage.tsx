@@ -26,6 +26,8 @@ import {
   useAutoEvaluate,
   useAutoEvaluateByRunId,
 } from '../../hooks/useEvaluationQueries';
+import { useAgentList } from '../../hooks/useAgentQueries';
+import { useTraceList } from '../../hooks/useTraceQueries';
 
 const { TextArea } = Input;
 const { Text } = Typography;
@@ -72,6 +74,15 @@ const EvaluationTab: React.FC = () => {
   const [form] = Form.useForm();
   const [autoForm] = Form.useForm();
   const [autoByRunForm] = Form.useForm();
+
+  const { data: agentData } = useAgentList({ limit: 200 });
+  const agentOptions = (agentData?.data ?? []).map((a) => ({ label: `${a.name}${a.description ? ` — ${a.description}` : ''}`, value: a.name }));
+
+  const { data: traceData } = useTraceList({ limit: 50 });
+  const traceOptions = (traceData?.data ?? []).map((t) => ({
+    label: `${t.id.slice(0, 8)}… | ${t.workflow_name || t.agent_name || '-'} | ${new Date(t.created_at).toLocaleString()}`,
+    value: t.id,
+  }));
 
   const { data: listData, isLoading: loading, refetch } = useEvaluationList({
     agent_id: filterAgentId || undefined,
@@ -168,10 +179,13 @@ const EvaluationTab: React.FC = () => {
   return (
     <>
       <Space style={{ marginBottom: 16 }}>
-        <Input.Search
-          placeholder="按 Agent ID 筛选"
+        <Select
+          placeholder="按 Agent 筛选"
           allowClear
-          onSearch={(v) => { setFilterAgentId(v); setPage(1); }}
+          showSearch
+          optionFilterProp="label"
+          options={agentOptions}
+          onChange={(v) => { setFilterAgentId(v ?? ''); setPage(1); }}
           style={{ width: 280 }}
         />
         <Button icon={<ReloadOutlined />} onClick={() => void refetch()}>刷新</Button>
@@ -214,11 +228,22 @@ const EvaluationTab: React.FC = () => {
         destroyOnClose
       >
         <Form form={form} layout="vertical">
-          <Form.Item name="run_id" label="Run ID" rules={[{ required: true, message: '请输入 Run ID' }]}>
-            <Input placeholder="运行记录 ID" />
+          <Form.Item name="run_id" label="关联运行" rules={[{ required: true, message: '请选择运行记录' }]}>
+            <Select
+              placeholder="选择运行记录"
+              showSearch
+              optionFilterProp="label"
+              options={traceOptions}
+            />
           </Form.Item>
-          <Form.Item name="agent_id" label="Agent ID">
-            <Input placeholder="关联的 Agent ID（可选）" />
+          <Form.Item name="agent_id" label="Agent（可选）">
+            <Select
+              placeholder="选择 Agent"
+              allowClear
+              showSearch
+              optionFilterProp="label"
+              options={agentOptions}
+            />
           </Form.Item>
           <Row gutter={16}>
             {DIMENSIONS.map((d) => (
@@ -277,11 +302,22 @@ const EvaluationTab: React.FC = () => {
         destroyOnClose
       >
         <Form form={autoForm} layout="vertical">
-          <Form.Item name="run_id" label="Run ID" rules={[{ required: true, message: '请输入 Run ID' }]}>
-            <Input placeholder="运行记录 ID" />
+          <Form.Item name="run_id" label="关联运行" rules={[{ required: true, message: '请选择运行记录' }]}>
+            <Select
+              placeholder="选择运行记录"
+              showSearch
+              optionFilterProp="label"
+              options={traceOptions}
+            />
           </Form.Item>
-          <Form.Item name="agent_id" label="Agent ID">
-            <Input placeholder="关联的 Agent ID（可选）" />
+          <Form.Item name="agent_id" label="Agent（可选）">
+            <Select
+              placeholder="选择 Agent"
+              allowClear
+              showSearch
+              optionFilterProp="label"
+              options={agentOptions}
+            />
           </Form.Item>
           <Form.Item name="user_input" label="用户输入" rules={[{ required: true, message: '请输入用户原始内容' }]}>
             <TextArea rows={3} placeholder="用户发送给 Agent 的原始消息" />
@@ -336,8 +372,13 @@ const EvaluationTab: React.FC = () => {
         destroyOnClose
       >
         <Form form={autoByRunForm} layout="vertical">
-          <Form.Item name="run_id" label="Run ID" rules={[{ required: true, message: '请输入 Run ID' }]}>
-            <Input placeholder="运行记录 ID（将自动从 Trace 提取上下文）" />
+          <Form.Item name="run_id" label="关联运行" rules={[{ required: true, message: '请选择运行记录' }]}>
+            <Select
+              placeholder="选择运行记录（将自动从 Trace 提取上下文）"
+              showSearch
+              optionFilterProp="label"
+              options={traceOptions}
+            />
           </Form.Item>
           <Form.Item name="judge_model" label="Judge 模型">
             <Input placeholder="默认 deepseek-chat（可选）" />
@@ -357,6 +398,12 @@ const FeedbackTab: React.FC = () => {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const [form] = Form.useForm();
+
+  const { data: traceData } = useTraceList({ limit: 50 });
+  const traceOptions = (traceData?.data ?? []).map((t) => ({
+    label: `${t.id.slice(0, 8)}… | ${t.workflow_name || t.agent_name || '-'} | ${new Date(t.created_at).toLocaleString()}`,
+    value: t.id,
+  }));
 
   const { data: listData, isLoading: loading, refetch } = useFeedbackList({
     limit: pageSize,
@@ -457,8 +504,13 @@ const FeedbackTab: React.FC = () => {
         destroyOnClose
       >
         <Form form={form} layout="vertical">
-          <Form.Item name="run_id" label="Run ID" rules={[{ required: true, message: '请输入 Run ID' }]}>
-            <Input placeholder="运行记录 ID" />
+          <Form.Item name="run_id" label="关联运行" rules={[{ required: true, message: '请选择运行记录' }]}>
+            <Select
+              placeholder="选择运行记录"
+              showSearch
+              optionFilterProp="label"
+              options={traceOptions}
+            />
           </Form.Item>
           <Form.Item name="rating" label="评分" rules={[{ required: true, message: '请选择评分' }]}>
             <Select
@@ -490,6 +542,9 @@ const QualityTab: React.FC = () => {
   const [summary, setSummary] = useState<AgentQualitySummary | null>(null);
   const [loading, setLoading] = useState(false);
 
+  const { data: agentData } = useAgentList({ limit: 200 });
+  const agentOptions = (agentData?.data ?? []).map((a) => ({ label: `${a.name}${a.description ? ` — ${a.description}` : ''}`, value: a.name }));
+
   const fetchQuality = async () => {
     if (!agentId.trim()) {
       message.warning('请输入 Agent ID');
@@ -510,12 +565,14 @@ const QualityTab: React.FC = () => {
   return (
     <>
       <Space style={{ marginBottom: 24 }}>
-        <Input
-          placeholder="输入 Agent ID"
-          value={agentId}
-          onChange={(e) => setAgentId(e.target.value)}
+        <Select
+          placeholder="选择 Agent"
+          showSearch
+          optionFilterProp="label"
+          options={agentOptions}
+          value={agentId || undefined}
+          onChange={(v) => setAgentId(v ?? '')}
           style={{ width: 320 }}
-          onPressEnter={fetchQuality}
         />
         <Button type="primary" icon={<BarChartOutlined />} onClick={fetchQuality} loading={loading}>
           查询质量

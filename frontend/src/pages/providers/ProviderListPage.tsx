@@ -194,7 +194,7 @@ const ProviderListPage: React.FC = () => {
             {testing === record.id ? '测试中...' : <><ThunderboltOutlined /> 测试</>}
           </a>
           <Popconfirm
-            title="确定删除此 Provider？"
+            title="确定删除此模型厂商？"
             onConfirm={() => handleDelete(record.id)}
             okText="删除"
             cancelText="取消"

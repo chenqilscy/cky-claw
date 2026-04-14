@@ -7,6 +7,31 @@ import { providerService, PROVIDER_TYPES, AUTH_TYPES, PROVIDER_BASE_URLS, PROVID
 import type { ProviderCreateRequest, ProviderUpdateRequest, ProviderModelResponse, ProviderModelCreateRequest, ProviderModelUpdateRequest } from '../../services/providerService';
 import type { ColumnsType } from 'antd/es/table';
 
+/** 认证方式中文标签 */
+const AUTH_TYPE_LABELS: Record<string, string> = {
+  api_key: 'API Key',
+  azure_ad: 'Azure AD',
+  custom_header: '自定义 Header',
+};
+
+/** 根据 auth_type 从表单值构建 auth_config */
+function buildAuthConfig(authType: string, values: Record<string, unknown>): Record<string, unknown> {
+  switch (authType) {
+    case 'azure_ad':
+      return {
+        tenant_id: (values.azure_tenant_id as string) || '',
+        client_id: (values.azure_client_id as string) || '',
+      };
+    case 'custom_header':
+      return {
+        header_name: (values.auth_header_name as string) || '',
+        header_value: (values.auth_header_value as string) || '',
+      };
+    default:
+      return {};
+  }
+}
+
 const ProviderEditPage: React.FC = () => {
   const { message } = App.useApp();
   const navigate = useNavigate();
@@ -16,6 +41,8 @@ const ProviderEditPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
+  const [providerName, setProviderName] = useState<string>('');
+  const [authType, setAuthType] = useState<string>('api_key');
 
   /* ---- 模型管理状态 ---- */
   const [models, setModels] = useState<ProviderModelResponse[]>([]);
@@ -39,11 +66,17 @@ const ProviderEditPage: React.FC = () => {
       setLoading(true);
       providerService.get(id)
         .then((provider) => {
+          setProviderName(provider.name);
+          setAuthType(provider.auth_type || 'api_key');
           form.setFieldsValue({
             name: provider.name,
             provider_type: provider.provider_type,
             base_url: provider.base_url,
             auth_type: provider.auth_type,
+            auth_header_name: provider.auth_config?.header_name ?? '',
+            auth_header_value: provider.auth_config?.header_value ?? '',
+            azure_tenant_id: provider.auth_config?.tenant_id ?? '',
+            azure_client_id: provider.auth_config?.client_id ?? '',
             rate_limit_rpm: provider.rate_limit_rpm,
             rate_limit_tpm: provider.rate_limit_tpm,
           });
@@ -57,11 +90,13 @@ const ProviderEditPage: React.FC = () => {
     setSaving(true);
     try {
       if (isEdit && id) {
+        const currentAuthType = (values.auth_type as string) || 'api_key';
         const payload: ProviderUpdateRequest = {
           name: values.name as string,
           provider_type: values.provider_type as string,
           base_url: values.base_url as string,
-          auth_type: values.auth_type as string,
+          auth_type: currentAuthType,
+          auth_config: buildAuthConfig(currentAuthType, values),
           rate_limit_rpm: values.rate_limit_rpm as number | null ?? null,
           rate_limit_tpm: values.rate_limit_tpm as number | null ?? null,
         };
@@ -71,12 +106,14 @@ const ProviderEditPage: React.FC = () => {
         await providerService.update(id, payload);
         message.success('更新成功');
       } else {
+        const createAuthType = (values.auth_type as string) || 'api_key';
         const payload: ProviderCreateRequest = {
           name: values.name as string,
           provider_type: values.provider_type as string,
           base_url: values.base_url as string,
           api_key: values.api_key as string,
-          auth_type: (values.auth_type as string) || 'api_key',
+          auth_type: createAuthType,
+          auth_config: buildAuthConfig(createAuthType, values),
           rate_limit_rpm: values.rate_limit_rpm as number | null ?? null,
           rate_limit_tpm: values.rate_limit_tpm as number | null ?? null,
         };
@@ -231,9 +268,9 @@ const ProviderEditPage: React.FC = () => {
 
   return (
     <PageContainer
-      title={isEdit ? '编辑 Provider' : '注册新 Provider'}
+      title={isEdit ? (providerName ? `编辑模型厂商：${providerName}` : '编辑模型厂商') : '注册新模型厂商'}
       icon={<ApiOutlined />}
-      description="配置 Provider 类型、认证方式与模型列表"
+      description="配置模型厂商类型、认证方式与模型管理"
       extra={
         <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/providers')}>
           返回列表
@@ -283,19 +320,43 @@ const ProviderEditPage: React.FC = () => {
                       <Input placeholder="https://api.openai.com/v1" />
                     </Form.Item>
 
+                    <Form.Item name="auth_type" label="认证方式">
+                      <Select
+                        options={AUTH_TYPES.map((t) => ({ label: AUTH_TYPE_LABELS[t] ?? t, value: t }))}
+                        onChange={(v: string) => setAuthType(v)}
+                      />
+                    </Form.Item>
+
                     <Form.Item
                       name="api_key"
                       label={isEdit ? 'API Key（留空则不更新）' : 'API Key'}
                       rules={isEdit ? [] : [{ required: true, message: '请输入 API Key' }]}
+                      style={{ display: authType === 'custom_header' ? 'none' : undefined }}
                     >
                       <Input.Password placeholder="sk-..." visibilityToggle />
                     </Form.Item>
 
-                    <Form.Item name="auth_type" label="认证方式">
-                      <Select
-                        options={AUTH_TYPES.map((t) => ({ label: t, value: t }))}
-                      />
-                    </Form.Item>
+                    {authType === 'azure_ad' && (
+                      <>
+                        <Form.Item name="azure_tenant_id" label="Tenant ID" rules={[{ required: true, message: '请输入 Azure Tenant ID' }]}>
+                          <Input placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" />
+                        </Form.Item>
+                        <Form.Item name="azure_client_id" label="Client ID" rules={[{ required: true, message: '请输入 Azure Client ID' }]}>
+                          <Input placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" />
+                        </Form.Item>
+                      </>
+                    )}
+
+                    {authType === 'custom_header' && (
+                      <>
+                        <Form.Item name="auth_header_name" label="Header 名称" rules={[{ required: true, message: '请输入 Header 名称' }]}>
+                          <Input placeholder="如：X-Api-Key、Authorization" />
+                        </Form.Item>
+                        <Form.Item name="auth_header_value" label="Header 值" rules={[{ required: true, message: '请输入 Header 值' }]}>
+                          <Input.Password placeholder="Header 值（加密存储）" visibilityToggle />
+                        </Form.Item>
+                      </>
+                    )}
 
                     <Form.Item name="rate_limit_rpm" label="每分钟请求数上限（RPM）">
                       <InputNumber min={0} style={{ width: '100%' }} placeholder="留空表示不限制" />

@@ -68,7 +68,7 @@ describe('ProviderEditPage', () => {
 
   it('新建模式渲染注册标题', () => {
     const { container } = renderWithRouter();
-    expect(container.textContent).toContain('注册新 Provider');
+    expect(container.textContent).toContain('注册新模型厂商');
   });
 
   it('新建模式包含返回按钮', () => {
@@ -86,7 +86,7 @@ describe('ProviderEditPage', () => {
   it('编辑模式渲染编辑标题', async () => {
     renderWithRouter('p1');
     await waitFor(() => {
-      expect(document.body.textContent).toContain('编辑 Provider');
+      expect(document.body.textContent).toContain('编辑模型厂商');
     });
   });
 
