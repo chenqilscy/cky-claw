@@ -5,6 +5,7 @@ import {
 import {
   BankOutlined, EyeOutlined,
 } from '@ant-design/icons';
+import { JsonEditor } from '../../components';
 import type { ProColumns } from '@ant-design/pro-components';
 import type { FormInstance } from 'antd';
 import type { OrganizationItem, OrganizationCreateParams, OrganizationUpdateParams } from '../../services/organizationService';
@@ -83,10 +84,10 @@ const renderForm = (_form: FormInstance, editing: OrganizationItem | null) => (
       <TextArea rows={2} placeholder="组织描述" />
     </Form.Item>
     <Form.Item name="settings" label="设置 (JSON)">
-      <TextArea rows={3} placeholder="{}" />
+      <JsonEditor height={100} placeholder="{}" />
     </Form.Item>
     <Form.Item name="quota" label="配额 (JSON)">
-      <TextArea rows={3} placeholder='{"max_agents": 50, "max_tokens_per_day": 1000000}' />
+      <JsonEditor height={100} placeholder='{"max_agents": 50, "max_tokens_per_day": 1000000}' />
     </Form.Item>
   </>
 );
@@ -113,6 +114,7 @@ const OrganizationPage: React.FC = () => {
         { id: string; data: OrganizationUpdateParams }
       >
         hideTitle
+        mobileHiddenColumns={['description', 'created_at']}
         title="组织管理"
         queryResult={queryResult}
         createMutation={createMutation}

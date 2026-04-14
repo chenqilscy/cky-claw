@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import {
-  Form, Input, Tag, Checkbox, Table,
+  Form, Input, Tag, Checkbox, Table, Space,
   Typography,
 } from 'antd';
 import {
@@ -169,6 +169,7 @@ const RolePage: React.FC = () => {
         { id: string; data: RoleUpdateParams }
       >
         hideTitle
+        mobileHiddenColumns={['description', 'updated_at']}
         title="角色管理"
         queryResult={queryResult}
         createMutation={createMutation}

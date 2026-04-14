@@ -337,6 +337,7 @@ const MCPServerPage: React.FC = () => {
         { id: string; data: MCPServerUpdateRequest }
       >
         hideTitle
+        mobileHiddenColumns={['description', 'created_at']}
         title="MCP Server 管理"
         queryResult={queryResult}
         createMutation={createMutation}

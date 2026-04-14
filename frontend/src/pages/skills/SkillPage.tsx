@@ -183,6 +183,7 @@ const SkillPage: React.FC = () => {
         { id: string; data: SkillUpdateParams }
       >
         hideTitle
+        mobileHiddenColumns={['description', 'tags', 'author', 'updated_at']}
         title="技能管理"
         queryResult={queryResult}
         createMutation={createMutation}

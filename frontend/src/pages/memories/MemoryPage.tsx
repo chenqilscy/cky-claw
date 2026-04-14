@@ -205,6 +205,7 @@ const MemoryPage: React.FC = () => {
         { id: string; data: MemoryUpdateParams }
       >
         hideTitle
+        mobileHiddenColumns={['tags', 'access_count', 'updated_at']}
         title="记忆管理"
         queryResult={queryResult}
         createMutation={createMutation}

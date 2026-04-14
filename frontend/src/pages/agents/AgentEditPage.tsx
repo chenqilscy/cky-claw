@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Button, Card, Form, Input, Select, Space, App, Spin, Switch, Steps, Divider, Typography } from 'antd';
 import { ArrowLeftOutlined, RobotOutlined } from '@ant-design/icons';
 import { PageContainer } from '../../components/PageContainer';
+import { JsonEditor } from '../../components';
 import { agentService } from '../../services/agentService';
 import type { AgentConfig, AgentCreateInput, AgentUpdateInput } from '../../services/agentService';
 import { guardrailService } from '../../services/guardrailService';
@@ -469,8 +470,8 @@ const AgentEditPage: React.FC = () => {
                   },
                 ]}
               >
-                <TextArea
-                  rows={6}
+                <JsonEditor
+                  height={180}
                   placeholder={'{\n  "type": "object",\n  "properties": {\n    "summary": { "type": "string" },\n    "score": { "type": "integer" }\n  },\n  "required": ["summary", "score"]\n}'}
                 />
               </Form.Item>

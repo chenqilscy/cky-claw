@@ -14,3 +14,5 @@ export { PageContainer } from './PageContainer';
 export { default as RouteErrorBoundary } from './RouteErrorBoundary';
 export { CrudTable, buildActionColumn } from './CrudTable';
 export type { CrudTableProps, CrudTableActions, PagedResult, ListParams, ActionColumnItem } from './CrudTable';
+export { default as JsonEditor } from './JsonEditor';
+export type { JsonEditorProps } from './JsonEditor';

@@ -9,7 +9,7 @@
  *
  * 每个页面只需提供 columns、renderForm 和 query hooks 即可。
  */
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { App, Button, Dropdown, Form, Modal, Space, Tooltip } from 'antd';
 import type { FormInstance, MenuProps } from 'antd';
 import { PlusOutlined, ReloadOutlined, EditOutlined, DeleteOutlined, MoreOutlined } from '@ant-design/icons';
@@ -120,6 +120,12 @@ export interface CrudTableProps<
    */
   onCreateClick?: false | (() => void);
 
+  /**
+   * 移动端自动隐藏的列 dataIndex 列表。
+   * isMobile 时，这些列会被自动设置 hideInTable: true。
+   */
+  mobileHiddenColumns?: string[];
+
   /* ---- 分页控制（外部管理筛选参数时需要）---- */
 
   /** 受控分页 */
@@ -160,6 +166,7 @@ export function CrudTable<
     showRefresh,
     hideTitle,
     onCreateClick,
+    mobileHiddenColumns,
     pagination: controlledPagination,
     onPaginationChange,
     total: totalOverride,
@@ -261,6 +268,15 @@ export function CrudTable<
   const actions: CrudTableActions<T> = { openEdit, openCreate, handleDelete };
   const resolvedColumns = typeof columns === 'function' ? columns(actions) : columns;
 
+  /* ---- 移动端列隐藏 ---- */
+  const finalColumns = useMemo(() => {
+    if (!isMobile || !mobileHiddenColumns?.length) return resolvedColumns;
+    const hiddenSet = new Set(mobileHiddenColumns);
+    return resolvedColumns.map((col) =>
+      hiddenSet.has(col.dataIndex as string) ? { ...col, hideInTable: true } : col,
+    );
+  }, [resolvedColumns, isMobile, mobileHiddenColumns]);
+
   /* ---- 渲染 ---- */
   const showCreateButton = onCreateClick !== false && (onCreateClick || createMutation);
 
@@ -287,7 +303,7 @@ export function CrudTable<
           )
         }
         rowKey={rowKey}
-        columns={resolvedColumns}
+        columns={finalColumns}
         dataSource={data}
         loading={loading}
         search={false}

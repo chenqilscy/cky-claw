@@ -10,6 +10,7 @@ import {
   Tag,
 } from 'antd';
 import { SafetyCertificateOutlined } from '@ant-design/icons';
+import { JsonEditor } from '../../components';
 import type { ProColumns } from '@ant-design/pro-components';
 import type { FormInstance } from 'antd';
 import {
@@ -233,7 +234,7 @@ const GuardrailFormFields: React.FC<{ editing: GuardrailRuleItem | null }> = ({ 
           },
         ]}
       >
-        <TextArea rows={2} placeholder='{"agent_name": "my-agent"}' />
+        <JsonEditor height={80} placeholder='{"agent_name": "my-agent"}' />
       </Form.Item>
     </>
   );
@@ -302,6 +303,7 @@ const GuardrailRulesPage: React.FC = () => {
       { id: string; data: GuardrailRuleUpdateParams }
     >
       hideTitle
+      mobileHiddenColumns={['description']}
       title="Guardrail 规则管理"
       icon={<SafetyCertificateOutlined />}
       queryResult={queryResult}

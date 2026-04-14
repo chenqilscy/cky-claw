@@ -7,6 +7,7 @@ import type { FormInstance } from 'antd';
 import {
   LinkOutlined, CopyOutlined,
 } from '@ant-design/icons';
+import { JsonEditor } from '../../components';
 import type { ProColumns } from '@ant-design/pro-components';
 import type { IMChannel, IMChannelCreate, IMChannelUpdate, ChannelType } from '../../services/imChannelService';
 import { CHANNEL_TYPES } from '../../services/imChannelService';
@@ -138,7 +139,7 @@ function renderForm(_form: FormInstance, editing: IMChannel | null) {
         <Switch />
       </Form.Item>
       <Form.Item name="app_config_json" label="应用配置 (JSON)">
-        <TextArea rows={4} placeholder='{"app_id": "xxx", "token": "xxx"}' />
+        <JsonEditor height={120} placeholder='{"app_id": "xxx", "token": "xxx"}' />
       </Form.Item>
     </>
   );
@@ -235,6 +236,7 @@ const IMChannelPage: React.FC = () => {
     >
     <CrudTable<IMChannel, IMChannelCreate, { id: string; data: IMChannelUpdate }>
       hideTitle
+      mobileHiddenColumns={['description', 'created_at']}
       title="IM 渠道管理"
       icon={<LinkOutlined />}
       columns={(actions) => buildColumns(actions, copyWebhookUrl)}

@@ -251,6 +251,7 @@ const EvolutionPage: React.FC = () => {
       { id: string; data: EvolutionProposalUpdate }
     >
       hideTitle
+      mobileHiddenColumns={['trigger_reason', 'created_at']}
       title="进化建议"
       queryResult={queryResult}
       createMutation={createMutation}

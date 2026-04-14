@@ -149,6 +149,7 @@ const ScheduledTasksPage: React.FC = () => {
       { id: string; data: ScheduledTaskUpdateParams }
     >
       hideTitle
+      mobileHiddenColumns={['description', 'last_run_at', 'next_run_at']}
       title="定时任务管理"
       icon={<ClockCircleOutlined />}
       queryResult={queryResult}

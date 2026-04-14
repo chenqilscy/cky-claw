@@ -3,11 +3,18 @@ import { render, act, fireEvent, screen, waitFor } from '@testing-library/react'
 import { TestQueryWrapper } from '../test-utils';
 import type { UseQueryResult, UseMutationResult } from '@tanstack/react-query';
 
+/* ---------- mock useResponsive ---------- */
+const mockResponsive = { isMobile: false, isTablet: false, isDesktop: true, screens: {} };
+vi.mock('../../hooks/useResponsive', () => ({
+  useResponsive: () => mockResponsive,
+}));
+
 /* ---------- mock ProTable ---------- */
+let capturedColumns: Array<Record<string, unknown>> = [];
 vi.mock('@ant-design/pro-components', () => ({
   ProTable: (props: Record<string, unknown>) => {
     const {
-      dataSource, loading, rowKey, pagination, headerTitle, toolBarRender,
+      dataSource, loading, rowKey, pagination, headerTitle, toolBarRender, columns,
     } = props as {
       dataSource?: Array<Record<string, unknown>>;
       loading?: boolean;
@@ -15,7 +22,9 @@ vi.mock('@ant-design/pro-components', () => ({
       pagination?: { total?: number; showTotal?: (t: number) => string };
       headerTitle?: React.ReactNode;
       toolBarRender?: () => React.ReactNode[];
+      columns?: Array<Record<string, unknown>>;
     };
+    capturedColumns = columns ?? [];
     return (
       <div data-testid="pro-table">
         {headerTitle && <div data-testid="header-title">{headerTitle}</div>}
@@ -134,6 +143,10 @@ function defaultProps(
 describe('CrudTable', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockResponsive.isMobile = false;
+    mockResponsive.isTablet = false;
+    mockResponsive.isDesktop = true;
+    capturedColumns = [];
   });
 
   it('渲染标题和图标', async () => {
@@ -412,5 +425,55 @@ describe('CrudTable', () => {
       fireEvent.click(btn!);
     });
     expect(onClick).toHaveBeenCalledOnce();
+  });
+
+  it('mobileHiddenColumns 在桌面端不影响列', async () => {
+    mockResponsive.isMobile = false;
+    await act(async () => {
+      render(
+        <TestQueryWrapper>
+          <CrudTable {...defaultProps({
+            mobileHiddenColumns: ['description'],
+          })} />
+        </TestQueryWrapper>,
+      );
+    });
+    // 桌面端，description 列不应被隐藏
+    const descCol = capturedColumns.find((c) => c.dataIndex === 'description');
+    expect(descCol).toBeTruthy();
+    expect(descCol!.hideInTable).toBeFalsy();
+  });
+
+  it('mobileHiddenColumns 在移动端隐藏对应列', async () => {
+    mockResponsive.isMobile = true;
+    await act(async () => {
+      render(
+        <TestQueryWrapper>
+          <CrudTable {...defaultProps({
+            mobileHiddenColumns: ['description'],
+          })} />
+        </TestQueryWrapper>,
+      );
+    });
+    const descCol = capturedColumns.find((c) => c.dataIndex === 'description');
+    expect(descCol).toBeTruthy();
+    expect(descCol!.hideInTable).toBe(true);
+    // 名称列不受影响
+    const nameCol = capturedColumns.find((c) => c.dataIndex === 'name');
+    expect(nameCol!.hideInTable).toBeFalsy();
+    mockResponsive.isMobile = false;
+  });
+
+  it('mobileHiddenColumns 未设置时列保持不变', async () => {
+    mockResponsive.isMobile = false;
+    await act(async () => {
+      render(
+        <TestQueryWrapper>
+          <CrudTable {...defaultProps()} />
+        </TestQueryWrapper>,
+      );
+    });
+    expect(capturedColumns.length).toBe(2);
+    expect(capturedColumns.every((c) => !c.hideInTable)).toBe(true);
   });
 });

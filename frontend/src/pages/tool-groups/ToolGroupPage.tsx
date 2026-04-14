@@ -2,6 +2,7 @@ import { Form, Input, Switch, Tag, App } from 'antd';
 import { ToolOutlined } from '@ant-design/icons';
 import type { ProColumns } from '@ant-design/pro-components';
 import type { FormInstance } from 'antd';
+import { JsonEditor } from '../../components';
 import {
   useToolGroupList,
   useCreateToolGroup,
@@ -119,8 +120,8 @@ const renderForm = (_form: FormInstance, editing: ToolGroupResponse | null) => (
       label="工具定义（JSON 数组）"
       tooltip="每个工具需 name、description 和 parameters_schema 字段"
     >
-      <TextArea
-        rows={8}
+      <JsonEditor
+        height={240}
         placeholder={`[\n  {\n    "name": "web_search",\n    "description": "搜索网页内容",\n    "parameters_schema": {\n      "type": "object",\n      "properties": {\n        "query": { "type": "string" }\n      },\n      "required": ["query"]\n    }\n  }\n]`}
       />
     </Form.Item>
@@ -149,7 +150,7 @@ const renderForm = (_form: FormInstance, editing: ToolGroupResponse | null) => (
         },
       ]}
     >
-      <TextArea rows={3} placeholder='{"env": "production"}' />
+      <JsonEditor height={100} placeholder='{"env": "production"}' />
     </Form.Item>
   </>
 );
@@ -186,6 +187,7 @@ const ToolGroupPage: React.FC = () => {
       { name: string; data: ToolGroupUpdateRequest }
     >
       hideTitle
+      mobileHiddenColumns={['description', 'created_at']}
       title="工具组管理"
       icon={<ToolOutlined />}
       queryResult={queryResult}

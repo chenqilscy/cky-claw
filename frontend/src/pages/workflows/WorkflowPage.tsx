@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Card, Modal, Form, Input, Tag, App, Badge, Tooltip, Table, Typography, Tabs } from 'antd';
+import { Card, Modal, Form, Input, Tag, App, Badge, Tooltip, Table, Typography, Tabs, Button, Space } from 'antd';
 import { EyeOutlined, CheckCircleOutlined, BranchesOutlined, NodeIndexOutlined, PartitionOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
+import { JsonEditor } from '../../components';
 import type { ProColumns } from '@ant-design/pro-components';
 import type { FormInstance } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
@@ -176,10 +177,10 @@ const WorkflowPage: React.FC = () => {
         <TextArea rows={2} placeholder="工作流描述" />
       </Form.Item>
       <Form.Item name="steps_json" label="步骤 (JSON)" rules={[{ required: true }]}>
-        <TextArea rows={8} placeholder='[{"id":"step1","name":"分析","type":"agent","agent_name":"researcher"}]' style={{ fontFamily: 'monospace' }} />
+        <JsonEditor height={200} placeholder='[{"id":"step1","name":"分析","type":"agent","agent_name":"researcher"}]' />
       </Form.Item>
       <Form.Item name="edges_json" label="边 (JSON)" rules={[{ required: true }]}>
-        <TextArea rows={4} placeholder='[{"source_step_id":"step1","target_step_id":"step2"}]' style={{ fontFamily: 'monospace' }} />
+        <JsonEditor height={120} placeholder='[{"source_step_id":"step1","target_step_id":"step2"}]' />
       </Form.Item>
       <Form.Item name="output_keys" label="输出键 (逗号分隔)">
         <Input placeholder="result, summary" />
@@ -205,6 +206,7 @@ const WorkflowPage: React.FC = () => {
         { id: string; data: WorkflowUpdateParams }
       >
         hideTitle
+        mobileHiddenColumns={['description', 'updated_at']}
         title="工作流管理"
         queryResult={queryResult}
         createMutation={createMutation}

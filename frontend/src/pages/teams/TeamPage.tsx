@@ -129,6 +129,7 @@ const TeamPage: React.FC = () => {
       { id: string; data: TeamConfigUpdate }
     >
       hideTitle
+      mobileHiddenColumns={['description', 'created_at']}
       title="Agent 团队管理"
       icon={<TeamOutlined />}
       queryResult={queryResult}
