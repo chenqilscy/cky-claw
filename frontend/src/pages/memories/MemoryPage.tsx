@@ -1,19 +1,27 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   Button,
+  Card,
+  Col,
   Form,
   Input,
   InputNumber,
   Modal,
+  Row,
   Select,
   Space,
+  Statistic,
   Tag,
   Slider,
+  Timeline,
 } from 'antd';
 import {
   SearchOutlined,
   BulbOutlined,
+  DatabaseOutlined,
+  HistoryOutlined,
 } from '@ant-design/icons';
+import ReactECharts from 'echarts-for-react';
 import { ProTable } from '@ant-design/pro-components';
 import type { ProColumns } from '@ant-design/pro-components';
 import type { FormInstance } from 'antd';
@@ -154,6 +162,7 @@ const renderForm = (_form: FormInstance, editing: MemoryItem | null) => (
 const MemoryPage: React.FC = () => {
   const [pagination, setPagination] = useState({ current: 1, pageSize: 20 });
   const [filters, setFilters] = useState<{ user_id?: string; type?: string; agent_name?: string }>({});
+  const [viewMode, setViewMode] = useState<'table' | 'timeline'>('table');
 
   // Search Modal
   const [searchVisible, setSearchVisible] = useState(false);
@@ -169,6 +178,53 @@ const MemoryPage: React.FC = () => {
   const updateMutation = useUpdateMemory();
   const deleteMutation = useDeleteMemory();
   const searchMutation = useSearchMemory();
+
+  /* ---- 统计数据 ---- */
+  const memories = queryResult.data?.data ?? [];
+  const total = queryResult.data?.total ?? 0;
+
+  const typeDistribution = useMemo(() => {
+    const map: Record<string, number> = {};
+    memories.forEach((m) => { map[m.type] = (map[m.type] || 0) + 1; });
+    return Object.entries(map).map(([name, value]) => ({
+      name: TYPE_LABELS[name] ?? name, value,
+    }));
+  }, [memories]);
+
+  const avgConfidence = useMemo(() => {
+    if (memories.length === 0) return 0;
+    return memories.reduce((sum, m) => sum + m.confidence, 0) / memories.length;
+  }, [memories]);
+
+  const typePieOption = useMemo(() => ({
+    tooltip: { trigger: 'item' },
+    series: [{
+      type: 'pie', radius: ['40%', '70%'],
+      data: typeDistribution.map((d) => ({
+        value: d.value, name: d.name,
+        itemStyle: { color: TYPE_COLORS[Object.entries(TYPE_LABELS).find(([, v]) => v === d.name)?.[0] ?? ''] ?? '#1677ff' },
+      })),
+      label: { show: true, formatter: '{b}: {c}' },
+    }],
+  }), [typeDistribution]);
+
+  const confidenceBarOption = useMemo(() => {
+    const buckets = [0, 0, 0, 0, 0]; // [0-0.2, 0.2-0.4, 0.4-0.6, 0.6-0.8, 0.8-1.0]
+    memories.forEach((m) => {
+      const idx = Math.min(Math.floor(m.confidence * 5), 4);
+      buckets[idx]++;
+    });
+    return {
+      tooltip: {},
+      xAxis: { type: 'category' as const, data: ['0-0.2', '0.2-0.4', '0.4-0.6', '0.6-0.8', '0.8-1.0'] },
+      yAxis: { type: 'value' as const },
+      series: [{
+        type: 'bar',
+        data: buckets,
+        itemStyle: { color: '#1677ff' },
+      }],
+    };
+  }, [memories]);
 
   const handleSearch = async () => {
     try {
@@ -199,6 +255,79 @@ const MemoryPage: React.FC = () => {
       icon={<BulbOutlined />}
       description="管理 Agent 记忆（情景 / 语义 / 程序型），支持向量搜索"
     >
+      {/* ---- 统计概览 ---- */}
+      <Row gutter={16} style={{ marginBottom: 24 }}>
+        <Col span={4}>
+          <Card size="small"><Statistic title="记忆总数" value={total} prefix={<DatabaseOutlined />} /></Card>
+        </Col>
+        <Col span={4}>
+          <Card size="small"><Statistic title="当前页" value={memories.length} /></Card>
+        </Col>
+        <Col span={4}>
+          <Card size="small"><Statistic title="平均置信度" value={avgConfidence} precision={2} /></Card>
+        </Col>
+        <Col span={6}>
+          <Card size="small" styles={{ body: { padding: 8 } }}>
+            <ReactECharts option={typePieOption} style={{ height: 120 }} />
+          </Card>
+        </Col>
+        <Col span={6}>
+          <Card size="small" styles={{ body: { padding: 8 } }}>
+            <ReactECharts option={confidenceBarOption} style={{ height: 120 }} />
+          </Card>
+        </Col>
+      </Row>
+
+      {/* ---- 视图切换 ---- */}
+      <Space style={{ marginBottom: 16 }}>
+        <Button
+          type={viewMode === 'table' ? 'primary' : 'default'}
+          icon={<DatabaseOutlined />}
+          onClick={() => setViewMode('table')}
+        >
+          表格
+        </Button>
+        <Button
+          type={viewMode === 'timeline' ? 'primary' : 'default'}
+          icon={<HistoryOutlined />}
+          onClick={() => setViewMode('timeline')}
+        >
+          时间线
+        </Button>
+      </Space>
+
+      {/* ---- 时间线视图 ---- */}
+      {viewMode === 'timeline' && (
+        <Card style={{ marginBottom: 24 }}>
+          {memories.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: 24, color: '#999' }}>暂无记忆数据</div>
+          ) : (
+            <Timeline
+              items={memories
+                .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
+                .map((m) => ({
+                  color: TYPE_COLORS[m.type] ?? 'blue',
+                  children: (
+                    <div>
+                      <Tag color={TYPE_COLORS[m.type] ?? 'default'}>{TYPE_LABELS[m.type] ?? m.type}</Tag>
+                      <Tag color={m.confidence >= 0.7 ? 'green' : m.confidence >= 0.4 ? 'orange' : 'red'}>
+                        {m.confidence.toFixed(2)}
+                      </Tag>
+                      {m.agent_name && <Tag>{m.agent_name}</Tag>}
+                      <span style={{ fontSize: 12, color: '#999', marginLeft: 8 }}>
+                        {new Date(m.updated_at).toLocaleString('zh-CN')}
+                      </span>
+                      <div style={{ marginTop: 4 }}>{m.content}</div>
+                    </div>
+                  ),
+                }))}
+            />
+          )}
+        </Card>
+      )}
+
+      {/* ---- 表格视图 ---- */}
+      {viewMode === 'table' && (
       <CrudTable<
         MemoryItem,
         MemoryCreateParams,
@@ -273,6 +402,7 @@ const MemoryPage: React.FC = () => {
         onPaginationChange={(current, pageSize) => setPagination({ current, pageSize })}
         showRefresh
       />
+      )}
 
       {/* Search Modal */}
       <Modal
@@ -281,7 +411,7 @@ const MemoryPage: React.FC = () => {
         onCancel={() => setSearchVisible(false)}
         footer={null}
         width={700}
-        destroyOnClose
+        destroyOnHidden
       >
         <Form form={searchForm} layout="inline" style={{ marginBottom: 16 }}>
           <Form.Item name="user_id" rules={[{ required: true, message: '用户 ID' }]}>

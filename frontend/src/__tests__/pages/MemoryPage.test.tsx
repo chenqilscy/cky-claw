@@ -2,6 +2,11 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, waitFor } from '@testing-library/react';
 import { TestQueryWrapper } from '../test-utils';
 
+// Mock echarts
+vi.mock('echarts-for-react', () => ({
+  default: () => <div data-testid="mock-echart" />,
+}));
+
 // Mock ProTable to avoid heavy @ant-design/pro-components rendering
 vi.mock('@ant-design/pro-components', () => ({
   ProTable: ({ headerTitle, dataSource }: { headerTitle: string; dataSource: unknown[] }) => (
@@ -83,14 +88,29 @@ describe('MemoryPage', () => {
     });
   });
 
-  it('renders create button', async () => {
+  it('renders view toggle and search buttons', async () => {
     render(
       <TestQueryWrapper>
           <MemoryPage />
       </TestQueryWrapper>,
     );
     await waitFor(() => {
-      expect(document.body.textContent).toContain('新建');
+      const text = document.body.textContent ?? '';
+      expect(text).toContain('表格');
+      expect(text).toContain('时间线');
+    });
+  });
+
+  it('renders statistics overview', async () => {
+    render(
+      <TestQueryWrapper>
+          <MemoryPage />
+      </TestQueryWrapper>,
+    );
+    await waitFor(() => {
+      const text = document.body.textContent ?? '';
+      expect(text).toContain('记忆总数');
+      expect(text).toContain('平均置信度');
     });
   });
 });
