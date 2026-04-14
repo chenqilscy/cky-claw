@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, waitFor } from '@testing-library/react';
 import { TestQueryWrapper } from '../test-utils';
-import { MemoryRouter } from 'react-router-dom';
 
 // Mock auditLogService
 const mockListAuditLogs = vi.fn();
@@ -34,9 +33,7 @@ describe('AuditLogPage', () => {
   it('renders page title', async () => {
     render(
       <TestQueryWrapper>
-        <MemoryRouter>
           <AuditLogPage />
-        </MemoryRouter>
       </TestQueryWrapper>,
     );
     await waitFor(() => {
@@ -47,9 +44,7 @@ describe('AuditLogPage', () => {
   it('renders audit log data in table', async () => {
     render(
       <TestQueryWrapper>
-        <MemoryRouter>
           <AuditLogPage />
-        </MemoryRouter>
       </TestQueryWrapper>,
     );
     await waitFor(() => {
@@ -65,9 +60,7 @@ describe('AuditLogPage', () => {
   it('renders table columns', async () => {
     render(
       <TestQueryWrapper>
-        <MemoryRouter>
           <AuditLogPage />
-        </MemoryRouter>
       </TestQueryWrapper>,
     );
     await waitFor(() => {
@@ -81,9 +74,7 @@ describe('AuditLogPage', () => {
   it('calls listAuditLogs on mount', async () => {
     render(
       <TestQueryWrapper>
-        <MemoryRouter>
           <AuditLogPage />
-        </MemoryRouter>
       </TestQueryWrapper>,
     );
     await waitFor(() => {

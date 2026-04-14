@@ -60,7 +60,7 @@ describe('EnvironmentDetailPage', () => {
 
   const renderPage = () =>
     render(
-      <TestQueryWrapper>
+      <TestQueryWrapper withRouter={false}>
         <MemoryRouter initialEntries={['/environments/dev']}>
           <Routes>
             <Route path="/environments/:envName" element={<EnvironmentDetailPage />} />

@@ -32,7 +32,7 @@ import AgentVersionPage from '../../pages/agents/AgentVersionPage';
 
 function renderWithRouter(agentId = 'agent-1') {
   return render(
-    <TestQueryWrapper>
+    <TestQueryWrapper withRouter={false}>
       <MemoryRouter initialEntries={[`/agents/${agentId}/versions`]}>
         <Routes>
           <Route path="/agents/:agentId/versions" element={<AgentVersionPage />} />

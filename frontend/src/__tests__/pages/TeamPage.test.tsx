@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, waitFor } from '@testing-library/react';
 import { TestQueryWrapper } from '../test-utils';
-import { MemoryRouter } from 'react-router-dom';
 
 // Mock teamService — named exports
 const mockListTeams = vi.fn();
@@ -38,9 +37,7 @@ describe('TeamPage', () => {
   it('renders page title', async () => {
     render(
       <TestQueryWrapper>
-        <MemoryRouter>
           <TeamPage />
-        </MemoryRouter>
       </TestQueryWrapper>,
     );
     await waitFor(() => {
@@ -51,9 +48,7 @@ describe('TeamPage', () => {
   it('calls listTeams on mount', async () => {
     render(
       <TestQueryWrapper>
-        <MemoryRouter>
           <TeamPage />
-        </MemoryRouter>
       </TestQueryWrapper>,
     );
     await waitFor(() => {
@@ -64,9 +59,7 @@ describe('TeamPage', () => {
   it('renders team data', async () => {
     render(
       <TestQueryWrapper>
-        <MemoryRouter>
           <TeamPage />
-        </MemoryRouter>
       </TestQueryWrapper>,
     );
     await waitFor(() => {
@@ -77,9 +70,7 @@ describe('TeamPage', () => {
   it('renders protocol tag', async () => {
     render(
       <TestQueryWrapper>
-        <MemoryRouter>
           <TeamPage />
-        </MemoryRouter>
       </TestQueryWrapper>,
     );
     await waitFor(() => {

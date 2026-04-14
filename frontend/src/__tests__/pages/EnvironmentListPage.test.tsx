@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, waitFor, screen, fireEvent } from '@testing-library/react';
 import { TestQueryWrapper } from '../test-utils';
-import { MemoryRouter } from 'react-router-dom';
 
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom');
@@ -80,9 +79,7 @@ describe('EnvironmentListPage', () => {
   it('renders and fetches environments on mount', async () => {
     render(
       <TestQueryWrapper>
-        <MemoryRouter>
           <EnvironmentListPage />
-        </MemoryRouter>
       </TestQueryWrapper>,
     );
     await waitFor(() => {
@@ -93,13 +90,11 @@ describe('EnvironmentListPage', () => {
   it('displays environment data in the table', async () => {
     render(
       <TestQueryWrapper>
-        <MemoryRouter>
           <EnvironmentListPage />
-        </MemoryRouter>
       </TestQueryWrapper>,
     );
     await waitFor(() => {
-      expect(screen.getByText('环境管理')).toBeTruthy();
+      expect(document.body.textContent).toContain('环境管理');
     });
     expect(screen.getByTestId('row-count').textContent).toBe('2');
   });
@@ -107,9 +102,7 @@ describe('EnvironmentListPage', () => {
   it('calls list API', async () => {
     render(
       <TestQueryWrapper>
-        <MemoryRouter>
           <EnvironmentListPage />
-        </MemoryRouter>
       </TestQueryWrapper>,
     );
     await waitFor(() => {

@@ -18,16 +18,22 @@ export function createTestQueryClient() {
 }
 
 /**
- * 包装组件，提供 QueryClientProvider。
+ * 包装组件，提供 QueryClientProvider + MemoryRouter。
  * 用法：render(<TestQueryWrapper><MyPage /></TestQueryWrapper>)
+ * 若测试自行提供 MemoryRouter（如需 initialEntries），传 withRouter={false}。
  */
-export function TestQueryWrapper({ children }: { children: React.ReactNode }) {
+export function TestQueryWrapper({
+  children,
+  withRouter = true,
+}: {
+  children: React.ReactNode;
+  withRouter?: boolean;
+}) {
   const queryClient = React.useMemo(() => createTestQueryClient(), []);
-  return (
-    <MemoryRouter>
-      <QueryClientProvider client={queryClient}>
-        {children}
-      </QueryClientProvider>
-    </MemoryRouter>
+  const content = (
+    <QueryClientProvider client={queryClient}>
+      {children}
+    </QueryClientProvider>
   );
+  return withRouter ? <MemoryRouter>{content}</MemoryRouter> : content;
 }

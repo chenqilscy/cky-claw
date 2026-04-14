@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, waitFor } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
 import { TestQueryWrapper } from '../test-utils';
 
 // Mock ProTable to avoid heavy @ant-design/pro-components rendering
@@ -47,9 +46,7 @@ import { skillService } from '../../services/skillService';
 function renderPage() {
   return render(
     <TestQueryWrapper>
-      <MemoryRouter>
         <SkillPage />
-      </MemoryRouter>
     </TestQueryWrapper>,
   );
 }

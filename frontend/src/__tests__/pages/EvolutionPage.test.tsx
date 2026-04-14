@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import { TestQueryWrapper } from '../test-utils';
-import { MemoryRouter } from 'react-router-dom';
 
 vi.mock('../../services/evolutionService', () => ({
   evolutionService: {
@@ -44,9 +43,7 @@ describe('EvolutionPage', () => {
   it('renders page title', () => {
     render(
       <TestQueryWrapper>
-        <MemoryRouter>
           <EvolutionPage />
-        </MemoryRouter>
       </TestQueryWrapper>,
     );
     // Card title 通过 Ant Design 内部渲染，用 container 查找
@@ -56,9 +53,7 @@ describe('EvolutionPage', () => {
   it('shows proposal in table after loading', async () => {
     render(
       <TestQueryWrapper>
-        <MemoryRouter>
           <EvolutionPage />
-        </MemoryRouter>
       </TestQueryWrapper>,
     );
     await waitFor(() => {
@@ -69,9 +64,7 @@ describe('EvolutionPage', () => {
   it('shows proposal type tag', async () => {
     render(
       <TestQueryWrapper>
-        <MemoryRouter>
           <EvolutionPage />
-        </MemoryRouter>
       </TestQueryWrapper>,
     );
     await waitFor(() => {
@@ -82,9 +75,7 @@ describe('EvolutionPage', () => {
   it('shows status tag', async () => {
     render(
       <TestQueryWrapper>
-        <MemoryRouter>
           <EvolutionPage />
-        </MemoryRouter>
       </TestQueryWrapper>,
     );
     await waitFor(() => {
@@ -95,9 +86,7 @@ describe('EvolutionPage', () => {
   it('renders filter inputs', () => {
     render(
       <TestQueryWrapper>
-        <MemoryRouter>
           <EvolutionPage />
-        </MemoryRouter>
       </TestQueryWrapper>,
     );
     expect(screen.getByPlaceholderText('Agent 名称')).toBeDefined();
@@ -106,9 +95,7 @@ describe('EvolutionPage', () => {
   it('renders create button', () => {
     render(
       <TestQueryWrapper>
-        <MemoryRouter>
           <EvolutionPage />
-        </MemoryRouter>
       </TestQueryWrapper>,
     );
     expect(screen.getByRole('button', { name: /新建建议/ })).toBeDefined();
@@ -117,9 +104,7 @@ describe('EvolutionPage', () => {
   it('renders refresh button', () => {
     render(
       <TestQueryWrapper>
-        <MemoryRouter>
           <EvolutionPage />
-        </MemoryRouter>
       </TestQueryWrapper>,
     );
     expect(screen.getByRole('button', { name: /刷新/ })).toBeDefined();
