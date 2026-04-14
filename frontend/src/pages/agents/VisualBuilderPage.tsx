@@ -1,6 +1,13 @@
-import { useMemo, useCallback } from 'react';
-import { Button, Card, Divider, Space, Typography, App } from 'antd';
-import { SaveOutlined, PlusOutlined, CopyOutlined } from '@ant-design/icons';
+import { useMemo, useCallback, useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import {
+  Button, Card, Divider, Space, Typography, App, Modal, Form, Input, Select, Dropdown, Collapse,
+} from 'antd';
+import type { MenuProps } from 'antd';
+import {
+  SaveOutlined, PlusOutlined, CopyOutlined, RocketOutlined,
+  ToolOutlined, SafetyCertificateOutlined, SwapOutlined, CloudServerOutlined,
+} from '@ant-design/icons';
 import {
   ReactFlow,
   Background,
@@ -14,72 +21,175 @@ import {
   type Node,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
+import { agentService } from '../../services/agentService';
+import type { AgentConfig } from '../../services/agentService';
+import { toolGroupService } from '../../services/toolGroupService';
+import { guardrailService } from '../../services/guardrailService';
+import { mcpServerService } from '../../services/mcpServerService';
 
 const { Text } = Typography;
 
-const initialNodes: Node[] = [
-  { id: 'agent', position: { x: 360, y: 160 }, data: { label: 'Agent Core' }, type: 'default' },
-];
+/** 节点类型配色与图标映射。 */
+const NODE_STYLES: Record<string, { color: string; bg: string; icon: string }> = {
+  agent:     { color: '#1677ff', bg: '#e6f4ff', icon: '🤖' },
+  tool:      { color: '#52c41a', bg: '#f6ffed', icon: '🔧' },
+  guardrail: { color: '#faad14', bg: '#fffbe6', icon: '🛡️' },
+  handoff:   { color: '#722ed1', bg: '#f9f0ff', icon: '🔀' },
+  mcp:       { color: '#13c2c2', bg: '#e6fffb', icon: '☁️' },
+};
 
+/** 从节点 id 中提取类型前缀。 */
+function nodeKind(id: string): string {
+  const idx = id.indexOf('-');
+  return idx > 0 ? id.slice(0, idx) : id;
+}
+
+const initialNodes: Node[] = [
+  { id: 'agent', position: { x: 360, y: 160 }, data: { label: '🤖 Agent Core' }, type: 'default', style: { background: '#e6f4ff', border: '2px solid #1677ff', borderRadius: 8, fontWeight: 600 } },
+];
 const initialEdges: Edge[] = [];
 
 const VisualBuilderPage: React.FC = () => {
   const { message } = App.useApp();
+  const navigate = useNavigate();
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+  const [saveModalOpen, setSaveModalOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveForm] = Form.useForm();
+
+  /* ---- 后端数据加载 ---- */
+  const [toolGroupItems, setToolGroupItems] = useState<{ name: string; description: string }[]>([]);
+  const [guardrailItems, setGuardrailItems] = useState<{ name: string; mode: string; type: string }[]>([]);
+  const [mcpItems, setMcpItems] = useState<{ name: string; transport_type: string }[]>([]);
+  const [agentItems, setAgentItems] = useState<{ name: string; description: string }[]>([]);
+
+  useEffect(() => {
+    toolGroupService.list().then((r) => setToolGroupItems(r.data.filter((g) => g.is_enabled))).catch(() => {});
+    guardrailService.list({ enabled_only: true, limit: 200 }).then((r) => setGuardrailItems(r.data)).catch(() => {});
+    mcpServerService.list({ limit: 200 }).then((r) => setMcpItems(r.data)).catch(() => {});
+    agentService.list({ limit: 200 }).then((r) => setAgentItems(r.data.map((a: AgentConfig) => ({ name: a.name, description: a.description })))).catch(() => {});
+  }, []);
 
   const onConnect = (params: Connection) => {
     setEdges((eds) => addEdge({ ...params, animated: true }, eds));
   };
 
-  const addNode = (kind: 'tool' | 'guardrail' | 'handoff' | 'mcp') => {
+  /** 添加带样式的节点。 */
+  const addStyledNode = useCallback((kind: string, label: string) => {
     const id = `${kind}-${Date.now()}`;
-    const count = nodes.filter((n) => n.id.startsWith(kind)).length;
+    const count = nodes.filter((n) => nodeKind(n.id) === kind).length;
+    const s = NODE_STYLES[kind] ?? NODE_STYLES.tool;
     const next: Node = {
       id,
-      data: { label: `${kind.toUpperCase()}-${count + 1}` },
-      position: { x: 120 + (count % 3) * 220, y: 40 + Math.floor(count / 3) * 120 },
+      data: { label: `${s.icon} ${label}` },
+      position: { x: 120 + (count % 4) * 220, y: 40 + Math.floor(count / 4) * 120 },
       type: 'default',
+      style: { background: s.bg, border: `2px solid ${s.color}`, borderRadius: 8, fontWeight: 500 },
     };
     setNodes((prev) => [...prev, next]);
-  };
+  }, [nodes, setNodes]);
 
+  /* ---- 下拉菜单构建 ---- */
+  const toolMenu: MenuProps['items'] = [
+    { key: 'custom', label: '自定义 Tool 节点', onClick: () => addStyledNode('tool', `TOOL-${nodes.filter((n) => nodeKind(n.id) === 'tool').length + 1}`) },
+    ...(toolGroupItems.length > 0 ? [{ type: 'divider' as const }] : []),
+    ...toolGroupItems.map((g) => ({ key: `tg-${g.name}`, label: g.name, onClick: () => addStyledNode('tool', g.name) })),
+  ];
+
+  const guardrailMenu: MenuProps['items'] = [
+    { key: 'custom', label: '自定义 Guardrail 节点', onClick: () => addStyledNode('guardrail', `GUARD-${nodes.filter((n) => nodeKind(n.id) === 'guardrail').length + 1}`) },
+    ...(guardrailItems.length > 0 ? [{ type: 'divider' as const }] : []),
+    ...guardrailItems.map((g) => ({ key: `gr-${g.name}`, label: `${g.name} (${g.type}/${g.mode})`, onClick: () => addStyledNode('guardrail', g.name) })),
+  ];
+
+  const handoffMenu: MenuProps['items'] = [
+    { key: 'custom', label: '自定义 Handoff 节点', onClick: () => addStyledNode('handoff', `HANDOFF-${nodes.filter((n) => nodeKind(n.id) === 'handoff').length + 1}`) },
+    ...(agentItems.length > 0 ? [{ type: 'divider' as const }] : []),
+    ...agentItems.map((a) => ({ key: `ho-${a.name}`, label: a.name, onClick: () => addStyledNode('handoff', a.name) })),
+  ];
+
+  const mcpMenu: MenuProps['items'] = [
+    { key: 'custom', label: '自定义 MCP 节点', onClick: () => addStyledNode('mcp', `MCP-${nodes.filter((n) => nodeKind(n.id) === 'mcp').length + 1}`) },
+    ...(mcpItems.length > 0 ? [{ type: 'divider' as const }] : []),
+    ...mcpItems.map((m) => ({ key: `mcp-${m.name}`, label: `${m.name} (${m.transport_type})`, onClick: () => addStyledNode('mcp', m.name) })),
+  ];
+
+  /* ---- JSON 配置生成 ---- */
   const configJson = useMemo(() => {
-    const tools = nodes.filter((n) => n.id.startsWith('tool-')).map((n) => String(n.data?.label ?? n.id));
-    const guardrails = nodes.filter((n) => n.id.startsWith('guardrail-')).map((n) => String(n.data?.label ?? n.id));
-    const handoffs = nodes.filter((n) => n.id.startsWith('handoff-')).map((n) => String(n.data?.label ?? n.id));
-    const mcpServers = nodes.filter((n) => n.id.startsWith('mcp-')).map((n) => String(n.data?.label ?? n.id));
+    /** 提取节点标签（去掉 emoji 前缀）。 */
+    const cleanLabel = (n: Node) => String(n.data?.label ?? n.id).replace(/^[^\w]*\s*/, '');
+    const tools = nodes.filter((n) => nodeKind(n.id) === 'tool').map(cleanLabel);
+    const guardrails = nodes.filter((n) => nodeKind(n.id) === 'guardrail').map(cleanLabel);
+    const handoffs = nodes.filter((n) => nodeKind(n.id) === 'handoff').map(cleanLabel);
+    const mcpServers = nodes.filter((n) => nodeKind(n.id) === 'mcp').map(cleanLabel);
 
     return {
       instructions: '由 Visual Builder 生成',
-      tools,
-      guardrails,
+      tool_groups: tools,
+      guardrails: { input: guardrails, output: [], tool: [] },
       handoffs,
       mcp_servers: mcpServers,
       links: edges.map((e) => ({ from: e.source, to: e.target })),
     };
   }, [edges, nodes]);
 
-  const handleSave = useCallback(async () => {
+  /* ---- 复制 JSON ---- */
+  const handleCopy = useCallback(async () => {
     try {
       await navigator.clipboard.writeText(JSON.stringify(configJson, null, 2));
-      message.success('Agent JSON 已复制到剪贴板，可在 Agent 编辑页粘贴使用');
+      message.success('Agent JSON 已复制到剪贴板');
     } catch {
       message.info('请手动复制下方 JSON 配置');
     }
   }, [configJson, message]);
 
+  /* ---- 保存为 Agent ---- */
+  const handleSaveAsAgent = useCallback(async () => {
+    try {
+      const values = await saveForm.validateFields();
+      setSaving(true);
+      await agentService.create({
+        name: values.name,
+        description: values.description || '',
+        instructions: configJson.instructions,
+        tool_groups: configJson.tool_groups,
+        handoffs: configJson.handoffs,
+        mcp_servers: configJson.mcp_servers,
+        guardrails: configJson.guardrails,
+      });
+      message.success(`Agent "${values.name}" 已创建`);
+      setSaveModalOpen(false);
+      saveForm.resetFields();
+      navigate(`/agents/${values.name}/edit`);
+    } catch (err: unknown) {
+      if (err && typeof err === 'object' && 'errorFields' in err) return; // form validation
+      message.error('创建 Agent 失败');
+    } finally {
+      setSaving(false);
+    }
+  }, [configJson, saveForm, message, navigate]);
+
   return (
     <Space direction="vertical" size={16} style={{ width: '100%' }}>
       <Card>
         <Space wrap>
-          <Button icon={<PlusOutlined />} onClick={() => addNode('tool')}>添加 Tool</Button>
-          <Button icon={<PlusOutlined />} onClick={() => addNode('guardrail')}>添加 Guardrail</Button>
-          <Button icon={<PlusOutlined />} onClick={() => addNode('handoff')}>添加 Handoff</Button>
-          <Button icon={<PlusOutlined />} onClick={() => addNode('mcp')}>添加 MCP</Button>
+          <Dropdown menu={{ items: toolMenu }} trigger={['click']}>
+            <Button icon={<ToolOutlined />} style={{ color: NODE_STYLES.tool.color }}>添加 Tool</Button>
+          </Dropdown>
+          <Dropdown menu={{ items: guardrailMenu }} trigger={['click']}>
+            <Button icon={<SafetyCertificateOutlined />} style={{ color: NODE_STYLES.guardrail.color }}>添加 Guardrail</Button>
+          </Dropdown>
+          <Dropdown menu={{ items: handoffMenu }} trigger={['click']}>
+            <Button icon={<SwapOutlined />} style={{ color: NODE_STYLES.handoff.color }}>添加 Handoff</Button>
+          </Dropdown>
+          <Dropdown menu={{ items: mcpMenu }} trigger={['click']}>
+            <Button icon={<CloudServerOutlined />} style={{ color: NODE_STYLES.mcp.color }}>添加 MCP</Button>
+          </Dropdown>
           <Divider type="vertical" />
-          <Button type="primary" icon={<SaveOutlined />} onClick={handleSave}>
-            保存（复制 JSON）
+          <Button icon={<CopyOutlined />} onClick={handleCopy}>复制 JSON</Button>
+          <Button type="primary" icon={<RocketOutlined />} onClick={() => setSaveModalOpen(true)}>
+            保存为 Agent
           </Button>
         </Space>
       </Card>
@@ -99,11 +209,45 @@ const VisualBuilderPage: React.FC = () => {
         </ReactFlow>
       </Card>
 
-      <Card title="Agent JSON（单向: Canvas -> JSON）">
-        <Text code style={{ whiteSpace: 'pre-wrap', display: 'block' }}>
-          {JSON.stringify(configJson, null, 2)}
-        </Text>
-      </Card>
+      <Collapse
+        items={[{
+          key: 'json',
+          label: 'Agent JSON（单向: Canvas → JSON）',
+          children: (
+            <Text code style={{ whiteSpace: 'pre-wrap', display: 'block' }}>
+              {JSON.stringify(configJson, null, 2)}
+            </Text>
+          ),
+        }]}
+        defaultActiveKey={[]}
+      />
+
+      {/* ---- Save as Agent Modal ---- */}
+      <Modal
+        title="保存为 Agent"
+        open={saveModalOpen}
+        onCancel={() => setSaveModalOpen(false)}
+        onOk={handleSaveAsAgent}
+        confirmLoading={saving}
+        okText="创建"
+        destroyOnClose
+      >
+        <Form form={saveForm} layout="vertical">
+          <Form.Item
+            name="name"
+            label="Agent 名称"
+            rules={[
+              { required: true, message: '请输入名称' },
+              { pattern: /^[a-z0-9][a-z0-9-]{1,62}[a-z0-9]$/, message: '小写字母/数字/连字符，3-64 字符' },
+            ]}
+          >
+            <Input placeholder="例如: my-visual-agent" />
+          </Form.Item>
+          <Form.Item name="description" label="描述">
+            <Input.TextArea rows={2} placeholder="Agent 功能描述（可选）" />
+          </Form.Item>
+        </Form>
+      </Modal>
     </Space>
   );
 };
