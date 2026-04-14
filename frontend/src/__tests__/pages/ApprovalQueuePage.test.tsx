@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, waitFor } from '@testing-library/react';
+import { TestQueryWrapper } from '../test-utils';
 
 // Mock useApprovalWs hook
 vi.mock('../../hooks/useApprovalWs', () => ({
@@ -56,24 +57,40 @@ describe('ApprovalQueuePage', () => {
   });
 
   it('渲染审批队列标题', () => {
-    const { container } = render(<ApprovalQueuePage />);
+    const { container } = render(
+      <TestQueryWrapper>
+        <ApprovalQueuePage />
+      </TestQueryWrapper>,
+    );
     expect(container.textContent).toContain('审批队列');
   });
 
   it('渲染刷新按钮', () => {
-    const { container } = render(<ApprovalQueuePage />);
+    const { container } = render(
+      <TestQueryWrapper>
+        <ApprovalQueuePage />
+      </TestQueryWrapper>,
+    );
     expect(container.textContent).toContain('刷新');
   });
 
   it('调用审批列表接口', async () => {
-    render(<ApprovalQueuePage />);
+    render(
+      <TestQueryWrapper>
+        <ApprovalQueuePage />
+      </TestQueryWrapper>,
+    );
     await waitFor(() => {
       expect(mockList).toHaveBeenCalled();
     });
   });
 
   it('渲染 WebSocket 连接状态', () => {
-    const { container } = render(<ApprovalQueuePage />);
+    const { container } = render(
+      <TestQueryWrapper>
+        <ApprovalQueuePage />
+      </TestQueryWrapper>,
+    );
     expect(container.textContent).toContain('未连接');
   });
 });

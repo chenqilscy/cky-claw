@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Button, Card, Form, Input, Select, Space, App, Spin, Switch, Steps, Divider, Typography } from 'antd';
 import { ArrowLeftOutlined, RobotOutlined } from '@ant-design/icons';
 import { PageContainer } from '../../components/PageContainer';
-import { JsonEditor } from '../../components';
+import { createJsonValidatorRule, JsonEditor } from '../../components';
 import { agentService } from '../../services/agentService';
 import type { AgentConfig, AgentCreateInput, AgentUpdateInput } from '../../services/agentService';
 import { guardrailService } from '../../services/guardrailService';
@@ -461,13 +461,7 @@ const AgentEditPage: React.FC = () => {
                 label="结构化输出（JSON Schema）"
                 tooltip="可选 — 定义 Agent 返回的结构化数据格式，留空则返回纯文本"
                 rules={[
-                  {
-                    validator: (_, value) => {
-                      if (!value || !(value as string).trim()) return Promise.resolve();
-                      try { JSON.parse(value as string); return Promise.resolve(); }
-                      catch { return Promise.reject(new Error('请输入有效的 JSON Schema')); }
-                    },
-                  },
+                  createJsonValidatorRule('请输入有效的 JSON Schema'),
                 ]}
               >
                 <JsonEditor

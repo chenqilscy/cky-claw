@@ -11,6 +11,7 @@
 import { useCallback, useRef } from 'react';
 import Editor, { type OnMount, type OnChange } from '@monaco-editor/react';
 import type { editor } from 'monaco-editor';
+import type { Rule } from 'antd/es/form';
 import { Spin } from 'antd';
 import useThemeStore from '../stores/themeStore';
 
@@ -36,6 +37,25 @@ function formatJson(val: string): string {
   } catch {
     return val;
   }
+}
+
+export function createJsonValidatorRule(message = 'JSON 格式无效', required = false): Rule {
+  return {
+    validator: async (_, value: unknown) => {
+      const text = typeof value === 'string' ? value.trim() : '';
+      if (!text) {
+        if (required) {
+          throw new Error(message);
+        }
+        return;
+      }
+      try {
+        JSON.parse(text);
+      } catch {
+        throw new Error(message);
+      }
+    },
+  };
 }
 
 export default function JsonEditor({

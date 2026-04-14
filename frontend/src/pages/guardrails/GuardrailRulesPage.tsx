@@ -10,7 +10,6 @@ import {
   Tag,
 } from 'antd';
 import { SafetyCertificateOutlined } from '@ant-design/icons';
-import { JsonEditor } from '../../components';
 import type { ProColumns } from '@ant-design/pro-components';
 import type { FormInstance } from 'antd';
 import {
@@ -24,7 +23,7 @@ import type {
   GuardrailRuleCreateParams,
   GuardrailRuleUpdateParams,
 } from '../../services/guardrailService';
-import { CrudTable, PageContainer, buildActionColumn } from '../../components';
+import { CrudTable, PageContainer, buildActionColumn, createJsonValidatorRule, JsonEditor } from '../../components';
 import type { CrudTableActions } from '../../components';
 
 const { TextArea } = Input;
@@ -220,19 +219,7 @@ const GuardrailFormFields: React.FC<{ editing: GuardrailRuleItem | null }> = ({ 
         name="conditions_json"
         label="条件启用配置（JSON）"
         extra='留空表示始终启用。示例：{"agent_name": "my-agent"}'
-        rules={[
-          {
-            validator: (_, value) => {
-              if (!value || !value.trim()) return Promise.resolve();
-              try {
-                JSON.parse(value);
-                return Promise.resolve();
-              } catch {
-                return Promise.reject(new Error('JSON 格式无效'));
-              }
-            },
-          },
-        ]}
+        rules={[createJsonValidatorRule()]}
       >
         <JsonEditor height={80} placeholder='{"agent_name": "my-agent"}' />
       </Form.Item>

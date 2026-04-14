@@ -2,7 +2,6 @@ import { Form, Input, Switch, Tag, App } from 'antd';
 import { ToolOutlined } from '@ant-design/icons';
 import type { ProColumns } from '@ant-design/pro-components';
 import type { FormInstance } from 'antd';
-import { JsonEditor } from '../../components';
 import {
   useToolGroupList,
   useCreateToolGroup,
@@ -15,7 +14,7 @@ import type {
   ToolGroupUpdateRequest,
   ToolDefinition,
 } from '../../services/toolGroupService';
-import { CrudTable, PageContainer, buildActionColumn } from '../../components';
+import { CrudTable, PageContainer, buildActionColumn, createJsonValidatorRule, JsonEditor } from '../../components';
 import type { CrudTableActions } from '../../components';
 
 const { TextArea } = Input;
@@ -119,6 +118,7 @@ const renderForm = (_form: FormInstance, editing: ToolGroupResponse | null) => (
       name="tools_json"
       label="工具定义（JSON 数组）"
       tooltip="每个工具需 name、description 和 parameters_schema 字段"
+      rules={[createJsonValidatorRule('请输入有效的工具定义 JSON', true)]}
     >
       <JsonEditor
         height={240}
@@ -136,19 +136,7 @@ const renderForm = (_form: FormInstance, editing: ToolGroupResponse | null) => (
       name="conditions_json"
       label="条件启用配置（JSON）"
       extra='留空表示始终启用。示例：{"env": "production"}'
-      rules={[
-        {
-          validator: (_, value) => {
-            if (!value || !value.trim()) return Promise.resolve();
-            try {
-              JSON.parse(value);
-              return Promise.resolve();
-            } catch {
-              return Promise.reject(new Error('JSON 格式无效'));
-            }
-          },
-        },
-      ]}
+      rules={[createJsonValidatorRule()]}
     >
       <JsonEditor height={100} placeholder='{"env": "production"}' />
     </Form.Item>

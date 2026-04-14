@@ -2,13 +2,12 @@ import { useState } from 'react';
 import { Card, Modal, Form, Input, Tag, App, Badge, Tooltip, Table, Typography, Tabs, Button, Space } from 'antd';
 import { EyeOutlined, CheckCircleOutlined, BranchesOutlined, NodeIndexOutlined, PartitionOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
-import { JsonEditor } from '../../components';
 import type { ProColumns } from '@ant-design/pro-components';
 import type { FormInstance } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import type { WorkflowItem, StepSchema, EdgeSchema, WorkflowCreateParams, WorkflowUpdateParams } from '../../services/workflowService';
 import { useWorkflowList, useCreateWorkflow, useUpdateWorkflow, useDeleteWorkflow, useValidateWorkflow } from '../../hooks/useWorkflowQueries';
-import { CrudTable, PageContainer, buildActionColumn } from '../../components';
+import { CrudTable, PageContainer, buildActionColumn, createJsonValidatorRule, JsonEditor } from '../../components';
 import type { CrudTableActions } from '../../components';
 import WorkflowGraphView from './WorkflowGraphView';
 
@@ -176,10 +175,10 @@ const WorkflowPage: React.FC = () => {
       <Form.Item name="description" label="描述">
         <TextArea rows={2} placeholder="工作流描述" />
       </Form.Item>
-      <Form.Item name="steps_json" label="步骤 (JSON)" rules={[{ required: true }]}>
+      <Form.Item name="steps_json" label="步骤 (JSON)" rules={[createJsonValidatorRule('请输入有效的步骤 JSON', true)]}>
         <JsonEditor height={200} placeholder='[{"id":"step1","name":"分析","type":"agent","agent_name":"researcher"}]' />
       </Form.Item>
-      <Form.Item name="edges_json" label="边 (JSON)" rules={[{ required: true }]}>
+      <Form.Item name="edges_json" label="边 (JSON)" rules={[createJsonValidatorRule('请输入有效的边 JSON', true)]}>
         <JsonEditor height={120} placeholder='[{"source_step_id":"step1","target_step_id":"step2"}]' />
       </Form.Item>
       <Form.Item name="output_keys" label="输出键 (逗号分隔)">

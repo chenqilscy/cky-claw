@@ -7,7 +7,6 @@ import type { FormInstance } from 'antd';
 import {
   LinkOutlined, CopyOutlined,
 } from '@ant-design/icons';
-import { JsonEditor } from '../../components';
 import type { ProColumns } from '@ant-design/pro-components';
 import type { IMChannel, IMChannelCreate, IMChannelUpdate, ChannelType } from '../../services/imChannelService';
 import { CHANNEL_TYPES } from '../../services/imChannelService';
@@ -17,7 +16,7 @@ import {
   useUpdateIMChannel,
   useDeleteIMChannel,
 } from '../../hooks/useIMChannelQueries';
-import { CrudTable, PageContainer, buildActionColumn } from '../../components';
+import { CrudTable, PageContainer, buildActionColumn, createJsonValidatorRule, JsonEditor } from '../../components';
 import type { CrudTableActions } from '../../components';
 
 const { TextArea } = Input;
@@ -138,7 +137,7 @@ function renderForm(_form: FormInstance, editing: IMChannel | null) {
       <Form.Item name="is_enabled" label="启用" valuePropName="checked">
         <Switch />
       </Form.Item>
-      <Form.Item name="app_config_json" label="应用配置 (JSON)">
+      <Form.Item name="app_config_json" label="应用配置 (JSON)" rules={[createJsonValidatorRule()]}>
         <JsonEditor height={120} placeholder='{"app_id": "xxx", "token": "xxx"}' />
       </Form.Item>
     </>

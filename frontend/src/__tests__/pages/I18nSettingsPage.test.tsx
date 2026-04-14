@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, act } from '@testing-library/react';
+import { TestQueryWrapper } from '../test-utils';
 
 /* ---------- mock services ---------- */
 const mockAgentList = vi.fn();
@@ -57,7 +58,11 @@ describe('I18nSettingsPage', () => {
   it('渲染页面标题', async () => {
     let container!: HTMLElement;
     await act(async () => {
-      ({ container } = render(<I18nSettingsPage />));
+      ({ container } = render(
+        <TestQueryWrapper>
+          <I18nSettingsPage />
+        </TestQueryWrapper>,
+      ));
     });
     const text = container.textContent ?? '';
     expect(text).toContain('语言版本');
@@ -65,7 +70,11 @@ describe('I18nSettingsPage', () => {
 
   it('加载 Agent 列表', async () => {
     await act(async () => {
-      render(<I18nSettingsPage />);
+      render(
+        <TestQueryWrapper>
+          <I18nSettingsPage />
+        </TestQueryWrapper>,
+      );
     });
     expect(mockAgentList).toHaveBeenCalled();
   });
@@ -73,7 +82,11 @@ describe('I18nSettingsPage', () => {
   it('渲染 Agent 下拉选择器', async () => {
     let container!: HTMLElement;
     await act(async () => {
-      ({ container } = render(<I18nSettingsPage />));
+      ({ container } = render(
+        <TestQueryWrapper>
+          <I18nSettingsPage />
+        </TestQueryWrapper>,
+      ));
     });
     const text = container.textContent ?? '';
     expect(text).toContain('选择 Agent');
@@ -83,7 +96,11 @@ describe('I18nSettingsPage', () => {
     mockAgentList.mockRejectedValueOnce(new Error('fail'));
     let container!: HTMLElement;
     await act(async () => {
-      ({ container } = render(<I18nSettingsPage />));
+      ({ container } = render(
+        <TestQueryWrapper>
+          <I18nSettingsPage />
+        </TestQueryWrapper>,
+      ));
     });
     expect(container).toBeTruthy();
   });

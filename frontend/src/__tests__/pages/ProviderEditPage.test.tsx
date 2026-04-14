@@ -11,8 +11,21 @@ vi.mock('../../services/providerService', () => ({
     create: vi.fn(),
     update: vi.fn(),
   },
-  PROVIDER_TYPES: ['openai', 'azure', 'anthropic'],
-  PROVIDER_BASE_URLS: { openai: 'https://api.openai.com/v1', azure: '', anthropic: 'https://api.anthropic.com/v1' },
+  PROVIDER_TYPES: ['openai', 'azure', 'anthropic', 'openai_compatible', 'custom'],
+  PROVIDER_BASE_URLS: {
+    openai: 'https://api.openai.com/v1',
+    azure: '',
+    anthropic: 'https://api.anthropic.com/v1',
+    openai_compatible: '',
+    custom: '',
+  },
+  PROVIDER_TYPE_LABELS: {
+    openai: 'OpenAI',
+    azure: 'Azure OpenAI',
+    anthropic: 'Anthropic',
+    openai_compatible: 'OpenAI Compatible',
+    custom: '自定义',
+  },
   AUTH_TYPES: ['api_key', 'oauth'],
 }));
 

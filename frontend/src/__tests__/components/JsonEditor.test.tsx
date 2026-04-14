@@ -16,7 +16,7 @@ vi.mock('@monaco-editor/react', () => ({
   },
 }));
 
-import JsonEditor from '../../components/JsonEditor';
+import JsonEditor, { createJsonValidatorRule } from '../../components/JsonEditor';
 
 describe('JsonEditor', () => {
   beforeEach(() => {
@@ -95,5 +95,15 @@ describe('JsonEditor', () => {
     render(<JsonEditor placeholder="{}" />);
     const opts = capturedProps.options as Record<string, unknown>;
     expect(opts.placeholder).toBe('{}');
+  });
+
+  it('createJsonValidatorRule 对合法 JSON 放行', async () => {
+    const rule = createJsonValidatorRule();
+    await expect(rule.validator?.({}, '{"ok":true}')).resolves.toBeUndefined();
+  });
+
+  it('createJsonValidatorRule 对非法 JSON 报错', async () => {
+    const rule = createJsonValidatorRule('bad json');
+    await expect(rule.validator?.({}, '{bad')).rejects.toThrow('bad json');
   });
 });
