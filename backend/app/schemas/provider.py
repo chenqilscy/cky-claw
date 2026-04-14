@@ -26,7 +26,7 @@ _VALID_CAPABILITIES = {"text", "code", "vision", "reasoning", "function_calling"
 
 _VALID_PROVIDER_TYPES = {
     "openai", "anthropic", "azure", "deepseek", "qwen",
-    "doubao", "zhipu", "moonshot", "minimax", "custom",
+    "doubao", "zhipu", "moonshot", "minimax", "openai_compatible", "custom",
 }
 
 _VALID_AUTH_TYPES = {"api_key", "azure_ad", "custom_header"}

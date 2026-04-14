@@ -26,6 +26,7 @@ import {
   CheckCircleOutlined,
   CloseCircleOutlined,
 } from '@ant-design/icons';
+import { PageContainer } from '../../components/PageContainer';
 import ReactECharts from 'echarts-for-react';
 import type {
   AgentRankItem,
@@ -154,27 +155,24 @@ export default function ApmDashboardPage() {
   ];
 
   return (
-    <div style={{ padding: 24 }}>
-      <Row justify="space-between" align="middle" style={{ marginBottom: 24 }}>
-        <Col>
-          <Title level={4} style={{ margin: 0 }}>
-            <DashboardOutlined /> APM 仪表盘
-          </Title>
-        </Col>
-        <Col>
-          <Select
-            value={days}
-            onChange={setDays}
-            style={{ width: 150 }}
-            options={[
-              { value: 7, label: '最近 7 天' },
-              { value: 14, label: '最近 14 天' },
-              { value: 30, label: '最近 30 天' },
-              { value: 90, label: '最近 90 天' },
-            ]}
-          />
-        </Col>
-      </Row>
+    <PageContainer
+      title="APM 仪表盘"
+      icon={<DashboardOutlined />}
+      description="应用性能监控：延迟、错误率、Token 趋势"
+      extra={
+        <Select
+          value={days}
+          onChange={setDays}
+          style={{ width: 150 }}
+          options={[
+            { value: 7, label: '最近 7 天' },
+            { value: 14, label: '最近 14 天' },
+            { value: 30, label: '最近 30 天' },
+            { value: 90, label: '最近 90 天' },
+          ]}
+        />
+      }
+    >
 
       {/* 总览卡片 */}
       <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
@@ -416,6 +414,6 @@ export default function ApmDashboardPage() {
           </Col>
         </Row>
       )}
-    </div>
+    </PageContainer>
   );
 }

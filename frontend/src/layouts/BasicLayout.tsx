@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { ProLayout } from '@ant-design/pro-components';
-import { Button, Select, Tag, Tooltip } from 'antd';
+import { Button, Select, Tag, Tooltip, theme } from 'antd';
 import useEnvironmentStore from '../stores/environmentStore';
 import { environmentService } from '../services/environmentService';
 import type { Environment } from '../services/environmentService';
@@ -148,6 +148,7 @@ const BasicLayout: React.FC = () => {
   const themeMode = useThemeStore((s: { mode: 'light' | 'dark' }) => s.mode);
   const toggleTheme = useThemeStore((s: { toggle: () => void }) => s.toggle);
   const { isMobile } = useResponsive();
+  const { token } = theme.useToken();
 
   const currentEnv = useEnvironmentStore((s) => s.current);
   const setCurrentEnv = useEnvironmentStore((s) => s.setCurrent);
@@ -167,6 +168,28 @@ const BasicLayout: React.FC = () => {
       breakpoint="md"
       route={menuRoutes}
       location={{ pathname: location.pathname }}
+      token={{
+        header: {
+          heightLayoutHeader: 56,
+          colorBgHeader: token.colorBgContainer,
+          colorHeaderTitle: token.colorText,
+        },
+        sider: {
+          colorMenuBackground: token.colorBgContainer,
+          colorBgMenuItemSelected: token.colorPrimaryBg,
+          colorTextMenuSelected: token.colorPrimary,
+          colorTextMenuItemHover: token.colorPrimary,
+          colorTextMenu: token.colorTextSecondary,
+          colorTextMenuTitle: token.colorText,
+          paddingInlineLayoutMenu: 8,
+          paddingBlockLayoutMenu: 4,
+        },
+        pageContainer: {
+          paddingBlockPageContainerContent: 24,
+          paddingInlinePageContainerContent: 24,
+        },
+      }}
+      siderMenuType="sub"
       menuItemRender={(item, dom) => (
         <a
           role="link"
@@ -205,7 +228,11 @@ const BasicLayout: React.FC = () => {
         </Tooltip>,
       ]}
     >
-      <main role="main" aria-label="页面内容">
+      <main
+        role="main"
+        aria-label="页面内容"
+        style={{ padding: 24, minHeight: 'calc(100vh - 56px)' }}
+      >
         <Outlet />
       </main>
     </ProLayout>

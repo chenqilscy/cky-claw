@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button, Card, Form, Input, InputNumber, Modal, Select, Space, App, Spin } from 'antd';
 import { ArrowLeftOutlined, ApiOutlined } from '@ant-design/icons';
-import { providerService, PROVIDER_TYPES, AUTH_TYPES, PROVIDER_BASE_URLS } from '../../services/providerService';
+import { PageContainer } from '../../components/PageContainer';
+import { providerService, PROVIDER_TYPES, AUTH_TYPES, PROVIDER_BASE_URLS, PROVIDER_TYPE_LABELS } from '../../services/providerService';
 import type { ProviderCreateRequest, ProviderUpdateRequest } from '../../services/providerService';
 
 const ProviderEditPage: React.FC = () => {
@@ -106,13 +107,16 @@ const ProviderEditPage: React.FC = () => {
   };
 
   return (
-    <div style={{ maxWidth: 800, margin: '0 auto' }}>
-      <Space style={{ marginBottom: 16 }}>
+    <PageContainer
+      title={isEdit ? '编辑 Provider' : '注册新 Provider'}
+      icon={<ApiOutlined />}
+      description="配置 Provider 类型、认证方式与模型列表"
+      extra={
         <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/providers')}>
           返回列表
         </Button>
-      </Space>
-
+      }
+    >
       <Card title={isEdit ? '编辑 Provider' : '注册新 Provider'}>
         <Spin spinning={loading}>
           <Form
@@ -135,7 +139,7 @@ const ProviderEditPage: React.FC = () => {
               rules={[{ required: true, message: '请选择厂商类型' }]}
             >
               <Select
-                options={PROVIDER_TYPES.map((t) => ({ label: t, value: t }))}
+                options={PROVIDER_TYPES.map((t) => ({ label: PROVIDER_TYPE_LABELS[t] ?? t, value: t }))}
                 placeholder="选择厂商类型"
                 onChange={handleProviderTypeChange}
               />
@@ -191,7 +195,7 @@ const ProviderEditPage: React.FC = () => {
           </Form>
         </Spin>
       </Card>
-    </div>
+    </PageContainer>
   );
 };
 

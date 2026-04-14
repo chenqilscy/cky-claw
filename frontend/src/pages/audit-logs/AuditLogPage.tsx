@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Table, Card, Tag, Input, Select, Space, Typography, Tooltip } from 'antd';
 import { AuditOutlined } from '@ant-design/icons';
+import { PageContainer } from '../../components/PageContainer';
 import type { ColumnsType } from 'antd/es/table';
 import type { AuditLog } from '../../services/auditLogService';
 import { useAuditLogList } from '../../hooks/useAuditLogQueries';
@@ -96,10 +97,11 @@ const AuditLogPage: React.FC = () => {
   ];
 
   return (
-    <div style={{ padding: 24 }}>
-      <Title level={4}>
-        <AuditOutlined /> 审计日志
-      </Title>
+    <PageContainer
+      title="审计日志"
+      icon={<AuditOutlined />}
+      description="查看系统操作审计日志"
+    >
       <Card>
         <Space style={{ marginBottom: 16 }} wrap>
           <Select
@@ -144,7 +146,7 @@ const AuditLogPage: React.FC = () => {
           scroll={{ x: 1200 }}
         />
       </Card>
-    </div>
+    </PageContainer>
   );
 };
 

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Button, Card, Col, Form, Input, App, Progress, Row, Slider, Space, Tag, Typography, theme } from 'antd';
 import { AimOutlined } from '@ant-design/icons';
+import { PageContainer } from '../../components/PageContainer';
 import { intentService } from '../../services/intentService';
 import type { IntentDetectResponse } from '../../services/intentService';
 
@@ -41,12 +42,11 @@ const IntentDetectionPage: React.FC = () => {
     : undefined;
 
   return (
-    <div style={{ maxWidth: 900, margin: '0 auto' }}>
-      <Title level={4}>意图飘移检测</Title>
-      <Paragraph type="secondary">
-        输入原始意图和当前消息，检测对话是否偏离初始主题。基于关键词 Jaccard 距离算法。
-      </Paragraph>
-
+    <PageContainer
+      title="意图飘移检测"
+      icon={<AimOutlined />}
+      description="检测对话是否偏离初始主题，基于关键词 Jaccard 距离算法"
+    >
       <Card>
         <Form form={form} layout="vertical" initialValues={{ threshold: 0.6 }}>
           <Form.Item
@@ -120,7 +120,7 @@ const IntentDetectionPage: React.FC = () => {
           </Row>
         </Card>
       )}
-    </div>
+    </PageContainer>
   );
 };
 

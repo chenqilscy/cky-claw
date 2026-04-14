@@ -1,7 +1,8 @@
 import { useState, useCallback, useEffect } from 'react';
 import { ProTable, type ProColumns } from '@ant-design/pro-components';
 import { Button, Form, Input, Select, Tag, App, Space, Popconfirm, Drawer } from 'antd';
-import { PlusOutlined, DeleteOutlined, EditOutlined, StarOutlined } from '@ant-design/icons';
+import { PlusOutlined, DeleteOutlined, EditOutlined, StarOutlined, TranslationOutlined } from '@ant-design/icons';
+import { PageContainer } from '../../components/PageContainer';
 import {
   agentLocaleService,
   type AgentLocaleItem,
@@ -145,7 +146,11 @@ const I18nSettingsPage: React.FC = () => {
   ];
 
   return (
-    <div>
+    <PageContainer
+      title="国际化设置"
+      icon={<TranslationOutlined />}
+      description="管理 Agent 多语言指令和名称翻译"
+    >
       {/* Agent 选择器 */}
       <div style={{ marginBottom: 16 }}>
         <Select
@@ -272,7 +277,7 @@ const I18nSettingsPage: React.FC = () => {
           </Form.Item>
         </Form>
       </Drawer>
-    </div>
+    </PageContainer>
   );
 };
 

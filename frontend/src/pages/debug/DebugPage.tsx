@@ -9,6 +9,7 @@ import {
   PlusOutlined,
   ReloadOutlined,
 } from '@ant-design/icons';
+import { PageContainer } from '../../components/PageContainer';
 import { ProTable } from '@ant-design/pro-components';
 import type { ProColumns } from '@ant-design/pro-components';
 import { debugService } from '../../services/debugService';
@@ -255,7 +256,11 @@ const DebugPage: React.FC = () => {
   ];
 
   return (
-    <>
+    <PageContainer
+      title="Agent 调试器"
+      icon={<BugOutlined />}
+      description="创建调试会话，单步、断点和变量检查"
+    >
       <Card
         title={<><BugOutlined style={{ marginRight: 8 }} />Agent 调试器</>}
         extra={
@@ -473,7 +478,7 @@ const DebugPage: React.FC = () => {
           </Space>
         )}
       </Drawer>
-    </>
+    </PageContainer>
   );
 };
 

@@ -10,6 +10,7 @@ import {
   DeleteOutlined,
   PlusOutlined,
 } from '@ant-design/icons';
+import { PageContainer } from '../../components/PageContainer';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { complianceService } from '../../services/complianceService';
 import type { ControlPointItem, RetentionPolicyItem, ErasureRequestItem, ClassificationLabel } from '../../services/complianceService';
@@ -160,13 +161,12 @@ const CompliancePage: React.FC = () => {
   ];
 
   return (
-    <div style={{ padding: 24 }}>
+    <PageContainer
+      title="合规管理"
+      icon={<SafetyCertificateOutlined />}
+      description="数据分类、保留策略、SOC2 控制点与 Right-to-Erasure"
+    >
       <Space direction="vertical" size="large" style={{ width: '100%' }}>
-        <Title level={3} style={{ margin: 0 }}>
-          <SafetyCertificateOutlined style={{ marginRight: 8 }} />
-          合规管理
-        </Title>
-
         {/* 仪表盘概览 */}
         <Row gutter={16}>
           <Col span={6}>
@@ -247,7 +247,7 @@ const CompliancePage: React.FC = () => {
           </Form.Item>
         </Form>
       </Modal>
-    </div>
+    </PageContainer>
   );
 };
 

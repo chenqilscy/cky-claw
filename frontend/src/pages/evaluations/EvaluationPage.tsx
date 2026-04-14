@@ -8,6 +8,7 @@ import {
   PlusOutlined, ReloadOutlined, StarOutlined, LikeOutlined,
   DislikeOutlined, BarChartOutlined, RobotOutlined,
 } from '@ant-design/icons';
+import { PageContainer } from '../../components/PageContainer';
 import type { ColumnsType } from 'antd/es/table';
 import type {
   RunEvaluation, RunEvaluationCreate,
@@ -581,13 +582,10 @@ const QualityTab: React.FC = () => {
 
 const EvaluationPage: React.FC = () => {
   return (
-    <Card
-      title={
-        <Space>
-          <StarOutlined />
-          <span>Agent 评估与反馈</span>
-        </Space>
-      }
+    <PageContainer
+      title="Agent 评估与反馈"
+      icon={<StarOutlined />}
+      description="运行评估与用户反馈管理"
     >
       <Tabs
         items={[
@@ -596,7 +594,7 @@ const EvaluationPage: React.FC = () => {
           { key: 'quality', label: 'Agent 质量', children: <QualityTab /> },
         ]}
       />
-    </Card>
+    </PageContainer>
   );
 };
 

@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Form, Input, Switch, Tag, Button, Space, Popconfirm, App } from 'antd';
-import { ClockCircleOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons';
+import { Form, Input, Switch, Tag, App } from 'antd';
+import { ClockCircleOutlined } from '@ant-design/icons';
 import type { ProColumns } from '@ant-design/pro-components';
 import type { FormInstance } from 'antd';
 import {
@@ -14,7 +14,7 @@ import type {
   ScheduledTaskCreateParams,
   ScheduledTaskUpdateParams,
 } from '../../services/scheduledTaskService';
-import { CrudTable } from '../../components';
+import { CrudTable, PageContainer, buildActionColumn } from '../../components';
 import type { CrudTableActions } from '../../components';
 
 const { TextArea } = Input;
@@ -69,22 +69,9 @@ const buildColumns = (
       />
     ),
   },
-  {
-    title: '操作',
-    width: 140,
-    render: (_, record) => (
-      <Space>
-        <Button type="link" size="small" icon={<EditOutlined />} onClick={() => actions.openEdit(record)}>
-          编辑
-        </Button>
-        <Popconfirm title="确认删除此定时任务？" onConfirm={() => actions.handleDelete(record.id)}>
-          <Button type="link" size="small" danger icon={<DeleteOutlined />}>
-            删除
-          </Button>
-        </Popconfirm>
-      </Space>
-    ),
-  },
+  buildActionColumn<ScheduledTaskItem>(actions, {
+    deleteConfirmTitle: '确认删除定时任务',
+  }),
 ];
 
 /* ---- 表单渲染 ---- */
@@ -151,11 +138,17 @@ const ScheduledTasksPage: React.FC = () => {
   };
 
   return (
+    <PageContainer
+      title="定时任务管理"
+      icon={<ClockCircleOutlined />}
+      description="管理 Agent 定时任务与调度"
+    >
     <CrudTable<
       ScheduledTaskItem,
       ScheduledTaskCreateParams,
       { id: string; data: ScheduledTaskUpdateParams }
     >
+      hideTitle
       title="定时任务管理"
       icon={<ClockCircleOutlined />}
       queryResult={queryResult}
@@ -192,8 +185,7 @@ const ScheduledTasksPage: React.FC = () => {
           input_text: values.input_text as string,
         },
       })}
-    />
-  );
+    />    </PageContainer>  );
 };
 
 export default ScheduledTasksPage;

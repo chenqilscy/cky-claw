@@ -19,6 +19,7 @@ import {
   SyncOutlined,
   EyeOutlined,
 } from '@ant-design/icons';
+import { PageContainer } from '../../components/PageContainer';
 import { useNavigate } from 'react-router-dom';
 import type {
   AgentTemplateItem,
@@ -154,9 +155,11 @@ const TemplatePage: React.FC = () => {
   const categories = [...new Set(templates.map((t) => t.category))].sort();
 
   return (
-    <div style={{ padding: '0 0 24px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-        <Title level={4} style={{ margin: 0 }}>Agent 模板市场</Title>
+    <PageContainer
+      title="Agent 模板市场"
+      icon={<FileTextOutlined />}
+      description="浏览、搜索与一键实例化 Agent 模板"
+      extra={
         <Space>
           <Input.Search
             placeholder="搜索模板..."
@@ -175,7 +178,8 @@ const TemplatePage: React.FC = () => {
             同步内置模板
           </Button>
         </Space>
-      </div>
+      }
+    >
 
       {loading ? (
         <div style={{ textAlign: 'center', padding: 80 }}><Spin size="large" /></div>
@@ -329,7 +333,7 @@ const TemplatePage: React.FC = () => {
           )}
         </Spin>
       </Modal>
-    </div>
+    </PageContainer>
   );
 };
 

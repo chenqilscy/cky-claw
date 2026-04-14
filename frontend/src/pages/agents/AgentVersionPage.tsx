@@ -14,6 +14,7 @@ import {
   theme,
 } from 'antd';
 import { ArrowLeftOutlined, DiffOutlined, RollbackOutlined } from '@ant-design/icons';
+import { PageContainer } from '../../components/PageContainer';
 import { ProTable } from '@ant-design/pro-components';
 import type { ProColumns } from '@ant-design/pro-components';
 import { agentVersionService } from '../../services/agentVersionService';
@@ -126,22 +127,27 @@ const AgentVersionPage: React.FC = () => {
   ];
 
   return (
-    <div>
-      <Space style={{ marginBottom: 16 }}>
-        <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/agents')}>
-          返回 Agent 列表
-        </Button>
-        {selectedRows.length === 2 && (
-          <Button
-            icon={<DiffOutlined />}
-            loading={diffLoading}
-            onClick={handleDiff}
-          >
-            对比 v{Math.min(selectedRows[0]?.version ?? 0, selectedRows[1]?.version ?? 0)} ↔ v{Math.max(selectedRows[0]?.version ?? 0, selectedRows[1]?.version ?? 0)}
+    <PageContainer
+      title="版本历史"
+      icon={<DiffOutlined />}
+      description="查看 Agent 快照版本、对比差异与回滚"
+      extra={
+        <Space>
+          <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/agents')}>
+            返回 Agent 列表
           </Button>
-        )}
-      </Space>
-
+          {selectedRows.length === 2 && (
+            <Button
+              icon={<DiffOutlined />}
+              loading={diffLoading}
+              onClick={handleDiff}
+            >
+              对比 v{Math.min(selectedRows[0]?.version ?? 0, selectedRows[1]?.version ?? 0)} ↔ v{Math.max(selectedRows[0]?.version ?? 0, selectedRows[1]?.version ?? 0)}
+            </Button>
+          )}
+        </Space>
+      }
+    >
       <ProTable<AgentVersion>
         headerTitle="版本历史"
         rowKey="id"
@@ -279,7 +285,7 @@ const AgentVersionPage: React.FC = () => {
           </div>
         )}
       </Modal>
-    </div>
+    </PageContainer>
   );
 };
 

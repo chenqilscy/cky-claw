@@ -2,10 +2,10 @@ import { api } from './api';
 
 export const PROVIDER_TYPES = [
   'openai', 'anthropic', 'azure', 'deepseek', 'qwen',
-  'doubao', 'zhipu', 'moonshot', 'minimax', 'custom',
+  'doubao', 'zhipu', 'moonshot', 'minimax', 'openai_compatible', 'custom',
 ] as const;
 
-/** 各厂商官方 API Base URL，azure/custom 需用户自行填写 */
+/** 各厂商官方 API Base URL，azure/openai_compatible/custom 需用户自行填写 */
 export const PROVIDER_BASE_URLS: Record<string, string> = {
   openai: 'https://api.openai.com/v1',
   anthropic: 'https://api.anthropic.com/v1',
@@ -16,10 +16,26 @@ export const PROVIDER_BASE_URLS: Record<string, string> = {
   zhipu: 'https://open.bigmodel.cn/api/paas/v4',
   moonshot: 'https://api.moonshot.cn/v1',
   minimax: 'https://api.minimax.chat/v1',
+  openai_compatible: '',
   custom: '',
 };
 
 export const AUTH_TYPES = ['api_key', 'azure_ad', 'custom_header'] as const;
+
+/** 厂商类型的中文显示标签 */
+export const PROVIDER_TYPE_LABELS: Record<string, string> = {
+  openai: 'OpenAI',
+  anthropic: 'Anthropic',
+  azure: 'Azure OpenAI',
+  deepseek: 'DeepSeek',
+  qwen: '通义千问',
+  doubao: '豆包',
+  zhipu: '智谱 AI',
+  moonshot: 'Moonshot',
+  minimax: 'MiniMax',
+  openai_compatible: 'OpenAI Compatible',
+  custom: '自定义',
+};
 
 export type ProviderType = typeof PROVIDER_TYPES[number];
 export type AuthType = typeof AUTH_TYPES[number];

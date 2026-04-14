@@ -10,6 +10,7 @@ import {
   PlusOutlined,
   TrophyOutlined,
 } from '@ant-design/icons';
+import { PageContainer } from '../../components/PageContainer';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { benchmarkService } from '../../services/benchmarkService';
 import type { BenchmarkSuiteItem } from '../../services/benchmarkService';
@@ -137,9 +138,11 @@ const BenchmarkPage: React.FC = () => {
   ];
 
   return (
-    <div style={{ padding: 24 }}>
-      <Title level={3}><ExperimentOutlined /> Agent 评测基准</Title>
-
+    <PageContainer
+      title="Agent 评测基准"
+      icon={<ExperimentOutlined />}
+      description="评测套件管理、运行与评分报告"
+    >
       {/* Dashboard */}
       <Row gutter={16} style={{ marginBottom: 24 }}>
         <Col span={4}>
@@ -231,7 +234,7 @@ const BenchmarkPage: React.FC = () => {
           </Form.Item>
         </Form>
       </Modal>
-    </div>
+    </PageContainer>
   );
 };
 

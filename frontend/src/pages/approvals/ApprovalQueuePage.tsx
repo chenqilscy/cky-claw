@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { Tag, Button, Space, Modal, Input, App, Popconfirm, Badge, theme, Dropdown } from 'antd';
 import { CheckOutlined, CloseOutlined, ReloadOutlined, WifiOutlined, MoreOutlined } from '@ant-design/icons';
+import { PageContainer } from '../../components/PageContainer';
 import type { ProColumns, ActionType } from '@ant-design/pro-components';
 import { ProTable } from '@ant-design/pro-components';
 import { useRef } from 'react';
@@ -223,7 +224,11 @@ const ApprovalQueuePage: React.FC = () => {
   ];
 
   return (
-    <>
+    <PageContainer
+      title="审批队列"
+      icon={<CheckOutlined />}
+      description="人工审批工具调用、输出及 Handoff 请求"
+    >
       <ProTable<ApprovalItem>
         headerTitle="审批队列"
         actionRef={actionRef}
@@ -288,7 +293,7 @@ const ApprovalQueuePage: React.FC = () => {
           placeholder="拒绝原因..."
         />
       </Modal>
-    </>
+    </PageContainer>
   );
 };
 

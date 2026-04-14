@@ -1,6 +1,7 @@
 import { useMemo, useState, useCallback } from 'react';
 import { Card, Row, Col, Statistic, DatePicker, Input, Space, Tag, Segmented, Button, App } from 'antd';
-import { ReloadOutlined, DownloadOutlined } from '@ant-design/icons';
+import { ReloadOutlined, DownloadOutlined, BarChartOutlined } from '@ant-design/icons';
+import { PageContainer } from '../../components/PageContainer';
 import { ProTable } from '@ant-design/pro-components';
 import type { ProColumns } from '@ant-design/pro-components';
 import type {
@@ -213,7 +214,11 @@ const RunListPage: React.FC = () => {
   }, [groupBy]);
 
   return (
-    <div>
+    <PageContainer
+      title="执行记录"
+      icon={<BarChartOutlined />}
+      description="Token 用量统计与多维度调用分析"
+    >
       <Row gutter={16} style={{ marginBottom: 16 }}>
         <Col span={6}>
           <Card loading={summaryLoading} size="small">
@@ -318,7 +323,7 @@ const RunListPage: React.FC = () => {
           </Button>,
         ]}
       />
-    </div>
+    </PageContainer>
   );
 };
 

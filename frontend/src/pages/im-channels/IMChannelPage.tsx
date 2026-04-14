@@ -1,11 +1,11 @@
 import { useState, useCallback } from 'react';
 import {
   App, Form, Input, Select, Tag, Typography, Tooltip, Switch,
-  Space, Button, Popconfirm,
+  Space,
 } from 'antd';
 import type { FormInstance } from 'antd';
 import {
-  LinkOutlined, DeleteOutlined, EditOutlined, CopyOutlined,
+  LinkOutlined, CopyOutlined,
 } from '@ant-design/icons';
 import type { ProColumns } from '@ant-design/pro-components';
 import type { IMChannel, IMChannelCreate, IMChannelUpdate, ChannelType } from '../../services/imChannelService';
@@ -16,7 +16,7 @@ import {
   useUpdateIMChannel,
   useDeleteIMChannel,
 } from '../../hooks/useIMChannelQueries';
-import { CrudTable } from '../../components';
+import { CrudTable, PageContainer, buildActionColumn } from '../../components';
 import type { CrudTableActions } from '../../components';
 
 const { TextArea } = Input;
@@ -87,23 +87,16 @@ function buildColumns(
       dataIndex: 'created_at',
       render: (_: unknown, r: IMChannel) => new Date(r.created_at).toLocaleString(),
     },
-    {
-      title: '操作',
-      key: 'actions',
-      render: (_: unknown, record: IMChannel) => (
-        <Space size="small">
-          <Tooltip title="复制 Webhook URL">
-            <Button type="text" icon={<CopyOutlined />} onClick={() => copyWebhookUrl(record)} />
-          </Tooltip>
-          <Tooltip title="编辑">
-            <Button type="text" icon={<EditOutlined />} onClick={() => actions.openEdit(record)} />
-          </Tooltip>
-          <Popconfirm title="确认删除？" onConfirm={() => actions.handleDelete(record.id)}>
-            <Button type="text" danger icon={<DeleteOutlined />} />
-          </Popconfirm>
-        </Space>
-      ),
-    },
+    buildActionColumn<IMChannel>(actions, {
+      extraItems: (record) => [
+        {
+          key: 'copy',
+          label: '复制 Webhook URL',
+          icon: <CopyOutlined />,
+          onClick: () => copyWebhookUrl(record),
+        },
+      ],
+    }),
   ];
 }
 
@@ -235,7 +228,13 @@ const IMChannelPage: React.FC = () => {
   );
 
   return (
+    <PageContainer
+      title="IM 渠道管理"
+      icon={<LinkOutlined />}
+      description="管理 IM 消息渠道（企微 / 钉钉 / Slack / Telegram / 飞书）"
+    >
     <CrudTable<IMChannel, IMChannelCreate, { id: string; data: IMChannelUpdate }>
+      hideTitle
       title="IM 渠道管理"
       icon={<LinkOutlined />}
       columns={(actions) => buildColumns(actions, copyWebhookUrl)}
@@ -256,6 +255,7 @@ const IMChannelPage: React.FC = () => {
       onPaginationChange={(p, ps) => { setPage(p); setPageSize(ps); }}
       total={queryResult.data?.total ?? 0}
     />
+    </PageContainer>
   );
 };
 

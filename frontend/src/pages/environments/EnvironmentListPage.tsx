@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Button, App, Tag, Popconfirm, Space, Modal, Form, Input, ColorPicker, InputNumber, Switch } from 'antd';
-import { PlusOutlined, ReloadOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons';
+import { PlusOutlined, ReloadOutlined, DeleteOutlined, EditOutlined, DeploymentUnitOutlined } from '@ant-design/icons';
+import { PageContainer } from '../../components/PageContainer';
 import { ProTable } from '@ant-design/pro-components';
 import type { ProColumns } from '@ant-design/pro-components';
 import { useNavigate } from 'react-router-dom';
@@ -156,7 +157,11 @@ const EnvironmentListPage: React.FC = () => {
   ];
 
   return (
-    <>
+    <PageContainer
+      title="环境管理"
+      icon={<DeploymentUnitOutlined />}
+      description="Dev/Staging/Prod 多环境隔离管理"
+    >
       <ProTable<Environment>
         headerTitle="环境管理"
         rowKey="id"
@@ -206,7 +211,7 @@ const EnvironmentListPage: React.FC = () => {
           </Form.Item>
         </Form>
       </Modal>
-    </>
+    </PageContainer>
   );
 };
 

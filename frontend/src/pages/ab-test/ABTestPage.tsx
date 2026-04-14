@@ -16,6 +16,7 @@ import {
   theme,
 } from 'antd';
 import { ExperimentOutlined, ThunderboltOutlined } from '@ant-design/icons';
+import { PageContainer } from '../../components/PageContainer';
 import { abTestService } from '../../services/abTestService';
 import type { ABTestModelResult } from '../../services/abTestService';
 
@@ -51,9 +52,12 @@ const ABTestPage: React.FC = () => {
   };
 
   return (
-    <div>
+    <PageContainer
+      title="多模型 A/B 测试"
+      icon={<ExperimentOutlined />}
+      description="对比多个模型在相同提示词下的表现"
+    >
       <Card
-        title={<span><ExperimentOutlined /> 多模型 A/B 测试</span>}
         style={{ marginBottom: 16 }}
       >
         <Form form={form} layout="vertical">
@@ -185,7 +189,7 @@ const ABTestPage: React.FC = () => {
           </Row>
         </div>
       )}
-    </div>
+    </PageContainer>
   );
 };
 

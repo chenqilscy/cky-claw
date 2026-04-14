@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { App, Tag, Badge, Modal, Descriptions, Input, Space, Card, Row, Col, Statistic, theme } from 'antd';
 import { ReloadOutlined, PauseCircleOutlined, PlayCircleOutlined, EyeOutlined } from '@ant-design/icons';
+import { PageContainer } from '../../components/PageContainer';
 import { ProTable } from '@ant-design/pro-components';
 import type { ProColumns } from '@ant-design/pro-components';
 import { supervisionService } from '../../services/supervisionService';
@@ -146,7 +147,11 @@ const SupervisionPage: React.FC = () => {
   ];
 
   return (
-    <div>
+    <PageContainer
+      title="监督面板"
+      icon={<EyeOutlined />}
+      description="实时监控 Agent 会话运行状态，支持暂停/恢复"
+    >
       <Row gutter={16} style={{ marginBottom: 16 }}>
         <Col span={6}>
           <Card size="small">
@@ -224,7 +229,7 @@ const SupervisionPage: React.FC = () => {
           </Descriptions>
         )}
       </Modal>
-    </div>
+    </PageContainer>
   );
 };
 

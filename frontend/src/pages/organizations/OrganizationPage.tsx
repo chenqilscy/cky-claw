@@ -1,9 +1,8 @@
 import { useState } from 'react';
 import {
-  Form, Input, Tag, Button, Space, Popconfirm, Modal, Descriptions,
+  Form, Input, Tag, Modal, Descriptions,
 } from 'antd';
 import {
-  DeleteOutlined, EditOutlined,
   BankOutlined, EyeOutlined,
 } from '@ant-design/icons';
 import type { ProColumns } from '@ant-design/pro-components';
@@ -15,7 +14,7 @@ import {
   useUpdateOrganization,
   useDeleteOrganization,
 } from '../../hooks/useOrganizationQueries';
-import { CrudTable } from '../../components';
+import { CrudTable, PageContainer, buildActionColumn } from '../../components';
 import type { CrudTableActions } from '../../components';
 
 const { TextArea } = Input;
@@ -58,23 +57,16 @@ const buildColumns = (
     width: 180,
     render: (_, record) => new Date(record.created_at).toLocaleString(),
   },
-  {
-    title: '操作',
-    width: 180,
-    render: (_, record) => (
-      <Space size="small">
-        <Button type="link" size="small" icon={<EyeOutlined />} onClick={() => setDetailRecord(record)}>
-          详情
-        </Button>
-        <Button type="link" size="small" icon={<EditOutlined />} onClick={() => actions.openEdit(record)}>
-          编辑
-        </Button>
-        <Popconfirm title="确定删除？" onConfirm={() => actions.handleDelete(record.id)}>
-          <Button type="link" size="small" danger icon={<DeleteOutlined />}>删除</Button>
-        </Popconfirm>
-      </Space>
-    ),
-  },
+  buildActionColumn<OrganizationItem>(actions, {
+    extraItems: (record) => [
+      {
+        key: 'detail',
+        label: '详情',
+        icon: <EyeOutlined />,
+        onClick: () => setDetailRecord(record),
+      },
+    ],
+  }),
 ];
 
 /* ---- 表单渲染 ---- */
@@ -110,13 +102,18 @@ const OrganizationPage: React.FC = () => {
   const deleteMutation = useDeleteOrganization();
 
   return (
-    <>
+    <PageContainer
+      title="组织管理"
+      icon={<BankOutlined />}
+      description="管理组织信息、配额与设置"
+    >
       <CrudTable<
         OrganizationItem,
         OrganizationCreateParams,
         { id: string; data: OrganizationUpdateParams }
       >
-        title={<><BankOutlined /> 组织管理</>}
+        hideTitle
+        title="组织管理"
         queryResult={queryResult}
         createMutation={createMutation}
         updateMutation={updateMutation}
@@ -182,7 +179,7 @@ const OrganizationPage: React.FC = () => {
           </Descriptions>
         )}
       </Modal>
-    </>
+    </PageContainer>
   );
 };
 

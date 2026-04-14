@@ -8,11 +8,8 @@ import {
   Select,
   Switch,
   Tag,
-  Button,
-  Space,
-  Popconfirm,
 } from 'antd';
-import { SafetyCertificateOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons';
+import { SafetyCertificateOutlined } from '@ant-design/icons';
 import type { ProColumns } from '@ant-design/pro-components';
 import type { FormInstance } from 'antd';
 import {
@@ -26,7 +23,7 @@ import type {
   GuardrailRuleCreateParams,
   GuardrailRuleUpdateParams,
 } from '../../services/guardrailService';
-import { CrudTable } from '../../components';
+import { CrudTable, PageContainer, buildActionColumn } from '../../components';
 import type { CrudTableActions } from '../../components';
 
 const { TextArea } = Input;
@@ -120,30 +117,9 @@ const buildColumns = (
       />
     ),
   },
-  {
-    title: '操作',
-    width: 140,
-    render: (_, record) => (
-      <Space>
-        <Button
-          type="link"
-          size="small"
-          icon={<EditOutlined />}
-          onClick={() => actions.openEdit(record)}
-        >
-          编辑
-        </Button>
-        <Popconfirm
-          title="确认删除此规则？"
-          onConfirm={() => actions.handleDelete(record.id)}
-        >
-          <Button type="link" size="small" danger icon={<DeleteOutlined />}>
-            删除
-          </Button>
-        </Popconfirm>
-      </Space>
-    ),
-  },
+  buildActionColumn<GuardrailRuleItem>(actions, {
+    deleteConfirmTitle: '确认删除护栏规则',
+  }),
 ];
 
 /* ---- 动态表单（使用 Form.useWatch 监听 mode 字段）---- */
@@ -315,11 +291,17 @@ const GuardrailRulesPage: React.FC = () => {
   };
 
   return (
+    <PageContainer
+      title="Guardrail 规则管理"
+      icon={<SafetyCertificateOutlined />}
+      description="管理输入 / 输出 / 工具护栏规则"
+    >
     <CrudTable<
       GuardrailRuleItem,
       GuardrailRuleCreateParams,
       { id: string; data: GuardrailRuleUpdateParams }
     >
+      hideTitle
       title="Guardrail 规则管理"
       icon={<SafetyCertificateOutlined />}
       queryResult={queryResult}
@@ -372,8 +354,7 @@ const GuardrailRulesPage: React.FC = () => {
           conditions: parseConditions((values.conditions_json as string) || ''),
         },
       })}
-    />
-  );
+    />    </PageContainer>  );
 };
 
 export default GuardrailRulesPage;

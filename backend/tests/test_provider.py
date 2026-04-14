@@ -174,7 +174,7 @@ class TestProviderSchemas:
 
     def test_all_valid_provider_types(self) -> None:
         for pt in ("openai", "anthropic", "azure", "deepseek", "qwen",
-                    "doubao", "zhipu", "moonshot", "minimax", "custom"):
+                    "doubao", "zhipu", "moonshot", "minimax", "openai_compatible", "custom"):
             data = ProviderCreate(
                 name="t", provider_type=pt,
                 base_url="https://x.com", api_key="k",

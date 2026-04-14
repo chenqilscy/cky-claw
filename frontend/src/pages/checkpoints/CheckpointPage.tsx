@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Button, Card, Input, App, Popconfirm, Space, Tag, Typography } from 'antd';
-import { DeleteOutlined, ReloadOutlined, SearchOutlined } from '@ant-design/icons';
+import { DeleteOutlined, ReloadOutlined, SearchOutlined, SaveOutlined } from '@ant-design/icons';
+import { PageContainer } from '../../components/PageContainer';
 import { ProTable } from '@ant-design/pro-components';
 import type { ProColumns } from '@ant-design/pro-components';
 import type { CheckpointResponse } from '../../services/checkpointService';
@@ -76,12 +77,11 @@ const CheckpointPage: React.FC = () => {
   ];
 
   return (
-    <div style={{ maxWidth: 1100, margin: '0 auto' }}>
-      <Title level={4}>检查点管理</Title>
-      <Text type="secondary">
-        查询指定执行（Run）的所有检查点，支持从检查点恢复执行。
-      </Text>
-
+    <PageContainer
+      title="检查点管理"
+      icon={<SaveOutlined />}
+      description="查询与管理执行检查点，支持恢复运行"
+    >
       <Card style={{ marginTop: 16 }}>
         <Space>
           <Input
@@ -134,7 +134,7 @@ const CheckpointPage: React.FC = () => {
           ]}
         />
       )}
-    </div>
+    </PageContainer>
   );
 };
 

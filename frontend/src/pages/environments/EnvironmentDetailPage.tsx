@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, Descriptions, Tag, Table, Button, App, Space, Modal, Form, Input, Select, Typography } from 'antd';
 import { ArrowLeftOutlined, RocketOutlined } from '@ant-design/icons';
+import { PageContainer } from '../../components/PageContainer';
 import { environmentService } from '../../services/environmentService';
 import type { Environment, BindingResponse } from '../../services/environmentService';
 
@@ -113,18 +114,24 @@ const EnvironmentDetailPage: React.FC = () => {
   ];
 
   return (
-    <div style={{ padding: 24 }}>
-      <Space style={{ marginBottom: 16 }}>
-        <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/environments')}>
-          返回列表
-        </Button>
-        <Button type="primary" icon={<RocketOutlined />} onClick={() => { publishForm.resetFields(); setPublishOpen(true); }}>
-          发布 Agent
-        </Button>
-        <Button onClick={() => { diffForm.resetFields(); setDiffResult(null); setDiffOpen(true); }}>
-          环境对比
-        </Button>
-      </Space>
+    <PageContainer
+      title="环境详情"
+      icon={<RocketOutlined />}
+      description="查看环境绑定、发布 Agent 与跨环境对比"
+      extra={
+        <Space>
+          <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/environments')}>
+            返回列表
+          </Button>
+          <Button type="primary" icon={<RocketOutlined />} onClick={() => { publishForm.resetFields(); setPublishOpen(true); }}>
+            发布 Agent
+          </Button>
+          <Button onClick={() => { diffForm.resetFields(); setDiffResult(null); setDiffOpen(true); }}>
+            环境对比
+          </Button>
+        </Space>
+      }
+    >
 
       {env && (
         <Card title={<><Tag color={env.color}>{env.display_name}</Tag> {env.name}</>} style={{ marginBottom: 16 }}>
@@ -213,7 +220,7 @@ const EnvironmentDetailPage: React.FC = () => {
           </div>
         )}
       </Modal>
-    </div>
+    </PageContainer>
   );
 };
 

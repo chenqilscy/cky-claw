@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Card, Input, Button, Tag, Space, Typography, Descriptions, Alert, Select } from 'antd';
 import { SendOutlined, ThunderboltOutlined } from '@ant-design/icons';
+import { PageContainer } from '../../components/PageContainer';
 import { useMutation } from '@tanstack/react-query';
 import { costRouterService } from '../../services/costRouterService';
 import type { ClassifyResponse, RecommendResponse } from '../../services/costRouterService';
@@ -55,14 +56,11 @@ const CostRouterPage: React.FC = () => {
   const recommendResult: RecommendResponse | undefined = recommendMutation.data;
 
   return (
-    <div style={{ maxWidth: 900, margin: '0 auto' }}>
-      <Title level={4}>
-        <ThunderboltOutlined /> 成本路由测试器
-      </Title>
-      <Text type="secondary">
-        输入文本以测试复杂度分类和 Provider 推荐。系统会根据文本内容自动匹配最优模型层级。
-      </Text>
-
+    <PageContainer
+      title="成本路由测试器"
+      icon={<ThunderboltOutlined />}
+      description="输入文本以测试复杂度分类和 Provider 推荐"
+    >
       <Card style={{ marginTop: 16 }}>
         <Space direction="vertical" style={{ width: '100%' }} size="middle">
           <TextArea
@@ -170,7 +168,7 @@ const CostRouterPage: React.FC = () => {
           <div><Tag color="red">多模态 (multimodal)</Tag> 图片分析、视觉理解，适用多模态模型</div>
         </Space>
       </Card>
-    </div>
+    </PageContainer>
   );
 };
 

@@ -1,11 +1,12 @@
 import { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { ConfigProvider, Spin, theme } from 'antd';
+import { ConfigProvider, Spin } from 'antd';
 import zhCN from 'antd/locale/zh_CN';
 import BasicLayout from './layouts/BasicLayout';
 import RouteErrorBoundary from './components/RouteErrorBoundary';
 import useAuthStore from './stores/authStore';
 import useThemeStore from './stores/themeStore';
+import { lightTheme, darkTheme } from './theme/themeConfig';
 
 const LoginPage = lazy(() => import('./pages/Login'));
 const DashboardPage = lazy(() => import('./pages/dashboard/DashboardPage'));
@@ -80,7 +81,7 @@ const App: React.FC = () => {
   return (
     <ConfigProvider
       locale={zhCN}
-      theme={{ algorithm: themeMode === 'dark' ? theme.darkAlgorithm : theme.defaultAlgorithm }}
+      theme={themeMode === 'dark' ? darkTheme : lightTheme}
     >
       <Suspense fallback={<PageLoading />}>
         <Routes>

@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import type { ProColumns } from '@ant-design/pro-components';
 import { ProTable } from '@ant-design/pro-components';
-import { Button, Modal, Form, Input, Select, Tag, App, Space, Popconfirm, theme } from 'antd';
-import { SearchOutlined, DeleteOutlined, EditOutlined, EyeOutlined } from '@ant-design/icons';
+import { Button, Modal, Form, Input, Select, Tag, App, Space, theme } from 'antd';
+import { SearchOutlined, EyeOutlined, ThunderboltOutlined } from '@ant-design/icons';
 import type { FormInstance } from 'antd';
 import type { SkillItem, SkillCreateParams, SkillUpdateParams } from '../../services/skillService';
 import {
@@ -12,7 +12,7 @@ import {
   useDeleteSkill,
   useSearchSkill,
 } from '../../hooks/useSkillQueries';
-import { CrudTable } from '../../components';
+import { CrudTable, PageContainer, buildActionColumn } from '../../components';
 import type { CrudTableActions } from '../../components';
 
 const categoryOptions = [
@@ -76,23 +76,17 @@ const buildColumns = (
     width: 180,
     render: (_, record) => new Date(record.updated_at).toLocaleString('zh-CN'),
   },
-  {
-    title: '操作',
-    width: 180,
-    render: (_, record) => (
-      <Space>
-        <a onClick={() => onPreview(record)}>
-          <EyeOutlined /> 查看
-        </a>
-        <a onClick={() => actions.openEdit(record)}>
-          <EditOutlined /> 编辑
-        </a>
-        <Popconfirm title="确认删除此技能？" onConfirm={() => actions.handleDelete(record.id)}>
-          <a style={{ color: token.colorError }}><DeleteOutlined /> 删除</a>
-        </Popconfirm>
-      </Space>
-    ),
-  },
+  buildActionColumn<SkillItem>(actions, {
+    deleteConfirmTitle: '确认删除技能',
+    extraItems: (record) => [
+      {
+        key: 'preview',
+        label: '查看',
+        icon: <EyeOutlined />,
+        onClick: () => onPreview(record),
+      },
+    ],
+  }),
 ];
 
 /* ---- 搜索结果列 ---- */
@@ -178,12 +172,17 @@ const SkillPage: React.FC = () => {
   };
 
   return (
-    <>
+    <PageContainer
+      title="技能管理"
+      icon={<ThunderboltOutlined />}
+      description="管理 Agent 技能库，支持搜索和预览"
+    >
       <CrudTable<
         SkillItem,
         SkillCreateParams,
         { id: string; data: SkillUpdateParams }
       >
+        hideTitle
         title="技能管理"
         queryResult={queryResult}
         createMutation={createMutation}
@@ -290,7 +289,7 @@ const SkillPage: React.FC = () => {
           toolBarRender={false}
         />
       </Modal>
-    </>
+    </PageContainer>
   );
 };
 

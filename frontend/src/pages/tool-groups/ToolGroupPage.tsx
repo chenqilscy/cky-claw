@@ -1,5 +1,5 @@
-import { Form, Input, Switch, Tag, Button, Space, Popconfirm, App } from 'antd';
-import { ToolOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons';
+import { Form, Input, Switch, Tag, App } from 'antd';
+import { ToolOutlined } from '@ant-design/icons';
 import type { ProColumns } from '@ant-design/pro-components';
 import type { FormInstance } from 'antd';
 import {
@@ -14,7 +14,7 @@ import type {
   ToolGroupUpdateRequest,
   ToolDefinition,
 } from '../../services/toolGroupService';
-import { CrudTable } from '../../components';
+import { CrudTable, PageContainer, buildActionColumn } from '../../components';
 import type { CrudTableActions } from '../../components';
 
 const { TextArea } = Input;
@@ -89,30 +89,10 @@ const buildColumns = (
     width: 170,
     render: (_, record) => new Date(record.created_at).toLocaleString('zh-CN'),
   },
-  {
-    title: '操作',
-    width: 140,
-    render: (_, record) => (
-      <Space>
-        <Button
-          type="link"
-          size="small"
-          icon={<EditOutlined />}
-          onClick={() => actions.openEdit(record)}
-        >
-          编辑
-        </Button>
-        <Popconfirm
-          title="确认删除此工具组？"
-          onConfirm={() => actions.handleDelete(record.name)}
-        >
-          <Button type="link" size="small" danger icon={<DeleteOutlined />}>
-            删除
-          </Button>
-        </Popconfirm>
-      </Space>
-    ),
-  },
+  buildActionColumn<ToolGroupResponse>(actions, {
+    deleteConfirmTitle: '确认删除工具组',
+    getRecordId: (r) => r.name,
+  }),
 ];
 
 /* ---- 表单渲染 ---- */
@@ -195,11 +175,17 @@ const ToolGroupPage: React.FC = () => {
   };
 
   return (
+    <PageContainer
+      title="工具组管理"
+      icon={<ToolOutlined />}
+      description="管理工具组定义与条件配置"
+    >
     <CrudTable<
       ToolGroupResponse,
       ToolGroupCreateRequest,
       { name: string; data: ToolGroupUpdateRequest }
     >
+      hideTitle
       title="工具组管理"
       icon={<ToolOutlined />}
       queryResult={queryResult}
@@ -242,6 +228,7 @@ const ToolGroupPage: React.FC = () => {
         return { name: record.name, data };
       }}
     />
+    </PageContainer>
   );
 };
 

@@ -10,9 +10,9 @@
  * 每个页面只需提供 columns、renderForm 和 query hooks 即可。
  */
 import { useState, useCallback } from 'react';
-import { App, Button, Card, Form, Modal, Space } from 'antd';
-import type { FormInstance } from 'antd';
-import { PlusOutlined, ReloadOutlined } from '@ant-design/icons';
+import { App, Button, Dropdown, Form, Modal, Space, Tooltip } from 'antd';
+import type { FormInstance, MenuProps } from 'antd';
+import { PlusOutlined, ReloadOutlined, EditOutlined, DeleteOutlined, MoreOutlined } from '@ant-design/icons';
 import { ProTable } from '@ant-design/pro-components';
 import type { ProColumns } from '@ant-design/pro-components';
 import type { ReactNode } from 'react';
@@ -20,6 +20,7 @@ import type {
   UseQueryResult,
   UseMutationResult,
 } from '@tanstack/react-query';
+import { useResponsive } from '../hooks/useResponsive';
 
 /* ---------- 通用分页响应结构 ---------- */
 
@@ -104,6 +105,8 @@ export interface CrudTableProps<
 
   /* ---- 扩展插槽 ---- */
 
+  /** 当页面使用 PageContainer 提供标题时，隐藏 ProTable headerTitle 避免标题重复 */
+  hideTitle?: boolean;
   /** Card extra 区域额外元素（筛选控件等），渲染在新建按钮左侧 */
   extraToolbar?: ReactNode;
   /** Card 与表格之间的自定义内容（筛选栏等） */
@@ -155,6 +158,7 @@ export function CrudTable<
     beforeTable,
     extraToolbar,
     showRefresh,
+    hideTitle,
     onCreateClick,
     pagination: controlledPagination,
     onPaginationChange,
@@ -162,6 +166,7 @@ export function CrudTable<
   } = props;
 
   const { message } = App.useApp();
+  const { isMobile } = useResponsive();
 
   /* ---- 内部分页（仅当未外部受控时使用）---- */
   const [internalPagination, setInternalPagination] = useState({
@@ -267,9 +272,12 @@ export function CrudTable<
 
   return (
     <>
-      <Card
-        title={
-          icon ? (
+      {beforeTable}
+      <ProTable<T>
+        headerTitle={
+          hideTitle
+            ? undefined
+            : icon ? (
             <Space>
               {icon}
               {title}
@@ -278,47 +286,51 @@ export function CrudTable<
             title
           )
         }
-        extra={
-          <Space>
-            {extraToolbar}
-            {showRefresh && (
+        rowKey={rowKey}
+        columns={resolvedColumns}
+        dataSource={data}
+        loading={loading}
+        search={false}
+        options={false}
+        cardProps={{ bodyStyle: { padding: 0 } }}
+        scroll={{ x: 'max-content' }}
+        toolBarRender={() => {
+          const items: React.ReactNode[] = [];
+          if (extraToolbar) items.push(extraToolbar);
+          if (showRefresh) {
+            items.push(
               <Button
+                key="__refresh"
+                type="text"
+                aria-label="刷新"
                 icon={<ReloadOutlined />}
                 onClick={() => void queryResult.refetch()}
-              >
-                刷新
-              </Button>
-            )}
-            {showCreateButton && (
+              />,
+            );
+          }
+          if (showCreateButton) {
+            items.push(
               <Button
+                key="__create"
                 type="primary"
                 icon={<PlusOutlined />}
                 onClick={typeof onCreateClick === 'function' ? onCreateClick : openCreate}
               >
                 {createButtonText}
-              </Button>
-            )}
-          </Space>
-        }
-      >
-        {beforeTable}
-        <ProTable<T>
-          rowKey={rowKey}
-          columns={resolvedColumns}
-          dataSource={data}
-          loading={loading}
-          search={false}
-          toolBarRender={false}
-          pagination={{
-            current: pagination.current,
-            pageSize: pagination.pageSize,
-            total,
-            showSizeChanger: true,
-            showTotal: (t) => `共 ${t} 条`,
-            onChange: handlePageChange,
-          }}
-        />
-      </Card>
+              </Button>,
+            );
+          }
+          return items;
+        }}
+        pagination={{
+          current: pagination.current,
+          pageSize: pagination.pageSize,
+          total,
+          showSizeChanger: true,
+          showTotal: (t) => `共 ${t} 条`,
+          onChange: handlePageChange,
+        }}
+      />
 
       <Modal
         title={resolvedTitle}
@@ -328,7 +340,8 @@ export function CrudTable<
         confirmLoading={
           (createMutation?.isPending ?? false) || (updateMutation?.isPending ?? false)
         }
-        width={modalWidth}
+        width={isMobile ? '100%' : modalWidth}
+        styles={isMobile ? { body: { maxHeight: '60vh', overflowY: 'auto' } } : undefined}
         destroyOnHidden
       >
         <Form form={form} layout="vertical">
@@ -341,3 +354,128 @@ export function CrudTable<
 
 /* ---- 暴露 helper 类型 ---- */
 export type { FormInstance };
+
+/* ---- 操作列工厂 ---- */
+
+export interface ActionColumnItem {
+  key: string;
+  label: string;
+  icon?: ReactNode;
+  danger?: boolean;
+  onClick: () => void;
+}
+
+/**
+ * 构建标准化操作列：主操作「编辑」+ Dropdown「更多」。
+ *
+ * 删除操作自动使用 Modal.confirm 二次确认（需在 extraItems 中传入 key='delete'）。
+ * 如果只有编辑和删除，Dropdown 仅包含删除；如果有更多项则全部放入 Dropdown。
+ */
+export function buildActionColumn<T extends { id?: string; name?: string }>(
+  actions: CrudTableActions<T>,
+  opts?: {
+    /** Dropdown 中的额外操作项（删除项自动追加，无需手动加） */
+    extraItems?: (record: T) => ActionColumnItem[];
+    /** 自定义删除确认文案 */
+    deleteConfirmTitle?: string;
+    /** 获取记录名称（用于确认弹窗中展示），默认取 record.name */
+    getRecordName?: (record: T) => string;
+    /** 隐藏编辑按钮 */
+    hideEdit?: boolean;
+    /** 列宽度，默认 120 */
+    width?: number;
+    /** 自定义获取记录 ID */
+    getRecordId?: (record: T) => string;
+    /** 根据记录判断操作是否禁用（编辑 + 删除） */
+    isDisabled?: (record: T) => boolean;
+    /** 禁用时的悬浮提示 */
+    disabledTooltip?: string;
+  },
+): ProColumns<T> {
+  const {
+    extraItems,
+    deleteConfirmTitle = '确认删除',
+    getRecordName = (r) => (r as Record<string, unknown>).name as string ?? '',
+    hideEdit = false,
+    width = 120,
+    getRecordId = (r) => (r as Record<string, unknown>).id as string,
+    isDisabled,
+    disabledTooltip,
+  } = opts ?? {};
+
+  return {
+    title: '操作',
+    width,
+    fixed: 'right' as const,
+    render: (_: unknown, record: T) => {
+      const disabled = isDisabled?.(record) ?? false;
+      const extras = extraItems?.(record) ?? [];
+      const allItems: MenuProps['items'] = [];
+
+      for (const item of extras) {
+        allItems.push({
+          key: item.key,
+          label: item.label,
+          icon: item.icon,
+          danger: item.danger,
+          disabled,
+        });
+      }
+
+      if (allItems.length > 0) {
+        allItems.push({ type: 'divider' as const, key: '__divider' });
+      }
+
+      allItems.push({
+        key: '__delete',
+        label: '删除',
+        icon: <DeleteOutlined />,
+        danger: true,
+        disabled,
+      });
+
+      const handleMenuClick: MenuProps['onClick'] = ({ key }) => {
+        if (key === '__delete') {
+          const name = getRecordName(record);
+          Modal.confirm({
+            title: deleteConfirmTitle,
+            content: name
+              ? `确定要删除「${name}」吗？此操作不可恢复。`
+              : '确定要删除吗？此操作不可恢复。',
+            okText: '确认删除',
+            okType: 'danger',
+            onOk: () => actions.handleDelete(getRecordId(record)),
+          });
+          return;
+        }
+        const item = extras.find((e) => e.key === key);
+        item?.onClick();
+      };
+
+      const editBtn = (
+        <Button
+          type="link"
+          size="small"
+          icon={<EditOutlined />}
+          onClick={() => actions.openEdit(record)}
+          disabled={disabled}
+        >
+          编辑
+        </Button>
+      );
+
+      return (
+        <Space size={4}>
+          {!hideEdit && (
+            disabled && disabledTooltip
+              ? <Tooltip title={disabledTooltip}>{editBtn}</Tooltip>
+              : editBtn
+          )}
+          <Dropdown menu={{ items: allItems, onClick: handleMenuClick }} disabled={disabled}>
+            <Button type="text" size="small" icon={<MoreOutlined />} />
+          </Dropdown>
+        </Space>
+      );
+    },
+  };
+}

@@ -1,12 +1,13 @@
 import { useState, useCallback } from 'react';
 import {
   Button, Space, Tag, Input, InputNumber,
-  Select, App, Typography, Tooltip, Progress, Form, Popconfirm,
+  Select, App, Typography, Tooltip, Progress, Form, Dropdown, Modal,
   theme,
 } from 'antd';
+import type { MenuProps } from 'antd';
 import {
   CheckOutlined, CloseOutlined,
-  DeleteOutlined, RocketOutlined, RollbackOutlined,
+  DeleteOutlined, RocketOutlined, RollbackOutlined, MoreOutlined,
 } from '@ant-design/icons';
 import type { ProColumns } from '@ant-design/pro-components';
 import type { FormInstance } from 'antd';
@@ -22,7 +23,7 @@ import {
   useDeleteEvolution,
   useScanRollback,
 } from '../../hooks/useEvolutionQueries';
-import { CrudTable } from '../../components';
+import { CrudTable, PageContainer } from '../../components';
 import type { CrudTableActions } from '../../components';
 
 const { Text } = Typography;
@@ -118,33 +119,60 @@ const buildColumns = (
   {
     title: '操作',
     width: 180,
-    render: (_, r) => (
-      <Space size="small">
-        {r.status === 'pending' && (
-          <>
-            <Tooltip title="批准">
-              <Button type="link" size="small" icon={<CheckOutlined />} onClick={() => onStatusChange(r.id, 'approved')} />
-            </Tooltip>
-            <Tooltip title="拒绝">
-              <Button type="link" size="small" danger icon={<CloseOutlined />} onClick={() => onStatusChange(r.id, 'rejected')} />
-            </Tooltip>
-          </>
-        )}
-        {r.status === 'approved' && (
+    render: (_, r) => {
+      /* 状态条件化主操作 */
+      let primaryBtn: React.ReactNode = null;
+      if (r.status === 'pending') {
+        primaryBtn = (
+          <Tooltip title="批准">
+            <Button type="link" size="small" icon={<CheckOutlined />} onClick={() => onStatusChange(r.id, 'approved')} />
+          </Tooltip>
+        );
+      } else if (r.status === 'approved') {
+        primaryBtn = (
           <Tooltip title="应用">
             <Button type="link" size="small" icon={<RocketOutlined />} onClick={() => onStatusChange(r.id, 'applied')} />
           </Tooltip>
-        )}
-        {r.status === 'applied' && (
+        );
+      } else if (r.status === 'applied') {
+        primaryBtn = (
           <Tooltip title="回滚">
             <Button type="link" size="small" danger icon={<RollbackOutlined />} onClick={() => onStatusChange(r.id, 'rolled_back')} />
           </Tooltip>
-        )}
-        <Popconfirm title="确认删除？" onConfirm={() => actions.handleDelete(r.id)}>
-          <Button type="link" size="small" danger icon={<DeleteOutlined />} />
-        </Popconfirm>
-      </Space>
-    ),
+        );
+      }
+
+      /* Dropdown 菜单项 */
+      const menuItems: MenuProps['items'] = [];
+      if (r.status === 'pending') {
+        menuItems.push({ key: 'reject', label: '拒绝', icon: <CloseOutlined />, danger: true });
+        menuItems.push({ type: 'divider', key: '__d' });
+      }
+      menuItems.push({ key: '__delete', label: '删除', icon: <DeleteOutlined />, danger: true });
+
+      const handleMenuClick: MenuProps['onClick'] = ({ key }) => {
+        if (key === 'reject') {
+          onStatusChange(r.id, 'rejected');
+        } else if (key === '__delete') {
+          Modal.confirm({
+            title: '确认删除',
+            content: `确定要删除该进化建议吗？此操作不可恢复。`,
+            okText: '确认删除',
+            okType: 'danger',
+            onOk: () => actions.handleDelete(r.id),
+          });
+        }
+      };
+
+      return (
+        <Space size={4}>
+          {primaryBtn}
+          <Dropdown menu={{ items: menuItems, onClick: handleMenuClick }}>
+            <Button type="text" size="small" icon={<MoreOutlined />} />
+          </Dropdown>
+        </Space>
+      );
+    },
   },
 ];
 
@@ -212,11 +240,17 @@ const EvolutionPage: React.FC = () => {
   }, [scanRollbackMutation, message]);
 
   return (
+    <PageContainer
+      title="进化建议"
+      icon={<RocketOutlined />}
+      description="管理 Agent 进化建议，自动扫描与回滚"
+    >
     <CrudTable<
       EvolutionProposal,
       EvolutionProposalCreate,
       { id: string; data: EvolutionProposalUpdate }
     >
+      hideTitle
       title="进化建议"
       queryResult={queryResult}
       createMutation={createMutation}
@@ -261,23 +295,27 @@ const EvolutionPage: React.FC = () => {
             onChange={(v) => { setFilterStatus(v || ''); setPagination(p => ({ ...p, current: 1 })); }}
             options={Object.entries(statusLabel).map(([k, v]) => ({ label: v, value: k }))}
           />
-          <Popconfirm
-            title="扫描所有已应用建议，对评分退化超过 10% 的自动回滚"
-            onConfirm={handleScanRollback}
-          >
-            <Button
+          <Button
               icon={<RollbackOutlined />}
               loading={scanRollbackMutation.isPending}
+              onClick={() => {
+                Modal.confirm({
+                  title: '扫描回滚',
+                  content: '扫描所有已应用建议，对评分退化超过 10% 的自动回滚。确认继续？',
+                  okText: '确认扫描',
+                  onOk: handleScanRollback,
+                });
+              }}
             >
               扫描回滚
             </Button>
-          </Popconfirm>
         </Space>
       }
       pagination={pagination}
       onPaginationChange={(current, pageSize) => setPagination({ current, pageSize })}
       showRefresh
     />
+    </PageContainer>
   );
 };
 

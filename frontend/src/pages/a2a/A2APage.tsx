@@ -24,6 +24,7 @@ import {
   SendOutlined,
   StopOutlined,
 } from '@ant-design/icons';
+import { PageContainer } from '../../components/PageContainer';
 import type { ColumnsType } from 'antd/es/table';
 import {
   a2aService,
@@ -196,14 +197,11 @@ const A2APage: React.FC = () => {
   ];
 
   return (
-    <div style={{ padding: 24 }}>
-      <Title level={3}>
-        <ApiOutlined /> A2A 协议 (Agent-to-Agent)
-      </Title>
-      <Paragraph type="secondary">
-        管理 Agent Card 发布、Task 生命周期，实现跨平台 Agent 互操作。
-      </Paragraph>
-
+    <PageContainer
+      title="A2A 协议"
+      icon={<ApiOutlined />}
+      description="管理 Agent Card 发布、Task 生命周期，实现跨平台 Agent 互操作"
+    >
       <Row gutter={24}>
         <Col span={24}>
           <Card
@@ -343,7 +341,7 @@ const A2APage: React.FC = () => {
           </Form.Item>
         </Form>
       </Modal>
-    </div>
+    </PageContainer>
   );
 };
 

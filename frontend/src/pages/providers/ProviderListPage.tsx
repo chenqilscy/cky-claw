@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Button, DatePicker, Form, Input, App, Modal, Popconfirm, Switch, Tag, Space, theme } from 'antd';
 import { KeyOutlined, PlusOutlined, ReloadOutlined, ThunderboltOutlined } from '@ant-design/icons';
+import { PageContainer } from '../../components/PageContainer';
 import { ProTable } from '@ant-design/pro-components';
 import type { ProColumns } from '@ant-design/pro-components';
 import { useNavigate } from 'react-router-dom';
@@ -12,6 +13,7 @@ import {
   useRotateProviderKey,
 } from '../../hooks/useProviderQueries';
 import type { ProviderResponse } from '../../services/providerService';
+import { PROVIDER_TYPE_LABELS } from '../../services/providerService';
 
 const HEALTH_STATUS_MAP: Record<string, { color: string; text: string }> = {
   healthy: { color: 'green', text: '健康' },
@@ -117,7 +119,7 @@ const ProviderListPage: React.FC = () => {
       title: '厂商类型',
       dataIndex: 'provider_type',
       width: 120,
-      render: (_, record) => <Tag color="blue">{record.provider_type}</Tag>,
+      render: (_, record) => <Tag color="blue">{PROVIDER_TYPE_LABELS[record.provider_type] ?? record.provider_type}</Tag>,
     },
     {
       title: 'Base URL',
@@ -205,7 +207,11 @@ const ProviderListPage: React.FC = () => {
   ];
 
   return (
-    <>
+    <PageContainer
+      title="模型厂商管理"
+      icon={<KeyOutlined />}
+      description="管理 LLM 厂商连接、密钥轮换与健康检测"
+    >
     <ProTable<ProviderResponse>
       headerTitle="模型厂商管理"
       rowKey="id"
@@ -259,7 +265,7 @@ const ProviderListPage: React.FC = () => {
         </Form.Item>
       </Form>
     </Modal>
-  </>
+  </PageContainer>
   );
 };
 

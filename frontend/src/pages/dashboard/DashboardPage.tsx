@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
+  Button,
   Card,
   Col,
   Row,
@@ -33,8 +34,9 @@ import type { TraceStatsResponse } from '../../services/traceService';
 import { tokenUsageService } from '../../services/tokenUsageService';
 import type { TokenUsageByModelItem, TokenUsageTrendItem } from '../../services/tokenUsageService';
 import { useResponsive } from '../../hooks/useResponsive';
+import { PageContainer } from '../../components/PageContainer';
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 import { SPAN_TYPE_COLORS as SPAN_TYPE_COLOR_VALUES } from '../../constants/colors';
 
@@ -158,30 +160,28 @@ const DashboardPage: React.FC = () => {
 
   return (
     <Skeleton loading={loading} active paragraph={{ rows: 12 }}>
+      <PageContainer
+        title="平台概览"
+        icon={<DashboardOutlined />}
+        description="Agent 运行状况、Token 消耗和系统健康度一览"
+        extra={[
+          <Button
+            key="reload"
+            type="text"
+            icon={<ReloadOutlined />}
+            loading={loading}
+            onClick={() => fetchData()}
+          />,
+          <Switch
+            key="auto"
+            checkedChildren="自动刷新"
+            unCheckedChildren="手动"
+            checked={autoRefresh}
+            onChange={setAutoRefresh}
+          />,
+        ]}
+      >
       <Space direction="vertical" size={16} style={{ width: '100%' }}>
-        {/* Header */}
-        <Row justify="space-between" align="middle">
-          <Col>
-            <Title level={4} style={{ margin: 0 }}>
-              <DashboardOutlined /> 平台概览
-            </Title>
-          </Col>
-          <Col>
-            <Space>
-              <ReloadOutlined
-                style={{ cursor: 'pointer', fontSize: 16 }}
-                spin={loading}
-                onClick={() => fetchData()}
-              />
-              <Switch
-                checkedChildren="自动刷新"
-                unCheckedChildren="手动"
-                checked={autoRefresh}
-                onChange={setAutoRefresh}
-              />
-            </Space>
-          </Col>
-        </Row>
 
         {/* Row 1: Key Metrics */}
         <Row gutter={[16, 16]}>
@@ -544,6 +544,7 @@ const DashboardPage: React.FC = () => {
           </Col>
         </Row>
       </Space>
+      </PageContainer>
     </Skeleton>
   );
 };

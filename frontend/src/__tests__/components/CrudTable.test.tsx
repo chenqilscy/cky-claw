@@ -7,15 +7,19 @@ import type { UseQueryResult, UseMutationResult } from '@tanstack/react-query';
 vi.mock('@ant-design/pro-components', () => ({
   ProTable: (props: Record<string, unknown>) => {
     const {
-      dataSource, loading, rowKey, pagination,
+      dataSource, loading, rowKey, pagination, headerTitle, toolBarRender,
     } = props as {
       dataSource?: Array<Record<string, unknown>>;
       loading?: boolean;
       rowKey?: string;
       pagination?: { total?: number; showTotal?: (t: number) => string };
+      headerTitle?: React.ReactNode;
+      toolBarRender?: () => React.ReactNode[];
     };
     return (
       <div data-testid="pro-table">
+        {headerTitle && <div data-testid="header-title">{headerTitle}</div>}
+        {toolBarRender && <div data-testid="toolbar">{toolBarRender()}</div>}
         {loading && <span data-testid="loading">loading</span>}
         <span data-testid="row-key">{rowKey}</span>
         {pagination?.total !== undefined && (
@@ -246,7 +250,7 @@ describe('CrudTable', () => {
       ));
     });
     const refreshBtn = Array.from(container.querySelectorAll('button'))
-      .find((b) => b.textContent?.includes('刷新'));
+      .find((b) => b.textContent?.includes('刷新') || b.getAttribute('aria-label') === '刷新');
     expect(refreshBtn).toBeTruthy();
     await act(async () => {
       fireEvent.click(refreshBtn!);

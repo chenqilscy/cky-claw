@@ -18,6 +18,7 @@ import {
   DownloadOutlined,
   SearchOutlined,
 } from '@ant-design/icons';
+import { PageContainer } from '../../components/PageContainer';
 import { ProTable } from '@ant-design/pro-components';
 import type { ProColumns } from '@ant-design/pro-components';
 import { traceService } from '../../services/traceService';
@@ -199,16 +200,14 @@ const TracesPage: React.FC = () => {
   ];
 
   return (
-    <>
+    <PageContainer
+      title="Trace 追踪"
+      icon={<ApartmentOutlined />}
+      description="查询与分析 Agent 执行链路追踪"
+    >
       {stats && <TraceStatsPanel stats={stats} />}
 
       <Card
-        title={
-          <Space>
-            <ApartmentOutlined />
-            Trace 追踪
-          </Space>
-        }
         extra={
           <Space wrap>
             <RangePicker
@@ -315,7 +314,7 @@ const TracesPage: React.FC = () => {
         flameData={flameData}
         replayData={replayData}
       />
-    </>
+    </PageContainer>
   );
 };
 

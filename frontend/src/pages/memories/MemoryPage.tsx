@@ -8,12 +8,9 @@ import {
   Select,
   Space,
   Tag,
-  Popconfirm,
   Slider,
 } from 'antd';
 import {
-  DeleteOutlined,
-  EditOutlined,
   SearchOutlined,
   BulbOutlined,
 } from '@ant-design/icons';
@@ -32,7 +29,7 @@ import {
   useDeleteMemory,
   useSearchMemory,
 } from '../../hooks/useMemoryQueries';
-import { CrudTable } from '../../components';
+import { CrudTable, PageContainer, buildActionColumn } from '../../components';
 import type { CrudTableActions } from '../../components';
 
 const { TextArea } = Input;
@@ -120,18 +117,7 @@ const buildColumns = (
     render: (v) => new Date(v as string).toLocaleString('zh-CN'),
     sorter: (a, b) => new Date(a.updated_at).getTime() - new Date(b.updated_at).getTime(),
   },
-  {
-    title: '操作',
-    width: 120,
-    render: (_, record) => (
-      <Space size="small">
-        <Button type="link" size="small" icon={<EditOutlined />} onClick={() => actions.openEdit(record)} />
-        <Popconfirm title="确认删除？" onConfirm={() => actions.handleDelete(record.id)}>
-          <Button type="link" size="small" danger icon={<DeleteOutlined />} />
-        </Popconfirm>
-      </Space>
-    ),
-  },
+  buildActionColumn<MemoryItem>(actions),
 ];
 
 /* ---- 表单 ---- */
@@ -208,13 +194,18 @@ const MemoryPage: React.FC = () => {
   ];
 
   return (
-    <>
+    <PageContainer
+      title="记忆管理"
+      icon={<BulbOutlined />}
+      description="管理 Agent 记忆（情景 / 语义 / 程序型），支持向量搜索"
+    >
       <CrudTable<
         MemoryItem,
         MemoryCreateParams,
         { id: string; data: MemoryUpdateParams }
       >
-        title={<Space><BulbOutlined /><span>记忆管理</span></Space>}
+        hideTitle
+        title="记忆管理"
         queryResult={queryResult}
         createMutation={createMutation}
         updateMutation={updateMutation}
@@ -318,7 +309,7 @@ const MemoryPage: React.FC = () => {
           />
         )}
       </Modal>
-    </>
+    </PageContainer>
   );
 };
 

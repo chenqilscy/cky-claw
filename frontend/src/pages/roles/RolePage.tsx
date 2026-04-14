@@ -1,10 +1,9 @@
 import { useState, useCallback } from 'react';
 import {
-  Form, Input, Tag, Button, Space, Popconfirm, Tooltip, Checkbox, Table,
+  Form, Input, Tag, Checkbox, Table,
   Typography,
 } from 'antd';
 import {
-  DeleteOutlined, EditOutlined,
   SafetyCertificateOutlined, LockOutlined,
 } from '@ant-design/icons';
 import type { ProColumns } from '@ant-design/pro-components';
@@ -17,7 +16,7 @@ import {
   useUpdateRole,
   useDeleteRole,
 } from '../../hooks/useRoleQueries';
-import { CrudTable } from '../../components';
+import { CrudTable, PageContainer, buildActionColumn } from '../../components';
 import type { CrudTableActions } from '../../components';
 
 const { Text } = Typography;
@@ -84,34 +83,11 @@ const buildColumns = (
     width: 180,
     render: (_, record) => new Date(record.updated_at).toLocaleString(),
   },
-  {
-    title: '操作',
-    width: 120,
-    render: (_, record) => (
-      <Space>
-        <Tooltip title="编辑">
-          <Button
-            type="link"
-            size="small"
-            icon={<EditOutlined />}
-            onClick={() => actions.openEdit(record)}
-            disabled={record.is_system}
-          />
-        </Tooltip>
-        <Popconfirm
-          title="确认删除此角色？"
-          onConfirm={() => actions.handleDelete(record.id)}
-          okText="删除"
-          cancelText="取消"
-          disabled={record.is_system}
-        >
-          <Tooltip title={record.is_system ? '系统角色不可删除' : '删除'}>
-            <Button type="link" danger size="small" icon={<DeleteOutlined />} disabled={record.is_system} />
-          </Tooltip>
-        </Popconfirm>
-      </Space>
-    ),
-  },
+  buildActionColumn<RoleItem>(actions, {
+    deleteConfirmTitle: '确认删除此角色',
+    isDisabled: (r) => r.is_system,
+    disabledTooltip: '系统角色不可操作',
+  }),
 ];
 
 /* ---- 页面组件 ---- */
@@ -182,13 +158,18 @@ const RolePage: React.FC = () => {
   );
 
   return (
-    <div style={{ padding: 24 }}>
+    <PageContainer
+      title="角色管理"
+      icon={<SafetyCertificateOutlined />}
+      description="管理 RBAC 角色与权限矩阵"
+    >
       <CrudTable<
         RoleItem,
         RoleCreateParams,
         { id: string; data: RoleUpdateParams }
       >
-        title={<Space><SafetyCertificateOutlined />角色管理 (RBAC)</Space>}
+        hideTitle
+        title="角色管理"
         queryResult={queryResult}
         createMutation={createMutation}
         updateMutation={updateMutation}
@@ -220,7 +201,7 @@ const RolePage: React.FC = () => {
         createDefaults={{}}
         showRefresh
       />
-    </div>
+    </PageContainer>
   );
 };
 

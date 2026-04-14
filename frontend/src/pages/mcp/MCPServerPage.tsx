@@ -12,14 +12,11 @@ import {
   Switch,
   Table,
   Tag,
-  Popconfirm,
   theme,
 } from 'antd';
 import {
   PlusOutlined,
   ApiOutlined,
-  DeleteOutlined,
-  EditOutlined,
   ThunderboltOutlined,
   MinusCircleOutlined,
 } from '@ant-design/icons';
@@ -41,7 +38,7 @@ import {
   useDeleteMCPServer,
   useTestMCPConnection,
 } from '../../hooks/useMCPServerQueries';
-import { CrudTable } from '../../components';
+import { CrudTable, PageContainer, buildActionColumn } from '../../components';
 import type { CrudTableActions } from '../../components';
 
 const { TextArea } = Input;
@@ -168,38 +165,17 @@ const buildColumns = (
     width: 170,
     render: (_, record) => new Date(record.created_at).toLocaleString('zh-CN'),
   },
-  {
-    title: '操作',
-    width: 200,
-    render: (_, record) => (
-      <Space>
-        <Button
-          type="link"
-          size="small"
-          icon={<ThunderboltOutlined />}
-          onClick={() => onTestConnection(record)}
-        >
-          测试
-        </Button>
-        <Button
-          type="link"
-          size="small"
-          icon={<EditOutlined />}
-          onClick={() => actions.openEdit(record)}
-        >
-          编辑
-        </Button>
-        <Popconfirm
-          title="确认删除此 MCP Server？"
-          onConfirm={() => actions.handleDelete(record.id)}
-        >
-          <Button type="link" size="small" danger icon={<DeleteOutlined />}>
-            删除
-          </Button>
-        </Popconfirm>
-      </Space>
-    ),
-  },
+  buildActionColumn<MCPServerResponse>(actions, {
+    deleteConfirmTitle: '确认删除 MCP Server',
+    extraItems: (record) => [
+      {
+        key: 'test',
+        label: '测试连接',
+        icon: <ThunderboltOutlined />,
+        onClick: () => onTestConnection(record),
+      },
+    ],
+  }),
 ];
 
 /* ---- 页面组件 ---- */
@@ -350,13 +326,18 @@ const MCPServerPage: React.FC = () => {
   ), [token]);
 
   return (
-    <>
+    <PageContainer
+      title="MCP Server 管理"
+      icon={<ApiOutlined />}
+      description="管理 MCP Server 连接与工具发现"
+    >
       <CrudTable<
         MCPServerResponse,
         MCPServerCreateRequest,
         { id: string; data: MCPServerUpdateRequest }
       >
-        title={<Space><ApiOutlined />MCP Server 管理</Space>}
+        hideTitle
+        title="MCP Server 管理"
         queryResult={queryResult}
         createMutation={createMutation}
         updateMutation={updateMutation}
@@ -457,7 +438,7 @@ const MCPServerPage: React.FC = () => {
           )
         ) : null}
       </Modal>
-    </>
+    </PageContainer>
   );
 };
 

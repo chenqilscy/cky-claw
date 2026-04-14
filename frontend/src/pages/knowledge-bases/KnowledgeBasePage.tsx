@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { App, Button, Card, Form, Input, InputNumber, Modal, Space, Table, Tag, Typography, Upload } from 'antd';
 import { DatabaseOutlined, PlusOutlined, SearchOutlined, UploadOutlined } from '@ant-design/icons';
+import { PageContainer } from '../../components/PageContainer';
 import type { ColumnsType } from 'antd/es/table';
 import { knowledgeBaseService, type KnowledgeBaseItem, type KnowledgeDocumentItem, type KnowledgeSearchResultItem } from '../../services/knowledgeBaseService';
 
@@ -169,7 +170,12 @@ const KnowledgeBasePage: React.FC = () => {
   };
 
   return (
-    <Card title={<Space><DatabaseOutlined /><span>知识库管理</span></Space>} extra={<Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>新建知识库</Button>}>
+    <PageContainer
+      title="知识库管理"
+      icon={<DatabaseOutlined />}
+      description="RAG 知识库的创建、文档上传与语义检索"
+      extra={<Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>新建知识库</Button>}
+    >
       <Table
         rowKey="id"
         columns={columns}
@@ -269,7 +275,7 @@ const KnowledgeBasePage: React.FC = () => {
           </Card>
         </Space>
       </Modal>
-    </Card>
+    </PageContainer>
   );
 };
 

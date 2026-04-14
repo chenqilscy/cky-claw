@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Form, Input, Select, Tag, Button, Space, Popconfirm, Tooltip } from 'antd';
+import { Form, Input, Select, Tag, Tooltip } from 'antd';
 import {
-  DeleteOutlined, EditOutlined,
   TeamOutlined, ApartmentOutlined,
 } from '@ant-design/icons';
 import type { ProColumns } from '@ant-design/pro-components';
@@ -14,7 +13,7 @@ import {
   useUpdateTeam,
   useDeleteTeam,
 } from '../../hooks/useTeamQueries';
-import { CrudTable } from '../../components';
+import { CrudTable, PageContainer, buildActionColumn } from '../../components';
 import type { CrudTableActions } from '../../components';
 
 const { TextArea } = Input;
@@ -59,23 +58,16 @@ const buildColumns = (
     width: 180,
     render: (_, record) => new Date(record.created_at).toLocaleString(),
   },
-  {
-    title: '操作',
-    width: 140,
-    render: (_, record) => (
-      <Space size="small">
-        <Tooltip title="查看拓扑">
-          <Button type="text" icon={<ApartmentOutlined />} onClick={() => navigate(`/teams/flow?id=${record.id}`)} />
-        </Tooltip>
-        <Tooltip title="编辑">
-          <Button type="text" icon={<EditOutlined />} onClick={() => actions.openEdit(record)} />
-        </Tooltip>
-        <Popconfirm title="确认删除？" onConfirm={() => actions.handleDelete(record.id)}>
-          <Button type="text" danger icon={<DeleteOutlined />} />
-        </Popconfirm>
-      </Space>
-    ),
-  },
+  buildActionColumn<TeamConfig>(actions, {
+    extraItems: (record) => [
+      {
+        key: 'topology',
+        label: '查看拓扑',
+        icon: <ApartmentOutlined />,
+        onClick: () => navigate(`/teams/flow?id=${record.id}`),
+      },
+    ],
+  }),
 ];
 
 /* ---- 表单渲染 ---- */
@@ -126,11 +118,17 @@ const TeamPage: React.FC = () => {
   const deleteMutation = useDeleteTeam();
 
   return (
+    <PageContainer
+      title="Agent 团队管理"
+      icon={<TeamOutlined />}
+      description="管理 Agent 团队编排与协议配置"
+    >
     <CrudTable<
       TeamConfig,
       TeamConfigCreate,
       { id: string; data: TeamConfigUpdate }
     >
+      hideTitle
       title="Agent 团队管理"
       icon={<TeamOutlined />}
       queryResult={queryResult}
@@ -191,6 +189,7 @@ const TeamPage: React.FC = () => {
       }
       showRefresh
     />
+    </PageContainer>
   );
 };
 

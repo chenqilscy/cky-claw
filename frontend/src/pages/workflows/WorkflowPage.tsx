@@ -1,13 +1,13 @@
 import { useState } from 'react';
-import { Card, Button, Space, Modal, Form, Input, Tag, App, Badge, Tooltip, Table, Typography, Tabs, Popconfirm } from 'antd';
-import { DeleteOutlined, EditOutlined, EyeOutlined, CheckCircleOutlined, BranchesOutlined, NodeIndexOutlined, PartitionOutlined } from '@ant-design/icons';
+import { Card, Modal, Form, Input, Tag, App, Badge, Tooltip, Table, Typography, Tabs } from 'antd';
+import { EyeOutlined, CheckCircleOutlined, BranchesOutlined, NodeIndexOutlined, PartitionOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import type { ProColumns } from '@ant-design/pro-components';
 import type { FormInstance } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import type { WorkflowItem, StepSchema, EdgeSchema, WorkflowCreateParams, WorkflowUpdateParams } from '../../services/workflowService';
 import { useWorkflowList, useCreateWorkflow, useUpdateWorkflow, useDeleteWorkflow, useValidateWorkflow } from '../../hooks/useWorkflowQueries';
-import { CrudTable } from '../../components';
+import { CrudTable, PageContainer, buildActionColumn } from '../../components';
 import type { CrudTableActions } from '../../components';
 import WorkflowGraphView from './WorkflowGraphView';
 
@@ -80,28 +80,23 @@ const buildColumns = (
     width: 180,
     render: (_, record) => new Date(record.updated_at).toLocaleString(),
   },
-  {
-    title: '操作',
-    width: 180,
-    render: (_, record) => (
-      <Space>
-        <Tooltip title="预览">
-          <Button type="link" size="small" icon={<EyeOutlined />} onClick={() => handlePreview(record)} />
-        </Tooltip>
-        <Tooltip title="编辑">
-          <Button type="link" size="small" icon={<EditOutlined />} onClick={() => actions.openEdit(record)} />
-        </Tooltip>
-        <Tooltip title="可视化编辑">
-          <Button type="link" size="small" icon={<PartitionOutlined />} onClick={() => navigate(`/workflow-editor?id=${record.id}`)} />
-        </Tooltip>
-        <Popconfirm title="确认删除此工作流？" onConfirm={() => actions.handleDelete(record.id)} okText="删除" cancelText="取消">
-          <Tooltip title="删除">
-            <Button type="link" danger size="small" icon={<DeleteOutlined />} />
-          </Tooltip>
-        </Popconfirm>
-      </Space>
-    ),
-  },
+  buildActionColumn<WorkflowItem>(actions, {
+    deleteConfirmTitle: '确认删除工作流',
+    extraItems: (record) => [
+      {
+        key: 'preview',
+        label: '预览',
+        icon: <EyeOutlined />,
+        onClick: () => handlePreview(record),
+      },
+      {
+        key: 'visual',
+        label: '可视化编辑',
+        icon: <PartitionOutlined />,
+        onClick: () => navigate(`/workflow-editor?id=${record.id}`),
+      },
+    ],
+  }),
 ];
 
 /* ---- 步骤预览表格列 ---- */
@@ -199,13 +194,18 @@ const WorkflowPage: React.FC = () => {
   );
 
   return (
-    <div style={{ padding: 24 }}>
+    <PageContainer
+      title="工作流管理"
+      icon={<BranchesOutlined />}
+      description="管理工作流编排，支持可视化预览"
+    >
       <CrudTable<
         WorkflowItem,
         WorkflowCreateParams,
         { id: string; data: WorkflowUpdateParams }
       >
-        title={<Space><BranchesOutlined />工作流管理</Space>}
+        hideTitle
+        title="工作流管理"
         queryResult={queryResult}
         createMutation={createMutation}
         updateMutation={updateMutation}
@@ -321,7 +321,7 @@ const WorkflowPage: React.FC = () => {
           ]} />
         )}
       </Modal>
-    </div>
+    </PageContainer>
   );
 };
 

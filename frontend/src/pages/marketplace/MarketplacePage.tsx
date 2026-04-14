@@ -11,6 +11,7 @@ import {
   CloudUploadOutlined,
   CloudDownloadOutlined,
 } from '@ant-design/icons';
+import { PageContainer } from '../../components/PageContainer';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { marketplaceService } from '../../services/marketplaceService';
 import type { MarketplaceTemplate } from '../../services/marketplaceService';
@@ -102,15 +103,12 @@ const MarketplacePage: React.FC = () => {
   };
 
   return (
-    <div style={{ padding: 24 }}>
+    <PageContainer
+      title="Agent 模板市场"
+      icon={<ShopOutlined />}
+      description="发现、安装和评价社区分享的 Agent 模板"
+    >
       <Space direction="vertical" size="large" style={{ width: '100%' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Title level={3} style={{ margin: 0 }}>
-            <ShopOutlined style={{ marginRight: 8 }} />
-            Agent 模板市场
-          </Title>
-        </div>
-
         {/* 筛选栏 */}
         <Space wrap>
           <Input
@@ -304,7 +302,7 @@ const MarketplacePage: React.FC = () => {
           </Form.Item>
         </Form>
       </Modal>
-    </div>
+    </PageContainer>
   );
 };
 

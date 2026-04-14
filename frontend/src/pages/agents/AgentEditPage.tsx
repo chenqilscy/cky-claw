@@ -1,7 +1,8 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button, Card, Form, Input, Select, Space, App, Spin, Switch, Steps, Divider, Typography } from 'antd';
-import { ArrowLeftOutlined } from '@ant-design/icons';
+import { ArrowLeftOutlined, RobotOutlined } from '@ant-design/icons';
+import { PageContainer } from '../../components/PageContainer';
 import { agentService } from '../../services/agentService';
 import type { AgentConfig, AgentCreateInput, AgentUpdateInput } from '../../services/agentService';
 import { guardrailService } from '../../services/guardrailService';
@@ -251,13 +252,16 @@ const AgentEditPage: React.FC = () => {
   const handlePrev = () => setCurrentStep((s) => s - 1);
 
   return (
-    <div style={{ maxWidth: 800, margin: '0 auto' }}>
-      <Space style={{ marginBottom: 16 }}>
+    <PageContainer
+      title={isEdit ? '编辑 Agent' : '新建 Agent'}
+      icon={<RobotOutlined />}
+      description="配置 Agent 基本信息、模型、工具与护栏"
+      extra={
         <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/agents')}>
           返回列表
         </Button>
-      </Space>
-
+      }
+    >
       <Card title={isEdit ? `编辑 Agent: ${name}` : '创建新 Agent'}>
         <Steps current={currentStep} items={STEP_ITEMS} style={{ marginBottom: 32 }} />
         <Spin spinning={loading}>
@@ -492,7 +496,7 @@ const AgentEditPage: React.FC = () => {
           </Form>
         </Spin>
       </Card>
-    </div>
+    </PageContainer>
   );
 };
 

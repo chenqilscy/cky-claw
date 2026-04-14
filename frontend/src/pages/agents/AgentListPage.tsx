@@ -1,16 +1,27 @@
 import { useState } from 'react';
-import { Button, App, Popconfirm, Input, Space, Tag, Upload, theme } from 'antd';
-import { PlusOutlined, ReloadOutlined, HistoryOutlined, ApartmentOutlined, DownloadOutlined, UploadOutlined } from '@ant-design/icons';
+import { Button, App, Input, Space, Tag, Upload, Dropdown, Modal } from 'antd';
+import {
+  PlusOutlined,
+  ReloadOutlined,
+  HistoryOutlined,
+  ApartmentOutlined,
+  DownloadOutlined,
+  UploadOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  MoreOutlined,
+} from '@ant-design/icons';
 import { ProTable } from '@ant-design/pro-components';
 import type { ProColumns } from '@ant-design/pro-components';
 import { useNavigate } from 'react-router-dom';
 import type { AgentConfig } from '../../services/agentService';
 import { agentService } from '../../services/agentService';
 import { useAgentList, useDeleteAgent } from '../../hooks/useAgentQueries';
+import { PageContainer } from '../../components/PageContainer';
+import { RobotOutlined } from '@ant-design/icons';
 
 const AgentListPage: React.FC = () => {
   const { message } = App.useApp();
-  const { token } = theme.useToken();
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [pagination, setPagination] = useState({ current: 1, pageSize: 20 });
@@ -94,37 +105,110 @@ const AgentListPage: React.FC = () => {
     },
     {
       title: '操作',
-      width: 280,
+      width: 160,
+      fixed: 'right',
       render: (_, record) => (
-        <Space>
-          <a onClick={() => navigate(`/agents/${record.name}/edit`)}>编辑</a>
-          <a onClick={() => navigate(`/agents/${record.id}/versions`)}><HistoryOutlined /> 版本</a>
-          <a onClick={() => void handleExport(record.name)}><DownloadOutlined /> 导出</a>
-          <Popconfirm
-            title="确认删除该 Agent？"
-            onConfirm={() => handleDelete(record.name)}
+        <Space size={0}>
+          <Button
+            type="link"
+            size="small"
+            icon={<EditOutlined />}
+            onClick={() => navigate(`/agents/${record.name}/edit`)}
           >
-            <a style={{ color: token.colorError }}>删除</a>
-          </Popconfirm>
+            编辑
+          </Button>
+          <Dropdown
+            menu={{
+              items: [
+                {
+                  key: 'versions',
+                  icon: <HistoryOutlined />,
+                  label: '版本历史',
+                  onClick: () => navigate(`/agents/${record.id}/versions`),
+                },
+                {
+                  key: 'export',
+                  icon: <DownloadOutlined />,
+                  label: '导出',
+                  onClick: () => void handleExport(record.name),
+                },
+                { type: 'divider' },
+                {
+                  key: 'delete',
+                  icon: <DeleteOutlined />,
+                  label: '删除',
+                  danger: true,
+                  onClick: () => {
+                    Modal.confirm({
+                      title: '确认删除',
+                      content: `确定要删除 Agent「${record.name}」吗？此操作不可恢复。`,
+                      okText: '确认删除',
+                      okButtonProps: { danger: true },
+                      cancelText: '取消',
+                      onOk: () => handleDelete(record.name),
+                    });
+                  },
+                },
+              ],
+            }}
+            trigger={['click']}
+          >
+            <Button type="text" size="small" icon={<MoreOutlined />} />
+          </Dropdown>
         </Space>
       ),
     },
   ];
 
   return (
-    <div>
+    <PageContainer
+      title="Agent 管理"
+      icon={<RobotOutlined />}
+      description="创建和管理你的 AI Agent，配置模型、工具和安全策略"
+      extra={[
+        <Button
+          key="handoff"
+          icon={<ApartmentOutlined />}
+          onClick={() => navigate('/agents/handoff-editor')}
+        >
+          Handoff 编排
+        </Button>,
+        <Upload
+          key="import"
+          accept=".yaml,.yml,.json"
+          showUploadList={false}
+          beforeUpload={(file) => {
+            void handleImport(file);
+            return false;
+          }}
+        >
+          <Button icon={<UploadOutlined />}>导入</Button>
+        </Upload>,
+        <Button
+          key="create"
+          type="primary"
+          icon={<PlusOutlined />}
+          onClick={() => navigate('/agents/new')}
+        >
+          创建 Agent
+        </Button>,
+      ]}
+    >
       <ProTable<AgentConfig>
-        headerTitle="Agent 管理"
         rowKey="id"
         columns={columns}
         dataSource={data}
         loading={loading}
         search={false}
+        options={false}
         scroll={{ x: 'max-content' }}
+        cardProps={{ bodyStyle: { padding: 0 } }}
         pagination={{
           current: pagination.current,
           pageSize: pagination.pageSize,
           total,
+          showSizeChanger: true,
+          showTotal: (t) => `共 ${t} 条`,
           onChange: (page, pageSize) => setPagination({ current: page, pageSize }),
         }}
         toolBarRender={() => [
@@ -133,42 +217,17 @@ const AgentListPage: React.FC = () => {
             placeholder="搜索名称 / 描述"
             allowClear
             onSearch={(v) => { setSearch(v); setPagination((p) => ({ ...p, current: 1 })); }}
-            style={{ width: 240 }}
+            style={{ width: 260 }}
           />,
           <Button
             key="reload"
+            type="text"
             icon={<ReloadOutlined />}
             onClick={() => void fetchAgents()}
           />,
-          <Button
-            key="handoff"
-            icon={<ApartmentOutlined />}
-            onClick={() => navigate('/agents/handoff-editor')}
-          >
-            Handoff 编排
-          </Button>,
-          <Upload
-            key="import"
-            accept=".yaml,.yml,.json"
-            showUploadList={false}
-            beforeUpload={(file) => {
-              void handleImport(file);
-              return false;
-            }}
-          >
-            <Button icon={<UploadOutlined />}>导入</Button>
-          </Upload>,
-          <Button
-            key="create"
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={() => navigate('/agents/new')}
-          >
-            创建 Agent
-          </Button>,
         ]}
       />
-    </div>
+    </PageContainer>
   );
 };
 
