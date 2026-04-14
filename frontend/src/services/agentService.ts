@@ -28,6 +28,7 @@ export interface AgentConfig {
   mcp_servers: string[];
   agent_tools: string[];
   skills: string[];
+  knowledge_bases: string[];
   output_type: Record<string, unknown> | null;
   metadata: Record<string, unknown>;
   prompt_variables: PromptVariableDefinition[];
@@ -62,6 +63,7 @@ export interface AgentCreateInput {
   mcp_servers?: string[];
   agent_tools?: string[];
   skills?: string[];
+  knowledge_bases?: string[];
   output_type?: Record<string, unknown> | null;
   metadata?: Record<string, unknown>;
   prompt_variables?: PromptVariableDefinition[];

@@ -87,6 +87,7 @@ async def create_agent(db: AsyncSession, data: AgentCreate) -> AgentConfig:
         mcp_servers=data.mcp_servers,
         agent_tools=data.agent_tools,
         skills=data.skills,
+        knowledge_bases=data.knowledge_bases,
         output_type=data.output_type,
         metadata_=data.metadata,
         prompt_variables=data.prompt_variables,

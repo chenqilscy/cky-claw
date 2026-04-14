@@ -83,4 +83,36 @@ describe('providerService', () => {
     expect(mockApi.post).toHaveBeenCalledWith('/providers/1/test');
     expect(resp).toEqual(result);
   });
+
+  /* ---- Model CRUD ---- */
+
+  it('listModels 调用 GET /providers/:id/models', async () => {
+    const data = { data: [], total: 0 };
+    mockApi.get.mockResolvedValue(data);
+    const result = await providerService.listModels('p1');
+    expect(mockApi.get).toHaveBeenCalledWith('/providers/p1/models', undefined);
+    expect(result).toEqual(data);
+  });
+
+  it('createModel 调用 POST /providers/:id/models', async () => {
+    const payload = { model_name: 'gpt-4o' };
+    const created = { id: 'm1', ...payload };
+    mockApi.post.mockResolvedValue(created);
+    const result = await providerService.createModel('p1', payload);
+    expect(mockApi.post).toHaveBeenCalledWith('/providers/p1/models', payload);
+    expect(result).toEqual(created);
+  });
+
+  it('updateModel 调用 PUT /providers/:id/models/:modelId', async () => {
+    const payload = { display_name: 'GPT-4o' };
+    mockApi.put.mockResolvedValue({ id: 'm1', ...payload });
+    await providerService.updateModel('p1', 'm1', payload);
+    expect(mockApi.put).toHaveBeenCalledWith('/providers/p1/models/m1', payload);
+  });
+
+  it('deleteModel 调用 DELETE /providers/:id/models/:modelId', async () => {
+    mockApi.delete.mockResolvedValue(undefined);
+    await providerService.deleteModel('p1', 'm1');
+    expect(mockApi.delete).toHaveBeenCalledWith('/providers/p1/models/m1');
+  });
 });

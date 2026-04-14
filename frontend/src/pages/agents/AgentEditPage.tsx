@@ -11,6 +11,9 @@ import type { GuardrailRuleItem } from '../../services/guardrailService';
 import { providerService } from '../../services/providerService';
 import type { ProviderResponse, ProviderModelResponse } from '../../services/providerService';
 import { toolGroupService } from '../../services/toolGroupService';
+import { mcpServerService } from '../../services/mcpServerService';
+import { skillService } from '../../services/skillService';
+import { knowledgeBaseService } from '../../services/knowledgeBaseService';
 
 const { TextArea } = Input;
 const { Text } = Typography;
@@ -52,6 +55,9 @@ const AgentEditPage: React.FC = () => {
   const [providerOptions, setProviderOptions] = useState<{ label: string; value: string; id: string; providerType: string }[]>([]);
   const [modelOptions, setModelOptions] = useState<{ label: string; value: string }[]>([]);
   const [modelLoading, setModelLoading] = useState(false);
+  const [mcpServerOptions, setMcpServerOptions] = useState<{ label: string; value: string }[]>([]);
+  const [skillOptions, setSkillOptions] = useState<{ label: string; value: string }[]>([]);
+  const [kbOptions, setKbOptions] = useState<{ label: string; value: string }[]>([]);
 
   useEffect(() => {
     guardrailService.list({ enabled_only: true, limit: 200 })
@@ -109,6 +115,33 @@ const AgentEditPage: React.FC = () => {
         );
       })
       .catch(() => { message.error('加载 Provider 列表失败'); });
+
+    // 加载可选的 MCP Server 列表
+    mcpServerService.list({ limit: 200 })
+      .then((res) => {
+        setMcpServerOptions(
+          res.data.map((s) => ({ label: `${s.name} (${s.transport_type})`, value: s.name }))
+        );
+      })
+      .catch(() => { message.error('加载 MCP Server 列表失败'); });
+
+    // 加载可选的 Skill 列表
+    skillService.list({ limit: 200 })
+      .then((res) => {
+        setSkillOptions(
+          res.data.map((s) => ({ label: `${s.name} v${s.version}`, value: s.name }))
+        );
+      })
+      .catch(() => { message.error('加载 Skill 列表失败'); });
+
+    // 加载可选的知识库列表
+    knowledgeBaseService.list({ limit: 200 })
+      .then((res) => {
+        setKbOptions(
+          res.data.map((kb) => ({ label: kb.name, value: kb.id }))
+        );
+      })
+      .catch(() => { message.error('加载知识库列表失败'); });
   }, [name, message]);
 
   // 加载指定 Provider 下的模型列表
@@ -160,6 +193,9 @@ const AgentEditPage: React.FC = () => {
             tool_groups: agent.tool_groups || [],
             handoffs: agent.handoffs?.join(', ') || '',
             agent_tools: agent.agent_tools || [],
+            mcp_servers: agent.mcp_servers || [],
+            skills: agent.skills || [],
+            knowledge_bases: agent.knowledge_bases || [],
             input_guardrails: agent.guardrails?.input || [],
             output_guardrails: agent.guardrails?.output || [],
             tool_guardrails: agent.guardrails?.tool || [],
@@ -199,6 +235,9 @@ const AgentEditPage: React.FC = () => {
           ? (values.handoffs as string).split(',').map((s) => s.trim()).filter(Boolean)
           : [],
         agent_tools: (values.agent_tools as string[]) || [],
+        mcp_servers: (values.mcp_servers as string[]) || [],
+        skills: (values.skills as string[]) || [],
+        knowledge_bases: (values.knowledge_bases as string[]) || [],
         guardrails: {
           input: (values.input_guardrails as string[]) || [],
           output: (values.output_guardrails as string[]) || [],
@@ -237,7 +276,7 @@ const AgentEditPage: React.FC = () => {
   // 步骤切换前校验当前步骤的字段
   const stepFields: string[][] = [
     ['name', 'description', 'instructions'],
-    ['provider_name', 'model', 'approval_mode', 'response_style', 'tool_groups', 'handoffs', 'agent_tools'],
+    ['provider_name', 'model', 'approval_mode', 'response_style', 'tool_groups', 'handoffs', 'agent_tools', 'mcp_servers', 'skills', 'knowledge_bases'],
     ['input_guardrails', 'output_guardrails', 'tool_guardrails', 'output_type'],
   ];
 
@@ -418,6 +457,45 @@ const AgentEditPage: React.FC = () => {
                   mode="multiple"
                   placeholder="可选 — 选择要作为工具调用的子 Agent"
                   options={agentOptions}
+                  allowClear
+                />
+              </Form.Item>
+
+              <Form.Item
+                name="mcp_servers"
+                label="MCP Server"
+                tooltip="可选 — 关联 MCP Server 以获取其提供的工具"
+              >
+                <Select
+                  mode="multiple"
+                  placeholder="可选 — 选择要关联的 MCP Server"
+                  options={mcpServerOptions}
+                  allowClear
+                />
+              </Form.Item>
+
+              <Form.Item
+                name="skills"
+                label="技能（Skills）"
+                tooltip="可选 — 为 Agent 启用已注册的技能"
+              >
+                <Select
+                  mode="multiple"
+                  placeholder="可选 — 选择要启用的技能"
+                  options={skillOptions}
+                  allowClear
+                />
+              </Form.Item>
+
+              <Form.Item
+                name="knowledge_bases"
+                label="知识库"
+                tooltip="可选 — 关联知识库以启用 RAG 检索增强"
+              >
+                <Select
+                  mode="multiple"
+                  placeholder="可选 — 选择要关联的知识库"
+                  options={kbOptions}
                   allowClear
                 />
               </Form.Item>

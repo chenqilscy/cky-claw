@@ -31,6 +31,24 @@ export interface RunResponse {
   last_agent_name: string;
 }
 
+export interface SessionMessageItem {
+  id: number;
+  role: string;
+  content: string;
+  content_blocks?: Record<string, unknown>[] | null;
+  agent_name?: string | null;
+  tool_call_id?: string | null;
+  tool_calls?: Record<string, unknown>[] | null;
+  token_usage?: Record<string, unknown> | null;
+  created_at: string;
+}
+
+export interface SessionMessagesResponse {
+  session_id: string;
+  messages: SessionMessageItem[];
+  total: number;
+}
+
 export interface SSEEvent {
   type: string;
   data: Record<string, unknown>;
@@ -48,6 +66,10 @@ export const chatService = {
 
   deleteSession: (sessionId: string) =>
     api.delete<undefined>(`/sessions/${sessionId}`),
+
+  /** 获取会话消息历史。 */
+  getMessages: (sessionId: string, search?: string) =>
+    api.get<SessionMessagesResponse>(`/sessions/${sessionId}/messages`, search ? { search } : undefined),
 
   runNonStream: (sessionId: string, input: string) =>
     api.post<RunResponse>(`/sessions/${sessionId}/run`, {

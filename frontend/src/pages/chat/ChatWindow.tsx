@@ -52,10 +52,28 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // session 切换时清消息
+  // session 切换时加载历史消息
   useEffect(() => {
     setMessages([]);
-  }, [sessionId, agentName]);
+    if (!sessionId) return;
+    let cancelled = false;
+    chatService.getMessages(sessionId).then((res) => {
+      if (cancelled) return;
+      const history = res.messages
+        .filter((m) => m.role === 'user' || m.role === 'assistant')
+        .map((m) => ({
+          id: `hist-${m.id}`,
+          role: m.role as 'user' | 'assistant',
+          content: m.content,
+          agentName: m.agent_name ?? undefined,
+          timestamp: new Date(m.created_at).getTime(),
+        }));
+      setMessages(history);
+    }).catch(() => {
+      // 加载失败时静默，用户仍可正常发送消息
+    });
+    return () => { cancelled = true; };
+  }, [sessionId, setMessages]);
 
   // 组件卸载时中止 SSE + 取消 RAF
   useEffect(() => {

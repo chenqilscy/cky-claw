@@ -10,6 +10,9 @@ const mockAgentUpdate = vi.fn();
 const mockGuardrailList = vi.fn();
 const mockToolGroupList = vi.fn();
 const mockProviderList = vi.fn();
+const mockMcpServerList = vi.fn();
+const mockSkillList = vi.fn();
+const mockKbList = vi.fn();
 
 vi.mock('../../services/agentService', () => ({
   agentService: {
@@ -38,6 +41,24 @@ vi.mock('../../services/providerService', () => ({
   },
 }));
 
+vi.mock('../../services/mcpServerService', () => ({
+  mcpServerService: {
+    list: (...args: unknown[]) => mockMcpServerList(...args),
+  },
+}));
+
+vi.mock('../../services/skillService', () => ({
+  skillService: {
+    list: (...args: unknown[]) => mockSkillList(...args),
+  },
+}));
+
+vi.mock('../../services/knowledgeBaseService', () => ({
+  knowledgeBaseService: {
+    list: (...args: unknown[]) => mockKbList(...args),
+  },
+}));
+
 import AgentEditPage from '../../pages/agents/AgentEditPage';
 
 function renderWithRouter(path: string, routePath: string) {
@@ -57,6 +78,9 @@ describe('AgentEditPage', () => {
     mockToolGroupList.mockResolvedValue({ data: [] });
     mockAgentList.mockResolvedValue({ data: [] });
     mockProviderList.mockResolvedValue({ data: [] });
+    mockMcpServerList.mockResolvedValue({ data: [] });
+    mockSkillList.mockResolvedValue({ data: [] });
+    mockKbList.mockResolvedValue({ data: [] });
     mockAgentGet.mockResolvedValue({
       name: 'bot-1', description: 'desc', instructions: 'test',
       model: 'gpt-4', approval_mode: 'suggest',
@@ -110,5 +134,8 @@ describe('AgentEditPage', () => {
     expect(mockGuardrailList).toHaveBeenCalled();
     expect(mockToolGroupList).toHaveBeenCalled();
     expect(mockProviderList).toHaveBeenCalled();
+    expect(mockMcpServerList).toHaveBeenCalled();
+    expect(mockSkillList).toHaveBeenCalled();
+    expect(mockKbList).toHaveBeenCalled();
   });
 });

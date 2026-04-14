@@ -4,10 +4,12 @@ import { render, act } from '@testing-library/react';
 /* ---------- mock chatService ---------- */
 const mockCreateSession = vi.fn();
 const mockRunStream = vi.fn();
+const mockGetMessages = vi.fn();
 vi.mock('../../services/chatService', () => ({
   chatService: {
     createSession: (...args: unknown[]) => mockCreateSession(...args),
     runStream: (...args: unknown[]) => mockRunStream(...args),
+    getMessages: (...args: unknown[]) => mockGetMessages(...args),
   },
 }));
 
@@ -33,6 +35,8 @@ describe('ChatWindow', () => {
     mockCreateSession.mockResolvedValue({ id: 'new-sess' });
     // runStream 返回一个 AbortController
     mockRunStream.mockReturnValue(new AbortController());
+    // getMessages 默认返回空消息列表
+    mockGetMessages.mockResolvedValue({ session_id: 'sess-1', messages: [], total: 0 });
   });
 
   it('渲染 Agent 名称', async () => {
@@ -70,5 +74,33 @@ describe('ChatWindow', () => {
     // 页面渲染了 SendOutlined 图标按钮
     const buttons = container.querySelectorAll('button');
     expect(buttons.length).toBeGreaterThan(0);
+  });
+
+  it('切换 session 时加载历史消息', async () => {
+    mockGetMessages.mockResolvedValue({
+      session_id: 'sess-1',
+      messages: [
+        { id: 1, role: 'user', content: '你好', agent_name: null, created_at: '2026-01-01T00:00:00Z' },
+        { id: 2, role: 'assistant', content: '你好！有什么可以帮助你？', agent_name: 'test-bot', created_at: '2026-01-01T00:00:01Z' },
+      ],
+      total: 2,
+    });
+    let container!: HTMLElement;
+    await act(async () => {
+      ({ container } = render(<ChatWindow {...defaultProps} />));
+    });
+    // 等待异步加载完成
+    await act(async () => { await new Promise((r) => setTimeout(r, 10)); });
+    expect(mockGetMessages).toHaveBeenCalledWith('sess-1');
+    const text = container.textContent ?? '';
+    expect(text).toContain('你好');
+    expect(text).toContain('有什么可以帮助你');
+  });
+
+  it('sessionId 为 null 时不调用 getMessages', async () => {
+    await act(async () => {
+      render(<ChatWindow {...defaultProps} sessionId={null} />);
+    });
+    expect(mockGetMessages).not.toHaveBeenCalled();
   });
 });

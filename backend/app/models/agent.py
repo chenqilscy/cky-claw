@@ -53,6 +53,9 @@ class AgentConfig(SoftDeleteMixin, Base):
     skills: Mapped[list[str]] = mapped_column(
         ARRAY(String), nullable=False, server_default=text("'{}'::varchar[]")
     )
+    knowledge_bases: Mapped[list[str]] = mapped_column(
+        ARRAY(String), nullable=False, server_default=text("'{}'::varchar[]")
+    )
     output_type: Mapped[dict[str, Any] | None] = mapped_column(
         JSONB, nullable=True, comment="结构化输出 JSON Schema"
     )

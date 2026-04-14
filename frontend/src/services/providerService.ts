@@ -128,6 +128,26 @@ export interface ProviderModelListResponse {
   total: number;
 }
 
+export interface ProviderModelCreateRequest {
+  model_name: string;
+  display_name?: string;
+  context_window?: number;
+  max_output_tokens?: number | null;
+  prompt_price_per_1k?: number;
+  completion_price_per_1k?: number;
+  is_enabled?: boolean;
+}
+
+export interface ProviderModelUpdateRequest {
+  model_name?: string;
+  display_name?: string;
+  context_window?: number;
+  max_output_tokens?: number | null;
+  prompt_price_per_1k?: number;
+  completion_price_per_1k?: number;
+  is_enabled?: boolean;
+}
+
 export const providerService = {
   list: (params?: ProviderListParams) =>
     api.get<ProviderListResponse>('/providers', params ? { ...params } as Record<string, string | number | undefined> : undefined),
@@ -155,4 +175,13 @@ export const providerService = {
 
   listModels: (providerId: string, isEnabled?: boolean) =>
     api.get<ProviderModelListResponse>(`/providers/${providerId}/models`, isEnabled != null ? { is_enabled: isEnabled } as Record<string, string | number | undefined> : undefined),
+
+  createModel: (providerId: string, data: ProviderModelCreateRequest) =>
+    api.post<ProviderModelResponse>(`/providers/${providerId}/models`, data),
+
+  updateModel: (providerId: string, modelId: string, data: ProviderModelUpdateRequest) =>
+    api.put<ProviderModelResponse>(`/providers/${providerId}/models/${modelId}`, data),
+
+  deleteModel: (providerId: string, modelId: string) =>
+    api.delete<undefined>(`/providers/${providerId}/models/${modelId}`),
 };

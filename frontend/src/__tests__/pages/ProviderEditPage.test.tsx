@@ -5,11 +5,17 @@ import { App as AntApp } from 'antd';
 
 // Mock 服务
 const mockGet = vi.fn();
+const mockListModels = vi.fn();
 vi.mock('../../services/providerService', () => ({
   providerService: {
     get: (...args: unknown[]) => mockGet(...args),
     create: vi.fn(),
     update: vi.fn(),
+    listModels: (...args: unknown[]) => mockListModels(...args),
+    createModel: vi.fn(),
+    updateModel: vi.fn(),
+    deleteModel: vi.fn(),
+    testConnection: vi.fn(),
   },
   PROVIDER_TYPES: ['openai', 'azure', 'anthropic', 'openai_compatible', 'custom'],
   PROVIDER_BASE_URLS: {
@@ -57,6 +63,7 @@ describe('ProviderEditPage', () => {
       rate_limit_rpm: null,
       rate_limit_tpm: null,
     });
+    mockListModels.mockResolvedValue({ data: [], total: 0 });
   });
 
   it('新建模式渲染注册标题', () => {
@@ -87,6 +94,33 @@ describe('ProviderEditPage', () => {
     renderWithRouter('p1');
     await waitFor(() => {
       expect(mockGet).toHaveBeenCalledWith('p1');
+    });
+  });
+
+  it('编辑模式显示关联模型 Tab', async () => {
+    renderWithRouter('p1');
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('关联模型');
+    });
+  });
+
+  it('编辑模式加载关联模型列表', async () => {
+    renderWithRouter('p1');
+    await waitFor(() => {
+      expect(mockListModels).toHaveBeenCalledWith('p1');
+    });
+  });
+
+  it('新建模式不显示关联模型 Tab', () => {
+    const { container } = renderWithRouter();
+    expect(container.textContent).not.toContain('关联模型');
+  });
+
+  it('编辑模式显示基本配置和关联模型两个 Tab', async () => {
+    renderWithRouter('p1');
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('基本配置');
+      expect(document.body.textContent).toContain('关联模型');
     });
   });
 });

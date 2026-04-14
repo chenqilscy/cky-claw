@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Button, Card, Form, Input, InputNumber, Modal, Select, Space, App, Spin } from 'antd';
-import { ArrowLeftOutlined, ApiOutlined } from '@ant-design/icons';
+import { Button, Card, Form, Input, InputNumber, Modal, Popconfirm, Select, Space, Switch, Table, Tabs, Tag, App, Spin } from 'antd';
+import { ArrowLeftOutlined, ApiOutlined, PlusOutlined } from '@ant-design/icons';
 import { PageContainer } from '../../components/PageContainer';
 import { providerService, PROVIDER_TYPES, AUTH_TYPES, PROVIDER_BASE_URLS, PROVIDER_TYPE_LABELS } from '../../services/providerService';
-import type { ProviderCreateRequest, ProviderUpdateRequest } from '../../services/providerService';
+import type { ProviderCreateRequest, ProviderUpdateRequest, ProviderModelResponse, ProviderModelCreateRequest, ProviderModelUpdateRequest } from '../../services/providerService';
+import type { ColumnsType } from 'antd/es/table';
 
 const ProviderEditPage: React.FC = () => {
   const { message } = App.useApp();
@@ -15,6 +16,14 @@ const ProviderEditPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
+
+  /* ---- 模型管理状态 ---- */
+  const [models, setModels] = useState<ProviderModelResponse[]>([]);
+  const [modelsLoading, setModelsLoading] = useState(false);
+  const [modelModalOpen, setModelModalOpen] = useState(false);
+  const [editingModel, setEditingModel] = useState<ProviderModelResponse | null>(null);
+  const [modelForm] = Form.useForm();
+  const [modelSaving, setModelSaving] = useState(false);
 
   /** 切换厂商类型时自动填写 Base URL（仅当 base_url 为空或匹配已知厂商 URL 时覆盖） */
   const handleProviderTypeChange = (type: string) => {
@@ -106,6 +115,120 @@ const ProviderEditPage: React.FC = () => {
     }
   };
 
+  /* ---- 模型管理 ---- */
+
+  const loadModels = useCallback(async () => {
+    if (!id) return;
+    setModelsLoading(true);
+    try {
+      const res = await providerService.listModels(id);
+      setModels(res.data);
+    } catch {
+      message.error('加载模型列表失败');
+    } finally {
+      setModelsLoading(false);
+    }
+  }, [id, message]);
+
+  useEffect(() => {
+    if (isEdit && id) loadModels();
+  }, [isEdit, id, loadModels]);
+
+  const openModelCreate = () => {
+    setEditingModel(null);
+    modelForm.resetFields();
+    modelForm.setFieldsValue({ context_window: 4096, prompt_price_per_1k: 0, completion_price_per_1k: 0, is_enabled: true });
+    setModelModalOpen(true);
+  };
+
+  const openModelEdit = (record: ProviderModelResponse) => {
+    setEditingModel(record);
+    modelForm.setFieldsValue({
+      model_name: record.model_name,
+      display_name: record.display_name,
+      context_window: record.context_window,
+      max_output_tokens: record.max_output_tokens,
+      prompt_price_per_1k: record.prompt_price_per_1k,
+      completion_price_per_1k: record.completion_price_per_1k,
+      is_enabled: record.is_enabled,
+    });
+    setModelModalOpen(true);
+  };
+
+  const handleModelSave = async () => {
+    if (!id) return;
+    try {
+      const values = await modelForm.validateFields();
+      setModelSaving(true);
+      if (editingModel) {
+        const payload: ProviderModelUpdateRequest = {
+          model_name: values.model_name,
+          display_name: values.display_name,
+          context_window: values.context_window,
+          max_output_tokens: values.max_output_tokens ?? null,
+          prompt_price_per_1k: values.prompt_price_per_1k,
+          completion_price_per_1k: values.completion_price_per_1k,
+          is_enabled: values.is_enabled,
+        };
+        await providerService.updateModel(id, editingModel.id, payload);
+        message.success('模型已更新');
+      } else {
+        const payload: ProviderModelCreateRequest = {
+          model_name: values.model_name,
+          display_name: values.display_name || '',
+          context_window: values.context_window ?? 4096,
+          max_output_tokens: values.max_output_tokens ?? null,
+          prompt_price_per_1k: values.prompt_price_per_1k ?? 0,
+          completion_price_per_1k: values.completion_price_per_1k ?? 0,
+          is_enabled: values.is_enabled ?? true,
+        };
+        await providerService.createModel(id, payload);
+        message.success('模型已添加');
+      }
+      setModelModalOpen(false);
+      loadModels();
+    } catch {
+      // validation error or API error
+    } finally {
+      setModelSaving(false);
+    }
+  };
+
+  const handleModelDelete = async (modelId: string) => {
+    if (!id) return;
+    try {
+      await providerService.deleteModel(id, modelId);
+      message.success('模型已删除');
+      loadModels();
+    } catch {
+      message.error('删除失败');
+    }
+  };
+
+  const modelColumns: ColumnsType<ProviderModelResponse> = [
+    { title: '模型标识', dataIndex: 'model_name', key: 'model_name', width: 200 },
+    { title: '显示名称', dataIndex: 'display_name', key: 'display_name', width: 160, render: (v: string) => v || '-' },
+    { title: '上下文窗口', dataIndex: 'context_window', key: 'context_window', width: 120, render: (v: number) => v.toLocaleString() },
+    { title: '最大输出', dataIndex: 'max_output_tokens', key: 'max_output_tokens', width: 100, render: (v: number | null) => v?.toLocaleString() ?? '-' },
+    { title: '输入价格/1k', dataIndex: 'prompt_price_per_1k', key: 'prompt_price_per_1k', width: 120, render: (v: number) => `$${v}` },
+    { title: '输出价格/1k', dataIndex: 'completion_price_per_1k', key: 'completion_price_per_1k', width: 120, render: (v: number) => `$${v}` },
+    {
+      title: '状态', dataIndex: 'is_enabled', key: 'is_enabled', width: 80,
+      render: (v: boolean) => <Tag color={v ? 'green' : 'default'}>{v ? '启用' : '禁用'}</Tag>,
+    },
+    {
+      title: '操作', key: 'actions', width: 140,
+      render: (_, record) => (
+        <Space>
+          <Button size="small" onClick={() => openModelEdit(record)}>编辑</Button>
+          <Popconfirm title="确认删除该模型？" onConfirm={() => handleModelDelete(record.id)} okText="删除" cancelText="取消">
+            <Button size="small" danger>删除</Button>
+          </Popconfirm>
+        </Space>
+      ),
+    },
+  ];
+
   return (
     <PageContainer
       title={isEdit ? '编辑 Provider' : '注册新 Provider'}
@@ -117,84 +240,155 @@ const ProviderEditPage: React.FC = () => {
         </Button>
       }
     >
-      <Card title={isEdit ? '编辑 Provider' : '注册新 Provider'}>
-        <Spin spinning={loading}>
-          <Form
-            form={form}
-            layout="vertical"
-            onFinish={onFinish}
-            initialValues={{ auth_type: 'api_key', provider_type: 'openai', base_url: PROVIDER_BASE_URLS.openai }}
-          >
-            <Form.Item
-              name="name"
-              label="名称"
-              rules={[{ required: true, message: '请输入厂商名称' }]}
-            >
-              <Input placeholder="如：OpenAI 官方、Azure China" />
-            </Form.Item>
-
-            <Form.Item
-              name="provider_type"
-              label="厂商类型"
-              rules={[{ required: true, message: '请选择厂商类型' }]}
-            >
-              <Select
-                options={PROVIDER_TYPES.map((t) => ({ label: PROVIDER_TYPE_LABELS[t] ?? t, value: t }))}
-                placeholder="选择厂商类型"
-                onChange={handleProviderTypeChange}
-              />
-            </Form.Item>
-
-            <Form.Item
-              name="base_url"
-              label="Base URL"
-              rules={[{ required: true, message: '请输入 API 端点 URL' }]}
-            >
-              <Input placeholder="https://api.openai.com/v1" />
-            </Form.Item>
-
-            <Form.Item
-              name="api_key"
-              label={isEdit ? 'API Key（留空则不更新）' : 'API Key'}
-              rules={isEdit ? [] : [{ required: true, message: '请输入 API Key' }]}
-            >
-              <Input.Password placeholder="sk-..." visibilityToggle />
-            </Form.Item>
-
-            <Form.Item name="auth_type" label="认证方式">
-              <Select
-                options={AUTH_TYPES.map((t) => ({ label: t, value: t }))}
-              />
-            </Form.Item>
-
-            <Form.Item name="rate_limit_rpm" label="每分钟请求数上限（RPM）">
-              <InputNumber min={0} style={{ width: '100%' }} placeholder="留空表示不限制" />
-            </Form.Item>
-
-            <Form.Item name="rate_limit_tpm" label="每分钟 Token 数上限（TPM）">
-              <InputNumber min={0} style={{ width: '100%' }} placeholder="留空表示不限制" />
-            </Form.Item>
-
-            <Form.Item>
-              <Space>
-                <Button type="primary" htmlType="submit" loading={saving}>
-                  {isEdit ? '保存' : '注册'}
-                </Button>
-                {isEdit && (
-                  <Button
-                    icon={<ApiOutlined />}
-                    loading={testing}
-                    onClick={handleTestConnection}
+      <Tabs
+        defaultActiveKey="basic"
+        items={[
+          {
+            key: 'basic',
+            label: '基本配置',
+            children: (
+              <Card>
+                <Spin spinning={loading}>
+                  <Form
+                    form={form}
+                    layout="vertical"
+                    onFinish={onFinish}
+                    initialValues={{ auth_type: 'api_key', provider_type: 'openai', base_url: PROVIDER_BASE_URLS.openai }}
                   >
-                    测试连接
+                    <Form.Item
+                      name="name"
+                      label="名称"
+                      rules={[{ required: true, message: '请输入厂商名称' }]}
+                    >
+                      <Input placeholder="如：OpenAI 官方、Azure China" />
+                    </Form.Item>
+
+                    <Form.Item
+                      name="provider_type"
+                      label="厂商类型"
+                      rules={[{ required: true, message: '请选择厂商类型' }]}
+                    >
+                      <Select
+                        options={PROVIDER_TYPES.map((t) => ({ label: PROVIDER_TYPE_LABELS[t] ?? t, value: t }))}
+                        placeholder="选择厂商类型"
+                        onChange={handleProviderTypeChange}
+                      />
+                    </Form.Item>
+
+                    <Form.Item
+                      name="base_url"
+                      label="Base URL"
+                      rules={[{ required: true, message: '请输入 API 端点 URL' }]}
+                    >
+                      <Input placeholder="https://api.openai.com/v1" />
+                    </Form.Item>
+
+                    <Form.Item
+                      name="api_key"
+                      label={isEdit ? 'API Key（留空则不更新）' : 'API Key'}
+                      rules={isEdit ? [] : [{ required: true, message: '请输入 API Key' }]}
+                    >
+                      <Input.Password placeholder="sk-..." visibilityToggle />
+                    </Form.Item>
+
+                    <Form.Item name="auth_type" label="认证方式">
+                      <Select
+                        options={AUTH_TYPES.map((t) => ({ label: t, value: t }))}
+                      />
+                    </Form.Item>
+
+                    <Form.Item name="rate_limit_rpm" label="每分钟请求数上限（RPM）">
+                      <InputNumber min={0} style={{ width: '100%' }} placeholder="留空表示不限制" />
+                    </Form.Item>
+
+                    <Form.Item name="rate_limit_tpm" label="每分钟 Token 数上限（TPM）">
+                      <InputNumber min={0} style={{ width: '100%' }} placeholder="留空表示不限制" />
+                    </Form.Item>
+
+                    <Form.Item>
+                      <Space>
+                        <Button type="primary" htmlType="submit" loading={saving}>
+                          {isEdit ? '保存' : '注册'}
+                        </Button>
+                        {isEdit && (
+                          <Button
+                            icon={<ApiOutlined />}
+                            loading={testing}
+                            onClick={handleTestConnection}
+                          >
+                            测试连接
+                          </Button>
+                        )}
+                        <Button onClick={() => navigate('/providers')}>取消</Button>
+                      </Space>
+                    </Form.Item>
+                  </Form>
+                </Spin>
+              </Card>
+            ),
+          },
+          ...(isEdit ? [{
+            key: 'models',
+            label: '关联模型',
+            children: (
+              <Card>
+                <div style={{ marginBottom: 16 }}>
+                  <Button type="primary" icon={<PlusOutlined />} onClick={openModelCreate}>
+                    添加模型
                   </Button>
-                )}
-                <Button onClick={() => navigate('/providers')}>取消</Button>
-              </Space>
-            </Form.Item>
-          </Form>
-        </Spin>
-      </Card>
+                </div>
+                <Table<ProviderModelResponse>
+                  rowKey="id"
+                  columns={modelColumns}
+                  dataSource={models}
+                  loading={modelsLoading}
+                  pagination={{ pageSize: 10 }}
+                  scroll={{ x: 900 }}
+                  size="small"
+                />
+              </Card>
+            ),
+          }] : []),
+        ]}
+      />
+
+      {/* 模型编辑弹窗 */}
+      <Modal
+        title={editingModel ? '编辑模型' : '添加模型'}
+        open={modelModalOpen}
+        onCancel={() => setModelModalOpen(false)}
+        onOk={handleModelSave}
+        confirmLoading={modelSaving}
+        destroyOnHidden
+      >
+        <Form form={modelForm} layout="vertical">
+          <Form.Item
+            name="model_name"
+            label="模型标识"
+            rules={[{ required: true, message: '请输入模型标识' }]}
+          >
+            <Input placeholder="如 gpt-4o、deepseek-chat" />
+          </Form.Item>
+          <Form.Item name="display_name" label="显示名称">
+            <Input placeholder="可选，用于前端展示" />
+          </Form.Item>
+          <Form.Item name="context_window" label="上下文窗口">
+            <InputNumber min={1} style={{ width: '100%' }} />
+          </Form.Item>
+          <Form.Item name="max_output_tokens" label="最大输出 Token">
+            <InputNumber min={1} style={{ width: '100%' }} placeholder="留空表示不限" />
+          </Form.Item>
+          <Form.Item name="prompt_price_per_1k" label="输入价格 / 千 Token（$）">
+            <InputNumber min={0} step={0.001} style={{ width: '100%' }} />
+          </Form.Item>
+          <Form.Item name="completion_price_per_1k" label="输出价格 / 千 Token（$）">
+            <InputNumber min={0} step={0.001} style={{ width: '100%' }} />
+          </Form.Item>
+          <Form.Item name="is_enabled" label="启用" valuePropName="checked">
+            <Switch />
+          </Form.Item>
+        </Form>
+      </Modal>
     </PageContainer>
   );
 };

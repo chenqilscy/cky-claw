@@ -67,6 +67,21 @@ describe('chatService', () => {
     expect(result).toEqual(runResp);
   });
 
+  it('getMessages 调用 GET /sessions/:id/messages', async () => {
+    const resp = { session_id: 's1', messages: [], total: 0 };
+    mockApi.get.mockResolvedValue(resp);
+    const result = await chatService.getMessages('s1');
+    expect(mockApi.get).toHaveBeenCalledWith('/sessions/s1/messages', undefined);
+    expect(result).toEqual(resp);
+  });
+
+  it('getMessages 带搜索参数', async () => {
+    const resp = { session_id: 's1', messages: [], total: 0 };
+    mockApi.get.mockResolvedValue(resp);
+    await chatService.getMessages('s1', '关键词');
+    expect(mockApi.get).toHaveBeenCalledWith('/sessions/s1/messages', { search: '关键词' });
+  });
+
   it('runStream 返回 AbortController', () => {
     // runStream 使用原生 fetch + SSE，mock fetch 测试基本流程
     const mockReader = {
