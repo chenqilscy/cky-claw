@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, waitFor } from '@testing-library/react';
 import { TestQueryWrapper } from '../test-utils';
-import { MemoryRouter } from 'react-router-dom';
 
 // Mock navigate
 vi.mock('react-router-dom', async () => {
@@ -59,9 +58,7 @@ describe('ProviderListPage', () => {
   it('renders and fetches providers on mount', async () => {
     render(
       <TestQueryWrapper>
-        <MemoryRouter>
           <ProviderListPage />
-        </MemoryRouter>
       </TestQueryWrapper>,
     );
     await waitFor(() => {
@@ -72,9 +69,7 @@ describe('ProviderListPage', () => {
   it('renders page content', async () => {
     render(
       <TestQueryWrapper>
-        <MemoryRouter>
           <ProviderListPage />
-        </MemoryRouter>
       </TestQueryWrapper>,
     );
     await waitFor(() => {
@@ -85,9 +80,7 @@ describe('ProviderListPage', () => {
   it('shows provider data in table', async () => {
     render(
       <TestQueryWrapper>
-        <MemoryRouter>
           <ProviderListPage />
-        </MemoryRouter>
       </TestQueryWrapper>,
     );
     await waitFor(() => {

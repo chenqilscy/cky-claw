@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, waitFor, act } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
 import { TestQueryWrapper } from '../test-utils';
 
 // Mock marketplaceService
@@ -40,7 +39,6 @@ describe('MarketplacePage', () => {
     let container!: HTMLElement;
     await act(async () => {
       ({ container } = render(
-        <MemoryRouter>
           <TestQueryWrapper>
             <MarketplacePage />
           </TestQueryWrapper>
@@ -56,7 +54,6 @@ describe('MarketplacePage', () => {
     let container!: HTMLElement;
     await act(async () => {
       ({ container } = render(
-        <MemoryRouter>
           <TestQueryWrapper>
             <MarketplacePage />
           </TestQueryWrapper>
@@ -73,7 +70,6 @@ describe('MarketplacePage', () => {
     let container!: HTMLElement;
     await act(async () => {
       ({ container } = render(
-        <MemoryRouter>
           <TestQueryWrapper>
             <MarketplacePage />
           </TestQueryWrapper>
@@ -92,7 +88,6 @@ describe('MarketplacePage', () => {
     let container!: HTMLElement;
     await act(async () => {
       ({ container } = render(
-        <MemoryRouter>
           <TestQueryWrapper>
             <MarketplacePage />
           </TestQueryWrapper>

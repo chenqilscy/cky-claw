@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, waitFor } from '@testing-library/react';
 import { TestQueryWrapper } from '../test-utils';
-import { MemoryRouter } from 'react-router-dom';
 
 // Mock ProTable to avoid heavy @ant-design/pro-components rendering
 vi.mock('@ant-design/pro-components', () => ({
@@ -54,9 +53,7 @@ describe('MemoryPage', () => {
   it('renders page title', async () => {
     render(
       <TestQueryWrapper>
-        <MemoryRouter>
           <MemoryPage />
-        </MemoryRouter>
       </TestQueryWrapper>,
     );
     await waitFor(() => {
@@ -67,9 +64,7 @@ describe('MemoryPage', () => {
   it('calls memoryService.list on mount', async () => {
     render(
       <TestQueryWrapper>
-        <MemoryRouter>
           <MemoryPage />
-        </MemoryRouter>
       </TestQueryWrapper>,
     );
     await waitFor(() => {
@@ -80,9 +75,7 @@ describe('MemoryPage', () => {
   it('renders memory data', async () => {
     render(
       <TestQueryWrapper>
-        <MemoryRouter>
           <MemoryPage />
-        </MemoryRouter>
       </TestQueryWrapper>,
     );
     await waitFor(() => {
@@ -93,9 +86,7 @@ describe('MemoryPage', () => {
   it('renders create button', async () => {
     render(
       <TestQueryWrapper>
-        <MemoryRouter>
           <MemoryPage />
-        </MemoryRouter>
       </TestQueryWrapper>,
     );
     await waitFor(() => {

@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, act, fireEvent } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { MemoryRouter } from 'react-router-dom';
 
 /* ---------- mock costRouterService ---------- */
 const mockClassify = vi.fn();
@@ -21,9 +22,11 @@ const MOCK_RECOMMEND_EMPTY = { tier: 'simple', provider_name: null, provider_tie
 function renderPage() {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
   return render(
-    <QueryClientProvider client={qc}>
-      <CostRouterPage />
-    </QueryClientProvider>,
+    <MemoryRouter>
+      <QueryClientProvider client={qc}>
+        <CostRouterPage />
+      </QueryClientProvider>
+    </MemoryRouter>,
   );
 }
 
