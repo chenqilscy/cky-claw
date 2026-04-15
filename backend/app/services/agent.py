@@ -130,7 +130,7 @@ async def update_agent(db: AsyncSession, name: str, data: AgentUpdate) -> AgentC
 
     for field, value in update_data.items():
         if field == "guardrails" and value is not None:
-            value = data.guardrails.model_dump()  # type: ignore[union-attr]
+            value = data.guardrails.model_dump() if data.guardrails is not None else value
         if field == "metadata":
             setattr(agent, "metadata_", value)
         else:

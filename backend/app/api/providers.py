@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.deps import require_admin
+from app.models.provider import ProviderConfig
 from app.models.user import User
 from app.schemas.provider import (
     ProviderCreate,
@@ -25,7 +26,7 @@ from app.services import provider as provider_service
 router = APIRouter(prefix="/api/v1/providers", tags=["providers"])
 
 
-def _to_response(p) -> ProviderResponse:  # type: ignore[no-untyped-def]
+def _to_response(p: ProviderConfig) -> ProviderResponse:
     """将 ProviderConfig ORM 对象转为 ProviderResponse。"""
     return ProviderResponse(
         id=p.id,

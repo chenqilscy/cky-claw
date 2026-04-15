@@ -187,7 +187,7 @@ class SQLAlchemyMemoryBackend(MemoryBackend):
         )
         result = await self._db.execute(stmt)
         await self._db.flush()
-        return result.rowcount  # type: ignore[union-attr]
+        return result.rowcount or 0
 
     async def decay(
         self,
@@ -207,7 +207,7 @@ class SQLAlchemyMemoryBackend(MemoryBackend):
             )
             result = await self._db.execute(stmt)
             await self._db.flush()
-            return result.rowcount  # type: ignore[union-attr]
+            return result.rowcount or 0
 
         # 指数衰减需逐条计算
         now = datetime.now(timezone.utc)

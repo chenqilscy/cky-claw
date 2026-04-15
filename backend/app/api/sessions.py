@@ -180,7 +180,7 @@ async def cancel_run(
 async def resume_from_checkpoint(
     session_id: uuid.UUID,
     run_id: str = Query(..., description="原始 Run ID（用于查找 checkpoint）"),
-    data: RunRequest = None,  # type: ignore[assignment]
+    data: RunRequest | None = None,
     db: AsyncSession = Depends(get_db),
 ) -> RunResponse:
     """从 Checkpoint 恢复执行。"""

@@ -18,6 +18,8 @@ from app.schemas.debug import (
 )
 from app.services import debug as debug_service
 
+from ckyclaw_framework.debug.controller import DebugController, DebugEvent
+
 router = APIRouter(prefix="/api/v1/debug", tags=["debug"])
 
 
@@ -218,18 +220,18 @@ async def debug_websocket(
     await websocket.accept()
 
     # 注册事件回调
-    async def on_event(event: object) -> None:
+    async def on_event(event: DebugEvent) -> None:
         """将 DebugEvent 推送给 WebSocket 客户端。"""
         try:
             await websocket.send_json({
-                "type": event.type.value,  # type: ignore[attr-defined]
-                "data": event.data,  # type: ignore[attr-defined]
-                "timestamp": event.timestamp,  # type: ignore[attr-defined]
+                "type": event.type.value,
+                "data": event.data,
+                "timestamp": event.timestamp,
             })
         except Exception:
             pass
 
-    controller._on_event = on_event  # type: ignore[attr-defined]
+    controller._on_event = on_event
 
     try:
         while True:
@@ -245,7 +247,7 @@ async def debug_websocket(
     except WebSocketDisconnect:
         pass
     finally:
-        controller._on_event = None  # type: ignore[attr-defined]
+        controller._on_event = None
 
 
 async def _sync_controller_state(

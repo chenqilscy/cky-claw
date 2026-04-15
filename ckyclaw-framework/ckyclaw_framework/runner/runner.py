@@ -1738,7 +1738,8 @@ class Runner:
             full_content = ""
             tool_call_buffers: dict[int, dict[str, str]] = {}
 
-            async for chunk in stream:  # type: ignore[union-attr]
+            assert stream is not None  # 重试全失败时上方已 return
+            async for chunk in stream:
                 if chunk.content:
                     full_content += chunk.content
                     yield StreamEvent(

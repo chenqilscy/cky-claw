@@ -17,11 +17,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.agent import AgentConfig
 from app.models.debug_session import DebugSession
 
+from ckyclaw_framework.debug.controller import DebugController, DebugMode
+
 logger = logging.getLogger(__name__)
 
 # 内存管理：活跃调试会话的 DebugController 实例
 # key = debug_session_id (UUID), value = DebugController
-_active_controllers: dict[uuid.UUID, Any] = {}
+_active_controllers: dict[uuid.UUID, DebugController] = {}
 
 # 最大同时调试会话数
 MAX_ACTIVE_SESSIONS = 5
@@ -84,9 +86,6 @@ async def create_debug_session(
     if agent is None:
         raise ValueError(f"Agent {agent_id} 不存在")
 
-    # 延迟导入避免循环依赖
-    from ckyclaw_framework.debug.controller import DebugController, DebugMode
-
     mode_enum = DebugMode(mode)
 
     session = DebugSession(
@@ -113,7 +112,7 @@ async def create_debug_session(
     return session
 
 
-def get_controller(session_id: uuid.UUID) -> Any | None:
+def get_controller(session_id: uuid.UUID) -> DebugController | None:
     """获取内存中的 DebugController 实例。"""
     return _active_controllers.get(session_id)
 

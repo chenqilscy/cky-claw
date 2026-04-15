@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import AsyncGenerator
 from datetime import datetime
 
 from sqlalchemy import Boolean, DateTime
@@ -41,7 +42,7 @@ class SoftDeleteMixin:
     )
 
 
-async def get_db() -> AsyncSession:  # type: ignore[misc]
+async def get_db() -> AsyncGenerator[AsyncSession, None]:
     """获取数据库 session（FastAPI 依赖注入）。"""
     async with async_session_factory() as session:
         yield session
