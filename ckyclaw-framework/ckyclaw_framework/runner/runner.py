@@ -1202,10 +1202,11 @@ class Runner:
             _retry_delay = config.retry_delay
             _circuit_breaker = config.circuit_breaker if config.fallback_provider is None else None
             _last_error: Exception | None = None
+            response: ModelResponse
             for _attempt in range(_max_retries + 1):
                 try:
                     if _circuit_breaker is not None:
-                        response: ModelResponse = await _circuit_breaker.call(
+                        response = await _circuit_breaker.call(
                             provider.chat,
                             model_name,
                             messages=llm_messages,
@@ -1213,16 +1214,16 @@ class Runner:
                             tools=tool_schemas or None,
                             stream=False,
                             response_format=response_format,
-                        )  # type: ignore[assignment]
+                        )
                     else:
-                        response: ModelResponse = await provider.chat(
+                        response = await provider.chat(
                             model=model_name,
                             messages=llm_messages,
                             settings=settings,
                             tools=tool_schemas or None,
                             stream=False,
                             response_format=response_format,
-                        )  # type: ignore[assignment]
+                        )
                     _last_error = None
                     break
                 except Exception as e:

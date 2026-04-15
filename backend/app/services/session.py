@@ -796,7 +796,7 @@ async def _resolve_provider(
     if not provider.is_enabled:
         raise NotFoundError(f"Provider '{provider_name}' 已被禁用，无法执行 Agent '{agent_config.name}'")
 
-    result: dict[str, str | None] = {}
+    result: dict[str, str | dict[str, str] | None] = {}
 
     # 解密 API Key
     if provider.api_key_encrypted:
@@ -820,7 +820,7 @@ async def _resolve_provider(
                 except Exception:
                     headers[key] = value
         if headers:
-            result["extra_headers"] = headers  # type: ignore[assignment]
+            result["extra_headers"] = headers
 
     logger.info(
         "Agent '%s' 使用 Provider '%s' (type=%s, base_url=%s)",

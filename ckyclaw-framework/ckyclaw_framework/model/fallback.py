@@ -132,6 +132,7 @@ class FallbackChainProvider(ModelProvider):
                 continue
 
             try:
+                result: ModelResponse | AsyncIterator[ModelChunk]
                 if cb is not None:
                     result = await cb.call(
                         entry.provider.chat,
@@ -154,7 +155,7 @@ class FallbackChainProvider(ModelProvider):
 
                 self._last_used_entry = entry
                 logger.debug("FallbackChain: '%s' succeeded", provider_name)
-                return result  # type: ignore[return-value]
+                return result
 
             except CircuitBreakerOpenError:
                 logger.debug("Skipping '%s': circuit breaker OPEN (during call)", provider_name)
