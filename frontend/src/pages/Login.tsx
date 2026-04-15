@@ -4,6 +4,7 @@ import { GithubOutlined, GoogleOutlined, LockOutlined, SafetyOutlined, UserOutli
 import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../stores/authStore';
 import { oauthService } from '../services/oauthService';
+import { samlService, type SamlEnabledIdp } from '../services/samlService';
 
 const { Title } = Typography;
 
@@ -28,11 +29,15 @@ const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const { login, loading, error, clearError } = useAuthStore();
   const [providers, setProviders] = useState<string[]>([]);
+  const [samlIdps, setSamlIdps] = useState<SamlEnabledIdp[]>([]);
 
   useEffect(() => {
     oauthService.getProviders()
       .then((resp) => setProviders(resp.providers))
       .catch(() => { /* Provider 列表获取失败时静默处理，仅显示密码登录 */ });
+    samlService.getEnabledIdps()
+      .then((resp) => setSamlIdps(resp.idps))
+      .catch(() => { /* SAML IdP 列表获取失败时静默处理 */ });
   }, []);
 
   const onFinish = async (values: LoginFormValues) => {
@@ -55,6 +60,16 @@ const LoginPage: React.FC = () => {
       window.location.href = authorize_url;
     } catch {
       message.error(`${label} 登录暂不可用`);
+    }
+  };
+
+  /** 发起 SAML SSO 登录 */
+  const handleSamlLogin = async (idpId: string) => {
+    try {
+      const { redirect_url } = await samlService.login(idpId);
+      window.location.href = redirect_url;
+    } catch {
+      message.error('SAML SSO 登录暂不可用');
     }
   };
 
@@ -115,6 +130,26 @@ const LoginPage: React.FC = () => {
                   </Button>
                 );
               })}
+            </Space>
+          </>
+        )}
+        {samlIdps.length > 0 && (
+          <>
+            {providers.length === 0 && <Divider plain>或</Divider>}
+            <Space direction="vertical" style={{ width: '100%' }} size="middle">
+              {samlIdps.map((idp) => (
+                <Button
+                  key={idp.id}
+                  icon={<SafetyOutlined />}
+                  block
+                  size="large"
+                  style={{ borderColor: '#722ed1', color: '#722ed1' }}
+                  onClick={() => handleSamlLogin(idp.id)}
+                  data-saml-idp={idp.id}
+                >
+                  {idp.name} SSO 登录
+                </Button>
+              ))}
             </Space>
           </>
         )}

@@ -65,6 +65,18 @@ class Settings(BaseSettings):
     oauth_google_client_secret: str = ""
     oauth_google_scope: str = "openid profile email"
 
+    # SAML 2.0 — SP 基础配置
+    saml_enabled: bool = False
+    saml_sp_entity_id: str = ""
+    saml_sp_acs_url: str = ""
+    saml_sp_sls_url: str = ""
+    saml_strict: bool = True
+    saml_debug: bool = False
+    saml_sp_x509_cert: str = ""
+    saml_sp_private_key: str = ""
+    saml_want_name_id: bool = True
+    saml_want_assertions_signed: bool = True
+
     model_config = {"env_prefix": "CKYCLAW_", "env_file": ".env", "extra": "ignore"}
 
 

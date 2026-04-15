@@ -55,9 +55,11 @@ const EnvironmentDetailPage = lazy(() => import('./pages/environments/Environmen
 const I18nSettingsPage = lazy(() => import('./pages/agents/I18nSettingsPage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 const OAuthCallbackPage = lazy(() => import('./pages/oauth/OAuthCallbackPage'));
+const SamlPage = lazy(() => import('./pages/saml/SamlPage'));
+const SamlCallbackPage = lazy(() => import('./pages/saml/SamlCallbackPage'));
 
 const PageLoading = () => (
-  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 300 }}>
+  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 300, background: 'transparent' }}>
     <Spin size="large" />
   </div>
 );
@@ -87,6 +89,7 @@ const App: React.FC = () => {
         <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/oauth/callback/:provider" element={<OAuthCallbackPage />} />
+        <Route path="/saml/callback" element={<SamlCallbackPage />} />
         <Route
           path="/"
           element={
@@ -142,6 +145,7 @@ const App: React.FC = () => {
           <Route path="compliance" element={guarded(<CompliancePage />)} />
           <Route path="benchmark" element={guarded(<BenchmarkPage />)} />
           <Route path="i18n" element={guarded(<I18nSettingsPage />)} />
+          <Route path="saml" element={guarded(<SamlPage />)} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>

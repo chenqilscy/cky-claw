@@ -137,6 +137,7 @@ const menuRoutes = {
         { path: '/audit-logs', name: '审计日志', icon: <FileSearchOutlined /> },
         { path: '/environments', name: '环境管理', icon: <DeploymentUnitOutlined /> },
         { path: '/i18n', name: '国际化设置', icon: <GlobalOutlined /> },
+        { path: '/saml', name: 'SAML SSO', icon: <SafetyCertificateOutlined /> },
       ],
     },
   ],

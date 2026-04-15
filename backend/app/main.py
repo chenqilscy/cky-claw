@@ -24,6 +24,7 @@ from app.api.approvals import router as approvals_router
 from app.api.audit_logs import router as audit_logs_router
 from app.api.auth import router as auth_router
 from app.api.oauth import router as oauth_router
+from app.api.saml import router as saml_router
 from app.api.evaluations import router as evaluations_router
 from app.api.evolution import router as evolution_router
 from app.api.events import router as events_router
@@ -119,6 +120,7 @@ def create_app() -> FastAPI:
             {"name": "system", "description": "健康检查与系统信息"},
             {"name": "auth", "description": "用户认证（登录/注册/JWT）"},
             {"name": "oauth", "description": "第三方 OAuth 登录（GitHub/企微）"},
+            {"name": "saml", "description": "SAML 2.0 SSO 认证与 IdP 配置管理"},
             {"name": "agents", "description": "Agent CRUD 与配置管理"},
             {"name": "agent-versions", "description": "Agent 版本快照与回滚"},
             {"name": "agent-locales", "description": "Agent 多语言配置"},
@@ -183,6 +185,7 @@ def create_app() -> FastAPI:
     app.include_router(health_router)
     app.include_router(auth_router)
     app.include_router(oauth_router)
+    app.include_router(saml_router)
     app.include_router(audit_logs_router)
     app.include_router(agents_router)
     app.include_router(agent_locales_router)
