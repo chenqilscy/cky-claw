@@ -26,8 +26,8 @@ class TestAgentPaginationEdgeCases:
 
     @patch(f"{SVC}.agent_service.list_agents", new_callable=AsyncMock)
     def test_limit_exceeds_max_rejected(self, mock_list: AsyncMock) -> None:
-        """limit=101 超过 le=100 应返回 422。"""
-        resp = client.get("/api/v1/agents?limit=101")
+        """limit=201 超过 le=200 应返回 422。"""
+        resp = client.get("/api/v1/agents?limit=201")
         assert resp.status_code == 422
 
     @patch(f"{SVC}.agent_service.list_agents", new_callable=AsyncMock)

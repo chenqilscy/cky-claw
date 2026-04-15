@@ -46,6 +46,7 @@ def _make_agent_config(**overrides: Any) -> MagicMock:
         "agent_tools": [],
         "provider_name": None,
         "skills": [],
+        "knowledge_bases": [],
         "output_type": None,
         "metadata_": {},
         "prompt_variables": [],
@@ -164,7 +165,7 @@ class TestConcurrentBaseline:
     @patch("app.api.sessions.session_service")
     def test_concurrent_session_create(self, mock_svc: MagicMock) -> None:
         """10 个并发请求同时创建 Session。"""
-        mock_svc.create_session = AsyncMock(side_effect=lambda db, data: _make_session_record())
+        mock_svc.create_session = AsyncMock(side_effect=lambda db, data, **kw: _make_session_record())
 
         client = TestClient(app)
         results: list[int] = []
@@ -468,7 +469,7 @@ class TestOverallBenchmark:
         """混合负载：10 个并发请求（agent list + session create + health）。"""
         agents = [_make_agent_config(name=f"a-{i}") for i in range(5)]
         mock_agent_svc.list_agents = AsyncMock(return_value=(agents, 5))
-        mock_session_svc.create_session = AsyncMock(side_effect=lambda db, data: _make_session_record())
+        mock_session_svc.create_session = AsyncMock(side_effect=lambda db, data, **kw: _make_session_record())
 
         client = TestClient(app)
 

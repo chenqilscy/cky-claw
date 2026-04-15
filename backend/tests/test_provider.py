@@ -615,6 +615,7 @@ class TestAgentProviderNameSchema:
             mcp_servers=[],
             agent_tools=[],
             skills=[],
+            knowledge_bases=[],
             output_type=None,
             metadata_={},
             prompt_variables=[],
