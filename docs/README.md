@@ -24,7 +24,8 @@ docs/
 │   ├── s2-memory-triclass.md                   — S2 记忆三分类设计
 │   ├── F8-Prompt-Editor-Design.md              — F8 Prompt 模板编辑器设计
 │   ├── F12-Environment-Management-Design.md    — F12 多环境管理设计
-│   ├── knowledge-base-graph-design.md          — 知识库图谱方案 + graphify 研究
+│   ├── knowledge-base-graph-design.md          — 知识库图谱方案 v1.0
+│   ├── graphify-knowledge-base-research.md     — graphify 图谱知识库研究报告
 │   ├── tool-group-redesign.md                  — 工具组方案重设计
 │   ├── cost-router-analysis.md                 — 成本路由测试器分析
 │   └── memory-management.md                    — 记忆管理功能文档

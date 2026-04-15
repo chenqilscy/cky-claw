@@ -80,9 +80,9 @@ async def recommend_provider(
     for p in providers:
         try:
             tier_enum = ModelTier(p.model_tier)
-        except ValueError:
-            # 跳过层级值非法的 Provider（数据兼容性保护）
-            continue
+        except (ValueError, TypeError):
+            # model_tier 未设置或值非法时，降级为 moderate 参与路由
+            tier_enum = ModelTier.MODERATE
         candidates.append(ProviderCandidate(
             name=p.name,
             model_tier=tier_enum,

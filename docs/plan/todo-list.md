@@ -1,8 +1,44 @@
 # CkyClaw 待办清单
 
 > 从 `docs/todo.md` 提取的当前可操作待办项。  
-> 已完成项归档于 `docs/todo.md` §六/§七/§八。  
-> 最后更新：2026-04-15
+> 已完成项归档于 `docs/todo.md`。  
+> 最后更新：2026-04-16
+
+---
+
+## 一、未完成功能（Issue 系列）
+
+| # | 问题 | 状态 | 说明 |
+|---|------|:----:|------|
+| 10 | 可视化搭建（Visual Builder）功能不完整 | 🔜 延后 | 交互设计未完成，暂不处理 |
+| 12 | 工具路线决策：弱化 MCP，统一工具体系 | 📋 产品决策 | 需产品讨论后执行 |
+| 14 | 模型厂商：自动同步模型功能 | ✅ 已完成 | "从厂商同步"按钮已在关联模型 Tab 中 |
+| 21 | 工具组整体设计需重新规划 | 📋 产品决策 | spec/tool-group-redesign.md 有方案 |
+| 22 | 成本路由 Provider 关联逻辑 | ✅ 已修复 | 后端默认 moderate，前端提示优化 |
+| 23 | 创建 Agent 步骤拆分 | ✅ 已修复 | 步骤 3 拆分为工具配置 + 编排配置 |
+
+---
+
+## 二、技术债务
+
+| # | 问题 | 优先级 | 说明 |
+|---|------|:------:|------|
+| D3 | 4 个 Framework 集成测试需 LLM Key | ⏭️ 已知 | CI 中 skip，非阻塞 |
+
+---
+
+## 三、文档任务
+
+| # | 文档 | 优先级 | 状态 |
+|---|------|:------:|:----:|
+| 17 | 记忆管理功能文档 | P2 | ✅ [memory-management.md](../spec/memory-management.md) |
+| 27 | graphify 知识库方案研究 | P2 | ✅ [graphify-knowledge-base-research.md](../spec/graphify-knowledge-base-research.md) |
+| 28 | CLI 使用指南 | P2 | ✅ [ckyclaw-cli-guide.md](../ckyclaw-cli-guide.md) |
+| 29 | docs 目录整理 + todo.md 迁移 | P3 | ✅ 本文件已更新 |
+
+---
+
+*迁移自 docs/todo.md · 原文件保留为历史归档*
 
 ---
 

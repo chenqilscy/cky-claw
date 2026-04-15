@@ -1,6 +1,7 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, Input, Button, Tag, Space, Typography, Descriptions, Alert, Select } from 'antd';
-import { SendOutlined, ThunderboltOutlined } from '@ant-design/icons';
+import { SendOutlined, ThunderboltOutlined, SettingOutlined } from '@ant-design/icons';
 import { PageContainer } from '../../components/PageContainer';
 import { useMutation } from '@tanstack/react-query';
 import { costRouterService } from '../../services/costRouterService';
@@ -34,6 +35,7 @@ const CAPABILITY_OPTIONS = [
 ];
 
 const CostRouterPage: React.FC = () => {
+  const navigate = useNavigate();
   const [inputText, setInputText] = useState('');
   const [capabilities, setCapabilities] = useState<string[]>([]);
 
@@ -152,7 +154,23 @@ const CostRouterPage: React.FC = () => {
             <Alert
               type="warning"
               message="无匹配 Provider"
-              description="当前没有启用的 Provider 满足此层级需求。请到「模型厂商」页面添加并启用 Provider。"
+              description={
+                <Space direction="vertical" size={4}>
+                  <span>当前没有启用的 Provider 满足此层级需求。可能原因：</span>
+                  <ul style={{ margin: 0, paddingLeft: 18 }}>
+                    <li>没有已启用的 Provider（请先注册并开启）</li>
+                    <li>所有 Provider 的层级 / 能力不符合筛选条件</li>
+                  </ul>
+                  <Button
+                    size="small"
+                    icon={<SettingOutlined />}
+                    onClick={() => navigate('/providers')}
+                    style={{ marginTop: 4 }}
+                  >
+                    前往模型厂商配置
+                  </Button>
+                </Space>
+              }
               showIcon
             />
           )}

@@ -35,7 +35,8 @@ const RESPONSE_STYLES = [
 const STEP_ITEMS = [
   { title: '基本信息' },
   { title: '模型配置' },
-  { title: '工具与编排' },
+  { title: '工具配置' },
+  { title: '编排配置' },
   { title: '安全与高级' },
 ];
 
@@ -282,7 +283,8 @@ const AgentEditPage: React.FC = () => {
   const stepFields: string[][] = [
     ['name', 'description', 'instructions'],
     ['provider_name', 'model', 'approval_mode', 'response_style'],
-    ['tool_groups', 'handoffs', 'agent_tools', 'mcp_servers', 'skills', 'knowledge_bases'],
+    ['tool_groups', 'mcp_servers', 'skills', 'knowledge_bases'],
+    ['handoffs', 'agent_tools'],
     ['input_guardrails', 'output_guardrails', 'tool_guardrails', 'output_type'],
   ];
 
@@ -447,7 +449,7 @@ const AgentEditPage: React.FC = () => {
               </Form.Item>
             </div>
 
-            {/* ========== 步骤 3：工具与编排 ========== */}
+            {/* ========== 步骤 3：工具配置 ========== */}
             <div style={{ display: currentStep === 2 ? 'block' : 'none' }}>
               <Divider orientation="left">工具配置</Divider>
 
@@ -487,20 +489,29 @@ const AgentEditPage: React.FC = () => {
               >
                 <MultiSelectList options={kbOptions} />
               </Form.Item>
+            </div>
 
-              <Divider orientation="left">编排配置</Divider>
+            {/* ========== 步骤 4：编排配置 ========== */}
+            <div style={{ display: currentStep === 3 ? 'block' : 'none' }}>
+              <Divider orientation="left">Handoff 移交</Divider>
 
-              <Form.Item name="handoffs" label="Handoff 目标">
+              <Form.Item
+                name="handoffs"
+                label="Handoff 目标"
+                tooltip="当 Agent 需要移交任务给其他 Agent 时，列表中的 Agent 可被选择作为目标"
+              >
                 <MultiSelectList
                   options={agentOptions}
                   emptyText="无其他可移交的 Agent"
                 />
               </Form.Item>
 
+              <Divider orientation="left">Agent-as-Tool</Divider>
+
               <Form.Item
                 name="agent_tools"
-                label="Agent-as-Tool（子 Agent 作为工具）"
-                tooltip="将其他 Agent 注册为当前 Agent 可调用的工具"
+                label="子 Agent 作为工具"
+                tooltip="将其他 Agent 注册为当前 Agent 可调用的工具，实现递归编排"
               >
                 <MultiSelectList
                   options={agentOptions}
@@ -509,8 +520,8 @@ const AgentEditPage: React.FC = () => {
               </Form.Item>
             </div>
 
-            {/* ========== 步骤 4：安全与高级 ========== */}
-            <div style={{ display: currentStep === 3 ? 'block' : 'none' }}>
+            {/* ========== 步骤 5：安全与高级 ========== */}
+            <div style={{ display: currentStep === 4 ? 'block' : 'none' }}>
               <Divider orientation="left">
                 <Space>
                   安全护栏
