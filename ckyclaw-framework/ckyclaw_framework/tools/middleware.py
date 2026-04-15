@@ -176,7 +176,7 @@ class ToolMiddlewarePipeline:
             except Exception as e:
                 logger.exception("Middleware '%s' after_execute error: %s", mw.name, e)
 
-        return result
+        return str(result)
 
 
 # ───────────────────────────────── 内置中间件 ─────────────────────────────────
@@ -185,7 +185,7 @@ class ToolMiddlewarePipeline:
 def _args_hash(tool_name: str, arguments: dict[str, Any]) -> str:
     """计算工具调用的确定性哈希。"""
     key = json.dumps({"tool": tool_name, "args": arguments}, sort_keys=True, default=str)
-    return hashlib.sha256(key.encode()).hexdigest()[:16]
+    return str(hashlib.sha256(key.encode()).hexdigest()[:16])
 
 
 class CacheMiddleware(ToolMiddleware):

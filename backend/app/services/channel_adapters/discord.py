@@ -68,7 +68,7 @@ class DiscordAdapter(ChannelAdapter):
 
         try:
             # 尝试使用 PyNaCl 验证签名
-            from nacl.signing import VerifyKey
+            from nacl.signing import VerifyKey  # type: ignore[import-not-found]
             verify_key = VerifyKey(bytes.fromhex(public_key))
             message = timestamp.encode() + body
             verify_key.verify(message, bytes.fromhex(signature))

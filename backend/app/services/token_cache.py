@@ -39,7 +39,7 @@ async def get_or_fetch(
 
     try:
         redis = await get_redis()
-        cached: str | None = await redis.get(full_key)  # type: ignore[assignment]
+        cached: str | None = await redis.get(full_key)
         if cached:
             logger.debug("Token 缓存命中: %s", full_key)
             return cached

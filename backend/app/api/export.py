@@ -6,6 +6,7 @@ import csv
 import io
 import re
 from datetime import datetime
+from collections.abc import Iterator
 from typing import Any
 from uuid import UUID
 
@@ -55,7 +56,7 @@ async def export_token_usage(
         offset=0,
     )
 
-    def generate():
+    def generate() -> Iterator[str]:
         """流式生成 CSV 内容。"""
         buf = io.StringIO()
         writer = csv.writer(buf)
@@ -128,7 +129,7 @@ async def export_runs(
         offset=0,
     )
 
-    def generate():
+    def generate() -> Iterator[str]:
         """流式生成 CSV 内容。"""
         buf = io.StringIO()
         writer = csv.writer(buf)

@@ -91,7 +91,7 @@ async def is_token_blacklisted(token: str) -> bool:
 
     redis = await get_redis()
     key = f"{_TOKEN_BLACKLIST_PREFIX}{token}"
-    return await redis.exists(key) > 0
+    return bool(await redis.exists(key) > 0)
 
 
 async def store_password_reset_token(email: str, token: str) -> None:

@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, WebSocket, WebSock
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.deps import get_current_user, get_db, require_permission
+from app.models.debug_session import DebugSession
 from app.models.user import User
 from app.schemas.debug import (
     DebugActionRequest,
@@ -108,10 +109,10 @@ async def step_debug_session(
     await controller.step()
 
     # 同步状态到数据库
-    session = await _sync_controller_state(db, session_id, controller)
-    if session is None:
+    updated = await _sync_controller_state(db, session_id, controller)
+    if updated is None:
         raise HTTPException(status_code=404, detail="调试会话不存在")
-    return DebugSessionResponse.model_validate(session)
+    return DebugSessionResponse.model_validate(updated)
 
 
 @router.post(
@@ -134,10 +135,10 @@ async def continue_debug_session(
 
     await controller.resume()
 
-    session = await _sync_controller_state(db, session_id, controller)
-    if session is None:
+    updated = await _sync_controller_state(db, session_id, controller)
+    if updated is None:
         raise HTTPException(status_code=404, detail="调试会话不存在")
-    return DebugSessionResponse.model_validate(session)
+    return DebugSessionResponse.model_validate(updated)
 
 
 @router.post(
@@ -254,7 +255,7 @@ async def _sync_controller_state(
     db: AsyncSession,
     session_id: uuid.UUID,
     controller: object,
-) -> object | None:
+) -> DebugSession | None:
     """将 DebugController 的状态同步到数据库。"""
     ctx = getattr(controller, "pause_context", None)
     pause_data = {}
@@ -273,10 +274,13 @@ async def _sync_controller_state(
         current_agent = ctx.agent_name
         token_data = ctx.token_usage
 
+    raw_state = getattr(controller, "state", "idle")
+    state_str = raw_state.value if hasattr(raw_state, "value") else str(raw_state)
+
     return await debug_service.update_session_state(
         db,
         session_id,
-        state=getattr(controller, "state", "idle").value if hasattr(getattr(controller, "state", None), "value") else str(getattr(controller, "state", "idle")),
+        state=state_str,
         current_turn=current_turn,
         current_agent_name=current_agent,
         pause_context=pause_data,

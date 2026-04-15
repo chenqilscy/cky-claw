@@ -43,7 +43,7 @@ def _record_to_entry(record: MemoryEntryRecord) -> MemoryEntry:
     )
 
 
-class SQLAlchemyMemoryBackend(MemoryBackend):
+class SQLAlchemyMemoryBackend(MemoryBackend):  # type: ignore[misc]
     """基于 SQLAlchemy Async 的记忆存储后端。
 
     与 Backend 共享同一个 AsyncSession（同一个连接池），避免额外的连接管理。
@@ -187,7 +187,7 @@ class SQLAlchemyMemoryBackend(MemoryBackend):
         )
         result = await self._db.execute(stmt)
         await self._db.flush()
-        return result.rowcount or 0
+        return result.rowcount or 0  # type: ignore[attr-defined]
 
     async def decay(
         self,
@@ -207,15 +207,15 @@ class SQLAlchemyMemoryBackend(MemoryBackend):
             )
             result = await self._db.execute(stmt)
             await self._db.flush()
-            return result.rowcount or 0
+            return result.rowcount or 0  # type: ignore[attr-defined]
 
         # 指数衰减需逐条计算
         now = datetime.now(timezone.utc)
-        stmt = select(MemoryEntryRecord).where(
+        select_stmt = select(MemoryEntryRecord).where(
             MemoryEntryRecord.updated_at < before,
             MemoryEntryRecord.is_deleted == False,  # noqa: E712
         )
-        rows = (await self._db.execute(stmt)).scalars().all()
+        rows = (await self._db.execute(select_stmt)).scalars().all()
         count = 0
         for record in rows:
             days = (now - record.updated_at).total_seconds() / 86400

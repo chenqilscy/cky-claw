@@ -1216,7 +1216,7 @@ class Runner:
                             response_format=response_format,
                         )
                     else:
-                        response = await provider.chat(
+                        response = await provider.chat(  # type: ignore[assignment]
                             model=model_name,
                             messages=llm_messages,
                             settings=settings,

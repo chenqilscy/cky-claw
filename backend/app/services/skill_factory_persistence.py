@@ -151,7 +151,7 @@ def _register_abc() -> None:
     try:
         _ensure_imports()
         if _SkillPersistence is not None:
-            _SkillPersistence.register(PostgresSkillPersistence)  # type: ignore[arg-type]
+            _SkillPersistence.register(PostgresSkillPersistence)  # type: ignore[attr-defined]
     except ImportError:
         pass
 

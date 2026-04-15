@@ -49,7 +49,7 @@ class TelegramAdapter(ChannelAdapter):
             headers.get("X-Telegram-Bot-Api-Secret-Token", "")
             or headers.get("x-telegram-bot-api-secret-token", "")
         )
-        return request_token == secret_token
+        return bool(request_token == secret_token)
 
     def parse_message(
         self, body: bytes, app_config: dict[str, Any]

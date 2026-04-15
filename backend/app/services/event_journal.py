@@ -15,7 +15,7 @@ from ckyclaw_framework.events.types import EventType
 logger = logging.getLogger(__name__)
 
 
-class SQLAlchemyEventJournal(EventJournal):
+class SQLAlchemyEventJournal(EventJournal):  # type: ignore[misc]
     """基于 SQLAlchemy 的事件日志实现。
 
     将 EventEntry 持久化到 PostgreSQL events 表。

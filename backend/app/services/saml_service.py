@@ -222,6 +222,7 @@ async def create_authn_request(
         raise ValidationError("SAML SP 未配置")
 
     # 获取 IdP 配置
+    idp: SamlIdpConfig | None = None
     if idp_id is not None:
         idp = await get_idp_config(db, idp_id)
         if not idp.is_enabled:
@@ -230,6 +231,7 @@ async def create_authn_request(
         idp = await get_default_idp(db)
         if idp is None:
             raise NotFoundError("无可用的 SAML IdP 配置")
+    assert idp is not None
 
     # 生成 AuthnRequest
     request_id = f"_ckyclaw_{secrets.token_hex(16)}"

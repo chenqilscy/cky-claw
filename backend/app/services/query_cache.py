@@ -42,7 +42,7 @@ async def get_or_fetch(
 
     try:
         redis = await get_redis()
-        cached: str | None = await redis.get(full_key)  # type: ignore[assignment]
+        cached: str | None = await redis.get(full_key)
         if cached is not None:
             logger.debug("Query cache hit: %s", full_key)
             return json.loads(cached)

@@ -375,9 +375,9 @@ def _convert_agent_from_dict(d: dict[str, Any], cache: dict[str, Agent]) -> Agen
         model=model,
         model_settings=model_settings,
         tools=tools,
-        handoffs=handoffs,
-        input_guardrails=input_guardrails,
-        output_guardrails=output_guardrails,
+        handoffs=list(handoffs),
+        input_guardrails=list(input_guardrails),  # type: ignore[arg-type]
+        output_guardrails=list(output_guardrails),  # type: ignore[arg-type]
         output_type=output_type,
     )
 
@@ -421,9 +421,9 @@ def _convert_agent_from_object(obj: Any, cache: dict[str, Agent]) -> Agent:
         model=model,
         model_settings=model_settings,
         tools=tools,
-        handoffs=handoffs,
-        input_guardrails=input_guardrails,
-        output_guardrails=output_guardrails,
+        handoffs=list(handoffs),
+        input_guardrails=list(input_guardrails),  # type: ignore[arg-type]
+        output_guardrails=list(output_guardrails),  # type: ignore[arg-type]
         output_type=output_type,
     )
 

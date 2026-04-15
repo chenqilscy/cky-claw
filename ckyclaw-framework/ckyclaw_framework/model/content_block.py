@@ -132,7 +132,7 @@ class FileContent:
 ContentBlock = Union[TextContent, ImageContent, AudioContent, FileContent]
 
 # 类型 tag → 类 的映射
-_CONTENT_BLOCK_MAP: dict[str, type] = {
+_CONTENT_BLOCK_MAP: dict[str, type[TextContent | ImageContent | AudioContent | FileContent]] = {
     "text": TextContent,
     "image": ImageContent,
     "audio": AudioContent,

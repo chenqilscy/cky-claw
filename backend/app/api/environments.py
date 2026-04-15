@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import uuid
+
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -27,7 +29,7 @@ router = APIRouter(prefix="/api/v1/environments", tags=["environments"])
 @router.get("", response_model=EnvironmentListResponse, dependencies=[Depends(require_permission("environments", "read"))])
 async def list_environments(
     db: AsyncSession = Depends(get_db),
-    org_id = Depends(get_org_id),
+    org_id: uuid.UUID | None = Depends(get_org_id),
 ) -> EnvironmentListResponse:
     """获取环境列表。"""
     rows = await environment_service.list_environments(db, org_id)
@@ -38,7 +40,7 @@ async def list_environments(
 async def create_environment(
     body: EnvironmentCreate,
     db: AsyncSession = Depends(get_db),
-    org_id = Depends(get_org_id),
+    org_id: uuid.UUID | None = Depends(get_org_id),
 ) -> EnvironmentResponse:
     """创建环境。"""
     row = await environment_service.create_environment(db, body, org_id)
@@ -55,7 +57,7 @@ async def diff_environments(
     env1: str = Query(...),
     env2: str = Query(...),
     db: AsyncSession = Depends(get_db),
-    org_id = Depends(get_org_id),
+    org_id: uuid.UUID | None = Depends(get_org_id),
 ) -> EnvironmentDiffResponse:
     """对比两个环境中同一 Agent 的发布版本快照。"""
     snap1, snap2 = await environment_service.diff_environments(db, agent, env1, env2, org_id)
@@ -72,7 +74,7 @@ async def diff_environments(
 async def get_environment(
     env_name: str,
     db: AsyncSession = Depends(get_db),
-    org_id = Depends(get_org_id),
+    org_id: uuid.UUID | None = Depends(get_org_id),
 ) -> EnvironmentResponse:
     """获取环境详情。"""
     row = await environment_service.get_environment_by_name(db, env_name, org_id)
@@ -84,7 +86,7 @@ async def update_environment(
     env_name: str,
     body: EnvironmentUpdate,
     db: AsyncSession = Depends(get_db),
-    org_id = Depends(get_org_id),
+    org_id: uuid.UUID | None = Depends(get_org_id),
 ) -> EnvironmentResponse:
     """更新环境。"""
     row = await environment_service.update_environment(db, env_name, body, org_id)
@@ -95,7 +97,7 @@ async def update_environment(
 async def delete_environment(
     env_name: str,
     db: AsyncSession = Depends(get_db),
-    org_id = Depends(get_org_id),
+    org_id: uuid.UUID | None = Depends(get_org_id),
 ) -> dict[str, str]:
     """删除环境。"""
     await environment_service.delete_environment(db, env_name, org_id)
@@ -113,7 +115,7 @@ async def publish_agent(
     body: PublishRequest,
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
-    org_id = Depends(get_org_id),
+    org_id: uuid.UUID | None = Depends(get_org_id),
 ) -> BindingResponse:
     """发布 Agent 到目标环境。"""
     row = await environment_service.publish_agent(
@@ -139,7 +141,7 @@ async def rollback_agent(
     body: RollbackRequest,
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
-    org_id = Depends(get_org_id),
+    org_id: uuid.UUID | None = Depends(get_org_id),
 ) -> BindingResponse:
     """回滚目标环境中的 Agent。"""
     row = await environment_service.rollback_agent(
@@ -162,7 +164,7 @@ async def rollback_agent(
 async def list_environment_agents(
     env_name: str,
     db: AsyncSession = Depends(get_db),
-    org_id = Depends(get_org_id),
+    org_id: uuid.UUID | None = Depends(get_org_id),
 ) -> EnvironmentAgentsResponse:
     """获取环境内已发布 Agent 列表。"""
     rows = await environment_service.list_environment_agents(db, env_name, org_id)

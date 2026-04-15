@@ -57,7 +57,7 @@ def validate_prompt(
 
 def extract_prompt_variables(instructions: str) -> list[str]:
     """提取模板中引用的所有变量名。"""
-    return extract_variables(instructions)
+    return list(extract_variables(instructions))
 
 
 def _parse_definitions(raw: list[dict[str, Any]]) -> list[TemplateVariable]:

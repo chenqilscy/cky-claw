@@ -770,7 +770,7 @@ def _ensure_model_prefix(model: str | None, provider_type: str | None) -> str | 
 async def _resolve_provider(
     db: AsyncSession,
     agent_config: AgentConfig,
-) -> tuple[dict[str, str | None], str | None]:
+) -> tuple[dict[str, str | dict[str, str] | None], str | None]:
     """从 AgentConfig.provider_name 加载 ProviderConfig，返回 LiteLLMProvider 构造参数。
 
     Returns:

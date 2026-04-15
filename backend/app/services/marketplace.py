@@ -46,7 +46,7 @@ async def list_marketplace(
     }
     order = order_map.get(sort_by, AgentTemplate.downloads.desc())
     rows = (
-        await db.execute(base.order_by(order).offset(offset).limit(limit))
+        await db.execute(base.order_by(order).offset(offset).limit(limit))  # type: ignore[arg-type]
     ).scalars().all()
     return list(rows), total
 

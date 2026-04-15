@@ -84,7 +84,7 @@ def instrument_fastapi(app: object) -> None:
     try:
         from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 
-        FastAPIInstrumentor.instrument_app(app)
+        FastAPIInstrumentor.instrument_app(app)  # type: ignore[arg-type]
         logger.info("FastAPI OTel instrumentation enabled")
     except ImportError:
         logger.debug("opentelemetry-instrumentation-fastapi not installed, skipping")

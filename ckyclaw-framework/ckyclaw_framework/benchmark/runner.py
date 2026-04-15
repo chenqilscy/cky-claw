@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import time
+from collections.abc import Coroutine
 from dataclasses import dataclass, field
 from typing import Any, Callable
 
@@ -22,7 +23,7 @@ logger = logging.getLogger(__name__)
 # 评分函数类型：(case, actual_output, actual_tool_calls) → dict[EvalDimension, float]
 ScorerFn = Callable[
     [BenchmarkCase, str, list[str]],
-    "asyncio.coroutines._CoroutineGenericAlias[dict[EvalDimension, float]]",
+    Coroutine[Any, Any, dict[EvalDimension, float]],
 ]
 
 

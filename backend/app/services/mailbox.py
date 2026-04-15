@@ -59,7 +59,7 @@ async def mark_read(db: AsyncSession, message_id: uuid.UUID) -> None:
         .values(is_read=True)
     )
     result = await db.execute(stmt)
-    if result.rowcount == 0:
+    if result.rowcount == 0:  # type: ignore[attr-defined]
         raise NotFoundError(f"消息 '{message_id}' 不存在")
     await db.flush()
 
@@ -91,4 +91,4 @@ async def delete_run_messages(db: AsyncSession, run_id: str) -> int:
     stmt = delete(MailboxRecord).where(MailboxRecord.run_id == run_id)
     result = await db.execute(stmt)
     await db.flush()
-    return result.rowcount
+    return int(result.rowcount)  # type: ignore[attr-defined]

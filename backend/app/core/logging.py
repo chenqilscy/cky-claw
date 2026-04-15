@@ -31,7 +31,7 @@ class _RequestIDFilter(logging.Filter):
 
     def filter(self, record: logging.LogRecord) -> bool:
         from app.core.middleware import request_id_var
-        record.request_id = request_id_var.get("-")  # type: ignore[attr-defined]
+        record.request_id = request_id_var.get("-")
         return True
 
 
