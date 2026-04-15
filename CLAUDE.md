@@ -77,6 +77,7 @@ npx tsc --noEmit                        # 类型检查
 - **`session/`** — 多轮对话：`Session` + `SessionBackend`（内存 / PostgreSQL），`HistoryTrimmer` 支持按 token 预算或消息数裁剪。
 - **`tracing/`** — 可观测性：`Trace` 包含 `Span`（AGENT / LLM / TOOL / GUARDRAIL / HANDOFF），`TraceProcessor` 抽象sink。
 - **`mcp/`** — Model Context Protocol 集成。
+- **`compat/`** — OpenAI Agents SDK 兼容层：`from_openai_agent/tool/handoff/guardrail` + `SdkAgentAdapter`，将 SDK 定义转换为 CkyClaw 原生对象。
 
 ### backend — 分层架构
 
