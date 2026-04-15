@@ -7,6 +7,7 @@ import type { MenuProps } from 'antd';
 import {
   SaveOutlined, PlusOutlined, CopyOutlined, RocketOutlined,
   ToolOutlined, SafetyCertificateOutlined, SwapOutlined, CloudServerOutlined,
+  DownloadOutlined,
 } from '@ant-design/icons';
 import {
   ReactFlow,
@@ -26,6 +27,8 @@ import type { AgentConfig } from '../../services/agentService';
 import { toolGroupService } from '../../services/toolGroupService';
 import { guardrailService } from '../../services/guardrailService';
 import { mcpServerService } from '../../services/mcpServerService';
+import { providerService } from '../../services/providerService';
+import type { ProviderResponse } from '../../services/providerService';
 
 const { Text } = Typography;
 
@@ -63,12 +66,17 @@ const VisualBuilderPage: React.FC = () => {
   const [guardrailItems, setGuardrailItems] = useState<{ name: string; mode: string; type: string }[]>([]);
   const [mcpItems, setMcpItems] = useState<{ name: string; transport_type: string }[]>([]);
   const [agentItems, setAgentItems] = useState<{ name: string; description: string }[]>([]);
+  const [providerOptions, setProviderOptions] = useState<{ label: string; value: string }[]>([]);
+  const [loadingAgent, setLoadingAgent] = useState(false);
 
   useEffect(() => {
     toolGroupService.list().then((r) => setToolGroupItems(r.data.filter((g) => g.is_enabled))).catch(() => {});
     guardrailService.list({ enabled_only: true, limit: 200 }).then((r) => setGuardrailItems(r.data)).catch(() => {});
     mcpServerService.list({ limit: 200 }).then((r) => setMcpItems(r.data)).catch(() => {});
     agentService.list({ limit: 100 }).then((r) => setAgentItems(r.data.map((a: AgentConfig) => ({ name: a.name, description: a.description })))).catch(() => {});
+    providerService.list({ is_enabled: true, limit: 100 })
+      .then((r) => setProviderOptions(r.data.map((p: ProviderResponse) => ({ label: `${p.name} (${p.provider_type})`, value: p.name }))))
+      .catch(() => {});
   }, []);
 
   const onConnect = (params: Connection) => {
@@ -89,6 +97,65 @@ const VisualBuilderPage: React.FC = () => {
     };
     setNodes((prev) => [...prev, next]);
   }, [nodes, setNodes]);
+
+  /**
+   * 从已有 Agent 加载画布（JSON → Canvas）。
+   * 将 Agent 的 tool_groups / mcp_servers / handoffs / guardrails 转化为节点并自动连线。
+   */
+  const handleLoadAgent = useCallback(async (agentName: string) => {
+    setLoadingAgent(true);
+    try {
+      const agent: AgentConfig = await agentService.get(agentName);
+      const s = NODE_STYLES.agent;
+      const agentNode: Node = {
+        id: 'agent',
+        position: { x: 360, y: 200 },
+        data: { label: `🤖 ${agent.name}` },
+        type: 'default',
+        style: { background: s.bg, border: `2px solid ${s.color}`, borderRadius: 8, fontWeight: 600 },
+      };
+      const newNodes: Node[] = [agentNode];
+      const newEdges: Edge[] = [];
+
+      const addGroup = (items: string[], kind: string, offsetX: number) => {
+        const st = NODE_STYLES[kind] ?? NODE_STYLES.tool;
+        items.forEach((name, i) => {
+          const id = `${kind}-loaded-${i}`;
+          newNodes.push({
+            id,
+            data: { label: `${st.icon} ${name}` },
+            position: { x: offsetX, y: 40 + i * 100 },
+            type: 'default',
+            style: { background: st.bg, border: `2px solid ${st.color}`, borderRadius: 8, fontWeight: 500 },
+          });
+          newEdges.push({ id: `e-${id}`, source: id, target: 'agent', animated: true });
+        });
+      };
+
+      addGroup(agent.tool_groups ?? [], 'tool', 80);
+      addGroup(agent.mcp_servers ?? [], 'mcp', 320);
+      addGroup(agent.handoffs ?? [], 'handoff', 580);
+      const inputGuardrails = agent.guardrails?.input ?? [];
+      addGroup(inputGuardrails, 'guardrail', 800);
+
+      setNodes(newNodes);
+      setEdges(newEdges);
+
+      // 预填保存表单
+      saveForm.setFieldsValue({
+        name: '',
+        description: agent.description || '',
+        instructions: agent.instructions || '',
+        provider_name: agent.provider_name || undefined,
+        model: agent.model || '',
+      });
+      message.success(`已加载 Agent「${agentName}」到画布`);
+    } catch {
+      message.error('加载 Agent 失败');
+    } finally {
+      setLoadingAgent(false);
+    }
+  }, [setNodes, setEdges, saveForm, message]);
 
   /* ---- 下拉菜单构建 ---- */
   const toolMenu: MenuProps['items'] = [
@@ -123,16 +190,21 @@ const VisualBuilderPage: React.FC = () => {
     const guardrails = nodes.filter((n) => nodeKind(n.id) === 'guardrail').map(cleanLabel);
     const handoffs = nodes.filter((n) => nodeKind(n.id) === 'handoff').map(cleanLabel);
     const mcpServers = nodes.filter((n) => nodeKind(n.id) === 'mcp').map(cleanLabel);
+    const instructions = (saveForm.getFieldValue('instructions') as string) || '由 Visual Builder 生成';
+    const model = (saveForm.getFieldValue('model') as string) || 'openai/glm-4-flash';
+    const providerName = (saveForm.getFieldValue('provider_name') as string) || null;
 
     return {
-      instructions: '由 Visual Builder 生成',
+      instructions,
+      model,
+      provider_name: providerName,
       tool_groups: tools,
       guardrails: { input: guardrails, output: [], tool: [] },
       handoffs,
       mcp_servers: mcpServers,
       links: edges.map((e) => ({ from: e.source, to: e.target })),
     };
-  }, [edges, nodes]);
+  }, [edges, nodes, saveForm]);
 
   /* ---- 复制 JSON ---- */
   const handleCopy = useCallback(async () => {
@@ -172,6 +244,24 @@ const VisualBuilderPage: React.FC = () => {
 
   return (
     <Space direction="vertical" size={16} style={{ width: '100%' }}>
+      {/* ---- 加载已有 Agent（JSON → Canvas） ---- */}
+      <Card size="small">
+        <Space wrap>
+          <Select
+            showSearch
+            placeholder="选择已有 Agent 加载到画布..."
+            style={{ minWidth: 260 }}
+            options={agentItems.map((a) => ({ label: a.name, value: a.name }))}
+            loading={loadingAgent}
+            allowClear
+            onSelect={(val: string) => handleLoadAgent(val)}
+            filterOption={(input, option) => String(option?.label ?? '').toLowerCase().includes(input.toLowerCase())}
+          />
+          <Button icon={<DownloadOutlined />} loading={loadingAgent} disabled>
+            从 Agent 加载
+          </Button>
+        </Space>
+      </Card>
       <Card>
         <Space wrap>
           <Dropdown menu={{ items: toolMenu }} trigger={['click']}>
@@ -231,6 +321,7 @@ const VisualBuilderPage: React.FC = () => {
         confirmLoading={saving}
         okText="创建"
         destroyOnClose
+        width={600}
       >
         <Form form={saveForm} layout="vertical">
           <Form.Item
@@ -245,6 +336,15 @@ const VisualBuilderPage: React.FC = () => {
           </Form.Item>
           <Form.Item name="description" label="描述">
             <Input.TextArea rows={2} placeholder="Agent 功能描述（可选）" />
+          </Form.Item>
+          <Form.Item name="instructions" label="系统指令">
+            <Input.TextArea rows={3} placeholder="Agent 的角色和行为指令" />
+          </Form.Item>
+          <Form.Item name="provider_name" label="模型厂商">
+            <Select options={providerOptions} allowClear placeholder="选择厂商（可选）" />
+          </Form.Item>
+          <Form.Item name="model" label="模型标识">
+            <Input placeholder="如 openai/glm-4-flash，留空使用默认" />
           </Form.Item>
         </Form>
       </Modal>
