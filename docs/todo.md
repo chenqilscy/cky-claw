@@ -50,7 +50,7 @@
 | F1 | 全链路启动验证 | ✅ | 25/25 API 验证通过 |
 | F2 | **Kubernetes 部署** | ✅ | Helm Chart（deploy/helm/ckyclaw）+ 3 环境 overlay + HPA + PDB + Ingress |
 | F3 | 日志聚合 | ✅ | Promtail→Loki + request_id + AlertRule |
-| F4 | **Agents SDK 兼容层** | ❌ | OpenAI Agents SDK 适配器（优先级最低） |
+| F4 | **Agents SDK 兼容层** | ✅ | compat 模块：from_openai_agent/tool/handoff/guardrail + SdkAgentAdapter + 52 测试 |
 | F5 | 流式输出端到端优化 | ✅ | RAF 批处理 + tool_call/handoff UI |
 | F6 | Agent 自动评估 Pipeline | ✅ | LLM-as-Judge 7 维评分 |
 | F7 | Agent 调试器 | ✅ | DebugController + 3 检查点 + WebSocket |
@@ -60,7 +60,7 @@
 | F11 | 数据导出/报表 | ✅ | CSV 流式导出 + 注入防护 |
 | F12 | 多环境管理 | ✅ | 环境 CRUD + 绑定 + 发布 + Diff + Runner 环境感知 |
 
-**完成率：11/12（91.7%）。剩余 1 项：F4。**
+**完成率：12/12（100%）。F 系列全部完成。**
 
 ### 3.2 各项详细分析
 
@@ -82,18 +82,20 @@
 
 **前置条件**：Docker 镜像已有 Dockerfile，docker-compose 已就绪。
 
-#### F4: Agents SDK 兼容层（P3 — 最低优先级）
+#### F4: Agents SDK 兼容层（✅ 已完成）
 
-**优先级**：P3（锦上添花，除非有客户显式要求）
+**优先级**：P3
 
 **交付物**：
-- [ ] Adapter 类：SDK Agent → CkyClaw Agent 映射
-- [ ] 工具转换：SDK function schema → FunctionTool
-- [ ] Handoff 映射：SDK transfer → CkyClaw Handoff
-- [ ] Runner 桥接：SDK Runner → CkyClaw Runner
-- [ ] 兼容性测试（SDK 示例直接运行）
-
-**风险**：OpenAI SDK 频繁迭代，维护成本高。
+- [x] `ckyclaw_framework/compat/adapter.py` — 541 行适配器实现
+- [x] `from_openai_agent()` — SDK Agent dict/对象 → CkyClaw Agent（递归转换 + 循环引用防护）
+- [x] `from_openai_tool()` — SDK FunctionTool → CkyClaw FunctionTool（签名自动适配）
+- [x] `from_openai_handoff()` — SDK Handoff → CkyClaw Handoff（递归 Agent 解析）
+- [x] `from_openai_guardrail()` — SDK Guardrail → CkyClaw InputGuardrail/OutputGuardrail
+- [x] `SdkAgentAdapter` — 高级适配器类（批量转换 + 直接运行）
+- [x] `ModelSettings` 转换（含 max_output_tokens → max_tokens 兼容）
+- [x] 52 个单元测试（test_compat.py）
+- [x] Framework 主包 `__init__.py` 导出
 
 #### F10: SSO SAML 2.0（✅ 已完成）
 
@@ -223,9 +225,9 @@ Boss 要求重点分析 Hermes 的多终端架构：
 |:----:|------|:------:|------|
 | 1 | ~~F2 Kubernetes 部署~~ | ✅ | Helm Chart 已完成 |
 | 2 | ~~F10 SSO SAML 2.0~~ | ✅ | SAML SP + 多 IdP + 前后端集成 |
-| 3 | F4 Agents SDK 兼容层 | P3 | 无客户显式需求，维护成本高 |
+| 3 | ~~F4 Agents SDK 兼容层~~ | ✅ | compat 模块 + SdkAgentAdapter + 52 测试 |
 
-> 2026-04-16 更新：F2、F10 已完成。仅剩 F4（P3，暂不处理）。
+> 2026-04-16 更新：F 系列 12/12 全部完成。
 
 ---
 
