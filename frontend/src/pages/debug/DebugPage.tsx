@@ -85,7 +85,7 @@ const DebugPage: React.FC = () => {
   const fetchAgents = useCallback(async () => {
     setAgentsLoading(true);
     try {
-      const res = await agentService.list({ limit: 200 });
+      const res = await agentService.list({ limit: 100 });
       setAgents(res.items);
     } catch {
       message.error('加载 Agent 列表失败');

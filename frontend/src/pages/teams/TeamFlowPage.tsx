@@ -217,7 +217,7 @@ const TeamFlowPage: React.FC = () => {
     try {
       const [teamData, agentResp] = await Promise.all([
         getTeam(teamId),
-        agentService.list({ limit: 200 }),
+        agentService.list({ limit: 100 }),
       ]);
       setTeam(teamData);
       setAgents(agentResp.data);

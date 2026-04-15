@@ -1,0 +1,131 @@
+
+Running 28 tests using 1 worker
+
+  鉁?  1 [setup] 鈥?e2e\auth.setup.ts:10:1 鈥?authenticate (15.4s)
+  鉁?  2 [deep-interaction] 鈥?e2e\deep-interaction.spec.ts:34:3 鈥?Agent 涓夋楠ゅ垱寤?鈥?姝ラ 1 鈥?鍩烘湰淇℃伅琛ㄥ崟鏍￠獙 (18.5s)
+  鉁?  3 [deep-interaction] 鈥?e2e\deep-interaction.spec.ts:56:3 鈥?Agent 涓夋楠ゅ垱寤?鈥?姝ラ 1 鈫?2 鈥?濉啓鍩烘湰淇℃伅骞跺墠杩?(13.9s)
+  鉁?  4 [deep-interaction] 鈥?e2e\deep-interaction.spec.ts:86:3 鈥?Agent 涓夋楠ゅ垱寤?鈥?姝ラ 2 鈥?Provider/Model 绾ц仈涓嬫媺 (15.3s)
+  鉁?  5 [deep-interaction] 鈥?e2e\deep-interaction.spec.ts:132:3 鈥?Agent 涓夋楠ゅ垱寤?鈥?姝ラ瀵艰埅 鈥?涓婁竴姝?涓嬩竴姝ュ垏鎹?(12.4s)
+  鉁?  6 [deep-interaction] 鈥?e2e\deep-interaction.spec.ts:162:3 鈥?Agent 涓夋楠ゅ垱寤?鈥?姝ラ 3 鈥?瀹夊叏涓庨珮绾ч〉娓叉煋 (25.7s)
+  鉁?  7 [deep-interaction] 鈥?e2e\deep-interaction.spec.ts:191:3 鈥?Agent 涓夋楠ゅ垱寤?鈥?瀹屾暣涓夋鍒涘缓 Agent (24.7s)
+  鉁?  8 [deep-interaction] 鈥?e2e\deep-interaction.spec.ts:275:3 鈥?Provider 娣卞害浜や簰 鈥?Provider 璇︽儏椤?鈥?妯″瀷鏍囩灞曠ず (13.8s)
+  鉁?  9 [deep-interaction] 鈥?e2e\deep-interaction.spec.ts:295:3 鈥?Provider 娣卞害浜や簰 鈥?Provider 缂栬緫椤?鈥?娴嬭瘯杩炴帴鎸夐挳 (10.9s)
+  鉁? 10 [deep-interaction] 鈥?e2e\deep-interaction.spec.ts:317:3 鈥?Provider 娣卞害浜や簰 鈥?Provider 鍒涘缓 鈥?琛ㄥ崟鏍￠獙 (8.8s)
+  鉁? 11 [deep-interaction] 鈥?e2e\deep-interaction.spec.ts:338:3 鈥?Chat 娣卞害浜や簰 鈥?鏂板缓浼氳瘽 (8.8s)
+  鉁? 12 [deep-interaction] 鈥?e2e\deep-interaction.spec.ts:355:3 鈥?Chat 娣卞害浜や簰 鈥?鍙戦€佹秷鎭?鈥?杈撳叆骞舵彁浜?(9.4s)
+  鉁? 13 [deep-interaction] 鈥?e2e\deep-interaction.spec.ts:403:3 鈥?Chat 娣卞害浜や簰 鈥?Agent 閫夋嫨鍣ㄥ垏鎹?(9.1s)
+  鉁? 14 [deep-interaction] 鈥?e2e\deep-interaction.spec.ts:428:3 鈥?渚ц竟鏍忚彍鍗曟繁搴︿氦浜?鈥?鑿滃崟鍒嗙粍灞曞紑/鎶樺彔 (9.6s)
+  鉁? 15 [deep-interaction] 鈥?e2e\deep-interaction.spec.ts:448:3 鈥?渚ц竟鏍忚彍鍗曟繁搴︿氦浜?鈥?鑿滃崟瀵艰埅璺宠浆 (9.9s)
+  鉁? 16 [deep-interaction] 鈥?e2e\deep-interaction.spec.ts:467:3 鈥?渚ц竟鏍忚彍鍗曟繁搴︿氦浜?鈥?渚ц竟鏍忔姌鍙?灞曞紑 (8.7s)
+  鉁? 17 [deep-interaction] 鈥?e2e\deep-interaction.spec.ts:493:3 鈥?鐜绠＄悊 鈥?鐜鍒楄〃娓叉煋 (8.4s)
+  鉁? 18 [deep-interaction] 鈥?e2e\deep-interaction.spec.ts:501:3 鈥?鐜绠＄悊 鈥?鍙充笂瑙掔幆澧冮€夋嫨鍣?鈥?涓嬫媺閫夐」 (8.6s)
+  鉁? 19 [deep-interaction] 鈥?e2e\deep-interaction.spec.ts:530:3 鈥?鐭ヨ瘑搴?鈥?鐭ヨ瘑搴撳垪琛?鈥?鍒涘缓鎸夐挳鍙 (10.8s)
+  鉁? 20 [deep-interaction] 鈥?e2e\deep-interaction.spec.ts:549:3 鈥?鍚堣闈㈡澘娣卞害 鈥?鍚堣浠〃鐩?鈥?缁熻鍗＄墖 (9.9s)
+  鉁? 21 [deep-interaction] 鈥?e2e\deep-interaction.spec.ts:563:3 鈥?Guardrails CRUD 鈥?鍒涘缓鎶ゆ爮 鈥?琛ㄥ崟鍙闂?(12.7s)
+  鉁? 22 [deep-interaction] 鈥?e2e\deep-interaction.spec.ts:584:3 鈥?Tool Groups 鈥?宸ュ叿缁勫垪琛ㄦ覆鏌?(16.8s)
+  鉁? 23 [deep-interaction] 鈥?e2e\deep-interaction.spec.ts:598:3 鈥?鍝嶅簲寮忓竷灞€ 鈥?绉诲姩绔鍙?鈥?渚ц竟鏍忚嚜鍔ㄩ殣钘?(8.1s)
+  鉁? 24 [deep-interaction] 鈥?e2e\deep-interaction.spec.ts:611:3 鈥?鍝嶅簲寮忓竷灞€ 鈥?骞虫澘瑙嗗彛 鈥?椤甸潰姝ｅ父娓叉煋 (9.6s)
+  鉁? 25 [deep-interaction] 鈥?e2e\deep-interaction.spec.ts:620:3 鈥?鍝嶅簲寮忓竷灞€ 鈥?瀹藉睆瑙嗗彛 鈥?渚ц竟鏍忓睍寮€ (10.8s)
+  鉁? 26 [deep-interaction] 鈥?e2e\deep-interaction.spec.ts:636:3 鈥?A2A 鍗忚 鈥?A2A 椤甸潰娓叉煋 + 鍗＄墖鍒楄〃 (11.1s)
+  鉁? 27 [deep-interaction] 鈥?e2e\deep-interaction.spec.ts:650:3 鈥?閿欒澶勭悊 鈥?404 璺敱 鈥?涓嶇櫧灞?(10.1s)
+  鉁? 28 [deep-interaction] 鈥?e2e\deep-interaction.spec.ts:665:3 鈥?閿欒澶勭悊 鈥?杩囨湡 Token 澶勭悊 (10.7s)
+
+
+  1) [deep-interaction] 鈥?e2e\deep-interaction.spec.ts:162:3 鈥?Agent 涓夋楠ゅ垱寤?鈥?姝ラ 3 鈥?瀹夊叏涓庨珮绾ч〉娓叉煋 鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: locator('button').filter({ hasText: /鍒涘缓|淇濆瓨|鎻愪氦/ }).first()
+    Expected: visible
+    Timeout: 10000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 10000ms[22m
+    [2m  - waiting for locator('button').filter({ hasText: /鍒涘缓|淇濆瓨|鎻愪氦/ }).first()[22m
+
+
+      182 |     // 搴旀湁鍒涘缓/淇濆瓨鎸夐挳锛堟寜閽彲鑳戒娇鐢?htmlType="submit" 鎴?type="primary"锛?      183 |     const createBtn = page.locator('button').filter({ hasText: /鍒涘缓|淇濆瓨|鎻愪氦/ });
+    > 184 |     await expect(createBtn.first()).toBeVisible({ timeout: 10_000 });
+          |                                     ^
+      185 |
+      186 |     // 涓嶅簲鏈?涓嬩竴姝?鎸夐挳鍦ㄥ綋鍓嶅彲瑙佸尯鍩?      187 |     const nextBtnVisible = page.locator('button:visible').filter({ hasText: '涓嬩竴姝? });
+        at E:\QP\maf\frontend\e2e\deep-interaction.spec.ts:184:37
+
+    attachment #1: screenshot (image/png) 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+    test-results\deep-interaction-Agent-涓夋楠ゅ垱寤?姝ラ-3-鈥?瀹夊叏涓庨珮绾ч〉娓叉煋-deep-interaction\test-failed-1.png
+    鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+
+    attachment #2: video (video/webm) 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+    test-results\deep-interaction-Agent-涓夋楠ゅ垱寤?姝ラ-3-鈥?瀹夊叏涓庨珮绾ч〉娓叉煋-deep-interaction\video.webm
+    鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+
+    Error Context: test-results\deep-interaction-Agent-涓夋楠ゅ垱寤?姝ラ-3-鈥?瀹夊叏涓庨珮绾ч〉娓叉煋-deep-interaction\error-context.md
+
+  2) [deep-interaction] 鈥?e2e\deep-interaction.spec.ts:191:3 鈥?Agent 涓夋楠ゅ垱寤?鈥?瀹屾暣涓夋鍒涘缓 Agent 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: locator('button').filter({ hasText: /鍒涘缓|淇濆瓨|鎻愪氦/ }).first()
+    Expected: visible
+    Timeout: 10000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 10000ms[22m
+    [2m  - waiting for locator('button').filter({ hasText: /鍒涘缓|淇濆瓨|鎻愪氦/ }).first()[22m
+
+
+      231 |     await page.waitForTimeout(1000);
+      232 |     const createBtn = page.locator('button').filter({ hasText: /鍒涘缓|淇濆瓨|鎻愪氦/ }).first();
+    > 233 |     await expect(createBtn).toBeVisible({ timeout: 10_000 });
+          |                             ^
+      234 |     await createBtn.click();
+      235 |
+      236 |     // 搴旇烦杞洖鍒楄〃鎴栨樉绀烘垚鍔?        at E:\QP\maf\frontend\e2e\deep-interaction.spec.ts:233:29
+
+    attachment #1: screenshot (image/png) 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+    test-results\deep-interaction-Agent-涓夋楠ゅ垱寤?瀹屾暣涓夋鍒涘缓-Agent-deep-interaction\test-failed-1.png
+    鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+
+    attachment #2: video (video/webm) 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+    test-results\deep-interaction-Agent-涓夋楠ゅ垱寤?瀹屾暣涓夋鍒涘缓-Agent-deep-interaction\video.webm
+    鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+
+    Error Context: test-results\deep-interaction-Agent-涓夋楠ゅ垱寤?瀹屾暣涓夋鍒涘缓-Agent-deep-interaction\error-context.md
+
+  3) [deep-interaction] 鈥?e2e\deep-interaction.spec.ts:501:3 鈥?鐜绠＄悊 鈥?鍙充笂瑙掔幆澧冮€夋嫨鍣?鈥?涓嬫媺閫夐」 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoBeTruthy[2m()[22m
+
+    Received: [31mfalse[39m
+
+      515 |         const allEnvOption = dropdown.locator('.ant-select-item-option').filter({ hasText: /鍏ㄩ儴/ });
+      516 |         const hasAll = await allEnvOption.isVisible().catch(() => false);
+    > 517 |         expect(hasAll).toBeTruthy();
+          |                        ^
+      518 |       }
+      519 |       // 鍏抽棴涓嬫媺
+      520 |       await page.keyboard.press('Escape');
+        at E:\QP\maf\frontend\e2e\deep-interaction.spec.ts:517:24
+
+    attachment #1: screenshot (image/png) 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+    test-results\deep-interaction-鐜绠＄悊-鍙充笂瑙掔幆澧冮€夋嫨鍣?鈥?涓嬫媺閫夐」-deep-interaction\test-failed-1.png
+    鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+
+    attachment #2: video (video/webm) 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+    test-results\deep-interaction-鐜绠＄悊-鍙充笂瑙掔幆澧冮€夋嫨鍣?鈥?涓嬫媺閫夐」-deep-interaction\video.webm
+    鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+
+    Error Context: test-results\deep-interaction-鐜绠＄悊-鍙充笂瑙掔幆澧冮€夋嫨鍣?鈥?涓嬫媺閫夐」-deep-interaction\error-context.md
+
+  3 failed
+    [deep-interaction] 鈥?e2e\deep-interaction.spec.ts:162:3 鈥?Agent 涓夋楠ゅ垱寤?鈥?姝ラ 3 鈥?瀹夊叏涓庨珮绾ч〉娓叉煋 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+    [deep-interaction] 鈥?e2e\deep-interaction.spec.ts:191:3 鈥?Agent 涓夋楠ゅ垱寤?鈥?瀹屾暣涓夋鍒涘缓 Agent 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+    [deep-interaction] 鈥?e2e\deep-interaction.spec.ts:501:3 鈥?鐜绠＄悊 鈥?鍙充笂瑙掔幆澧冮€夋嫨鍣?鈥?涓嬫媺閫夐」 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+  25 passed (7.4m)
+
+To open last HTML report run:
+[36m[39m
+[36m  npx playwright show-report[39m
+[36m[39m

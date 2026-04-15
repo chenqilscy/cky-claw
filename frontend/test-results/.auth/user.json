@@ -1,0 +1,14 @@
+{
+  "cookies": [],
+  "origins": [
+    {
+      "origin": "http://localhost:3000",
+      "localStorage": [
+        {
+          "name": "ckyclaw_token",
+          "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI5OTJjMGFiNC03OTRhLTRkNjYtOWU3My02MzYxN2M3NTZkN2IiLCJyb2xlIjoiYWRtaW4iLCJleHAiOjE3NzYxNjIxMTgsInR5cGUiOiJhY2Nlc3MifQ.wFeSgU1JfZDzEGcLAXn4VBo-9RnhNkPZosuQ62HUqnI"
+        }
+      ]
+    }
+  ]
+}

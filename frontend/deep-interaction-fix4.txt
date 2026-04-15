@@ -1,0 +1,13 @@
+
+Running 3 tests using 1 worker
+
+  鉁? 1 [setup] 鈥?e2e\auth.setup.ts:10:1 鈥?authenticate (12.2s)
+  鉁? 2 [deep-interaction] 鈥?e2e\deep-interaction.spec.ts:162:3 鈥?Agent 涓夋楠ゅ垱寤?鈥?姝ラ 3 鈥?瀹夊叏涓庨珮绾ч〉娓叉煋 (15.7s)
+  鉁? 3 [deep-interaction] 鈥?e2e\deep-interaction.spec.ts:187:3 鈥?Agent 涓夋楠ゅ垱寤?鈥?瀹屾暣涓夋鍒涘缓 Agent (25.5s)
+
+  3 passed (1.5m)
+
+To open last HTML report run:
+[36m[39m
+[36m  npx playwright show-report[39m
+[36m[39m

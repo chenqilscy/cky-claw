@@ -152,7 +152,7 @@ const HandoffEditorPage: React.FC = () => {
   const loadAgents = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await agentService.list({ limit: 500 });
+      const res = await agentService.list({ limit: 100 });
       const list = res.data;
       setAgents(list);
 

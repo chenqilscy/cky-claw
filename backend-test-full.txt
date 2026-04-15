@@ -1,0 +1,242 @@
+........................................................................ [  3%]
+........................................................................ [  6%]
+........................................................................ [  9%]
+........................................................................ [ 12%]
+........................................................................ [ 16%]
+........................................................................ [ 19%]
+........................................................................ [ 22%]
+........................................................................ [ 25%]
+........................................................................ [ 28%]
+........................................................................ [ 32%]
+........................................................................ [ 35%]
+........................................................................ [ 38%]
+........................................................................ [ 41%]
+........................................................................ [ 45%]
+........................................................................ [ 48%]
+........................................................................ [ 51%]
+........................................................................ [ 54%]
+........................................................................ [ 57%]
+........................................................................ [ 61%]
+........................................................................ [ 64%]
+........................................................................ [ 67%]
+...............................................................s........ [ 70%]
+........................................................................ [ 73%]
+........................................................................ [ 77%]
+........................................................................ [ 80%]
+........................................................................ [ 83%]
+........................................................................ [ 86%]
+........................................................................ [ 90%]
+........................................................................ [ 93%]
+........................................................................ [ 96%]
+........................................................................ [ 99%]
+.......                                                                  [100%]
+============================== warnings summary ===============================
+tests/test_a2a.py::TestA2AService::test_create_agent_card_calls_commit
+  E:\QP\maf\backend\app\services\a2a.py:39: RuntimeWarning: coroutine 'AsyncMockMixin._execute_mock_call' was never awaited
+    db.add(record)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/test_a2a.py::TestA2AService::test_create_task_initial_history
+  E:\QP\maf\backend\app\services\a2a.py:158: RuntimeWarning: coroutine 'AsyncMockMixin._execute_mock_call' was never awaited
+    db.add(record)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/test_alert.py::TestAlertService::test_create_alert_rule
+tests/test_alert.py::TestAlertService::test_create_alert_rule_with_org_id
+  E:\QP\maf\backend\app\services\alert.py:94: RuntimeWarning: coroutine 'AsyncMockMixin._execute_mock_call' was never awaited
+    db.add(rule)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/test_alert.py::TestAlertService::test_evaluate_rule_triggered
+  E:\QP\maf\backend\app\services\alert.py:256: RuntimeWarning: coroutine 'AsyncMockMixin._execute_mock_call' was never awaited
+    db.add(event)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/test_api_coverage.py::TestSchedulerEngine::test_start_scheduler_already_running
+  C:\Python312\Lib\unittest\mock.py:2185: RuntimeWarning: coroutine '_scheduler_loop' was never awaited
+    def __init__(self, name, parent):
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/test_api_coverage.py::TestServiceEdgeCases::test_tool_group_conflict_integrity
+  E:\QP\maf\backend\app\services\tool_group.py:66: RuntimeWarning: coroutine 'AsyncMockMixin._execute_mock_call' was never awaited
+    db.add(tg)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/test_audit_log.py::TestAuditLogService::test_create_audit_log
+  E:\QP\maf\backend\app\services\audit_log.py:42: RuntimeWarning: coroutine 'AsyncMockMixin._execute_mock_call' was never awaited
+    db.add(record)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/test_benchmark.py::TestBenchmarkService::test_create_suite_calls_db
+  E:\QP\maf\backend\app\services\benchmark.py:38: RuntimeWarning: coroutine 'AsyncMockMixin._execute_mock_call' was never awaited
+    db.add(suite)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/test_checkpoint.py::TestPostgresCheckpointBackend::test_save
+tests/test_checkpoint.py::TestPostgresCheckpointBackend::test_save_with_dict_messages
+  E:\QP\maf\backend\app\services\checkpoint_backend.py:32: RuntimeWarning: coroutine 'AsyncMockMixin._execute_mock_call' was never awaited
+    self._db.add(record)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/test_config_reload.py::TestConfigChangeService::test_record_change
+  E:\QP\maf\backend\app\services\config_change.py:33: RuntimeWarning: coroutine 'AsyncMockMixin._execute_mock_call' was never awaited
+    db.add(log)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/test_config_reload.py::TestConfigChangeService::test_rollback_change
+  E:\QP\maf\backend\app\services\config_change.py:103: RuntimeWarning: coroutine 'AsyncMockMixin._execute_mock_call' was never awaited
+    db.add(rollback_log)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/test_e2e_backend.py::TestTokenUsageExtraction::test_save_token_usage_from_trace
+tests/test_token_usage.py::TestSaveTokenUsageFromTrace::test_extract_llm_spans
+tests/test_token_usage.py::TestSaveTokenUsageFromTrace::test_multiple_llm_spans
+  E:\QP\maf\backend\app\services\session.py:630: RuntimeWarning: coroutine 'AsyncMockMixin._execute_mock_call' was never awaited
+    db.add_all(logs)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/test_event_journal.py::TestEventJournalAppend::test_append_creates_orm_record
+tests/test_event_journal.py::TestEventJournalAppend::test_append_assigns_sequence
+  E:\QP\maf\backend\app\services\event_journal.py:45: RuntimeWarning: coroutine 'AsyncMockMixin._execute_mock_call' was never awaited
+    self._db.add(record)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/test_evolution.py::TestEvolutionService::test_create_proposal[asyncio]
+  E:\QP\maf\backend\app\services\evolution.py:88: RuntimeWarning: coroutine 'AsyncMockMixin._execute_mock_call' was never awaited
+    db.add(record)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/test_evolution.py::TestEvolutionService::test_update_proposal_applied_sets_timestamp[asyncio]
+tests/test_evolution.py::TestStatusTransitions::test_approved_to_applied[asyncio]
+tests/test_evolution.py::TestApplyProposalToAgent::test_apply_instructions_proposal[asyncio]
+tests/test_evolution.py::TestApplyProposalToAgent::test_apply_model_proposal[asyncio]
+tests/test_evolution.py::TestApplyProposalToAgent::test_apply_pending_auto_promotes_to_approved[asyncio]
+  E:\QP\maf\backend\app\services\evolution.py:456: RuntimeWarning: coroutine 'AsyncMockMixin._execute_mock_call' was never awaited
+    db.add(version)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/test_evolution.py::TestEvolutionSignalService::test_create_signal[asyncio]
+  E:\QP\maf\backend\app\services\evolution.py:181: RuntimeWarning: coroutine 'AsyncMockMixin._execute_mock_call' was never awaited
+    db.add(record)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/test_evolution.py::TestEvolutionSignalService::test_create_signals_batch[asyncio]
+  E:\QP\maf\backend\app\services\evolution.py:206: RuntimeWarning: coroutine 'AsyncMockMixin._execute_mock_call' was never awaited
+    db.add(record)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/test_evolution.py::TestEvolutionSignalService::test_analyze_agent_persists_proposals[asyncio]
+  E:\QP\maf\backend\app\services\evolution.py:335: RuntimeWarning: coroutine 'AsyncMockMixin._execute_mock_call' was never awaited
+    db.add(record)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/test_hosted_tools.py::TestHostedToolGroupsSeed::test_seed_creates_new_groups
+tests/test_hosted_tools.py::TestHostedToolGroupsSeed::test_seed_partial_existing
+  E:\QP\maf\backend\app\services\tool_group.py:182: RuntimeWarning: coroutine 'AsyncMockMixin._execute_mock_call' was never awaited
+    db.add(tg)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/test_knowledge_base.py::TestKnowledgeBaseService::test_create_knowledge_base_calls_commit
+  E:\QP\maf\backend\app\services\knowledge_base.py:41: RuntimeWarning: coroutine 'AsyncMockMixin._execute_mock_call' was never awaited
+    db.add(record)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/test_organization.py::TestOrganizationService::test_create_organization
+  E:\QP\maf\backend\app\services\organization.py:69: RuntimeWarning: coroutine 'AsyncMockMixin._execute_mock_call' was never awaited
+    db.add(record)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/test_rbac.py::TestRoleService::test_create_role
+tests/test_rbac.py::TestRoleAPI::test_create_role_success
+  E:\QP\maf\backend\app\services\role.py:116: RuntimeWarning: coroutine 'AsyncMockMixin._execute_mock_call' was never awaited
+    db.add(role)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/test_scheduled_tasks.py::TestScheduledTaskSchemas::test_create_invalid_cron
+  E:\QP\maf\backend\.venv\Lib\site-packages\_pytest\unraisableexception.py:67: PytestUnraisableExceptionWarning: Exception ignored in: <function _ProactorBasePipeTransport.__del__ at 0x00000246ED2BAAC0>
+  
+  Traceback (most recent call last):
+    File "C:\Python312\Lib\asyncio\proactor_events.py", line 116, in __del__
+      _warn(f"unclosed transport {self!r}", ResourceWarning, source=self)
+                                 ^^^^^^^^
+    File "C:\Python312\Lib\asyncio\proactor_events.py", line 80, in __repr__
+      info.append(f'fd={self._sock.fileno()}')
+                        ^^^^^^^^^^^^^^^^^^^
+    File "C:\Python312\Lib\asyncio\windows_utils.py", line 102, in fileno
+      raise ValueError("I/O operation on closed pipe")
+  ValueError: I/O operation on closed pipe
+  
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+    warnings.warn(pytest.PytestUnraisableExceptionWarning(msg))
+
+tests/test_scheduled_tasks.py::TestScheduledTaskSchemas::test_create_invalid_cron
+  E:\QP\maf\backend\.venv\Lib\site-packages\_pytest\unraisableexception.py:67: PytestUnraisableExceptionWarning: Exception ignored in: <function BaseSubprocessTransport.__del__ at 0x00000246ED2B9260>
+  
+  Traceback (most recent call last):
+    File "C:\Python312\Lib\asyncio\base_subprocess.py", line 126, in __del__
+      self.close()
+    File "C:\Python312\Lib\asyncio\base_subprocess.py", line 104, in close
+      proto.pipe.close()
+    File "C:\Python312\Lib\asyncio\proactor_events.py", line 109, in close
+      self._loop.call_soon(self._call_connection_lost, None)
+    File "C:\Python312\Lib\asyncio\base_events.py", line 792, in call_soon
+      self._check_closed()
+    File "C:\Python312\Lib\asyncio\base_events.py", line 539, in _check_closed
+      raise RuntimeError('Event loop is closed')
+  RuntimeError: Event loop is closed
+  
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+    warnings.warn(pytest.PytestUnraisableExceptionWarning(msg))
+
+tests/test_scheduled_tasks.py::TestSchedulerEngine::test_execute_task_success
+tests/test_scheduled_tasks.py::TestSchedulerEngine::test_execute_task_agent_not_found
+  E:\QP\maf\backend\app\services\scheduler_engine.py:44: RuntimeWarning: coroutine 'AsyncMockMixin._execute_mock_call' was never awaited
+    db.add(run)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/test_session_messages.py::TestSQLAlchemySessionBackendSave::test_save_creates_metadata_if_new
+tests/test_session_messages.py::TestSQLAlchemySessionBackendSave::test_save_updates_existing_metadata
+  E:\QP\maf\backend\app\services\session_backend.py:95: RuntimeWarning: coroutine 'AsyncMockMixin._execute_mock_call' was never awaited
+    self._db.add(record)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/test_session_messages.py::TestSQLAlchemySessionBackendSave::test_save_creates_metadata_if_new
+  E:\QP\maf\backend\app\services\session_backend.py:115: RuntimeWarning: coroutine 'AsyncMockMixin._execute_mock_call' was never awaited
+    self._db.add(meta)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/test_team.py::TestTeamService::test_create_team
+  E:\QP\maf\backend\app\services\team.py:36: RuntimeWarning: coroutine 'AsyncMockMixin._execute_mock_call' was never awaited
+    db.add(record)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+2238 passed, 1 skipped, 41 warnings in 120.12s (0:02:00)

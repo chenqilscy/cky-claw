@@ -75,7 +75,7 @@ const EvaluationTab: React.FC = () => {
   const [autoForm] = Form.useForm();
   const [autoByRunForm] = Form.useForm();
 
-  const { data: agentData } = useAgentList({ limit: 200 });
+  const { data: agentData } = useAgentList({ limit: 100 });
   const agentOptions = (agentData?.data ?? []).map((a) => ({ label: `${a.name}${a.description ? ` — ${a.description}` : ''}`, value: a.name }));
 
   const { data: traceData } = useTraceList({ limit: 50 });
@@ -542,7 +542,7 @@ const QualityTab: React.FC = () => {
   const [summary, setSummary] = useState<AgentQualitySummary | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const { data: agentData } = useAgentList({ limit: 200 });
+  const { data: agentData } = useAgentList({ limit: 100 });
   const agentOptions = (agentData?.data ?? []).map((a) => ({ label: `${a.name}${a.description ? ` — ${a.description}` : ''}`, value: a.name }));
 
   const fetchQuality = async () => {

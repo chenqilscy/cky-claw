@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, waitFor } from '@testing-library/react';
 import { TestQueryWrapper } from '../test-utils';
-import { MemoryRouter } from 'react-router-dom';
 
 // Mock ProTable to avoid heavy @ant-design/pro-components rendering
 vi.mock('@ant-design/pro-components', () => ({
@@ -56,9 +55,7 @@ describe('ScheduledTasksPage', () => {
   it('renders page title', async () => {
     render(
       <TestQueryWrapper>
-        <MemoryRouter>
           <ScheduledTasksPage />
-        </MemoryRouter>
       </TestQueryWrapper>,
     );
     await waitFor(() => {
@@ -69,9 +66,7 @@ describe('ScheduledTasksPage', () => {
   it('calls scheduledTaskService.list on mount', async () => {
     render(
       <TestQueryWrapper>
-        <MemoryRouter>
           <ScheduledTasksPage />
-        </MemoryRouter>
       </TestQueryWrapper>,
     );
     await waitFor(() => {
@@ -82,9 +77,7 @@ describe('ScheduledTasksPage', () => {
   it('renders task data', async () => {
     render(
       <TestQueryWrapper>
-        <MemoryRouter>
           <ScheduledTasksPage />
-        </MemoryRouter>
       </TestQueryWrapper>,
     );
     await waitFor(() => {
@@ -92,16 +85,15 @@ describe('ScheduledTasksPage', () => {
     });
   });
 
-  it('renders create button', async () => {
+  it('renders page description', async () => {
     render(
       <TestQueryWrapper>
-        <MemoryRouter>
           <ScheduledTasksPage />
-        </MemoryRouter>
       </TestQueryWrapper>,
     );
     await waitFor(() => {
-      expect(document.body.textContent).toContain('新建任务');
+      expect(document.body.textContent).toContain('定时任务');
+      expect(document.body.textContent).toContain('调度');
     });
   });
 });

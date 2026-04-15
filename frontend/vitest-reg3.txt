@@ -1,0 +1,800 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mE:/QP/maf/frontend[39m
+
+[90mstderr[2m | src/__tests__/pages/DashboardPage.test.tsx[2m > [22m[2mDashboardPage[2m > [22m[2mrenders dashboard title
+[22m[39m鈿狅笍 React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+鈿狅笍 React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+[90mstderr[2m | src/__tests__/pages/LoginPage.test.tsx[2m > [22m[2mLoginPage[2m > [22m[2mrenders login form
+[22m[39m鈿狅笍 React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+鈿狅笍 React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+An update to LoginPage inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+[90mstderr[2m | src/__tests__/pages/DashboardPage.test.tsx[2m > [22m[2mDashboardPage[2m > [22m[2mrenders dashboard title
+[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+Not implemented: Window's getComputedStyle() method: with pseudo-elements
+
+[90mstderr[2m | src/__tests__/pages/LoginPage.test.tsx[2m > [22m[2mLoginPage[2m > [22m[2mrenders login button
+[22m[39mAn update to LoginPage inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+[90mstderr[2m | src/__tests__/pages/LoginPage.test.tsx[2m > [22m[2mLoginPage[2m > [22m[2mshows error message when store has error
+[22m[39mAn update to LoginPage inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+[90mstderr[2m | src/__tests__/pages/DashboardPage.test.tsx[2m > [22m[2mDashboardPage[2m > [22m[2mshows agent count after loading
+[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+Not implemented: Window's getComputedStyle() method: with pseudo-elements
+
+[90mstderr[2m | src/__tests__/pages/DashboardPage.test.tsx[2m > [22m[2mDashboardPage[2m > [22m[2mshows session count after loading
+[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+Not implemented: Window's getComputedStyle() method: with pseudo-elements
+
+[90mstderr[2m | src/__tests__/pages/A2APage.test.tsx[2m > [22m[2mA2APage[2m > [22m[2m娓叉煋椤甸潰鏍囬
+[22m[39mWarning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+Not implemented: Window's getComputedStyle() method: with pseudo-elements
+Not implemented: Window's getComputedStyle() method: with pseudo-elements
+鈿狅笍 React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+鈿狅笍 React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+
+[90mstderr[2m | src/__tests__/pages/A2APage.test.tsx[2m > [22m[2mA2APage[2m > [22m[2m娓叉煋椤甸潰鏍囬
+[22m[39mWarning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+
+[90mstderr[2m | src/__tests__/pages/DashboardPage.test.tsx[2m > [22m[2mDashboardPage[2m > [22m[2mrenders ECharts component
+[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+Not implemented: Window's getComputedStyle() method: with pseudo-elements
+
+[90mstderr[2m | src/__tests__/pages/ApmDashboardPage.test.tsx[2m > [22m[2mApmDashboardPage[2m > [22m[2m娓叉煋椤甸潰鏍囬
+[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+Not implemented: Window's getComputedStyle() method: with pseudo-elements
+Not implemented: Window's getComputedStyle() method: with pseudo-elements
+
+[90mstderr[2m | src/__tests__/pages/DashboardPage.test.tsx[2m > [22m[2mDashboardPage[2m > [22m[2mrenders token trend card title
+[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+Not implemented: Window's getComputedStyle() method: with pseudo-elements
+
+[90mstderr[2m | src/__tests__/pages/A2APage.test.tsx[2m > [22m[2mA2APage[2m > [22m[2m娓叉煋 Agent Card 琛ㄦ牸
+[22m[39mWarning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+Not implemented: Window's getComputedStyle() method: with pseudo-elements
+Not implemented: Window's getComputedStyle() method: with pseudo-elements
+Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+
+[90mstderr[2m | src/__tests__/pages/A2APage.test.tsx[2m > [22m[2mA2APage[2m > [22m[2m娓叉煋 Agent Card 琛ㄦ牸
+[22m[39mWarning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+
+[90mstderr[2m | src/__tests__/pages/DashboardPage.test.tsx[2m > [22m[2mDashboardPage[2m > [22m[2mrenders agent realtime status card
+[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+Not implemented: Window's getComputedStyle() method: with pseudo-elements
+
+[90mstderr[2m | src/__tests__/pages/ApmDashboardPage.test.tsx[2m > [22m[2mApmDashboardPage[2m > [22m[2m娓叉煋缁熻鍗＄墖
+[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+Not implemented: Window's getComputedStyle() method: with pseudo-elements
+Not implemented: Window's getComputedStyle() method: with pseudo-elements
+
+[90mstderr[2m | src/__tests__/pages/ProviderKeyRotation.test.tsx[2m > [22m[2mProviderListPage 鈥?瀵嗛挜杞崲涓庡埌鏈?[2m > [22m[2m娓叉煋瀵嗛挜鐘舵€佸垪
+[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+
+[90mstderr[2m | src/__tests__/pages/DashboardPage.test.tsx[2m > [22m[2mDashboardPage[2m > [22m[2mrenders agent activity trend card
+[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+Not implemented: Window's getComputedStyle() method: with pseudo-elements
+
+[90mstderr[2m | src/__tests__/pages/ProviderKeyRotation.test.tsx[2m > [22m[2mProviderListPage 鈥?瀵嗛挜杞崲涓庡埌鏈?[2m > [22m[2m鏄剧ず宸茶繃鏈熸爣绛?[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+
+[90mstderr[2m | src/__tests__/pages/DebugPage.test.tsx[2m > [22m[2mDebugPage[2m > [22m[2m娓叉煋椤甸潰鏍囬
+[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+
+[90mstderr[2m | src/__tests__/pages/ApmDashboardPage.test.tsx[2m > [22m[2mApmDashboardPage[2m > [22m[2m娓叉煋 ECharts 鍥捐〃
+[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+Not implemented: Window's getComputedStyle() method: with pseudo-elements
+Not implemented: Window's getComputedStyle() method: with pseudo-elements
+
+ [32m鉁?[39m src/__tests__/pages/ApmDashboardPage.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[33m 11709[2mms[22m[39m
+   [33m[2m鉁?[22m[39m ApmDashboardPage[2m > [22m娓叉煋椤甸潰鏍囬 [33m 5984[2mms[22m[39m
+   [33m[2m鉁?[22m[39m ApmDashboardPage[2m > [22m娓叉煋缁熻鍗＄墖 [33m 2694[2mms[22m[39m
+   [33m[2m鉁?[22m[39m ApmDashboardPage[2m > [22m娓叉煋 ECharts 鍥捐〃 [33m 2844[2mms[22m[39m
+[90mstderr[2m | src/__tests__/pages/A2APage.test.tsx[2m > [22m[2mA2APage[2m > [22m[2m娓叉煋鎿嶄綔鎸夐挳锛堟敞鍐?鍙戠幇锛?[22m[39mWarning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+Not implemented: Window's getComputedStyle() method: with pseudo-elements
+Not implemented: Window's getComputedStyle() method: with pseudo-elements
+Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+
+[90mstderr[2m | src/__tests__/pages/DashboardPage.test.tsx[2m > [22m[2mDashboardPage[2m > [22m[2mshows auto-refresh switch
+[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+Not implemented: Window's getComputedStyle() method: with pseudo-elements
+
+[90mstderr[2m | src/__tests__/pages/A2APage.test.tsx[2m > [22m[2mA2APage[2m > [22m[2m娓叉煋鎿嶄綔鎸夐挳锛堟敞鍐?鍙戠幇锛?[22m[39mWarning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+
+ [32m鉁?[39m src/__tests__/pages/DashboardPage.test.tsx [2m([22m[2m8 tests[22m[2m)[22m[33m 17312[2mms[22m[39m
+   [33m[2m鉁?[22m[39m DashboardPage[2m > [22mrenders dashboard title [33m 4177[2mms[22m[39m
+   [33m[2m鉁?[22m[39m DashboardPage[2m > [22mshows agent count after loading [33m 1833[2mms[22m[39m
+   [33m[2m鉁?[22m[39m DashboardPage[2m > [22mshows session count after loading [33m 1600[2mms[22m[39m
+   [33m[2m鉁?[22m[39m DashboardPage[2m > [22mrenders ECharts component [33m 1309[2mms[22m[39m
+   [33m[2m鉁?[22m[39m DashboardPage[2m > [22mrenders token trend card title [33m 1972[2mms[22m[39m
+   [33m[2m鉁?[22m[39m DashboardPage[2m > [22mrenders agent realtime status card [33m 1826[2mms[22m[39m
+   [33m[2m鉁?[22m[39m DashboardPage[2m > [22mrenders agent activity trend card [33m 2459[2mms[22m[39m
+   [33m[2m鉁?[22m[39m DashboardPage[2m > [22mshows auto-refresh switch [33m 2132[2mms[22m[39m
+[90mstderr[2m | src/__tests__/pages/ProviderKeyRotation.test.tsx[2m > [22m[2mProviderListPage 鈥?瀵嗛挜杞崲涓庡埌鏈?[2m > [22m[2m鏄剧ず鏈夋晥鏍囩
+[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+
+[90mstderr[2m | src/__tests__/pages/DebugPage.test.tsx[2m > [22m[2mDebugPage[2m > [22m[2m娓叉煋鏂板缓璋冭瘯鎸夐挳
+[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+
+[90mstderr[2m | src/__tests__/pages/A2APage.test.tsx[2m > [22m[2mA2APage[2m > [22m[2m绌烘暟鎹笉宕╂簝
+[22m[39mWarning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+Not implemented: Window's getComputedStyle() method: with pseudo-elements
+Not implemented: Window's getComputedStyle() method: with pseudo-elements
+Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+An update to A2APage inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to A2APage inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to A2APage inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to A2APage inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to A2APage inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+ [32m鉁?[39m src/__tests__/pages/A2APage.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 18691[2mms[22m[39m
+   [33m[2m鉁?[22m[39m A2APage[2m > [22m娓叉煋椤甸潰鏍囬 [33m 7736[2mms[22m[39m
+   [33m[2m鉁?[22m[39m A2APage[2m > [22m娓叉煋 Agent Card 琛ㄦ牸 [33m 3738[2mms[22m[39m
+   [33m[2m鉁?[22m[39m A2APage[2m > [22m娓叉煋鎿嶄綔鎸夐挳锛堟敞鍐?鍙戠幇锛?[33m 4557[2mms[22m[39m
+   [33m[2m鉁?[22m[39m A2APage[2m > [22m绌烘暟鎹笉宕╂簝 [33m 2656[2mms[22m[39m
+[90mstderr[2m | src/__tests__/pages/ProviderKeyRotation.test.tsx[2m > [22m[2mProviderListPage 鈥?瀵嗛挜杞崲涓庡埌鏈?[2m > [22m[2m鏄剧ず姘镐箙鏍囩锛堟棤杩囨湡鏃堕棿锛?[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+
+[90mstderr[2m | src/__tests__/pages/DebugPage.test.tsx[2m > [22m[2mDebugPage[2m > [22m[2m娓叉煋鍒锋柊鎸夐挳
+[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+
+[90mstderr[2m | src/__tests__/pages/EvolutionPage.test.tsx[2m > [22m[2mEvolutionPage[2m > [22m[2mrenders page title
+[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+鈿狅笍 React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+鈿狅笍 React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+[90mstderr[2m | src/__tests__/pages/ProviderKeyRotation.test.tsx[2m > [22m[2mProviderListPage 鈥?瀵嗛挜杞崲涓庡埌鏈?[2m > [22m[2m娓叉煋杞崲鎸夐挳
+[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+
+[90mstderr[2m | src/__tests__/pages/DebugPage.test.tsx[2m > [22m[2mDebugPage[2m > [22m[2m鐐瑰嚮鍒锋柊鎸夐挳璋冪敤 list 鎺ュ彛
+[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+
+[90mstderr[2m | src/__tests__/pages/EvolutionPage.test.tsx[2m > [22m[2mEvolutionPage[2m > [22m[2mshows proposal in table after loading
+[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+
+[90mstderr[2m | src/__tests__/pages/ProviderKeyRotation.test.tsx[2m > [22m[2mProviderListPage 鈥?瀵嗛挜杞崲涓庡埌鏈?[2m > [22m[2m鐐瑰嚮杞崲鎸夐挳鏄剧ず寮圭獥
+[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+
+[90mstderr[2m | src/__tests__/pages/DebugPage.test.tsx[2m > [22m[2mDebugPage[2m > [22m[2m鐐瑰嚮鏂板缓璋冭瘯鎵撳紑妯℃€佹
+[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+Not implemented: Window's getComputedStyle() method: with pseudo-elements
+
+[90mstderr[2m | src/__tests__/pages/EvolutionPage.test.tsx[2m > [22m[2mEvolutionPage[2m > [22m[2mshows proposal type tag
+[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+
+[90mstderr[2m | src/__tests__/pages/ProviderKeyRotation.test.tsx[2m > [22m[2mProviderListPage 鈥?瀵嗛挜杞崲涓庡埌鏈?[2m > [22m[2m鐐瑰嚮杞崲鎸夐挳鏄剧ず寮圭獥
+[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+
+ [32m鉁?[39m src/__tests__/pages/ProviderKeyRotation.test.tsx [2m([22m[2m6 tests[22m[2m)[22m[33m 17512[2mms[22m[39m
+   [33m[2m鉁?[22m[39m ProviderListPage 鈥?瀵嗛挜杞崲涓庡埌鏈?[2m > [22m娓叉煋瀵嗛挜鐘舵€佸垪 [33m 5073[2mms[22m[39m
+   [33m[2m鉁?[22m[39m ProviderListPage 鈥?瀵嗛挜杞崲涓庡埌鏈?[2m > [22m鏄剧ず宸茶繃鏈熸爣绛?[33m 2560[2mms[22m[39m
+   [33m[2m鉁?[22m[39m ProviderListPage 鈥?瀵嗛挜杞崲涓庡埌鏈?[2m > [22m鏄剧ず鏈夋晥鏍囩 [33m 1915[2mms[22m[39m
+   [33m[2m鉁?[22m[39m ProviderListPage 鈥?瀵嗛挜杞崲涓庡埌鏈?[2m > [22m鏄剧ず姘镐箙鏍囩锛堟棤杩囨湡鏃堕棿锛?[33m 1563[2mms[22m[39m
+   [33m[2m鉁?[22m[39m ProviderListPage 鈥?瀵嗛挜杞崲涓庡埌鏈?[2m > [22m娓叉煋杞崲鎸夐挳 [33m 2306[2mms[22m[39m
+   [33m[2m鉁?[22m[39m ProviderListPage 鈥?瀵嗛挜杞崲涓庡埌鏈?[2m > [22m鐐瑰嚮杞崲鎸夐挳鏄剧ず寮圭獥 [33m 4092[2mms[22m[39m
+[90mstderr[2m | src/__tests__/pages/EvolutionPage.test.tsx[2m > [22m[2mEvolutionPage[2m > [22m[2mshows status tag
+[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+
+[90mstderr[2m | src/__tests__/pages/DebugPage.test.tsx[2m > [22m[2mDebugPage[2m > [22m[2m妯℃€佹鍖呭惈杈撳叆娑堟伅鍜岃皟璇曟ā寮忛€夋嫨
+[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+Not implemented: Window's getComputedStyle() method: with pseudo-elements
+
+[90mstderr[2m | src/__tests__/pages/LoginPage.test.tsx[2m > [22m[2mLoginPage[2m > [22m[2mdoes not show divider when no providers available
+[22m[39mAn update to LoginPage inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+[90mstderr[2m | src/__tests__/pages/DebugPage.test.tsx[2m > [22m[2mDebugPage[2m > [22m[2m鍒楄〃灞曠ず浼氳瘽鏁版嵁
+[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+
+[90mstderr[2m | src/__tests__/pages/EvolutionPage.test.tsx[2m > [22m[2mEvolutionPage[2m > [22m[2mrenders filter inputs
+[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+
+[90mstderr[2m | src/__tests__/pages/DebugPage.test.tsx[2m > [22m[2mDebugPage[2m > [22m[2m鍒涘缓璋冭瘯浼氳瘽鎴愬姛
+[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+Not implemented: Window's getComputedStyle() method: with pseudo-elements
+
+[90mstderr[2m | src/__tests__/pages/DebugPage.test.tsx[2m > [22m[2mDebugPage[2m > [22m[2m璋冭瘯鎸夐挳瀛樺湪浜庡垪琛ㄨ
+[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+
+ [32m鉁?[39m src/__tests__/pages/DebugPage.test.tsx [2m([22m[2m14 tests[22m[2m)[22m[33m 26018[2mms[22m[39m
+   [33m[2m鉁?[22m[39m DebugPage[2m > [22m娓叉煋椤甸潰鏍囬 [33m 6222[2mms[22m[39m
+   [33m[2m鉁?[22m[39m DebugPage[2m > [22m娓叉煋鏂板缓璋冭瘯鎸夐挳 [33m 2081[2mms[22m[39m
+   [33m[2m鉁?[22m[39m DebugPage[2m > [22m娓叉煋鍒锋柊鎸夐挳 [33m 1769[2mms[22m[39m
+   [33m[2m鉁?[22m[39m DebugPage[2m > [22m鐐瑰嚮鍒锋柊鎸夐挳璋冪敤 list 鎺ュ彛 [33m 2568[2mms[22m[39m
+   [33m[2m鉁?[22m[39m DebugPage[2m > [22m鐐瑰嚮鏂板缓璋冭瘯鎵撳紑妯℃€佹 [33m 2511[2mms[22m[39m
+   [33m[2m鉁?[22m[39m DebugPage[2m > [22m妯℃€佹鍖呭惈杈撳叆娑堟伅鍜岃皟璇曟ā寮忛€夋嫨 [33m 3307[2mms[22m[39m
+   [33m[2m鉁?[22m[39m DebugPage[2m > [22m鍒楄〃灞曠ず浼氳瘽鏁版嵁 [33m 2412[2mms[22m[39m
+   [33m[2m鉁?[22m[39m DebugPage[2m > [22m鍒涘缓璋冭瘯浼氳瘽鎴愬姛 [33m 2630[2mms[22m[39m
+   [33m[2m鉁?[22m[39m DebugPage[2m > [22m璋冭瘯鎸夐挳瀛樺湪浜庡垪琛ㄨ [33m 2453[2mms[22m[39m
+[90mstderr[2m | src/__tests__/pages/EvolutionPage.test.tsx[2m > [22m[2mEvolutionPage[2m > [22m[2mrenders create button
+[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+
+[90mstderr[2m | src/__tests__/pages/EvolutionPage.test.tsx[2m > [22m[2mEvolutionPage[2m > [22m[2mrenders refresh button
+[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+
+ [32m鉁?[39m src/__tests__/pages/EvolutionPage.test.tsx [2m([22m[2m7 tests[22m[2m)[22m[33m 25122[2mms[22m[39m
+   [33m[2m鉁?[22m[39m EvolutionPage[2m > [22mrenders page title [33m 4524[2mms[22m[39m
+   [33m[2m鉁?[22m[39m EvolutionPage[2m > [22mshows proposal in table after loading [33m 3498[2mms[22m[39m
+   [33m[2m鉁?[22m[39m EvolutionPage[2m > [22mshows proposal type tag [33m 2217[2mms[22m[39m
+   [33m[2m鉁?[22m[39m EvolutionPage[2m > [22mshows status tag [33m 2386[2mms[22m[39m
+   [33m[2m鉁?[22m[39m EvolutionPage[2m > [22mrenders filter inputs [33m 2842[2mms[22m[39m
+   [33m[2m鉁?[22m[39m EvolutionPage[2m > [22mrenders create button [33m 5376[2mms[22m[39m
+   [33m[2m鉁?[22m[39m EvolutionPage[2m > [22mrenders refresh button [33m 4275[2mms[22m[39m
+ [32m鉁?[39m src/__tests__/pages/LoginPage.test.tsx [2m([22m[2m12 tests[22m[2m)[22m[33m 41892[2mms[22m[39m
+   [33m[2m鉁?[22m[39m LoginPage[2m > [22mrenders login form [33m 2588[2mms[22m[39m
+   [33m[2m鉁?[22m[39m LoginPage[2m > [22mrenders login button [33m 2554[2mms[22m[39m
+   [33m[2m鉁?[22m[39m LoginPage[2m > [22mshows error message when store has error [33m 364[2mms[22m[39m
+   [33m[2m鉁?[22m[39m LoginPage[2m > [22mrenders GitHub login button when provider is available [33m 4426[2mms[22m[39m
+   [33m[2m鉁?[22m[39m LoginPage[2m > [22mrenders wecom login button when provider is available [33m 4350[2mms[22m[39m
+   [33m[2m鉁?[22m[39m LoginPage[2m > [22mrenders dingtalk login button when provider is available [33m 2803[2mms[22m[39m
+   [33m[2m鉁?[22m[39m LoginPage[2m > [22mrenders feishu login button when provider is available [33m 2933[2mms[22m[39m
+   [33m[2m鉁?[22m[39m LoginPage[2m > [22mrenders multiple OAuth providers together [33m 6857[2mms[22m[39m
+   [33m[2m鉁?[22m[39m LoginPage[2m > [22mdoes not show divider when no providers available [33m 2017[2mms[22m[39m
+   [33m[2m鉁?[22m[39m LoginPage[2m > [22mclicks OAuth button and calls authorize [33m 6729[2mms[22m[39m
+   [33m[2m鉁?[22m[39m LoginPage[2m > [22mshows error message when OAuth authorize fails [33m 4746[2mms[22m[39m
+   [33m[2m鉁?[22m[39m LoginPage[2m > [22mhandles getProviders failure gracefully [33m 1521[2mms[22m[39m
+[90mstderr[2m | src/__tests__/pages/EvaluationPage.test.tsx[2m > [22m[2mEvaluationPage[2m > [22m[2m娓叉煋 Tabs
+[22m[39mWarning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+Not implemented: Window's getComputedStyle() method: with pseudo-elements
+
+[90mstderr[2m | src/__tests__/pages/CompliancePage.test.tsx[2m > [22m[2mCompliancePage[2m > [22m[2m娓叉煋椤甸潰鏍囬
+[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+鈿狅笍 React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+鈿狅笍 React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+[90mstderr[2m | src/__tests__/pages/EvaluationPage.test.tsx[2m > [22m[2mEvaluationPage[2m > [22m[2m娓叉煋璇勪及鍒楄〃
+[22m[39mWarning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+Not implemented: Window's getComputedStyle() method: with pseudo-elements
+
+[90mstderr[2m | src/__tests__/pages/EvaluationPage.test.tsx[2m > [22m[2mEvaluationPage[2m > [22m[2m娓叉煋璇勪及鍒楄〃
+[22m[39mWarning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+
+[90mstderr[2m | src/__tests__/pages/CompliancePage.test.tsx[2m > [22m[2mCompliancePage[2m > [22m[2m娓叉煋缁熻浠〃鐩?[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+
+[90mstderr[2m | src/__tests__/pages/EvaluationPage.test.tsx[2m > [22m[2mEvaluationPage[2m > [22m[2m娓叉煋鏂板缓璇勪及鎸夐挳
+[22m[39mWarning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+Not implemented: Window's getComputedStyle() method: with pseudo-elements
+
+[90mstderr[2m | src/__tests__/pages/EvaluationPage.test.tsx[2m > [22m[2mEvaluationPage[2m > [22m[2m娓叉煋鏂板缓璇勪及鎸夐挳
+[22m[39mWarning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+
+[90mstderr[2m | src/__tests__/pages/CompliancePage.test.tsx[2m > [22m[2mCompliancePage[2m > [22m[2m娓叉煋 Tabs锛堟暟鎹垎绫?淇濈暀绛栫暐/鎿﹂櫎璇锋眰/鎺у埗鐐癸級
+[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+
+[90mstderr[2m | src/__tests__/pages/EvaluationPage.test.tsx[2m > [22m[2mEvaluationPage[2m > [22m[2m鍔犺浇澶辫触涓嶅穿婧?[22m[39mWarning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+Not implemented: Window's getComputedStyle() method: with pseudo-elements
+
+[90mstderr[2m | src/__tests__/pages/EvaluationPage.test.tsx[2m > [22m[2mEvaluationPage[2m > [22m[2m鍔犺浇澶辫触涓嶅穿婧?[22m[39mWarning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+
+ [32m鉁?[39m src/__tests__/pages/EvaluationPage.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 10562[2mms[22m[39m
+   [33m[2m鉁?[22m[39m EvaluationPage[2m > [22m娓叉煋 Tabs [33m 4607[2mms[22m[39m
+   [33m[2m鉁?[22m[39m EvaluationPage[2m > [22m娓叉煋璇勪及鍒楄〃 [33m 1807[2mms[22m[39m
+   [33m[2m鉁?[22m[39m EvaluationPage[2m > [22m娓叉煋鏂板缓璇勪及鎸夐挳 [33m 2580[2mms[22m[39m
+   [33m[2m鉁?[22m[39m EvaluationPage[2m > [22m鍔犺浇澶辫触涓嶅穿婧?[33m 1565[2mms[22m[39m
+[90mstderr[2m | src/__tests__/pages/CompliancePage.test.tsx[2m > [22m[2mCompliancePage[2m > [22m[2m绌烘暟鎹笉宕╂簝
+[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+
+ [32m鉁?[39m src/__tests__/pages/CompliancePage.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 10899[2mms[22m[39m
+   [33m[2m鉁?[22m[39m CompliancePage[2m > [22m娓叉煋椤甸潰鏍囬 [33m 5877[2mms[22m[39m
+   [33m[2m鉁?[22m[39m CompliancePage[2m > [22m娓叉煋缁熻浠〃鐩?[33m 1616[2mms[22m[39m
+   [33m[2m鉁?[22m[39m CompliancePage[2m > [22m娓叉煋 Tabs锛堟暟鎹垎绫?淇濈暀绛栫暐/鎿﹂櫎璇锋眰/鎺у埗鐐癸級 [33m 1676[2mms[22m[39m
+   [33m[2m鉁?[22m[39m CompliancePage[2m > [22m绌烘暟鎹笉宕╂簝 [33m 1725[2mms[22m[39m
+[90mstderr[2m | src/__tests__/pages/IntentDetectionPage.test.tsx[2m > [22m[2mIntentDetectionPage[2m > [22m[2mrenders page title
+[22m[39m鈿狅笍 React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+鈿狅笍 React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+[90mstderr[2m | src/__tests__/pages/WorkflowPage.test.tsx[2m > [22m[2mWorkflowPage[2m > [22m[2m娓叉煋椤甸潰鏍囬
+[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+鈿狅笍 React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+鈿狅笍 React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+[90mstderr[2m | src/__tests__/pages/WorkflowPage.test.tsx[2m > [22m[2mWorkflowPage[2m > [22m[2m娓叉煋鏂板缓鎸夐挳
+[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+
+ [32m鉁?[39m src/__tests__/pages/IntentDetectionPage.test.tsx [2m([22m[2m6 tests[22m[2m)[22m[33m 10166[2mms[22m[39m
+   [33m[2m鉁?[22m[39m IntentDetectionPage[2m > [22mrenders page title [33m 2097[2mms[22m[39m
+   [33m[2m鉁?[22m[39m IntentDetectionPage[2m > [22mrenders detect button [33m 1593[2mms[22m[39m
+   [33m[2m鉁?[22m[39m IntentDetectionPage[2m > [22mcalls detect API and shows drifted result [33m 2347[2mms[22m[39m
+   [33m[2m鉁?[22m[39m IntentDetectionPage[2m > [22mshows not-drifted result [33m 1906[2mms[22m[39m
+   [33m[2m鉁?[22m[39m IntentDetectionPage[2m > [22mdisplays keyword tags [33m 1969[2mms[22m[39m
+[90mstderr[2m | src/__tests__/pages/WorkflowPage.test.tsx[2m > [22m[2mWorkflowPage[2m > [22m[2m娓叉煋宸ヤ綔娴佸垪琛ㄨ褰?[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+
+[90mstderr[2m | src/__tests__/pages/AuditLogPage.test.tsx[2m > [22m[2mAuditLogPage[2m > [22m[2mrenders page title
+[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+鈿狅笍 React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+鈿狅笍 React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+[90mstderr[2m | src/__tests__/pages/BenchmarkPage.test.tsx[2m > [22m[2mBenchmarkPage[2m > [22m[2m娓叉煋椤甸潰鏍囬
+[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+鈿狅笍 React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+鈿狅笍 React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+[90mstderr[2m | src/__tests__/pages/WorkflowPage.test.tsx[2m > [22m[2mWorkflowPage[2m > [22m[2m娓叉煋鎿嶄綔鎸夐挳
+[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+
+ [32m鉁?[39m src/__tests__/pages/WorkflowPage.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 13311[2mms[22m[39m
+   [33m[2m鉁?[22m[39m WorkflowPage[2m > [22m娓叉煋椤甸潰鏍囬 [33m 6800[2mms[22m[39m
+   [33m[2m鉁?[22m[39m WorkflowPage[2m > [22m娓叉煋鏂板缓鎸夐挳 [33m 1946[2mms[22m[39m
+   [33m[2m鉁?[22m[39m WorkflowPage[2m > [22m娓叉煋宸ヤ綔娴佸垪琛ㄨ褰?[33m 2937[2mms[22m[39m
+   [33m[2m鉁?[22m[39m WorkflowPage[2m > [22m娓叉煋鎿嶄綔鎸夐挳 [33m 1625[2mms[22m[39m
+[90mstderr[2m | src/__tests__/pages/AuditLogPage.test.tsx[2m > [22m[2mAuditLogPage[2m > [22m[2mrenders audit log data in table
+[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+
+[90mstderr[2m | src/__tests__/pages/BenchmarkPage.test.tsx[2m > [22m[2mBenchmarkPage[2m > [22m[2m娓叉煋缁熻鍗＄墖鍖哄煙
+[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+
+[90mstderr[2m | src/__tests__/pages/AuditLogPage.test.tsx[2m > [22m[2mAuditLogPage[2m > [22m[2mrenders table columns
+[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+
+[90mstderr[2m | src/__tests__/pages/BenchmarkPage.test.tsx[2m > [22m[2mBenchmarkPage[2m > [22m[2m娓叉煋 Tabs 鍒囨崲鍖?[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+
+[90mstderr[2m | src/__tests__/pages/AuditLogPage.test.tsx[2m > [22m[2mAuditLogPage[2m > [22m[2mcalls listAuditLogs on mount
+[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+
+ [32m鉁?[39m src/__tests__/pages/AuditLogPage.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 12342[2mms[22m[39m
+   [33m[2m鉁?[22m[39m AuditLogPage[2m > [22mrenders page title [33m 7058[2mms[22m[39m
+   [33m[2m鉁?[22m[39m AuditLogPage[2m > [22mrenders audit log data in table [33m 2294[2mms[22m[39m
+   [33m[2m鉁?[22m[39m AuditLogPage[2m > [22mrenders table columns [33m 1222[2mms[22m[39m
+   [33m[2m鉁?[22m[39m AuditLogPage[2m > [22mcalls listAuditLogs on mount [33m 1765[2mms[22m[39m
+[90mstderr[2m | src/__tests__/pages/BenchmarkPage.test.tsx[2m > [22m[2mBenchmarkPage[2m > [22m[2m椤甸潰涓嶅穿婧冿紙绌烘暟鎹級
+[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+
+ [32m鉁?[39m src/__tests__/pages/BenchmarkPage.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 11578[2mms[22m[39m
+   [33m[2m鉁?[22m[39m BenchmarkPage[2m > [22m娓叉煋椤甸潰鏍囬 [33m 6270[2mms[22m[39m
+   [33m[2m鉁?[22m[39m BenchmarkPage[2m > [22m娓叉煋缁熻鍗＄墖鍖哄煙 [33m 2132[2mms[22m[39m
+   [33m[2m鉁?[22m[39m BenchmarkPage[2m > [22m娓叉煋 Tabs 鍒囨崲鍖?[33m 1760[2mms[22m[39m
+   [33m[2m鉁?[22m[39m BenchmarkPage[2m > [22m椤甸潰涓嶅穿婧冿紙绌烘暟鎹級 [33m 1413[2mms[22m[39m
+[90mstderr[2m | src/__tests__/pages/TeamPage.test.tsx[2m > [22m[2mTeamPage[2m > [22m[2mrenders page title
+[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+鈿狅笍 React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+鈿狅笍 React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+[90mstderr[2m | src/__tests__/pages/TeamPage.test.tsx[2m > [22m[2mTeamPage[2m > [22m[2mcalls listTeams on mount
+[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+
+[90mstderr[2m | src/__tests__/pages/TeamPage.test.tsx[2m > [22m[2mTeamPage[2m > [22m[2mrenders team data
+[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+
+[90mstderr[2m | src/__tests__/pages/TeamPage.test.tsx[2m > [22m[2mTeamPage[2m > [22m[2mrenders protocol tag
+[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+
+ [32m鉁?[39m src/__tests__/pages/TeamPage.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 9778[2mms[22m[39m
+   [33m[2m鉁?[22m[39m TeamPage[2m > [22mrenders page title [33m 4679[2mms[22m[39m
+   [33m[2m鉁?[22m[39m TeamPage[2m > [22mcalls listTeams on mount [33m 1462[2mms[22m[39m
+   [33m[2m鉁?[22m[39m TeamPage[2m > [22mrenders team data [33m 2048[2mms[22m[39m
+   [33m[2m鉁?[22m[39m TeamPage[2m > [22mrenders protocol tag [33m 1585[2mms[22m[39m
+[90mstderr[2m | src/__tests__/pages/AgentListEdgeCases.test.tsx[2m > [22m[2mAgentListPage 杈圭晫鍦烘櫙[2m > [22m[2mAPI 杩斿洖绌哄垪琛ㄤ笉宕╂簝
+[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+鈿狅笍 React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+鈿狅笍 React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+[90mstderr[2m | src/__tests__/pages/AgentListEdgeCases.test.tsx[2m > [22m[2mAgentListPage 杈圭晫鍦烘櫙[2m > [22m[2m娓叉煋 Agent 鍒楄〃椤垫爣棰?[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+
+[90mstderr[2m | src/__tests__/pages/AgentListEdgeCases.test.tsx[2m > [22m[2mAgentListPage 杈圭晫鍦烘櫙[2m > [22m[2mAPI 杩斿洖 undefined data 涓嶅穿婧?[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+
+[90mstderr[2m | src/__tests__/pages/AgentListEdgeCases.test.tsx[2m > [22m[2mAgentListPage 杈圭晫鍦烘櫙[2m > [22m[2mAPI 杩斿洖 null 涓嶅穿婧?[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+
+ [32m鉁?[39m src/__tests__/pages/AgentListEdgeCases.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 7775[2mms[22m[39m
+   [33m[2m鉁?[22m[39m AgentListPage 杈圭晫鍦烘櫙[2m > [22mAPI 杩斿洖绌哄垪琛ㄤ笉宕╂簝 [33m 4578[2mms[22m[39m
+   [33m[2m鉁?[22m[39m AgentListPage 杈圭晫鍦烘櫙[2m > [22m娓叉煋 Agent 鍒楄〃椤垫爣棰?[33m 1188[2mms[22m[39m
+   [33m[2m鉁?[22m[39m AgentListPage 杈圭晫鍦烘櫙[2m > [22mAPI 杩斿洖 undefined data 涓嶅穿婧?[33m 962[2mms[22m[39m
+   [33m[2m鉁?[22m[39m AgentListPage 杈圭晫鍦烘櫙[2m > [22mAPI 杩斿洖 null 涓嶅穿婧?[33m 1044[2mms[22m[39m
+[90mstderr[2m | src/__tests__/pages/IMChannelPage.test.tsx[2m > [22m[2mIMChannelPage[2m > [22m[2m娓叉煋椤甸潰鏍囬
+[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+
+[90mstderr[2m | src/__tests__/pages/IMChannelPage.test.tsx[2m > [22m[2mIMChannelPage[2m > [22m[2m娓叉煋鏂板缓鎸夐挳
+[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+
+[90mstderr[2m | src/__tests__/pages/AgentEditPage.test.tsx[2m > [22m[2mAgentEditPage[2m > [22m[2m鍒涘缓妯″紡娓叉煋鏍囬
+[22m[39m鈿狅笍 React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+鈿狅笍 React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+[90mstderr[2m | src/__tests__/pages/KnowledgeBasePage.test.tsx[2m > [22m[2mKnowledgeBasePage[2m > [22m[2m娓叉煋椤甸潰鏍囬
+[22m[39mWarning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+Not implemented: Window's getComputedStyle() method: with pseudo-elements
+鈿狅笍 React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+鈿狅笍 React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+
+[90mstderr[2m | src/__tests__/pages/KnowledgeBasePage.test.tsx[2m > [22m[2mKnowledgeBasePage[2m > [22m[2m娓叉煋椤甸潰鏍囬
+[22m[39mWarning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+
+[90mstderr[2m | src/__tests__/pages/IMChannelPage.test.tsx[2m > [22m[2mIMChannelPage[2m > [22m[2m璋冪敤鍒楄〃鎺ュ彛
+[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+
+[90mstderr[2m | src/__tests__/pages/KnowledgeBasePage.test.tsx[2m > [22m[2mKnowledgeBasePage[2m > [22m[2m娓叉煋鐭ヨ瘑搴撳垪琛?[22m[39mWarning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+Not implemented: Window's getComputedStyle() method: with pseudo-elements
+Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+
+[90mstderr[2m | src/__tests__/pages/KnowledgeBasePage.test.tsx[2m > [22m[2mKnowledgeBasePage[2m > [22m[2m娓叉煋鐭ヨ瘑搴撳垪琛?[22m[39mWarning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+
+[90mstderr[2m | src/__tests__/pages/KnowledgeBasePage.test.tsx[2m > [22m[2mKnowledgeBasePage[2m > [22m[2m娓叉煋鏂板缓鎸夐挳
+[22m[39mWarning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+Not implemented: Window's getComputedStyle() method: with pseudo-elements
+Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+
+[90mstderr[2m | src/__tests__/pages/KnowledgeBasePage.test.tsx[2m > [22m[2mKnowledgeBasePage[2m > [22m[2m娓叉煋鏂板缓鎸夐挳
+[22m[39mWarning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+
+[90mstderr[2m | src/__tests__/pages/IMChannelPage.test.tsx[2m > [22m[2mIMChannelPage[2m > [22m[2m鍔犺浇澶辫触涓嶅穿婧?[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+
+ [32m鉁?[39m src/__tests__/pages/IMChannelPage.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 10878[2mms[22m[39m
+   [33m[2m鉁?[22m[39m IMChannelPage[2m > [22m娓叉煋椤甸潰鏍囬 [33m 5017[2mms[22m[39m
+   [33m[2m鉁?[22m[39m IMChannelPage[2m > [22m娓叉煋鏂板缓鎸夐挳 [33m 2554[2mms[22m[39m
+   [33m[2m鉁?[22m[39m IMChannelPage[2m > [22m璋冪敤鍒楄〃鎺ュ彛 [33m 1511[2mms[22m[39m
+   [33m[2m鉁?[22m[39m IMChannelPage[2m > [22m鍔犺浇澶辫触涓嶅穿婧?[33m 1792[2mms[22m[39m
+[90mstderr[2m | src/__tests__/pages/KnowledgeBasePage.test.tsx[2m > [22m[2mKnowledgeBasePage[2m > [22m[2m绌烘暟鎹笉宕╂簝
+[22m[39mWarning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+Not implemented: Window's getComputedStyle() method: with pseudo-elements
+Warning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+An update to KnowledgeBasePage inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to KnowledgeBasePage inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to KnowledgeBasePage inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+[90mstderr[2m | src/__tests__/pages/CheckpointPage.test.tsx[2m > [22m[2mCheckpointPage[2m > [22m[2m鏄剧ず妫€鏌ョ偣鍒楄〃鏁版嵁
+[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+
+ [32m鉁?[39m src/__tests__/pages/KnowledgeBasePage.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 7725[2mms[22m[39m
+   [33m[2m鉁?[22m[39m KnowledgeBasePage[2m > [22m娓叉煋椤甸潰鏍囬 [33m 5228[2mms[22m[39m
+   [33m[2m鉁?[22m[39m KnowledgeBasePage[2m > [22m娓叉煋鐭ヨ瘑搴撳垪琛?[33m 1329[2mms[22m[39m
+   [33m[2m鉁?[22m[39m KnowledgeBasePage[2m > [22m娓叉煋鏂板缓鎸夐挳 [33m 541[2mms[22m[39m
+   [33m[2m鉁?[22m[39m KnowledgeBasePage[2m > [22m绌烘暟鎹笉宕╂簝 [33m 625[2mms[22m[39m
+ [32m鉁?[39m src/__tests__/pages/AgentEditPage.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[33m 8439[2mms[22m[39m
+   [33m[2m鉁?[22m[39m AgentEditPage[2m > [22m鍒涘缓妯″紡娓叉煋鏍囬 [33m 4436[2mms[22m[39m
+   [33m[2m鉁?[22m[39m AgentEditPage[2m > [22m缂栬緫妯″紡娓叉煋鏍囬 [33m 1099[2mms[22m[39m
+   [33m[2m鉁?[22m[39m AgentEditPage[2m > [22m娓叉煋琛ㄥ崟瀛楁 [33m 910[2mms[22m[39m
+   [33m[2m鉁?[22m[39m AgentEditPage[2m > [22m缂栬緫妯″紡鍔犺浇 Agent 璇︽儏 [33m 1200[2mms[22m[39m
+   [33m[2m鉁?[22m[39m AgentEditPage[2m > [22m鍔犺浇涓嬫媺閫夐」 [33m 790[2mms[22m[39m
+[90mstderr[2m | src/__tests__/pages/CheckpointPage.test.tsx[2m > [22m[2mCheckpointPage[2m > [22m[2m鏄剧ず娑堟伅鏁板拰 Token 浣跨敤
+[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+
+ [32m鉁?[39m src/__tests__/pages/CheckpointPage.test.tsx [2m([22m[2m6 tests[22m[2m)[22m[33m 8630[2mms[22m[39m
+   [33m[2m鉁?[22m[39m CheckpointPage[2m > [22m娓叉煋椤甸潰鏍囬 [33m 2416[2mms[22m[39m
+   [33m[2m鉁?[22m[39m CheckpointPage[2m > [22m杈撳叆 Run ID 鍚庣偣鍑绘煡璇㈣皟鐢?list 鎺ュ彛 [33m 342[2mms[22m[39m
+   [33m[2m鉁?[22m[39m CheckpointPage[2m > [22m鏄剧ず妫€鏌ョ偣鍒楄〃鏁版嵁 [33m 3640[2mms[22m[39m
+   [33m[2m鉁?[22m[39m CheckpointPage[2m > [22m鏄剧ず娑堟伅鏁板拰 Token 浣跨敤 [33m 1893[2mms[22m[39m
+[90mstderr[2m | src/__tests__/pages/EnvironmentDetailPage.test.tsx[2m > [22m[2mEnvironmentDetailPage[2m > [22m[2mrenders environment detail page
+[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+鈿狅笍 React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+鈿狅笍 React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+[90mstderr[2m | src/__tests__/pages/EnvironmentDetailPage.test.tsx[2m > [22m[2mEnvironmentDetailPage[2m > [22m[2mdisplays environment info
+[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+
+[90mstderr[2m | src/__tests__/pages/EnvironmentDetailPage.test.tsx[2m > [22m[2mEnvironmentDetailPage[2m > [22m[2mshows publish and diff buttons
+[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+
+[90mstderr[2m | src/__tests__/pages/EnvironmentDetailPage.test.tsx[2m > [22m[2mEnvironmentDetailPage[2m > [22m[2mshows back button
+[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+
+ [32m鉁?[39m src/__tests__/pages/EnvironmentDetailPage.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 4816[2mms[22m[39m
+   [33m[2m鉁?[22m[39m EnvironmentDetailPage[2m > [22mrenders environment detail page [33m 3115[2mms[22m[39m
+   [33m[2m鉁?[22m[39m EnvironmentDetailPage[2m > [22mdisplays environment info [33m 535[2mms[22m[39m
+   [33m[2m鉁?[22m[39m EnvironmentDetailPage[2m > [22mshows publish and diff buttons [33m 580[2mms[22m[39m
+   [33m[2m鉁?[22m[39m EnvironmentDetailPage[2m > [22mshows back button [33m 583[2mms[22m[39m
+[90mstderr[2m | src/__tests__/pages/RolePage.test.tsx[2m > [22m[2mRolePage[2m > [22m[2mrenders page title
+[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+鈿狅笍 React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+鈿狅笍 React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+[90mstderr[2m | src/__tests__/pages/RolePage.test.tsx[2m > [22m[2mRolePage[2m > [22m[2mcalls roleService.list on mount
+[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+
+[90mstderr[2m | src/__tests__/pages/RolePage.test.tsx[2m > [22m[2mRolePage[2m > [22m[2mrenders role data
+[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+
+[90mstderr[2m | src/__tests__/pages/RolePage.test.tsx[2m > [22m[2mRolePage[2m > [22m[2mrenders permission resources
+[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+
+ [32m鉁?[39m src/__tests__/pages/RolePage.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 6734[2mms[22m[39m
+   [33m[2m鉁?[22m[39m RolePage[2m > [22mrenders page title [33m 2992[2mms[22m[39m
+   [33m[2m鉁?[22m[39m RolePage[2m > [22mcalls roleService.list on mount [33m 1028[2mms[22m[39m
+   [33m[2m鉁?[22m[39m RolePage[2m > [22mrenders role data [33m 1896[2mms[22m[39m
+   [33m[2m鉁?[22m[39m RolePage[2m > [22mrenders permission resources [33m 811[2mms[22m[39m
+ [32m鉁?[39m src/__tests__/pages/ChatWindow.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 3976[2mms[22m[39m
+   [33m[2m鉁?[22m[39m ChatWindow[2m > [22m娓叉煋 Agent 鍚嶇О [33m 2412[2mms[22m[39m
+   [33m[2m鉁?[22m[39m ChatWindow[2m > [22m鏃?Agent 鏃舵樉绀烘彁绀?[33m 575[2mms[22m[39m
+   [33m[2m鉁?[22m[39m ChatWindow[2m > [22m鏃犳秷鎭椂鏄剧ず寮曞鏂囨湰 [33m 659[2mms[22m[39m
+   [33m[2m鉁?[22m[39m ChatWindow[2m > [22m娓叉煋鍙戦€佹寜閽?[33m 327[2mms[22m[39m
+[90mstderr[2m | src/__tests__/pages/DashboardEdgeCases.test.tsx[2m > [22m[2mDashboardPage 杈圭晫鍦烘櫙[2m > [22m[2m鎵€鏈?API 杩斿洖绌烘暟鎹笉宕╂簝
+[22m[39m鈿狅笍 React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+鈿狅笍 React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+[90mstderr[2m | src/__tests__/pages/DashboardEdgeCases.test.tsx[2m > [22m[2mDashboardPage 杈圭晫鍦烘櫙[2m > [22m[2m鎵€鏈?API 杩斿洖绌烘暟鎹笉宕╂簝
+[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+
+[90mstderr[2m | src/__tests__/pages/DashboardEdgeCases.test.tsx[2m > [22m[2mDashboardPage 杈圭晫鍦烘櫙[2m > [22m[2m娓叉煋姒傝鏍囬
+[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+
+[90mstderr[2m | src/__tests__/pages/DashboardEdgeCases.test.tsx[2m > [22m[2mDashboardPage 杈圭晫鍦烘櫙[2m > [22m[2mAPI 鎶涘紓甯镐笉宕╂簝
+[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+
+[90mstderr[2m | src/__tests__/pages/DashboardEdgeCases.test.tsx[2m > [22m[2mDashboardPage 杈圭晫鍦烘櫙[2m > [22m[2m娓叉煋 ECharts 鍥捐〃鍖哄煙
+[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+
+ [32m鉁?[39m src/__tests__/pages/DashboardEdgeCases.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 5309[2mms[22m[39m
+   [33m[2m鉁?[22m[39m DashboardPage 杈圭晫鍦烘櫙[2m > [22m鎵€鏈?API 杩斿洖绌烘暟鎹笉宕╂簝 [33m 2346[2mms[22m[39m
+   [33m[2m鉁?[22m[39m DashboardPage 杈圭晫鍦烘櫙[2m > [22m娓叉煋姒傝鏍囬 [33m 809[2mms[22m[39m
+   [33m[2m鉁?[22m[39m DashboardPage 杈圭晫鍦烘櫙[2m > [22mAPI 鎶涘紓甯镐笉宕╂簝 [33m 914[2mms[22m[39m
+   [33m[2m鉁?[22m[39m DashboardPage 杈圭晫鍦烘櫙[2m > [22m娓叉煋 ECharts 鍥捐〃鍖哄煙 [33m 1236[2mms[22m[39m
+[90mstderr[2m | src/__tests__/pages/TemplatePage.test.tsx[2m > [22m[2mTemplatePage[2m > [22m[2mrenders page title
+[22m[39m鈿狅笍 React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+鈿狅笍 React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ [32m鉁?[39m src/__tests__/pages/CostRouterPage.test.tsx [2m([22m[2m8 tests[22m[2m)[22m[33m 5767[2mms[22m[39m
+   [33m[2m鉁?[22m[39m CostRouterPage[2m > [22m娓叉煋椤甸潰鏍囬 [33m 2531[2mms[22m[39m
+   [33m[2m鉁?[22m[39m CostRouterPage[2m > [22m娓叉煋灞傜骇璇存槑鍗＄墖 [33m 304[2mms[22m[39m
+   [33m[2m鉁?[22m[39m CostRouterPage[2m > [22m杈撳叆鏂囨湰鍚庣偣鍑诲垎鏋愭寜閽皟鐢?classify 鍜?recommend [33m 335[2mms[22m[39m
+   [33m[2m鉁?[22m[39m CostRouterPage[2m > [22m鏄剧ず鍒嗙被缁撴灉 [33m 545[2mms[22m[39m
+   [33m[2m鉁?[22m[39m CostRouterPage[2m > [22m鏄剧ず Provider 鎺ㄨ崘 [33m 619[2mms[22m[39m
+   [33m[2m鉁?[22m[39m CostRouterPage[2m > [22m鏃犲尮閰?Provider 鏃舵樉绀鸿鍛?[33m 719[2mms[22m[39m
+   [33m[2m鉁?[22m[39m CostRouterPage[2m > [22mclassify 澶辫触鏃舵樉绀洪敊璇彁绀?[33m 407[2mms[22m[39m
+[90mstderr[2m | src/__tests__/pages/ProviderEditPage.test.tsx[2m > [22m[2mProviderEditPage[2m > [22m[2m鏂板缓妯″紡娓叉煋娉ㄥ唽鏍囬
+[22m[39m鈿狅笍 React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+鈿狅笍 React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ [32m鉁?[39m src/__tests__/pages/TemplatePage.test.tsx [2m([22m[2m6 tests[22m[2m)[22m[33m 4081[2mms[22m[39m
+   [33m[2m鉁?[22m[39m TemplatePage[2m > [22mrenders page title [33m 2262[2mms[22m[39m
+   [33m[2m鉁?[22m[39m TemplatePage[2m > [22mloads and displays template card [33m 545[2mms[22m[39m
+   [33m[2m鉁?[22m[39m TemplatePage[2m > [22mshows category tag [33m 384[2mms[22m[39m
+   [33m[2m鉁?[22m[39m TemplatePage[2m > [22mshows empty state when no templates [33m 340[2mms[22m[39m
+ [32m鉁?[39m src/__tests__/pages/ProviderEditPage.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[33m 4798[2mms[22m[39m
+   [33m[2m鉁?[22m[39m ProviderEditPage[2m > [22m鏂板缓妯″紡娓叉煋娉ㄥ唽鏍囬 [33m 2812[2mms[22m[39m
+   [33m[2m鉁?[22m[39m ProviderEditPage[2m > [22m鏂板缓妯″紡鍖呭惈杩斿洖鎸夐挳 [33m 550[2mms[22m[39m
+   [33m[2m鉁?[22m[39m ProviderEditPage[2m > [22m鏂板缓妯″紡鍖呭惈琛ㄥ崟瀛楁 [33m 478[2mms[22m[39m
+   [33m[2m鉁?[22m[39m ProviderEditPage[2m > [22m缂栬緫妯″紡娓叉煋缂栬緫鏍囬 [33m 491[2mms[22m[39m
+   [33m[2m鉁?[22m[39m ProviderEditPage[2m > [22m缂栬緫妯″紡璋冪敤 get 鎺ュ彛 [33m 464[2mms[22m[39m
+[90mstderr[2m | src/__tests__/pages/OrganizationPage.test.tsx[2m > [22m[2mOrganizationPage[2m > [22m[2mrenders page title
+[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+鈿狅笍 React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+鈿狅笍 React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ [32m鉁?[39m src/__tests__/pages/TracesPage.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 4205[2mms[22m[39m
+   [33m[2m鉁?[22m[39m TracesPage[2m > [22m娓叉煋椤甸潰鏍囬 [33m 2528[2mms[22m[39m
+   [33m[2m鉁?[22m[39m TracesPage[2m > [22m娓叉煋缁熻鍗＄墖 [33m 946[2mms[22m[39m
+   [33m[2m鉁?[22m[39m TracesPage[2m > [22m璋冪敤鍒楄〃鍜岀粺璁℃帴鍙?[33m 529[2mms[22m[39m
+[90mstderr[2m | src/__tests__/pages/OrganizationPage.test.tsx[2m > [22m[2mOrganizationPage[2m > [22m[2mcalls organizationService.list on mount
+[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+
+[90mstderr[2m | src/__tests__/pages/OrganizationPage.test.tsx[2m > [22m[2mOrganizationPage[2m > [22m[2mrenders organization data
+[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+
+[90mstderr[2m | src/__tests__/pages/OrganizationPage.test.tsx[2m > [22m[2mOrganizationPage[2m > [22m[2mrenders create button
+[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+
+ [32m鉁?[39m src/__tests__/pages/OrganizationPage.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 5825[2mms[22m[39m
+   [33m[2m鉁?[22m[39m OrganizationPage[2m > [22mrenders page title [33m 3179[2mms[22m[39m
+   [33m[2m鉁?[22m[39m OrganizationPage[2m > [22mcalls organizationService.list on mount [33m 660[2mms[22m[39m
+   [33m[2m鉁?[22m[39m OrganizationPage[2m > [22mrenders organization data [33m 1337[2mms[22m[39m
+   [33m[2m鉁?[22m[39m OrganizationPage[2m > [22mrenders create button [33m 646[2mms[22m[39m
+ [32m鉁?[39m src/__tests__/pages/EventReplayTimeline.test.tsx [2m([22m[2m6 tests[22m[2m)[22m[33m 3413[2mms[22m[39m
+   [33m[2m鉁?[22m[39m EventReplayTimeline[2m > [22m绌轰簨浠舵樉绀虹┖鐘舵€?[33m 714[2mms[22m[39m
+   [33m[2m鉁?[22m[39m EventReplayTimeline[2m > [22m娓叉煋浜嬩欢鍒楄〃 [33m 1323[2mms[22m[39m
+   [33m[2m鉁?[22m[39m EventReplayTimeline[2m > [22m鐐瑰嚮鍗曟鍓嶈繘 [33m 968[2mms[22m[39m
+[90mstderr[2m | src/__tests__/pages/ABTestPage.test.tsx[2m > [22m[2mABTestPage[2m > [22m[2m娓叉煋椤甸潰鏍囬
+[22m[39m鈿狅笍 React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+鈿狅笍 React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ [32m鉁?[39m src/__tests__/pages/ABTestPage.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 3349[2mms[22m[39m
+   [33m[2m鉁?[22m[39m ABTestPage[2m > [22m娓叉煋椤甸潰鏍囬 [33m 2340[2mms[22m[39m
+   [33m[2m鉁?[22m[39m ABTestPage[2m > [22m娓叉煋 Prompt 杈撳叆鍖?[33m 423[2mms[22m[39m
+   [33m[2m鉁?[22m[39m ABTestPage[2m > [22m绌虹姸鎬佷笉宕╂簝 [33m 349[2mms[22m[39m
+ [32m鉁?[39m src/__tests__/pages/TraceComponents.test.tsx [2m([22m[2m11 tests[22m[2m)[22m[33m 2918[2mms[22m[39m
+   [33m[2m鉁?[22m[39m SpanDetailsPanel[2m > [22m娓叉煋 Span 鍚嶇О [33m 1190[2mms[22m[39m
+   [33m[2m鉁?[22m[39m TraceStatsPanel[2m > [22m娓叉煋鎬?Trace 鏁?[33m 430[2mms[22m[39m
+[90mstderr[2m | src/__tests__/pages/MarketplacePage.test.tsx[2m > [22m[2mMarketplacePage[2m > [22m[2m娓叉煋椤甸潰鏍囬
+[22m[39mWarning: [antd: Spin] `tip` only work in nest or fullscreen pattern.
+鈿狅笍 React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+鈿狅笍 React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+[90mstderr[2m | src/__tests__/pages/MarketplacePage.test.tsx[2m > [22m[2mMarketplacePage[2m > [22m[2m娓叉煋鎼滅储鍜岀瓫閫夊尯鍩?[22m[39mWarning: [antd: Spin] `tip` only work in nest or fullscreen pattern.
+
+[90mstderr[2m | src/__tests__/pages/MemoryPage.test.tsx[2m > [22m[2mMemoryPage[2m > [22m[2mrenders page title
+[22m[39mWarning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+鈿狅笍 React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+鈿狅笍 React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+[90mstderr[2m | src/__tests__/pages/MarketplacePage.test.tsx[2m > [22m[2mMarketplacePage[2m > [22m[2m娓叉煋妯℃澘鍗＄墖鍒楄〃
+[22m[39mWarning: [antd: Spin] `tip` only work in nest or fullscreen pattern.
+
+[90mstderr[2m | src/__tests__/pages/MemoryPage.test.tsx[2m > [22m[2mMemoryPage[2m > [22m[2mcalls memoryService.list on mount
+[22m[39mWarning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+
+[90mstderr[2m | src/__tests__/pages/MarketplacePage.test.tsx[2m > [22m[2mMarketplacePage[2m > [22m[2m绌烘暟鎹笉宕╂簝
+[22m[39mWarning: [antd: Spin] `tip` only work in nest or fullscreen pattern.
+
+ [32m鉁?[39m src/__tests__/pages/MarketplacePage.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 4074[2mms[22m[39m
+   [33m[2m鉁?[22m[39m MarketplacePage[2m > [22m娓叉煋椤甸潰鏍囬 [33m 2737[2mms[22m[39m
+   [33m[2m鉁?[22m[39m MarketplacePage[2m > [22m娓叉煋鎼滅储鍜岀瓫閫夊尯鍩?[33m 624[2mms[22m[39m
+   [33m[2m鉁?[22m[39m MarketplacePage[2m > [22m娓叉煋妯℃澘鍗＄墖鍒楄〃 [33m 574[2mms[22m[39m
+[90mstderr[2m | src/__tests__/pages/MemoryPage.test.tsx[2m > [22m[2mMemoryPage[2m > [22m[2mrenders memory data
+[22m[39mWarning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+
+[90mstderr[2m | src/__tests__/pages/MemoryPage.test.tsx[2m > [22m[2mMemoryPage[2m > [22m[2mrenders memory data
+[22m[39mWarning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+
+[90mstderr[2m | src/__tests__/pages/MemoryPage.test.tsx[2m > [22m[2mMemoryPage[2m > [22m[2mrenders create button
+[22m[39mWarning: [antd: Modal] `destroyOnClose` is deprecated. Please use `destroyOnHidden` instead.
+
+ [32m鉁?[39m src/__tests__/pages/MemoryPage.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 3166[2mms[22m[39m
+   [33m[2m鉁?[22m[39m MemoryPage[2m > [22mrenders page title [33m 2166[2mms[22m[39m
+   [33m[2m鉁?[22m[39m MemoryPage[2m > [22mcalls memoryService.list on mount [33m 367[2mms[22m[39m
+   [33m[2m鉁?[22m[39m MemoryPage[2m > [22mrenders memory data [33m 411[2mms[22m[39m
+[90mstderr[2m | src/__tests__/pages/VisualBuilderPage.test.tsx[2m > [22m[2mVisualBuilderPage[2m > [22m[2m娓叉煋 ReactFlow 鐢诲竷
+[22m[39mWarning: [antd: Card] `bodyStyle` is deprecated. Please use `styles.body` instead.
+鈿狅笍 React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+鈿狅笍 React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+[90mstderr[2m | src/__tests__/pages/VisualBuilderPage.test.tsx[2m > [22m[2mVisualBuilderPage[2m > [22m[2m娓叉煋宸ュ叿鏍忔寜閽?[22m[39mWarning: [antd: Card] `bodyStyle` is deprecated. Please use `styles.body` instead.
+
+[90mstderr[2m | src/__tests__/pages/VisualBuilderPage.test.tsx[2m > [22m[2mVisualBuilderPage[2m > [22m[2m娓叉煋淇濆瓨鎸夐挳
+[22m[39mWarning: [antd: Card] `bodyStyle` is deprecated. Please use `styles.body` instead.
+
+[90mstderr[2m | src/__tests__/pages/VisualBuilderPage.test.tsx[2m > [22m[2mVisualBuilderPage[2m > [22m[2m娓叉煋 JSON 杈撳嚭鍖哄煙
+[22m[39mWarning: [antd: Card] `bodyStyle` is deprecated. Please use `styles.body` instead.
+
+[90mstderr[2m | src/__tests__/pages/VisualBuilderPage.test.tsx[2m > [22m[2mVisualBuilderPage[2m > [22m[2m鍒濆鑺傜偣鍖呭惈 Agent Core
+[22m[39mWarning: [antd: Card] `bodyStyle` is deprecated. Please use `styles.body` instead.
+
+ [32m鉁?[39m src/__tests__/pages/VisualBuilderPage.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[33m 2879[2mms[22m[39m
+   [33m[2m鉁?[22m[39m VisualBuilderPage[2m > [22m娓叉煋 ReactFlow 鐢诲竷 [33m 2259[2mms[22m[39m
+[90mstderr[2m | src/__tests__/components/CrudTable.test.tsx[2m > [22m[2mCrudTable[2m > [22m[2m鐐瑰嚮鏂板缓鎸夐挳鎵撳紑 Modal
+[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+
+[90mstderr[2m | src/__tests__/components/CrudTable.test.tsx[2m > [22m[2mCrudTable[2m > [22m[2mmodalTitle 鑷畾涔?[22m[39mNot implemented: Window's getComputedStyle() method: with pseudo-elements
+
+ [32m鉁?[39m src/__tests__/components/CrudTable.test.tsx [2m([22m[2m18 tests[22m[2m)[22m[33m 3565[2mms[22m[39m
+   [33m[2m鉁?[22m[39m CrudTable[2m > [22m娓叉煋鏍囬鍜屽浘鏍?[33m 1062[2mms[22m[39m
+   [33m[2m鉁?[22m[39m CrudTable[2m > [22m榛樿鏄剧ず鏂板缓鎸夐挳 [33m 928[2mms[22m[39m
+   [33m[2m鉁?[22m[39m CrudTable[2m > [22m鐐瑰嚮鏂板缓鎸夐挳鎵撳紑 Modal [33m 609[2mms[22m[39m
+[90mstderr[2m | src/__tests__/pages/SkillPage.test.tsx[2m > [22m[2mSkillPage[2m > [22m[2mrenders page title
+[22m[39m鈿狅笍 React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+鈿狅笍 React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ [32m鉁?[39m src/__tests__/pages/SkillPage.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 2102[2mms[22m[39m
+   [33m[2m鉁?[22m[39m SkillPage[2m > [22mrenders page title [33m 1722[2mms[22m[39m
+ [32m鉁?[39m src/__tests__/pages/ChatPage.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 1685[2mms[22m[39m
+   [33m[2m鉁?[22m[39m ChatPage[2m > [22m娓叉煋渚ц竟鏍?[33m 1456[2mms[22m[39m

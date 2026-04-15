@@ -1,0 +1,81 @@
+
+Running 3 tests using 1 worker
+
+  鉁? 1 [setup] 鈥?e2e\auth.setup.ts:10:1 鈥?authenticate (10.0s)
+  鉁? 2 [deep-interaction] 鈥?e2e\deep-interaction.spec.ts:162:3 鈥?Agent 涓夋楠ゅ垱寤?鈥?姝ラ 3 鈥?瀹夊叏涓庨珮绾ч〉娓叉煋 (25.7s)
+  鉁? 3 [deep-interaction] 鈥?e2e\deep-interaction.spec.ts:187:3 鈥?Agent 涓夋楠ゅ垱寤?鈥?瀹屾暣涓夋鍒涘缓 Agent (29.4s)
+
+
+  1) [deep-interaction] 鈥?e2e\deep-interaction.spec.ts:162:3 鈥?Agent 涓夋楠ゅ垱寤?鈥?姝ラ 3 鈥?瀹夊叏涓庨珮绾ч〉娓叉煋 鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: getByRole('button', { name: /鍒涘缓|淇濆瓨|鎻愪氦/ }).first()
+    Expected: visible
+    Timeout: 10000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 10000ms[22m
+    [2m  - waiting for getByRole('button', { name: /鍒涘缓|淇濆瓨|鎻愪氦/ }).first()[22m
+
+
+      182 |     // 鍒涘缓鎸夐挳搴斿彲瑙?      183 |     const createBtn = page.getByRole('button', { name: /鍒涘缓|淇濆瓨|鎻愪氦/ });
+    > 184 |     await expect(createBtn.first()).toBeVisible({ timeout: 10_000 });
+          |                                     ^
+      185 |   });
+      186 |
+      187 |   test('瀹屾暣涓夋鍒涘缓 Agent', async ({ page }) => {
+        at E:\QP\maf\frontend\e2e\deep-interaction.spec.ts:184:37
+
+    attachment #1: screenshot (image/png) 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+    test-results\deep-interaction-Agent-涓夋楠ゅ垱寤?姝ラ-3-鈥?瀹夊叏涓庨珮绾ч〉娓叉煋-deep-interaction\test-failed-1.png
+    鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+
+    attachment #2: video (video/webm) 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+    test-results\deep-interaction-Agent-涓夋楠ゅ垱寤?姝ラ-3-鈥?瀹夊叏涓庨珮绾ч〉娓叉煋-deep-interaction\video.webm
+    鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+
+    Error Context: test-results\deep-interaction-Agent-涓夋楠ゅ垱寤?姝ラ-3-鈥?瀹夊叏涓庨珮绾ч〉娓叉煋-deep-interaction\error-context.md
+
+  2) [deep-interaction] 鈥?e2e\deep-interaction.spec.ts:187:3 鈥?Agent 涓夋楠ゅ垱寤?鈥?瀹屾暣涓夋鍒涘缓 Agent 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: getByRole('button', { name: /鍒涘缓|淇濆瓨|鎻愪氦/ }).first()
+    Expected: visible
+    Timeout: 10000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 10000ms[22m
+    [2m  - waiting for getByRole('button', { name: /鍒涘缓|淇濆瓨|鎻愪氦/ }).first()[22m
+
+
+      235 |     await expect(page.getByText('瀹夊叏鎶ゆ爮', { exact: true })).toBeVisible({ timeout: 10_000 });
+      236 |     const createBtn = page.getByRole('button', { name: /鍒涘缓|淇濆瓨|鎻愪氦/ }).first();
+    > 237 |     await expect(createBtn).toBeVisible({ timeout: 10_000 });
+          |                             ^
+      238 |     await createBtn.click();
+      239 |
+      240 |     // 搴旇烦杞洖鍒楄〃鎴栨樉绀烘垚鍔?        at E:\QP\maf\frontend\e2e\deep-interaction.spec.ts:237:29
+
+    attachment #1: screenshot (image/png) 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+    test-results\deep-interaction-Agent-涓夋楠ゅ垱寤?瀹屾暣涓夋鍒涘缓-Agent-deep-interaction\test-failed-1.png
+    鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+
+    attachment #2: video (video/webm) 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+    test-results\deep-interaction-Agent-涓夋楠ゅ垱寤?瀹屾暣涓夋鍒涘缓-Agent-deep-interaction\video.webm
+    鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+
+    Error Context: test-results\deep-interaction-Agent-涓夋楠ゅ垱寤?瀹屾暣涓夋鍒涘缓-Agent-deep-interaction\error-context.md
+
+  2 failed
+    [deep-interaction] 鈥?e2e\deep-interaction.spec.ts:162:3 鈥?Agent 涓夋楠ゅ垱寤?鈥?姝ラ 3 鈥?瀹夊叏涓庨珮绾ч〉娓叉煋 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+    [deep-interaction] 鈥?e2e\deep-interaction.spec.ts:187:3 鈥?Agent 涓夋楠ゅ垱寤?鈥?瀹屾暣涓夋鍒涘缓 Agent 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+  1 passed (1.5m)
+
+To open last HTML report run:
+[36m[39m
+[36m  npx playwright show-report[39m
+[36m[39m

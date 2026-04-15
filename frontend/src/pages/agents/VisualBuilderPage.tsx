@@ -68,7 +68,7 @@ const VisualBuilderPage: React.FC = () => {
     toolGroupService.list().then((r) => setToolGroupItems(r.data.filter((g) => g.is_enabled))).catch(() => {});
     guardrailService.list({ enabled_only: true, limit: 200 }).then((r) => setGuardrailItems(r.data)).catch(() => {});
     mcpServerService.list({ limit: 200 }).then((r) => setMcpItems(r.data)).catch(() => {});
-    agentService.list({ limit: 200 }).then((r) => setAgentItems(r.data.map((a: AgentConfig) => ({ name: a.name, description: a.description })))).catch(() => {});
+    agentService.list({ limit: 100 }).then((r) => setAgentItems(r.data.map((a: AgentConfig) => ({ name: a.name, description: a.description })))).catch(() => {});
   }, []);
 
   const onConnect = (params: Connection) => {

@@ -1,0 +1,334 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mE:/QP/maf/frontend[39m
+
+ [32m✓[39m src/__tests__/pages/CompliancePage.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 28542[2mms[22m[39m
+   [33m[2m✓[22m[39m CompliancePage[2m > [22m渲染页面标题 [33m 12728[2mms[22m[39m
+   [33m[2m✓[22m[39m CompliancePage[2m > [22m渲染统计仪表盘 [33m 6850[2mms[22m[39m
+   [33m[2m✓[22m[39m CompliancePage[2m > [22m渲染 Tabs（数据分类/保留策略/擦除请求/控制点） [33m 6015[2mms[22m[39m
+   [33m[2m✓[22m[39m CompliancePage[2m > [22m空数据不崩溃 [33m 2945[2mms[22m[39m
+ [32m✓[39m src/__tests__/pages/BenchmarkPage.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[33m 29479[2mms[22m[39m
+   [33m[2m✓[22m[39m BenchmarkPage[2m > [22m渲染页面标题 [33m 14911[2mms[22m[39m
+   [33m[2m✓[22m[39m BenchmarkPage[2m > [22m渲染统计卡片区域 [33m 4041[2mms[22m[39m
+   [33m[2m✓[22m[39m BenchmarkPage[2m > [22m渲染 Tabs 切换区 [33m 5779[2mms[22m[39m
+   [33m[2m✓[22m[39m BenchmarkPage[2m > [22m渲染创建套件按钮 [33m 1364[2mms[22m[39m
+   [33m[2m✓[22m[39m BenchmarkPage[2m > [22m页面不崩溃（空数据） [33m 3381[2mms[22m[39m
+ [32m✓[39m src/__tests__/pages/DashboardPage.test.tsx [2m([22m[2m8 tests[22m[2m)[22m[33m 67063[2mms[22m[39m
+   [33m[2m✓[22m[39m DashboardPage[2m > [22mrenders dashboard title [33m 14000[2mms[22m[39m
+   [33m[2m✓[22m[39m DashboardPage[2m > [22mshows agent count after loading [33m 9426[2mms[22m[39m
+   [33m[2m✓[22m[39m DashboardPage[2m > [22mshows session count after loading [33m 6539[2mms[22m[39m
+   [33m[2m✓[22m[39m DashboardPage[2m > [22mrenders ECharts component [33m 4263[2mms[22m[39m
+   [33m[2m✓[22m[39m DashboardPage[2m > [22mrenders token trend card title [33m 3454[2mms[22m[39m
+   [33m[2m✓[22m[39m DashboardPage[2m > [22mrenders agent realtime status card [33m 11246[2mms[22m[39m
+   [33m[2m✓[22m[39m DashboardPage[2m > [22mrenders agent activity trend card [33m 3464[2mms[22m[39m
+   [33m[2m✓[22m[39m DashboardPage[2m > [22mshows auto-refresh switch [33m 14668[2mms[22m[39m
+ [32m✓[39m src/__tests__/pages/DebugPage.test.tsx [2m([22m[2m14 tests[22m[2m)[22m[33m 58111[2mms[22m[39m
+   [33m[2m✓[22m[39m DebugPage[2m > [22m渲染页面标题 [33m 12258[2mms[22m[39m
+   [33m[2m✓[22m[39m DebugPage[2m > [22m渲染新建调试按钮 [33m 3168[2mms[22m[39m
+   [33m[2m✓[22m[39m DebugPage[2m > [22m渲染刷新按钮 [33m 5609[2mms[22m[39m
+   [33m[2m✓[22m[39m DebugPage[2m > [22m点击刷新按钮调用 list 接口 [33m 7574[2mms[22m[39m
+   [33m[2m✓[22m[39m DebugPage[2m > [22m点击新建调试打开模态框 [33m 5285[2mms[22m[39m
+   [33m[2m✓[22m[39m DebugPage[2m > [22m模态框包含输入消息和调试模式选择 [33m 11050[2mms[22m[39m
+   [33m[2m✓[22m[39m DebugPage[2m > [22m列表展示会话数据 [33m 5255[2mms[22m[39m
+   [33m[2m✓[22m[39m DebugPage[2m > [22m创建调试会话成功 [33m 5876[2mms[22m[39m
+   [33m[2m✓[22m[39m DebugPage[2m > [22m调试按钮存在于列表行 [33m 1868[2mms[22m[39m
+ [32m✓[39m src/__tests__/pages/EvolutionPage.test.tsx [2m([22m[2m7 tests[22m[2m)[22m[33m 46387[2mms[22m[39m
+   [33m[2m✓[22m[39m EvolutionPage[2m > [22mrenders page title [33m 13103[2mms[22m[39m
+   [33m[2m✓[22m[39m EvolutionPage[2m > [22mshows proposal in table after loading [33m 8888[2mms[22m[39m
+   [33m[2m✓[22m[39m EvolutionPage[2m > [22mshows proposal type tag [33m 9147[2mms[22m[39m
+   [33m[2m✓[22m[39m EvolutionPage[2m > [22mshows status tag [33m 4370[2mms[22m[39m
+   [33m[2m✓[22m[39m EvolutionPage[2m > [22mrenders filter inputs [33m 2436[2mms[22m[39m
+   [33m[2m✓[22m[39m EvolutionPage[2m > [22mrenders create button [33m 3544[2mms[22m[39m
+   [33m[2m✓[22m[39m EvolutionPage[2m > [22mrenders refresh button [33m 4897[2mms[22m[39m
+ [32m✓[39m src/__tests__/pages/LoginPage.test.tsx [2m([22m[2m12 tests[22m[2m)[22m[33m 86918[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginPage[2m > [22mrenders login form [33m 8308[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginPage[2m > [22mrenders login button [33m 5169[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginPage[2m > [22mshows error message when store has error [33m 782[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginPage[2m > [22mrenders GitHub login button when provider is available [33m 7436[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginPage[2m > [22mrenders wecom login button when provider is available [33m 9517[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginPage[2m > [22mrenders dingtalk login button when provider is available [33m 4662[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginPage[2m > [22mrenders feishu login button when provider is available [33m 8783[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginPage[2m > [22mrenders multiple OAuth providers together [33m 9299[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginPage[2m > [22mdoes not show divider when no providers available [33m 1731[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginPage[2m > [22mclicks OAuth button and calls authorize [33m 15935[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginPage[2m > [22mshows error message when OAuth authorize fails [33m 12672[2mms[22m[39m
+   [33m[2m✓[22m[39m LoginPage[2m > [22mhandles getProviders failure gracefully [33m 2619[2mms[22m[39m
+ [32m✓[39m src/__tests__/components/ToolEditor.test.tsx [2m([22m[2m8 tests[22m[2m)[22m[33m 52381[2mms[22m[39m
+   [33m[2m✓[22m[39m ToolEditor[2m > [22m空状态显示占位提示 [33m 5269[2mms[22m[39m
+   [33m[2m✓[22m[39m ToolEditor[2m > [22m渲染工具列表 [33m 2244[2mms[22m[39m
+   [33m[2m✓[22m[39m ToolEditor[2m > [22m添加工具按钮打开弹窗 [33m 13669[2mms[22m[39m
+   [33m[2m✓[22m[39m ToolEditor[2m > [22m删除工具触发 onChange [33m 22121[2mms[22m[39m
+   [33m[2m✓[22m[39m ToolEditor[2m > [22m切换到 JSON 模式 [33m 500[2mms[22m[39m
+   [33m[2m✓[22m[39m ToolEditor[2m > [22m复制工具触发 onChange [33m 6193[2mms[22m[39m
+   [33m[2m✓[22m[39m ToolEditor[2m > [22m应用模板覆盖当前工具列表 [33m 2315[2mms[22m[39m
+ [32m✓[39m src/__tests__/pages/IMChannelPage.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 13280[2mms[22m[39m
+   [33m[2m✓[22m[39m IMChannelPage[2m > [22m渲染页面标题 [33m 5678[2mms[22m[39m
+   [33m[2m✓[22m[39m IMChannelPage[2m > [22m渲染新建按钮 [33m 2439[2mms[22m[39m
+   [33m[2m✓[22m[39m IMChannelPage[2m > [22m调用列表接口 [33m 2358[2mms[22m[39m
+   [33m[2m✓[22m[39m IMChannelPage[2m > [22m加载失败不崩溃 [33m 2800[2mms[22m[39m
+ [32m✓[39m src/__tests__/pages/RolePage.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 15046[2mms[22m[39m
+   [33m[2m✓[22m[39m RolePage[2m > [22mrenders page title [33m 6653[2mms[22m[39m
+   [33m[2m✓[22m[39m RolePage[2m > [22mcalls roleService.list on mount [33m 1332[2mms[22m[39m
+   [33m[2m✓[22m[39m RolePage[2m > [22mrenders role data [33m 5002[2mms[22m[39m
+   [33m[2m✓[22m[39m RolePage[2m > [22mrenders permission resources [33m 2056[2mms[22m[39m
+ [32m✓[39m src/__tests__/pages/A2APage.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 17827[2mms[22m[39m
+   [33m[2m✓[22m[39m A2APage[2m > [22m渲染页面标题 [33m 6475[2mms[22m[39m
+   [33m[2m✓[22m[39m A2APage[2m > [22m渲染 Agent Card 表格 [33m 2536[2mms[22m[39m
+   [33m[2m✓[22m[39m A2APage[2m > [22m渲染操作按钮（注册/发现） [33m 4534[2mms[22m[39m
+   [33m[2m✓[22m[39m A2APage[2m > [22m空数据不崩溃 [33m 4277[2mms[22m[39m
+ [32m✓[39m src/__tests__/pages/AuditLogPage.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 14253[2mms[22m[39m
+   [33m[2m✓[22m[39m AuditLogPage[2m > [22mrenders page title [33m 7245[2mms[22m[39m
+   [33m[2m✓[22m[39m AuditLogPage[2m > [22mrenders audit log data in table [33m 3004[2mms[22m[39m
+   [33m[2m✓[22m[39m AuditLogPage[2m > [22mrenders table columns [33m 1514[2mms[22m[39m
+   [33m[2m✓[22m[39m AuditLogPage[2m > [22mcalls listAuditLogs on mount [33m 2487[2mms[22m[39m
+ [32m✓[39m src/__tests__/pages/ProviderEditPage.test.tsx [2m([22m[2m9 tests[22m[2m)[22m[33m 15995[2mms[22m[39m
+   [33m[2m✓[22m[39m ProviderEditPage[2m > [22m新建模式渲染注册标题 [33m 6676[2mms[22m[39m
+   [33m[2m✓[22m[39m ProviderEditPage[2m > [22m新建模式包含返回按钮 [33m 1648[2mms[22m[39m
+   [33m[2m✓[22m[39m ProviderEditPage[2m > [22m新建模式包含表单字段 [33m 1092[2mms[22m[39m
+   [33m[2m✓[22m[39m ProviderEditPage[2m > [22m编辑模式渲染编辑标题 [33m 1402[2mms[22m[39m
+   [33m[2m✓[22m[39m ProviderEditPage[2m > [22m编辑模式调用 get 接口 [33m 1147[2mms[22m[39m
+   [33m[2m✓[22m[39m ProviderEditPage[2m > [22m编辑模式显示关联模型 Tab [33m 1502[2mms[22m[39m
+   [33m[2m✓[22m[39m ProviderEditPage[2m > [22m编辑模式加载关联模型列表 [33m 805[2mms[22m[39m
+   [33m[2m✓[22m[39m ProviderEditPage[2m > [22m新建模式不显示关联模型 Tab [33m 455[2mms[22m[39m
+   [33m[2m✓[22m[39m ProviderEditPage[2m > [22m编辑模式显示基本配置和关联模型两个 Tab [33m 1265[2mms[22m[39m
+ [32m✓[39m src/__tests__/pages/EvaluationPage.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 14282[2mms[22m[39m
+   [33m[2m✓[22m[39m EvaluationPage[2m > [22m渲染 Tabs [33m 6487[2mms[22m[39m
+   [33m[2m✓[22m[39m EvaluationPage[2m > [22m渲染评估列表 [33m 2913[2mms[22m[39m
+   [33m[2m✓[22m[39m EvaluationPage[2m > [22m渲染新建评估按钮 [33m 2582[2mms[22m[39m
+   [33m[2m✓[22m[39m EvaluationPage[2m > [22m加载失败不崩溃 [33m 2297[2mms[22m[39m
+ [32m✓[39m src/__tests__/pages/TeamPage.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 10903[2mms[22m[39m
+   [33m[2m✓[22m[39m TeamPage[2m > [22mrenders page title [33m 4590[2mms[22m[39m
+   [33m[2m✓[22m[39m TeamPage[2m > [22mcalls listTeams on mount [33m 1931[2mms[22m[39m
+   [33m[2m✓[22m[39m TeamPage[2m > [22mrenders team data [33m 2595[2mms[22m[39m
+   [33m[2m✓[22m[39m TeamPage[2m > [22mrenders protocol tag [33m 1785[2mms[22m[39m
+ [32m✓[39m src/__tests__/pages/DashboardEdgeCases.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 22993[2mms[22m[39m
+   [33m[2m✓[22m[39m DashboardPage 边界场景[2m > [22m所有 API 返回空数据不崩溃 [33m 12135[2mms[22m[39m
+   [33m[2m✓[22m[39m DashboardPage 边界场景[2m > [22m渲染概览标题 [33m 5206[2mms[22m[39m
+   [33m[2m✓[22m[39m DashboardPage 边界场景[2m > [22mAPI 抛异常不崩溃 [33m 3997[2mms[22m[39m
+   [33m[2m✓[22m[39m DashboardPage 边界场景[2m > [22m渲染 ECharts 图表区域 [33m 1651[2mms[22m[39m
+ [32m✓[39m src/__tests__/pages/EnvironmentDetailPage.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 11087[2mms[22m[39m
+   [33m[2m✓[22m[39m EnvironmentDetailPage[2m > [22mrenders environment detail page [33m 6301[2mms[22m[39m
+   [33m[2m✓[22m[39m EnvironmentDetailPage[2m > [22mdisplays environment info [33m 1850[2mms[22m[39m
+   [33m[2m✓[22m[39m EnvironmentDetailPage[2m > [22mshows publish and diff buttons [33m 1346[2mms[22m[39m
+   [33m[2m✓[22m[39m EnvironmentDetailPage[2m > [22mshows back button [33m 1587[2mms[22m[39m
+ [32m✓[39m src/__tests__/pages/ApmDashboardPage.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[33m 17423[2mms[22m[39m
+   [33m[2m✓[22m[39m ApmDashboardPage[2m > [22m渲染页面标题 [33m 8900[2mms[22m[39m
+   [33m[2m✓[22m[39m ApmDashboardPage[2m > [22m渲染统计卡片 [33m 3446[2mms[22m[39m
+   [33m[2m✓[22m[39m ApmDashboardPage[2m > [22m渲染 ECharts 图表 [33m 4799[2mms[22m[39m
+ [32m✓[39m src/__tests__/pages/CheckpointPage.test.tsx [2m([22m[2m6 tests[22m[2m)[22m[33m 15396[2mms[22m[39m
+   [33m[2m✓[22m[39m CheckpointPage[2m > [22m渲染页面标题 [33m 4533[2mms[22m[39m
+   [33m[2m✓[22m[39m CheckpointPage[2m > [22m渲染搜索框和查询按钮 [33m 764[2mms[22m[39m
+   [33m[2m✓[22m[39m CheckpointPage[2m > [22m输入 Run ID 后点击查询调用 list 接口 [33m 570[2mms[22m[39m
+   [33m[2m✓[22m[39m CheckpointPage[2m > [22m显示检查点列表数据 [33m 7777[2mms[22m[39m
+   [33m[2m✓[22m[39m CheckpointPage[2m > [22m显示消息数和 Token 使用 [33m 1597[2mms[22m[39m
+ [32m✓[39m src/__tests__/pages/ProviderKeyRotation.test.tsx [2m([22m[2m6 tests[22m[2m)[22m[33m 23387[2mms[22m[39m
+   [33m[2m✓[22m[39m ProviderListPage — 密钥轮换与到期[2m > [22m渲染密钥状态列 [33m 8029[2mms[22m[39m
+   [33m[2m✓[22m[39m ProviderListPage — 密钥轮换与到期[2m > [22m显示已过期标签 [33m 5547[2mms[22m[39m
+   [33m[2m✓[22m[39m ProviderListPage — 密钥轮换与到期[2m > [22m显示有效标签 [33m 2674[2mms[22m[39m
+   [33m[2m✓[22m[39m ProviderListPage — 密钥轮换与到期[2m > [22m显示永久标签（无过期时间） [33m 2603[2mms[22m[39m
+   [33m[2m✓[22m[39m ProviderListPage — 密钥轮换与到期[2m > [22m渲染轮换按钮 [33m 2389[2mms[22m[39m
+   [33m[2m✓[22m[39m ProviderListPage — 密钥轮换与到期[2m > [22m点击轮换按钮显示弹窗 [33m 2139[2mms[22m[39m
+ [32m✓[39m src/__tests__/pages/IntentDetectionPage.test.tsx [2m([22m[2m6 tests[22m[2m)[22m[33m 20086[2mms[22m[39m
+   [33m[2m✓[22m[39m IntentDetectionPage[2m > [22mrenders page title [33m 5800[2mms[22m[39m
+   [33m[2m✓[22m[39m IntentDetectionPage[2m > [22mrenders form labels [33m 711[2mms[22m[39m
+   [33m[2m✓[22m[39m IntentDetectionPage[2m > [22mrenders detect button [33m 4937[2mms[22m[39m
+   [33m[2m✓[22m[39m IntentDetectionPage[2m > [22mcalls detect API and shows drifted result [33m 2900[2mms[22m[39m
+   [33m[2m✓[22m[39m IntentDetectionPage[2m > [22mshows not-drifted result [33m 2876[2mms[22m[39m
+   [33m[2m✓[22m[39m IntentDetectionPage[2m > [22mdisplays keyword tags [33m 2857[2mms[22m[39m
+ [32m✓[39m src/__tests__/pages/AgentEditPage.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[33m 16730[2mms[22m[39m
+   [33m[2m✓[22m[39m AgentEditPage[2m > [22m创建模式渲染标题 [33m 6600[2mms[22m[39m
+   [33m[2m✓[22m[39m AgentEditPage[2m > [22m编辑模式渲染标题 [33m 4301[2mms[22m[39m
+   [33m[2m✓[22m[39m AgentEditPage[2m > [22m渲染表单字段 [33m 1557[2mms[22m[39m
+   [33m[2m✓[22m[39m AgentEditPage[2m > [22m编辑模式加载 Agent 详情 [33m 2526[2mms[22m[39m
+   [33m[2m✓[22m[39m AgentEditPage[2m > [22m加载下拉选项 [33m 1735[2mms[22m[39m
+ [32m✓[39m src/__tests__/pages/WorkflowPage.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 14724[2mms[22m[39m
+   [33m[2m✓[22m[39m WorkflowPage[2m > [22m渲染页面标题 [33m 5956[2mms[22m[39m
+   [33m[2m✓[22m[39m WorkflowPage[2m > [22m渲染新建按钮 [33m 2540[2mms[22m[39m
+   [33m[2m✓[22m[39m WorkflowPage[2m > [22m渲染工作流列表记录 [33m 2459[2mms[22m[39m
+   [33m[2m✓[22m[39m WorkflowPage[2m > [22m渲染操作按钮 [33m 3761[2mms[22m[39m
+ [32m✓[39m src/__tests__/pages/AgentListEdgeCases.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 15723[2mms[22m[39m
+   [33m[2m✓[22m[39m AgentListPage 边界场景[2m > [22mAPI 返回空列表不崩溃 [33m 7151[2mms[22m[39m
+   [33m[2m✓[22m[39m AgentListPage 边界场景[2m > [22m渲染 Agent 列表页标题 [33m 2522[2mms[22m[39m
+   [33m[2m✓[22m[39m AgentListPage 边界场景[2m > [22mAPI 返回 undefined data 不崩溃 [33m 2643[2mms[22m[39m
+   [33m[2m✓[22m[39m AgentListPage 边界场景[2m > [22mAPI 返回 null 不崩溃 [33m 3403[2mms[22m[39m
+ [32m✓[39m src/__tests__/pages/CostRouterPage.test.tsx [2m([22m[2m8 tests[22m[2m)[22m[33m 8633[2mms[22m[39m
+   [33m[2m✓[22m[39m CostRouterPage[2m > [22m渲染页面标题 [33m 4080[2mms[22m[39m
+   [33m[2m✓[22m[39m CostRouterPage[2m > [22m渲染层级说明卡片 [33m 369[2mms[22m[39m
+   [33m[2m✓[22m[39m CostRouterPage[2m > [22m空输入时分析按钮禁用 [33m 613[2mms[22m[39m
+   [33m[2m✓[22m[39m CostRouterPage[2m > [22m输入文本后点击分析按钮调用 classify 和 recommend [33m 921[2mms[22m[39m
+   [33m[2m✓[22m[39m CostRouterPage[2m > [22m显示分类结果 [33m 521[2mms[22m[39m
+   [33m[2m✓[22m[39m CostRouterPage[2m > [22m显示 Provider 推荐 [33m 513[2mms[22m[39m
+   [33m[2m✓[22m[39m CostRouterPage[2m > [22m无匹配 Provider 时显示警告 [33m 706[2mms[22m[39m
+   [33m[2m✓[22m[39m CostRouterPage[2m > [22mclassify 失败时显示错误提示 [33m 906[2mms[22m[39m
+ [32m✓[39m src/__tests__/pages/VisualBuilderPage.test.tsx [2m([22m[2m7 tests[22m[2m)[22m[33m 7018[2mms[22m[39m
+   [33m[2m✓[22m[39m VisualBuilderPage[2m > [22m渲染 ReactFlow 画布 [33m 3603[2mms[22m[39m
+   [33m[2m✓[22m[39m VisualBuilderPage[2m > [22m渲染复制 JSON 按钮 [33m 514[2mms[22m[39m
+   [33m[2m✓[22m[39m VisualBuilderPage[2m > [22m初始节点包含 Agent Core [33m 438[2mms[22m[39m
+   [33m[2m✓[22m[39m VisualBuilderPage[2m > [22m加载后端数据 [33m 401[2mms[22m[39m
+   [33m[2m✓[22m[39m VisualBuilderPage[2m > [22m点击保存为 Agent 打开 Modal [33m 1683[2mms[22m[39m
+ [32m✓[39m src/__tests__/pages/TemplatePage.test.tsx [2m([22m[2m6 tests[22m[2m)[22m[33m 7694[2mms[22m[39m
+   [33m[2m✓[22m[39m TemplatePage[2m > [22mrenders page title [33m 4489[2mms[22m[39m
+   [33m[2m✓[22m[39m TemplatePage[2m > [22mloads and displays template card [33m 965[2mms[22m[39m
+   [33m[2m✓[22m[39m TemplatePage[2m > [22mshows template description [33m 884[2mms[22m[39m
+   [33m[2m✓[22m[39m TemplatePage[2m > [22mshows category tag [33m 679[2mms[22m[39m
+   [33m[2m✓[22m[39m TemplatePage[2m > [22mshows empty state when no templates [33m 510[2mms[22m[39m
+ [32m✓[39m src/__tests__/pages/OrganizationPage.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 13049[2mms[22m[39m
+   [33m[2m✓[22m[39m OrganizationPage[2m > [22mrenders page title [33m 7362[2mms[22m[39m
+   [33m[2m✓[22m[39m OrganizationPage[2m > [22mcalls organizationService.list on mount [33m 1175[2mms[22m[39m
+   [33m[2m✓[22m[39m OrganizationPage[2m > [22mrenders organization data [33m 1937[2mms[22m[39m
+   [33m[2m✓[22m[39m OrganizationPage[2m > [22mrenders create button [33m 2570[2mms[22m[39m
+ [32m✓[39m src/__tests__/pages/ChatWindow.test.tsx [2m([22m[2m6 tests[22m[2m)[22m[33m 8465[2mms[22m[39m
+   [33m[2m✓[22m[39m ChatWindow[2m > [22m渲染 Agent 名称 [33m 4811[2mms[22m[39m
+   [33m[2m✓[22m[39m ChatWindow[2m > [22m无 Agent 时显示提示 [33m 881[2mms[22m[39m
+   [33m[2m✓[22m[39m ChatWindow[2m > [22m无消息时显示引导文本 [33m 742[2mms[22m[39m
+   [33m[2m✓[22m[39m ChatWindow[2m > [22m渲染发送按钮 [33m 383[2mms[22m[39m
+   [33m[2m✓[22m[39m ChatWindow[2m > [22m切换 session 时加载历史消息 [33m 827[2mms[22m[39m
+   [33m[2m✓[22m[39m ChatWindow[2m > [22msessionId 为 null 时不调用 getMessages [33m 815[2mms[22m[39m
+ [32m✓[39m src/__tests__/pages/MarketplacePage.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 6333[2mms[22m[39m
+   [33m[2m✓[22m[39m MarketplacePage[2m > [22m渲染页面标题 [33m 4636[2mms[22m[39m
+   [33m[2m✓[22m[39m MarketplacePage[2m > [22m渲染搜索和筛选区域 [33m 844[2mms[22m[39m
+   [33m[2m✓[22m[39m MarketplacePage[2m > [22m渲染模板卡片列表 [33m 662[2mms[22m[39m
+ [32m✓[39m src/__tests__/pages/EventReplayTimeline.test.tsx [2m([22m[2m6 tests[22m[2m)[22m[33m 8206[2mms[22m[39m
+   [33m[2m✓[22m[39m EventReplayTimeline[2m > [22m空事件显示空状态 [33m 2087[2mms[22m[39m
+   [33m[2m✓[22m[39m EventReplayTimeline[2m > [22m渲染事件列表 [33m 2410[2mms[22m[39m
+   [33m[2m✓[22m[39m EventReplayTimeline[2m > [22m点击播放按钮 [33m 660[2mms[22m[39m
+   [33m[2m✓[22m[39m EventReplayTimeline[2m > [22m点击单步前进 [33m 2285[2mms[22m[39m
+   [33m[2m✓[22m[39m EventReplayTimeline[2m > [22m显示事件类型 Tag [33m 391[2mms[22m[39m
+   [33m[2m✓[22m[39m EventReplayTimeline[2m > [22m按序列号排序 [33m 365[2mms[22m[39m
+ [32m✓[39m src/__tests__/pages/KnowledgeBasePage.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 11533[2mms[22m[39m
+   [33m[2m✓[22m[39m KnowledgeBasePage[2m > [22m渲染页面标题 [33m 7237[2mms[22m[39m
+   [33m[2m✓[22m[39m KnowledgeBasePage[2m > [22m渲染知识库列表 [33m 961[2mms[22m[39m
+   [33m[2m✓[22m[39m KnowledgeBasePage[2m > [22m渲染新建按钮 [33m 1464[2mms[22m[39m
+   [33m[2m✓[22m[39m KnowledgeBasePage[2m > [22m空数据不崩溃 [33m 1868[2mms[22m[39m
+ [32m✓[39m src/__tests__/components/ConditionRuleEditor.test.tsx [2m([22m[2m6 tests[22m[2m)[22m[33m 8561[2mms[22m[39m
+   [33m[2m✓[22m[39m ConditionRuleEditor[2m > [22m空条件显示占位提示 [33m 3180[2mms[22m[39m
+   [33m[2m✓[22m[39m ConditionRuleEditor[2m > [22m已有规则时渲染规则列表 [33m 1106[2mms[22m[39m
+   [33m[2m✓[22m[39m ConditionRuleEditor[2m > [22m添加规则触发 onChange [33m 411[2mms[22m[39m
+   [33m[2m✓[22m[39m ConditionRuleEditor[2m > [22m删除规则触发 onChange [33m 3602[2mms[22m[39m
+ [32m✓[39m src/__tests__/pages/ABTestPage.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 5739[2mms[22m[39m
+   [33m[2m✓[22m[39m ABTestPage[2m > [22m渲染页面标题 [33m 4086[2mms[22m[39m
+   [33m[2m✓[22m[39m ABTestPage[2m > [22m渲染 Prompt 输入区 [33m 820[2mms[22m[39m
+   [33m[2m✓[22m[39m ABTestPage[2m > [22m渲染模型选择区域 [33m 508[2mms[22m[39m
+   [33m[2m✓[22m[39m ABTestPage[2m > [22m空状态不崩溃 [33m 322[2mms[22m[39m
+ [32m✓[39m src/__tests__/pages/MemoryPage.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[33m 4865[2mms[22m[39m
+   [33m[2m✓[22m[39m MemoryPage[2m > [22mrenders page title [33m 3744[2mms[22m[39m
+   [33m[2m✓[22m[39m MemoryPage[2m > [22mrenders memory data [33m 344[2mms[22m[39m
+ [32m✓[39m src/__tests__/pages/TracesPage.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 6084[2mms[22m[39m
+   [33m[2m✓[22m[39m TracesPage[2m > [22m渲染页面标题 [33m 4668[2mms[22m[39m
+   [33m[2m✓[22m[39m TracesPage[2m > [22m渲染统计卡片 [33m 687[2mms[22m[39m
+   [33m[2m✓[22m[39m TracesPage[2m > [22m调用列表和统计接口 [33m 511[2mms[22m[39m
+ [32m✓[39m src/__tests__/pages/ApprovalQueuePage.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 4052[2mms[22m[39m
+   [33m[2m✓[22m[39m ApprovalQueuePage[2m > [22m渲染审批队列标题 [33m 3113[2mms[22m[39m
+   [33m[2m✓[22m[39m ApprovalQueuePage[2m > [22m渲染 WebSocket 连接状态 [33m 361[2mms[22m[39m
+ [32m✓[39m src/__tests__/pages/SupervisionPage.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 5161[2mms[22m[39m
+   [33m[2m✓[22m[39m SupervisionPage[2m > [22m渲染页面标题 [33m 3767[2mms[22m[39m
+   [33m[2m✓[22m[39m SupervisionPage[2m > [22m渲染统计卡片 [33m 540[2mms[22m[39m
+   [33m[2m✓[22m[39m SupervisionPage[2m > [22m调用列表接口 [33m 438[2mms[22m[39m
+   [33m[2m✓[22m[39m SupervisionPage[2m > [22m加载失败不崩溃 [33m 413[2mms[22m[39m
+ [32m✓[39m src/__tests__/components/CrudTable.test.tsx [2m([22m[2m21 tests[22m[2m)[22m[33m 5085[2mms[22m[39m
+   [33m[2m✓[22m[39m CrudTable[2m > [22m渲染标题和图标 [33m 1419[2mms[22m[39m
+   [33m[2m✓[22m[39m CrudTable[2m > [22m默认显示新建按钮 [33m 1438[2mms[22m[39m
+   [33m[2m✓[22m[39m CrudTable[2m > [22m点击新建按钮打开 Modal [33m 728[2mms[22m[39m
+   [33m[2m✓[22m[39m CrudTable[2m > [22mmodalTitle 自定义 [33m 438[2mms[22m[39m
+ [32m✓[39m src/__tests__/pages/TeamFlowPage.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[33m 2666[2mms[22m[39m
+   [33m[2m✓[22m[39m TeamFlowPage[2m > [22m渲染页面标题 [33m 2400[2mms[22m[39m
+ [32m✓[39m src/__tests__/pages/I18nSettingsPage.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 3762[2mms[22m[39m
+   [33m[2m✓[22m[39m I18nSettingsPage[2m > [22m渲染页面标题 [33m 2880[2mms[22m[39m
+   [33m[2m✓[22m[39m I18nSettingsPage[2m > [22m渲染 Agent 下拉选择器 [33m 304[2mms[22m[39m
+ [32m✓[39m src/__tests__/components/buildActionColumn.test.tsx [2m([22m[2m8 tests[22m[2m)[22m[33m 3697[2mms[22m[39m
+   [33m[2m✓[22m[39m buildActionColumn[2m > [22m渲染编辑按钮和更多下拉 [33m 2541[2mms[22m[39m
+   [33m[2m✓[22m[39m buildActionColumn[2m > [22m点击编辑按钮调用 openEdit [33m 323[2mms[22m[39m
+ [32m✓[39m src/__tests__/pages/TraceComponents.test.tsx [2m([22m[2m11 tests[22m[2m)[22m[33m 4573[2mms[22m[39m
+   [33m[2m✓[22m[39m SpanDetailsPanel[2m > [22m渲染 Span 名称 [33m 1939[2mms[22m[39m
+   [33m[2m✓[22m[39m SpanDetailsPanel[2m > [22mguardrail 拦截时显示告警 [33m 304[2mms[22m[39m
+   [33m[2m✓[22m[39m TraceStatsPanel[2m > [22m渲染总 Trace 数 [33m 713[2mms[22m[39m
+ [32m✓[39m src/__tests__/pages/NotFoundPage.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[33m 3416[2mms[22m[39m
+   [33m[2m✓[22m[39m NotFoundPage[2m > [22mrenders 404 text [33m 2383[2mms[22m[39m
+   [33m[2m✓[22m[39m NotFoundPage[2m > [22mrenders back button [33m 1029[2mms[22m[39m
+ [32m✓[39m src/__tests__/pages/HandoffEditorPage.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 3438[2mms[22m[39m
+   [33m[2m✓[22m[39m HandoffEditorPage[2m > [22m渲染页面标题 [33m 3209[2mms[22m[39m
+ [32m✓[39m src/__tests__/pages/MCPServerPage.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 3672[2mms[22m[39m
+   [33m[2m✓[22m[39m MCPServerPage[2m > [22m渲染 MCP Server 管理标题 [33m 2756[2mms[22m[39m
+   [33m[2m✓[22m[39m MCPServerPage[2m > [22m渲染新建按钮 [33m 362[2mms[22m[39m
+ [32m✓[39m src/__tests__/pages/AgentListPage.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[33m 3354[2mms[22m[39m
+   [33m[2m✓[22m[39m AgentListPage[2m > [22mrenders page content [33m 2864[2mms[22m[39m
+ [32m✓[39m src/__tests__/pages/WorkflowEditorPage.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 3981[2mms[22m[39m
+   [33m[2m✓[22m[39m WorkflowEditorPage[2m > [22m渲染页面标题 [33m 2999[2mms[22m[39m
+   [33m[2m✓[22m[39m WorkflowEditorPage[2m > [22m渲染 ReactFlow 画布 [33m 313[2mms[22m[39m
+   [33m[2m✓[22m[39m WorkflowEditorPage[2m > [22m渲染创建按钮 [33m 314[2mms[22m[39m
+   [33m[2m✓[22m[39m WorkflowEditorPage[2m > [22m渲染步骤类型选项 [33m 351[2mms[22m[39m
+ [32m✓[39m src/__tests__/pages/RunListPage.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[33m 3248[2mms[22m[39m
+   [33m[2m✓[22m[39m RunListPage[2m > [22m渲染页面标题 [33m 2087[2mms[22m[39m
+   [33m[2m✓[22m[39m RunListPage[2m > [22m渲染统计卡片 [33m 419[2mms[22m[39m
+ [32m✓[39m src/__tests__/pages/SkillPage.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 3799[2mms[22m[39m
+   [33m[2m✓[22m[39m SkillPage[2m > [22mrenders page title [33m 2833[2mms[22m[39m
+   [33m[2m✓[22m[39m SkillPage[2m > [22mcalls skillService.list via ProTable request [33m 342[2mms[22m[39m
+   [33m[2m✓[22m[39m SkillPage[2m > [22mrenders create button [33m 302[2mms[22m[39m
+   [33m[2m✓[22m[39m SkillPage[2m > [22mrenders search button [33m 318[2mms[22m[39m
+ [32m✓[39m src/__tests__/pages/GuardrailRulesPage.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 3157[2mms[22m[39m
+   [33m[2m✓[22m[39m GuardrailRulesPage[2m > [22m渲染页面标题 [33m 2536[2mms[22m[39m
+ [32m✓[39m src/__tests__/pages/ChatPage.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 2851[2mms[22m[39m
+   [33m[2m✓[22m[39m ChatPage[2m > [22m渲染侧边栏 [33m 2517[2mms[22m[39m
+ [32m✓[39m src/__tests__/pages/ToolGroupPage.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 3848[2mms[22m[39m
+   [33m[2m✓[22m[39m ToolGroupPage[2m > [22m渲染页面标题 [33m 3021[2mms[22m[39m
+   [33m[2m✓[22m[39m ToolGroupPage[2m > [22m渲染新建按钮 [33m 330[2mms[22m[39m
+ [32m✓[39m src/__tests__/pages/ChatSidebar.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 3920[2mms[22m[39m
+   [33m[2m✓[22m[39m ChatSidebar[2m > [22m渲染选择 Agent 标签 [33m 3367[2mms[22m[39m
+ [32m✓[39m src/__tests__/components/PageContainer.test.tsx [2m([22m[2m9 tests[22m[2m)[22m[33m 1027[2mms[22m[39m
+   [33m[2m✓[22m[39m PageContainer[2m > [22m渲染标题 [33m 597[2mms[22m[39m
+ [32m✓[39m src/__tests__/pages/AgentVersionPage.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 2204[2mms[22m[39m
+   [33m[2m✓[22m[39m AgentVersionPage[2m > [22m渲染返回按钮 [33m 1752[2mms[22m[39m
+ [32m✓[39m src/__tests__/pages/SpanWaterfall.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 1652[2mms[22m[39m
+   [33m[2m✓[22m[39m SpanWaterfall[2m > [22m渲染 Span 行 [33m 1327[2mms[22m[39m
+ [32m✓[39m src/__tests__/pages/useStreamReducer.test.tsx [2m([22m[2m13 tests[22m[2m)[22m[32m 213[2mms[22m[39m
+ [32m✓[39m src/__tests__/pages/OAuthCallbackPage.test.tsx [2m([22m[2m6 tests[22m[2m)[22m[33m 1810[2mms[22m[39m
+   [33m[2m✓[22m[39m OAuthCallbackPage[2m > [22mshows loading state during callback [33m 852[2mms[22m[39m
+   [33m[2m✓[22m[39m OAuthCallbackPage[2m > [22mshows error when missing code param [33m 309[2mms[22m[39m
+ [32m✓[39m src/__tests__/authStore.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 232[2mms[22m[39m
+ [32m✓[39m src/__tests__/pages/WorkflowGraphView.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[33m 316[2mms[22m[39m
+ [32m✓[39m src/__tests__/pages/EnvironmentListPage.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[33m 1785[2mms[22m[39m
+   [33m[2m✓[22m[39m EnvironmentListPage[2m > [22mrenders and fetches environments on mount [33m 1251[2mms[22m[39m
+   [33m[2m✓[22m[39m EnvironmentListPage[2m > [22mdisplays environment data in the table [33m 325[2mms[22m[39m
+ [32m✓[39m src/__tests__/pages/ProviderListPage.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[33m 1849[2mms[22m[39m
+   [33m[2m✓[22m[39m ProviderListPage[2m > [22mrenders and fetches providers on mount [33m 1472[2mms[22m[39m
+ [32m✓[39m src/__tests__/pages/ScheduledTasksPage.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 1868[2mms[22m[39m
+   [33m[2m✓[22m[39m ScheduledTasksPage[2m > [22mrenders page title [33m 1270[2mms[22m[39m
+ [32m✓[39m src/__tests__/components/JsonEditor.test.tsx [2m([22m[2m14 tests[22m[2m)[22m[32m 132[2mms[22m[39m
+ [32m✓[39m src/__tests__/pages/FlameChart.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[32m 118[2mms[22m[39m
+ [32m✓[39m src/__tests__/api.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 29[2mms[22m[39m
+ [32m✓[39m src/__tests__/hooks/useResponsive.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[32m 44[2mms[22m[39m
+ [32m✓[39m src/__tests__/themeStore.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 27[2mms[22m[39m
+ [32m✓[39m src/__tests__/chatService.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+ [32m✓[39m src/__tests__/workflowService.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 14[2mms[22m[39m
+ [32m✓[39m src/__tests__/skillService.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 14[2mms[22m[39m
+ [32m✓[39m src/__tests__/memoryService.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 16[2mms[22m[39m
+ [32m✓[39m src/__tests__/providerService.test.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 16[2mms[22m[39m
+ [32m✓[39m src/__tests__/evolutionService.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+ [32m✓[39m src/__tests__/eventService.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m src/__tests__/mcpServerService.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32m✓[39m src/__tests__/agentService.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32m✓[39m src/__tests__/teamService.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 14[2mms[22m[39m
+ [32m✓[39m src/__tests__/agentTemplateService.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 13[2mms[22m[39m
+ [32m✓[39m src/__tests__/supervisionService.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 13[2mms[22m[39m
+ [32m✓[39m src/__tests__/evaluationService.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32m✓[39m src/__tests__/roleService.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m src/__tests__/oauthService.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 13[2mms[22m[39m
+ [32m✓[39m src/__tests__/scheduledTaskService.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+ [32m✓[39m src/__tests__/agentLocaleService.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32m✓[39m src/__tests__/approvalService.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m src/__tests__/toolGroupService.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m src/__tests__/traceService.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m src/__tests__/organizationService.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32m✓[39m src/__tests__/guardrailService.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 13[2mms[22m[39m
+ [32m✓[39m src/__tests__/agentVersionService.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 13[2mms[22m[39m
+ [32m✓[39m src/__tests__/imChannelService.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m src/__tests__/auditLogService.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m src/__tests__/tokenUsageService.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m src/__tests__/providerConstants.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m src/__tests__/apmService.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m src/__tests__/smoke.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 6[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m97 passed[39m[22m[90m (97)[39m
+[2m      Tests [22m [1m[32m561 passed[39m[22m[90m (561)[39m
+[2m   Start at [22m 00:00:46
+[2m   Duration [22m 728.26s[2m (transform 149.42s, setup 146.06s, collect 2798.50s, tests 805.53s, environment 721.42s, prepare 91.54s)[22m
+

@@ -31,6 +31,14 @@ export default defineConfig({
         storageState: STORAGE_STATE,
       },
     },
+    {
+      name: 'deep-interaction',
+      testMatch: /deep-interaction\.spec\.ts$/,
+      dependencies: ['setup'],
+      use: {
+        storageState: STORAGE_STATE,
+      },
+    },
   ],
   use: {
     baseURL: 'http://localhost:3000',

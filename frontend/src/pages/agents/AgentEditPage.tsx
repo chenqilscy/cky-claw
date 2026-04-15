@@ -4,6 +4,7 @@ import { Button, Card, Form, Input, Select, Space, App, Spin, Switch, Steps, Div
 import { ArrowLeftOutlined, RobotOutlined } from '@ant-design/icons';
 import { PageContainer } from '../../components/PageContainer';
 import { createJsonValidatorRule, JsonEditor } from '../../components';
+import MultiSelectList from '../../components/MultiSelectList';
 import { agentService } from '../../services/agentService';
 import type { AgentConfig, AgentCreateInput, AgentUpdateInput } from '../../services/agentService';
 import { guardrailService } from '../../services/guardrailService';
@@ -51,7 +52,7 @@ const AgentEditPage: React.FC = () => {
   const [guardrailOptions, setGuardrailOptions] = useState<{ label: string; value: string }[]>([]);
   const [outputGuardrailOptions, setOutputGuardrailOptions] = useState<{ label: string; value: string }[]>([]);
   const [toolGuardrailOptions, setToolGuardrailOptions] = useState<{ label: string; value: string }[]>([]);
-  const [agentOptions, setAgentOptions] = useState<{ label: string; value: string }[]>([]);
+  const [agentOptions, setAgentOptions] = useState<{ label: string; value: string; description?: string }[]>([]);
   const [toolGroupOptions, setToolGroupOptions] = useState<{ label: string; value: string; source: string; tools: string[] }[]>([]);
   const [providerOptions, setProviderOptions] = useState<{ label: string; value: string; id: string; providerType: string }[]>([]);
   const [modelOptions, setModelOptions] = useState<{ label: string; value: string }[]>([]);
@@ -103,7 +104,7 @@ const AgentEditPage: React.FC = () => {
         setAgentOptions(
           res.data
             .filter((a: AgentConfig) => a.name !== name) // 排除自身
-            .map((a: AgentConfig) => ({ label: `${a.name}${a.description ? ` — ${a.description}` : ''}`, value: a.name }))
+            .map((a: AgentConfig) => ({ label: a.name, value: a.name, description: a.description || undefined }))
         );
       })
       .catch(() => { message.error('加载 Agent 列表失败'); });
@@ -451,30 +452,15 @@ const AgentEditPage: React.FC = () => {
               <Divider orientation="left">工具配置</Divider>
 
               <Form.Item name="tool_groups" label="工具组">
-                <Select
-                  mode="multiple"
-                  placeholder="选择要关联的工具组"
-                  options={toolGroupOptions}
-                  allowClear
-                  optionRender={(option) => {
-                    const opt = option.data as { source: string; tools: string[] };
-                    return (
-                      <Space direction="vertical" size={0} style={{ padding: '2px 0' }}>
-                        <Space size={8} align="center">
-                          <Text strong>{option.label}</Text>
-                          <Text type="secondary" style={{ fontSize: 11 }}>
-                            {opt.source === 'builtin' ? '内置' : '自定义'} · {opt.tools?.length ?? 0} 工具
-                          </Text>
-                        </Space>
-                        {opt.tools && opt.tools.length > 0 && (
-                          <Text type="secondary" style={{ fontSize: 11 }}>
-                            {opt.tools.slice(0, 4).join(' · ')}{opt.tools.length > 4 ? ` +${opt.tools.length - 4}` : ''}
-                          </Text>
-                        )}
-                      </Space>
-                    );
-                  }}
-                  optionFilterProp="label"
+                <MultiSelectList
+                  options={toolGroupOptions.map((g) => ({
+                    value: g.value,
+                    label: g.label,
+                    description: g.tools.length > 0
+                      ? g.tools.slice(0, 5).join(' · ') + (g.tools.length > 5 ? ` +${g.tools.length - 5}` : '')
+                      : undefined,
+                    tags: [g.source === 'builtin' ? '内置' : '自定义', `${g.tools.length} 工具`],
+                  }))}
                 />
               </Form.Item>
 
@@ -483,12 +469,7 @@ const AgentEditPage: React.FC = () => {
                 label="MCP Server"
                 tooltip="关联 MCP Server 以获取其提供的工具"
               >
-                <Select
-                  mode="multiple"
-                  placeholder="选择要关联的 MCP Server"
-                  options={mcpServerOptions}
-                  allowClear
-                />
+                <MultiSelectList options={mcpServerOptions} />
               </Form.Item>
 
               <Form.Item
@@ -496,12 +477,7 @@ const AgentEditPage: React.FC = () => {
                 label="技能（Skills）"
                 tooltip="为 Agent 启用已注册的技能"
               >
-                <Select
-                  mode="multiple"
-                  placeholder="选择要启用的技能"
-                  options={skillOptions}
-                  allowClear
-                />
+                <MultiSelectList options={skillOptions} />
               </Form.Item>
 
               <Form.Item
@@ -509,22 +485,15 @@ const AgentEditPage: React.FC = () => {
                 label="知识库"
                 tooltip="关联知识库以启用 RAG 检索增强"
               >
-                <Select
-                  mode="multiple"
-                  placeholder="选择要关联的知识库"
-                  options={kbOptions}
-                  allowClear
-                />
+                <MultiSelectList options={kbOptions} />
               </Form.Item>
 
               <Divider orientation="left">编排配置</Divider>
 
               <Form.Item name="handoffs" label="Handoff 目标">
-                <Select
-                  mode="multiple"
-                  placeholder="选择可移交的目标 Agent"
+                <MultiSelectList
                   options={agentOptions}
-                  allowClear
+                  emptyText="无其他可移交的 Agent"
                 />
               </Form.Item>
 
@@ -533,11 +502,9 @@ const AgentEditPage: React.FC = () => {
                 label="Agent-as-Tool（子 Agent 作为工具）"
                 tooltip="将其他 Agent 注册为当前 Agent 可调用的工具"
               >
-                <Select
-                  mode="multiple"
-                  placeholder="选择要作为工具调用的子 Agent"
+                <MultiSelectList
                   options={agentOptions}
-                  allowClear
+                  emptyText="无其他 Agent 可作为工具"
                 />
               </Form.Item>
             </div>
