@@ -1,8 +1,8 @@
 # CkyClaw 工具组方案重设计
 
-> 版本：v1.0
+> 版本：v1.1
 > 日期：2026-04-15
-> 状态：方案设计
+> 状态：✅ 全部实现完成（Phase 1-4）
 
 ## 1. 背景与问题
 
@@ -376,25 +376,25 @@ Framework 层支持两种条件启用：
 
 ## 7. 实施计划
 
-### Phase 1：文档与校验增强（当前迭代）
+### Phase 1：文档与校验增强 ✅
 - [x] 编写工具定义 JSON 规范文档（本文档）
-- [ ] 前端工具定义 JSON 编辑器增加 placeholder 示例
-- [ ] 后端 ToolDefinition schema 增加更详细的 validation 错误信息
+- [x] 前端工具定义 JSON 编辑器增加 placeholder 示例（已替换为结构化编辑器 + 模板系统）
+- [x] 后端 ToolDefinition schema 增加更详细的 validation 错误信息（name 正则 + parameters_schema 结构校验）
 
-### Phase 2：结构化工具编辑器
-- [ ] 工具组编辑弹窗改为结构化表单 + 可视化工具列表
-- [ ] 工具编辑子表单：参数表格化编辑
-- [ ] "JSON 模式"切换按钮保留高级用户手写 JSON 能力
+### Phase 2：结构化工具编辑器 ✅
+- [x] 工具组编辑弹窗改为结构化表单 + 可视化工具列表（ToolEditor 组件）
+- [x] 工具编辑子表单：参数表格化编辑（ToolEditModal + 参数 Table）
+- [x] "JSON 模式"切换按钮保留高级用户手写 JSON 能力（Segmented 控件切换）
 
-### Phase 3：条件启用规则编辑器
-- [ ] 将自由 JSON `conditions` 改为结构化规则编辑器
-- [ ] 下拉选择可用参数（env / user_id / org_id 等）
-- [ ] 下拉选择比较运算符
+### Phase 3：条件启用规则编辑器 ✅
+- [x] 将自由 JSON `conditions` 改为结构化规则编辑器（ConditionRuleEditor 组件）
+- [x] 下拉选择可用参数（env / user_id / org_id / agent_name / turn_count）
+- [x] 下拉选择比较运算符（equals / not_equals / in / not_in / gt / lt / gte / lte）
 
-### Phase 4：Agent 编辑页工具预览
-- [ ] Agent 编辑页工具组选择从下拉多选改为卡片列表
-- [ ] 展示组内工具名称和描述
-- [ ] 工具组来源标识
+### Phase 4：Agent 编辑页工具预览 ✅
+- [x] Agent 编辑页工具组选择增强为带预览的 optionRender（显示来源、工具数量、工具名称）
+- [x] 展示组内工具名称和描述
+- [x] 工具组来源标识（内置 🏠 / 自定义 ✏️）
 
 ---
 
