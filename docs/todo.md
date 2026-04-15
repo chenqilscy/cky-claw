@@ -2,7 +2,7 @@
 
 > 本文件记录 CkyClaw 项目的当前状态、未来演进方向和历史交付归档。
 >
-> 最后更新：2026-04-13 · 文档版本 v3.9.0
+> 最后更新：2026-04-16 · 文档版本 v4.0.0
 
 ---
 
@@ -10,13 +10,13 @@
 
 | 指标 | 数值 |
 |------|------|
-| 测试通过 | **4689+**（Backend 2236 + Framework 1919 + Frontend 493 + CLI 41） |
+| 测试通过 | **4811+**（Backend 2238 + Framework 1971 + Frontend 561 + CLI 41） |
 | 测试覆盖率 | Backend **98%** · Framework **100%** |
-| Alembic 迁移 | **58** 个（0001–0058） |
+| Alembic 迁移 | **61** 个（0001–0061） |
 | API 路由模块 | **48** 个（含 12 个 Benchmark 端点） |
-| 前端页面 | **35** 个（React.lazy 懒加载） |
-| 前端测试文件 | **49** 个 |
-| 前端测试数 | **441** 个（Vitest） |
+| 前端页面 | **39** 个（React.lazy 懒加载） |
+| 前端测试文件 | **97** 个 |
+| 前端测试数 | **561** 个（Vitest） |
 | CI Job | **6** 个 GitHub Actions + **5** Stage Jenkinsfile |
 | TypeScript 错误 | **0** |
 | Backend mypy | **0** 错误（166 源文件） |
@@ -41,7 +41,7 @@
 
 ---
 
-## 三、未完成功能
+## 三、已完成功能（F 系列 12/12）
 
 ### 3.1 F 系列功能现状
 
@@ -219,7 +219,7 @@ Boss 要求重点分析 Hermes 的多终端架构：
 | E4 | ~~**Terminal Gateway**~~ | ✅ 完成 — TerminalBackend ABC + PlainTerminalBackend + StructuredOutput + OutputType | P3 | CLI |
 | E5 | ~~**海外消息网关**~~ | ✅ 完成 — TelegramAdapter + DiscordAdapter + 签名验证 + Webhook 推送 | P3 | IM Channels |
 
-### 5.3 未完成 F 系列优先级排序
+### 5.3 F 系列完成情况
 
 | 排名 | 功能 | 优先级 | 理由 |
 |:----:|------|:------:|------|
