@@ -12,7 +12,7 @@ CkyClaw 是基于自研 **CkyClaw Framework** 构建的 AI Agent 管理与运行
 
 | 指标 | 数值 |
 |------|------|
-| 测试总数 | **4835+**（Backend 2262 + Framework 1971 + Frontend 561 + CLI 41） |
+| 测试总数 | **4856+**（Backend 2262 + Framework 1991 + Frontend 561 + CLI 41） |
 | 测试覆盖率 | Backend **98%** · Framework **100%** |
 | Alembic 迁移 | 61 个（0001–0061） |
 | API 路由模块 | 48 个（含 12 个 Benchmark 端点） |
