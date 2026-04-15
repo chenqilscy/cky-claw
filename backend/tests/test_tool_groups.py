@@ -58,6 +58,66 @@ class TestToolGroupSchemas:
         )
         assert data.name == "web-search"
 
+    def test_tool_definition_name_validation(self) -> None:
+        """工具名称格式校验：必须小写字母开头。"""
+        from app.schemas.tool_group import ToolDefinition
+
+        # 合法名称
+        valid = ToolDefinition(name="web_search", description="search")
+        assert valid.name == "web_search"
+
+        # 非法名称：以数字开头
+        with pytest.raises(Exception, match="工具名称.*格式无效"):
+            ToolDefinition(name="123tool", description="bad")
+
+        # 非法名称：含大写字母
+        with pytest.raises(Exception, match="工具名称.*格式无效"):
+            ToolDefinition(name="MyTool", description="bad")
+
+        # 非法名称：含连字符
+        with pytest.raises(Exception, match="工具名称.*格式无效"):
+            ToolDefinition(name="my-tool", description="bad")
+
+    def test_tool_definition_schema_validation(self) -> None:
+        """parameters_schema 校验增强。"""
+        from app.schemas.tool_group import ToolDefinition
+
+        # 合法 schema
+        valid = ToolDefinition(
+            name="test_tool",
+            description="test",
+            parameters_schema={
+                "type": "object",
+                "properties": {"q": {"type": "string"}},
+                "required": ["q"],
+            },
+        )
+        assert valid.parameters_schema["type"] == "object"
+
+        # 非法 type
+        with pytest.raises(Exception, match="无效"):
+            ToolDefinition(
+                name="bad_tool",
+                description="test",
+                parameters_schema={"type": "invalid_type"},
+            )
+
+        # required 引用不存在的属性
+        with pytest.raises(Exception, match="required.*未在 properties"):
+            ToolDefinition(
+                name="bad_tool",
+                description="test",
+                parameters_schema={
+                    "type": "object",
+                    "properties": {"a": {"type": "string"}},
+                    "required": ["a", "b"],
+                },
+            )
+
+        # 空 schema 被填充默认值
+        empty = ToolDefinition(name="empty_tool", description="test", parameters_schema={})
+        assert empty.parameters_schema == {"type": "object", "properties": {}}
+
 
 # ---------------------------------------------------------------------------
 # Service 测试

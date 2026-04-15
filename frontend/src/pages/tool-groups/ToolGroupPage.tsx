@@ -1,4 +1,4 @@
-import { Form, Input, Switch, Tag, App } from 'antd';
+import { Form, Input, Switch, Tag, App, Space, Typography } from 'antd';
 import { ToolOutlined } from '@ant-design/icons';
 import type { ProColumns } from '@ant-design/pro-components';
 import type { FormInstance } from 'antd';
@@ -14,28 +14,14 @@ import type {
   ToolGroupUpdateRequest,
   ToolDefinition,
 } from '../../services/toolGroupService';
-import { CrudTable, PageContainer, buildActionColumn, createJsonValidatorRule, JsonEditor } from '../../components';
+import { CrudTable, PageContainer, buildActionColumn, ToolEditor, ConditionRuleEditor } from '../../components';
 import type { CrudTableActions } from '../../components';
 
-const { TextArea } = Input;
+const { Text } = Typography;
 
 const SOURCE_COLORS: Record<string, string> = {
   builtin: 'blue',
   custom: 'green',
-};
-
-/* ---- JSON 解析工具 ---- */
-
-const parseToolsJson = (raw: string): ToolDefinition[] => {
-  if (!raw.trim()) return [];
-  const parsed = JSON.parse(raw) as ToolDefinition[];
-  if (!Array.isArray(parsed)) throw new Error('tools must be an array');
-  return parsed;
-};
-
-const parseConditionsJson = (raw: string): Record<string, unknown> | undefined => {
-  if (!raw || !raw.trim()) return undefined;
-  return JSON.parse(raw) as Record<string, unknown>;
 };
 
 /* ---- 列定义 ---- */
@@ -59,17 +45,29 @@ const buildColumns = (
   {
     title: '来源',
     dataIndex: 'source',
-    width: 80,
+    width: 100,
     render: (_, record) => (
       <Tag color={SOURCE_COLORS[record.source] || 'default'}>
-        {record.source === 'builtin' ? '内置' : '自定义'}
+        {record.source === 'builtin' ? '🏠 内置' : '✏️ 自定义'}
       </Tag>
     ),
   },
   {
-    title: '工具数量',
-    width: 100,
-    render: (_, record) => (record.tools || []).length,
+    title: '工具',
+    width: 200,
+    render: (_, record) => {
+      const tools = record.tools || [];
+      if (tools.length === 0) return <Text type="secondary">无工具</Text>;
+      return (
+        <Space size={4} wrap>
+          <Tag>{tools.length} 个</Tag>
+          {tools.slice(0, 3).map((t) => (
+            <Tag key={t.name} color="cyan">{t.name}</Tag>
+          ))}
+          {tools.length > 3 && <Text type="secondary">+{tools.length - 3}</Text>}
+        </Space>
+      );
+    },
   },
   {
     title: '启用',
@@ -105,6 +103,7 @@ const renderForm = (_form: FormInstance, editing: ToolGroupResponse | null) => (
       rules={[
         { required: true, message: '请输入工具组名称' },
         { min: 3, max: 64, message: '长度须在 3-64 字符之间' },
+        { pattern: /^[a-z0-9][a-z0-9-]{1,62}[a-z0-9]$/, message: '仅允许小写字母、数字和连字符，以字母或数字开头结尾' },
       ]}
     >
       <Input placeholder="如: web-search" disabled={!!editing} />
@@ -115,15 +114,11 @@ const renderForm = (_form: FormInstance, editing: ToolGroupResponse | null) => (
     </Form.Item>
 
     <Form.Item
-      name="tools_json"
-      label="工具定义（JSON 数组）"
-      tooltip="每个工具需 name、description 和 parameters_schema 字段"
-      rules={[createJsonValidatorRule('请输入有效的工具定义 JSON', true)]}
+      name="tools"
+      label="工具定义"
+      tooltip="定义工具组包含的工具，每个工具需要名称、描述和参数定义"
     >
-      <JsonEditor
-        height={240}
-        placeholder={`[\n  {\n    "name": "web_search",\n    "description": "搜索网页内容",\n    "parameters_schema": {\n      "type": "object",\n      "properties": {\n        "query": { "type": "string" }\n      },\n      "required": ["query"]\n    }\n  }\n]`}
-      />
+      <ToolEditor />
     </Form.Item>
 
     {editing && (
@@ -133,12 +128,11 @@ const renderForm = (_form: FormInstance, editing: ToolGroupResponse | null) => (
     )}
 
     <Form.Item
-      name="conditions_json"
-      label="条件启用配置（JSON）"
-      extra='留空表示始终启用。示例：{"env": "production"}'
-      rules={[createJsonValidatorRule()]}
+      name="conditions"
+      label="条件启用"
+      tooltip="配置工具组的条件启用规则，留空表示始终启用"
     >
-      <JsonEditor height={100} placeholder='{"env": "production"}' />
+      <ConditionRuleEditor />
     </Form.Item>
   </>
 );
@@ -189,32 +183,30 @@ const ToolGroupPage: React.FC = () => {
       toFormValues={(record) => ({
         name: record.name,
         description: record.description,
-        tools_json: JSON.stringify(record.tools, null, 2),
-        conditions_json: Object.keys(record.conditions || {}).length > 0
-          ? JSON.stringify(record.conditions, null, 2)
-          : '',
+        tools: (record.tools || []) as ToolDefinition[],
+        conditions: record.conditions || {},
         is_enabled: record.is_enabled,
       })}
       toCreatePayload={(values) => {
-        const tools = parseToolsJson((values.tools_json as string) || '[]');
-        const conditions = parseConditionsJson((values.conditions_json as string) || '');
+        const tools = (values.tools as ToolDefinition[]) || [];
+        const conditions = (values.conditions as Record<string, unknown>) || {};
         const payload: ToolGroupCreateRequest = {
           name: values.name as string,
           description: values.description as string,
           tools,
         };
-        if (conditions) payload.conditions = conditions;
+        if (Object.keys(conditions).length > 0) payload.conditions = conditions;
         return payload;
       }}
       toUpdatePayload={(values, record) => {
-        const tools = parseToolsJson((values.tools_json as string) || '[]');
-        const conditions = parseConditionsJson((values.conditions_json as string) || '');
+        const tools = (values.tools as ToolDefinition[]) || [];
+        const conditions = (values.conditions as Record<string, unknown>) || {};
         const data: ToolGroupUpdateRequest = {
           description: values.description as string,
           tools,
           is_enabled: values.is_enabled as boolean,
         };
-        data.conditions = conditions ?? {};
+        data.conditions = Object.keys(conditions).length > 0 ? conditions : {};
         return { name: record.name, data };
       }}
     />

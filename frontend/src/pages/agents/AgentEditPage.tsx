@@ -52,7 +52,7 @@ const AgentEditPage: React.FC = () => {
   const [outputGuardrailOptions, setOutputGuardrailOptions] = useState<{ label: string; value: string }[]>([]);
   const [toolGuardrailOptions, setToolGuardrailOptions] = useState<{ label: string; value: string }[]>([]);
   const [agentOptions, setAgentOptions] = useState<{ label: string; value: string }[]>([]);
-  const [toolGroupOptions, setToolGroupOptions] = useState<{ label: string; value: string }[]>([]);
+  const [toolGroupOptions, setToolGroupOptions] = useState<{ label: string; value: string; source: string; tools: string[] }[]>([]);
   const [providerOptions, setProviderOptions] = useState<{ label: string; value: string; id: string; providerType: string }[]>([]);
   const [modelOptions, setModelOptions] = useState<{ label: string; value: string }[]>([]);
   const [modelLoading, setModelLoading] = useState(false);
@@ -87,7 +87,12 @@ const AgentEditPage: React.FC = () => {
         setToolGroupOptions(
           res.data
             .filter((g) => g.is_enabled)
-            .map((g) => ({ label: `${g.name}${g.description ? ` — ${g.description}` : ''}`, value: g.name }))
+            .map((g) => ({
+              label: g.name,
+              value: g.name,
+              source: g.source,
+              tools: (g.tools || []).map((t) => t.name),
+            }))
         );
       })
       .catch(() => { message.error('加载工具组失败'); });
@@ -451,11 +456,25 @@ const AgentEditPage: React.FC = () => {
                   placeholder="选择要关联的工具组"
                   options={toolGroupOptions}
                   allowClear
-                  optionRender={(option) => (
-                    <Space direction="vertical" size={0}>
-                      <Text strong>{option.label}</Text>
-                    </Space>
-                  )}
+                  optionRender={(option) => {
+                    const opt = option.data as { source: string; tools: string[] };
+                    return (
+                      <Space direction="vertical" size={0} style={{ padding: '2px 0' }}>
+                        <Space size={8} align="center">
+                          <Text strong>{option.label}</Text>
+                          <Text type="secondary" style={{ fontSize: 11 }}>
+                            {opt.source === 'builtin' ? '内置' : '自定义'} · {opt.tools?.length ?? 0} 工具
+                          </Text>
+                        </Space>
+                        {opt.tools && opt.tools.length > 0 && (
+                          <Text type="secondary" style={{ fontSize: 11 }}>
+                            {opt.tools.slice(0, 4).join(' · ')}{opt.tools.length > 4 ? ` +${opt.tools.length - 4}` : ''}
+                          </Text>
+                        )}
+                      </Space>
+                    );
+                  }}
+                  optionFilterProp="label"
                 />
               </Form.Item>
 

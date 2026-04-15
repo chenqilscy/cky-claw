@@ -10,17 +10,58 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 _TOOL_GROUP_NAME_PATTERN = re.compile(r"^[a-z0-9][a-z0-9-]{1,62}[a-z0-9]$")
+_TOOL_NAME_PATTERN = re.compile(r"^[a-z][a-z0-9_]{0,127}$")
+
+_VALID_SCHEMA_TYPES = {"string", "integer", "number", "boolean", "array", "object"}
 
 
 class ToolDefinition(BaseModel):
     """工具组内单个工具的元数据定义。"""
 
-    name: str = Field(..., min_length=1, max_length=128, description="工具名称")
-    description: str = Field(default="", description="工具描述")
+    name: str = Field(..., min_length=1, max_length=128, description="工具名称，仅允许小写字母、数字和下划线")
+    description: str = Field(default="", description="工具功能描述，LLM 据此决定是否调用该工具")
     parameters_schema: dict[str, Any] = Field(
         default_factory=lambda: {"type": "object", "properties": {}},
-        description="JSON Schema 参数定义",
+        description="符合 JSON Schema Draft 7 的参数定义",
     )
+
+    @field_validator("name")
+    @classmethod
+    def validate_tool_name(cls, v: str) -> str:
+        """校验工具名称格式：小写字母开头，仅含小写字母/数字/下划线。"""
+        if not _TOOL_NAME_PATTERN.match(v):
+            raise ValueError(
+                f"工具名称 '{v}' 格式无效。要求：以小写字母开头，仅包含小写字母、数字和下划线，长度 1-128"
+            )
+        return v
+
+    @field_validator("parameters_schema")
+    @classmethod
+    def validate_parameters_schema(cls, v: dict[str, Any]) -> dict[str, Any]:
+        """校验 parameters_schema 基本结构符合 JSON Schema 规范。"""
+        if not v:
+            return {"type": "object", "properties": {}}
+        schema_type = v.get("type")
+        if schema_type and schema_type not in _VALID_SCHEMA_TYPES:
+            raise ValueError(
+                f"parameters_schema.type '{schema_type}' 无效。"
+                f"支持的类型: {', '.join(sorted(_VALID_SCHEMA_TYPES))}"
+            )
+        if schema_type == "object":
+            props = v.get("properties")
+            if props is not None and not isinstance(props, dict):
+                raise ValueError("parameters_schema.properties 必须是对象")
+            required = v.get("required")
+            if required is not None:
+                if not isinstance(required, list):
+                    raise ValueError("parameters_schema.required 必须是数组")
+                if props:
+                    unknown = set(required) - set(props.keys())
+                    if unknown:
+                        raise ValueError(
+                            f"required 中包含未在 properties 中定义的参数: {', '.join(sorted(unknown))}"
+                        )
+        return v
 
 
 class ToolGroupCreate(BaseModel):
