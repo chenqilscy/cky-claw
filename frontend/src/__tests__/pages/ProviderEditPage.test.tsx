@@ -33,6 +33,20 @@ vi.mock('../../services/providerService', () => ({
     custom: '自定义',
   },
   AUTH_TYPES: ['api_key', 'oauth'],
+  MODEL_TIER_OPTIONS: [
+    { label: '简单', value: 'simple' },
+    { label: '中等', value: 'moderate' },
+    { label: '复杂', value: 'complex' },
+    { label: '推理', value: 'reasoning' },
+    { label: '多模态', value: 'multimodal' },
+  ],
+  CAPABILITY_OPTIONS: [
+    { label: '文本处理', value: 'text' },
+    { label: '代码处理', value: 'code' },
+    { label: '视觉识别', value: 'vision' },
+    { label: '推理能力', value: 'reasoning' },
+    { label: '函数调用', value: 'function_calling' },
+  ],
 }));
 
 import ProviderEditPage from '../../pages/providers/ProviderEditPage';

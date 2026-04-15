@@ -13,7 +13,8 @@ import {
   useRotateProviderKey,
 } from '../../hooks/useProviderQueries';
 import type { ProviderResponse } from '../../services/providerService';
-import { PROVIDER_TYPE_LABELS } from '../../services/providerService';
+import { PROVIDER_TYPE_LABELS, MODEL_TIER_LABELS, CAPABILITY_LABELS } from '../../services/providerService';
+import type { ModelTier, ProviderCapability } from '../../services/providerService';
 
 const HEALTH_STATUS_MAP: Record<string, { color: string; text: string }> = {
   healthy: { color: 'green', text: '健康' },
@@ -122,6 +123,33 @@ const ProviderListPage: React.FC = () => {
       render: (_, record) => <Tag color="blue">{PROVIDER_TYPE_LABELS[record.provider_type] ?? record.provider_type}</Tag>,
     },
     {
+      title: '模型层级',
+      dataIndex: 'model_tier',
+      width: 90,
+      render: (_, record) => {
+        const tier = record.model_tier as ModelTier | undefined;
+        if (!tier) return '-';
+        const colorMap: Record<ModelTier, string> = {
+          simple: 'default', moderate: 'blue', complex: 'orange', reasoning: 'purple', multimodal: 'magenta',
+        };
+        return <Tag color={colorMap[tier]}>{MODEL_TIER_LABELS[tier] ?? tier}</Tag>;
+      },
+    },
+    {
+      title: '能力标签',
+      dataIndex: 'capabilities',
+      width: 200,
+      render: (_, record) => {
+        const caps = record.capabilities as ProviderCapability[] | undefined;
+        if (!caps?.length) return <Tag color="default">无</Tag>;
+        return (
+          <Space size={[0, 4]} wrap>
+            {caps.map((c) => <Tag key={c} color="cyan">{CAPABILITY_LABELS[c] ?? c}</Tag>)}
+          </Space>
+        );
+      },
+    },
+    {
       title: 'Base URL',
       dataIndex: 'base_url',
       width: 260,
@@ -220,7 +248,7 @@ const ProviderListPage: React.FC = () => {
       loading={loading}
       search={false}
       options={{ reload: false }}
-      scroll={{ x: 1200 }}
+      scroll={{ x: 1500 }}
       pagination={{
         current: pagination.current,
         pageSize: pagination.pageSize,

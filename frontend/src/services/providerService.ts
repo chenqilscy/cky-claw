@@ -40,6 +40,41 @@ export const PROVIDER_TYPE_LABELS: Record<string, string> = {
 export type ProviderType = typeof PROVIDER_TYPES[number];
 export type AuthType = typeof AUTH_TYPES[number];
 
+export type ModelTier = 'simple' | 'moderate' | 'complex' | 'reasoning' | 'multimodal';
+export type ProviderCapability = 'text' | 'code' | 'vision' | 'reasoning' | 'function_calling';
+
+export const MODEL_TIER_OPTIONS: { label: string; value: ModelTier }[] = [
+  { label: '简单', value: 'simple' },
+  { label: '中等', value: 'moderate' },
+  { label: '复杂', value: 'complex' },
+  { label: '推理', value: 'reasoning' },
+  { label: '多模态', value: 'multimodal' },
+];
+
+export const CAPABILITY_OPTIONS: { label: string; value: ProviderCapability }[] = [
+  { label: '文本处理', value: 'text' },
+  { label: '代码处理', value: 'code' },
+  { label: '视觉识别', value: 'vision' },
+  { label: '推理能力', value: 'reasoning' },
+  { label: '函数调用', value: 'function_calling' },
+];
+
+export const MODEL_TIER_LABELS: Record<ModelTier, string> = {
+  simple: '简单',
+  moderate: '中等',
+  complex: '复杂',
+  reasoning: '推理',
+  multimodal: '多模态',
+};
+
+export const CAPABILITY_LABELS: Record<ProviderCapability, string> = {
+  text: '文本',
+  code: '代码',
+  vision: '视觉',
+  reasoning: '推理',
+  function_calling: '函数调用',
+};
+
 export interface ProviderResponse {
   id: string;
   name: string;
@@ -50,6 +85,8 @@ export interface ProviderResponse {
   auth_config: Record<string, unknown>;
   rate_limit_rpm: number | null;
   rate_limit_tpm: number | null;
+  model_tier: ModelTier;
+  capabilities: ProviderCapability[];
   is_enabled: boolean;
   org_id: string | null;
   last_health_check: string | null;
@@ -82,6 +119,8 @@ export interface ProviderCreateRequest {
   auth_config?: Record<string, unknown>;
   rate_limit_rpm?: number | null;
   rate_limit_tpm?: number | null;
+  model_tier?: ModelTier;
+  capabilities?: ProviderCapability[];
 }
 
 export interface ProviderUpdateRequest {
@@ -93,6 +132,8 @@ export interface ProviderUpdateRequest {
   auth_config?: Record<string, unknown>;
   rate_limit_rpm?: number | null;
   rate_limit_tpm?: number | null;
+  model_tier?: ModelTier;
+  capabilities?: ProviderCapability[];
 }
 
 export interface ProviderListParams {

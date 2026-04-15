@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Button, Card, Form, Input, InputNumber, Modal, Popconfirm, Select, Space, Switch, Table, Tabs, Tag, App, Spin } from 'antd';
 import { ArrowLeftOutlined, ApiOutlined, PlusOutlined, SyncOutlined } from '@ant-design/icons';
 import { PageContainer } from '../../components/PageContainer';
-import { providerService, PROVIDER_TYPES, AUTH_TYPES, PROVIDER_BASE_URLS, PROVIDER_TYPE_LABELS } from '../../services/providerService';
+import { providerService, PROVIDER_TYPES, AUTH_TYPES, PROVIDER_BASE_URLS, PROVIDER_TYPE_LABELS, MODEL_TIER_OPTIONS, CAPABILITY_OPTIONS } from '../../services/providerService';
 import type { ProviderCreateRequest, ProviderUpdateRequest, ProviderModelResponse, ProviderModelCreateRequest, ProviderModelUpdateRequest } from '../../services/providerService';
 import type { ColumnsType } from 'antd/es/table';
 
@@ -80,6 +80,8 @@ const ProviderEditPage: React.FC = () => {
             azure_client_id: provider.auth_config?.client_id ?? '',
             rate_limit_rpm: provider.rate_limit_rpm,
             rate_limit_tpm: provider.rate_limit_tpm,
+            model_tier: provider.model_tier || 'moderate',
+            capabilities: provider.capabilities || [],
           });
         })
         .catch(() => message.error('加载 Provider 失败'))
@@ -100,6 +102,8 @@ const ProviderEditPage: React.FC = () => {
           auth_config: buildAuthConfig(currentAuthType, values),
           rate_limit_rpm: values.rate_limit_rpm as number | null ?? null,
           rate_limit_tpm: values.rate_limit_tpm as number | null ?? null,
+          model_tier: values.model_tier as ProviderUpdateRequest['model_tier'],
+          capabilities: values.capabilities as ProviderUpdateRequest['capabilities'],
         };
         if (values.api_key) {
           payload.api_key = values.api_key as string;
@@ -117,6 +121,8 @@ const ProviderEditPage: React.FC = () => {
           auth_config: buildAuthConfig(createAuthType, values),
           rate_limit_rpm: values.rate_limit_rpm as number | null ?? null,
           rate_limit_tpm: values.rate_limit_tpm as number | null ?? null,
+          model_tier: values.model_tier as ProviderCreateRequest['model_tier'],
+          capabilities: values.capabilities as ProviderCreateRequest['capabilities'],
         };
         await providerService.create(payload);
         message.success('注册成功');
@@ -310,7 +316,7 @@ const ProviderEditPage: React.FC = () => {
                     form={form}
                     layout="vertical"
                     onFinish={onFinish}
-                    initialValues={{ auth_type: 'api_key', provider_type: 'openai', base_url: PROVIDER_BASE_URLS.openai }}
+                    initialValues={{ auth_type: 'api_key', provider_type: 'openai', base_url: PROVIDER_BASE_URLS.openai, model_tier: 'moderate', capabilities: ['text'] }}
                   >
                     <Form.Item
                       name="name"
@@ -384,6 +390,21 @@ const ProviderEditPage: React.FC = () => {
 
                     <Form.Item name="rate_limit_tpm" label="每分钟 Token 数上限（TPM）">
                       <InputNumber min={0} style={{ width: '100%' }} placeholder="留空表示不限制" />
+                    </Form.Item>
+
+                    <Form.Item name="model_tier" label="模型层级" tooltip="用于 CostRouter 智能路由，根据输入复杂度匹配合适层级的 Provider">
+                      <Select
+                        options={MODEL_TIER_OPTIONS}
+                        placeholder="选择模型层级"
+                      />
+                    </Form.Item>
+
+                    <Form.Item name="capabilities" label="模型能力" tooltip="声明该 Provider 支持的能力，CostRouter 会根据任务需求过滤">
+                      <Select
+                        mode="multiple"
+                        options={CAPABILITY_OPTIONS}
+                        placeholder="选择模型能力标签（可多选）"
+                      />
                     </Form.Item>
 
                     <Form.Item>

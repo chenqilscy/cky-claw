@@ -16,6 +16,27 @@ vi.mock('../../services/providerService', () => ({
     toggle: vi.fn(),
     testConnection: vi.fn(),
   },
+  PROVIDER_TYPE_LABELS: {
+    openai: 'OpenAI',
+    anthropic: 'Anthropic',
+    azure: 'Azure OpenAI',
+    openai_compatible: 'OpenAI Compatible',
+    custom: '自定义',
+  },
+  MODEL_TIER_LABELS: {
+    simple: '简单',
+    moderate: '中等',
+    complex: '复杂',
+    reasoning: '推理',
+    multimodal: '多模态',
+  },
+  CAPABILITY_LABELS: {
+    text: '文本',
+    code: '代码',
+    vision: '视觉',
+    reasoning: '推理',
+    function_calling: '函数调用',
+  },
 }));
 
 // Mock message
