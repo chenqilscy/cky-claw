@@ -1,4 +1,10 @@
 {
+  "permissions": {
+    "allow": [
+      "Bash(pnpm test *)",
+      "Bash(npx vitest *)"
+    ]
+  },
   "hooks": {
     "PreToolUse": [
       {
