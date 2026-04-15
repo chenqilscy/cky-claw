@@ -6,17 +6,17 @@ CkyClaw 是基于自研 **CkyClaw Framework** 构建的 AI Agent 管理与运行
 
 ## 项目现状（M0–M7 全部完成）
 
-截至 2026-04-13，**M0–M7 共 8 个里程碑、60+ Phase 全部完成 + S1–S7 进化路线全部完成**。
+截至 2026-04-16，**M0–M7 共 8 个里程碑、60+ Phase 全部完成 + S1–S7 进化路线全部完成 + F 系列 12/12 全部完成**。
 
 ### 关键指标
 
 | 指标 | 数值 |
 |------|------|
-| 测试总数 | **4689+**（Backend 2236 + Framework 1919 + Frontend 493 + CLI 41） |
+| 测试总数 | **4811+**（Backend 2238 + Framework 1971 + Frontend 561 + CLI 41） |
 | 测试覆盖率 | Backend **98%** · Framework **100%** |
-| Alembic 迁移 | 58 个（0001–0058） |
+| Alembic 迁移 | 61 个（0001–0061） |
 | API 路由模块 | 48 个（含 12 个 Benchmark 端点） |
-| 前端页面 | 35 个（React.lazy 懒加载） |
+| 前端页面 | 39 个（React.lazy 懒加载） |
 | CI Job | 5 个 GitHub Actions + 5 Stage Jenkinsfile |
 | TypeScript 错误 | 0 |
 
@@ -65,10 +65,13 @@ CkyClaw 是基于自研 **CkyClaw Framework** 构建的 AI Agent 管理与运行
 | 多环境管理 | ✅ | F12 Dev/Staging/Prod 环境隔离 + Publish/Rollback/Diff |
 | 移动端适配 | ✅ | F9 useResponsive Hook + 审批/对话/仪表盘/布局 4 页面响应式 |
 | 输出风格控制 | ✅ | talk-normal 集成 — Agent 级 response_style 字段 + Runner 自动注入 + 前端 Select |
+| Kubernetes 部署 | ✅ | F2 Helm Chart + 3 环境 overlay + HPA + PDB + Ingress + Migration Job |
+| SSO SAML 2.0 | ✅ | F10 SAML SP + 多 IdP + AuthnRequest/ACS + 前端 SSO 按钮 + 管理页 |
+| Agents SDK 兼容层 | ✅ | F4 compat 模块 — from_openai_agent/tool/handoff/guardrail + SdkAgentAdapter |
 
 ### 未完成 / 延期项
 
-重新分析：完整的待办事项、PRD 差距分析和演进规划见 `docs/todo.md`。
+F 系列 12/12 全部完成。完整的待办事项、PRD 差距分析和演进规划见 `docs/todo.md`。
 
 ## 代理身份
 
