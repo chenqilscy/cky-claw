@@ -335,3 +335,185 @@ Runner 在构建 system message 时：
 - **简化部署**：不引入 Neo4j/ArangoDB 等额外中间件
 - **PostgreSQL 足够**：实体/关系规模（单知识库 < 100K 实体）下，PG + 索引 + CTE 性能足够
 - **后续可扩展**：`GraphStore` 设计为 ABC，未来可添加 Neo4j 实现
+
+---
+
+## 9. Graphify 方案与实现研究报告
+
+> 补充日期：2026-04-15
+
+### 9.1 项目概况
+
+[graphify](https://github.com/safishamsi/graphify)（PyPI 包名 `graphifyy`）是一个 AI 编程助手技能插件，可将任意文件夹（代码、文档、论文、图片、视频）转化为可查询的知识图谱。
+
+| 指标 | 数值 |
+|------|------|
+| GitHub Stars | 26.5k+ |
+| 版本 | v0.4.14 |
+| 许可证 | MIT |
+| Python 版本 | 3.10+ |
+| 支持平台 | Claude Code、Codex、OpenCode、Cursor、Gemini CLI、GitHub Copilot CLI、Aider、OpenClaw、Trae、Kiro、Hermes 等 14+ 个平台 |
+
+### 9.2 核心架构
+
+graphify 的工作流分为三个阶段：
+
+```
+Pass 1: AST 静态分析（代码文件）
+├── tree-sitter 解析 25 种语言
+├── 提取：classes / functions / imports / call graphs / docstrings / rationale comments
+├── 跨文件调用图
+└── 无需 LLM，纯本地执行
+
+Pass 2: 音视频转录（可选）
+├── faster-whisper 本地转录
+├── 基于语料 god nodes 的领域感知提示词
+├── 转录缓存（重复运行即时跳过）
+└── 音频不出本机
+
+Pass 3: LLM 语义抽取（文档/论文/图片/转录稿）
+├── Claude 子代理并行抽取
+├── 提取概念、关系、设计原理
+├── 合并为 NetworkX 图
+├── Leiden 社区检测（基于图拓扑，非 Embedding）
+└── 输出：HTML + JSON + Report
+```
+
+### 9.3 输出产物
+
+```
+graphify-out/
+├── graph.html          # 交互式图谱可视化（vis.js）
+├── GRAPH_REPORT.md     # God nodes、意外连接、建议问题
+├── graph.json          # 持久化图谱 JSON（可周后查询）
+├── cache/              # SHA256 缓存（增量更新仅处理变更文件）
+├── wiki/               # (--wiki) Wikipedia 式社区文章
+│   ├── index.md        # 入口索引
+│   └── community-*.md  # 各社区文章
+└── transcripts/        # (视频) 转录稿缓存
+```
+
+### 9.4 关键特性分析
+
+#### 9.4.1 关系置信度标注
+
+每条关系都标记来源类型：
+
+| 标签 | 含义 | 置信度 |
+|------|------|--------|
+| `EXTRACTED` | 从源码/文档中直接发现 | 1.0（确定） |
+| `INFERRED` | LLM 推理得出（合理推断） | 0.0-1.0（含分数） |
+| `AMBIGUOUS` | 不确定，标记待审查 | 需人工确认 |
+
+#### 9.4.2 检索效率
+
+官方基准测试：
+
+| 语料规模 | 文件数 | Token 压缩比 |
+|---------|:------:|:-------:|
+| Karpathy repos + 5 论文 + 4 图片 | 52 | **71.5x** |
+| graphify 源码 + Transformer 论文 | 4 | 5.4x |
+| httpx（小型库） | 6 | ~1x |
+
+> 压缩比随语料规模增长。小项目（6 文件）图谱价值在于结构化清晰度，而非压缩。
+
+#### 9.4.3 增量更新
+
+- `--update`：仅重新抽取变更文件，合并到现有图谱
+- `--watch`：后台监听文件变更（代码文件立即重建 AST；文档变更通知用户执行 `--update`）
+- `graphify hook install`：Git post-commit / post-checkout 钩子自动重建
+- SHA256 缓存保证未变更文件零开销
+
+#### 9.4.4 MCP 服务器
+
+```bash
+python -m graphify.serve graphify-out/graph.json
+```
+
+暴露结构化图访问 API：`query_graph`、`get_node`、`get_neighbors`、`shortest_path`。Agent 可通过 MCP 协议直接查询图谱。
+
+#### 9.4.5 多种导出格式
+
+| 格式 | 命令 | 用途 |
+|------|------|------|
+| HTML | 默认 | 交互式可视化浏览 |
+| JSON | 默认 | 程序化查询 |
+| Wiki | `--wiki` | Agent 可导航的 Markdown 知识库 |
+| SVG | `--svg` | 静态图导出 |
+| GraphML | `--graphml` | Gephi / yEd 导入 |
+| Cypher | `--neo4j` | Neo4j 导入脚本 |
+| Neo4j Push | `--neo4j-push bolt://...` | 直接推送到 Neo4j |
+
+### 9.5 与 CkyClaw 知识库的整合方案
+
+#### 9.5.1 方案对比
+
+| 维度 | CkyClaw 当前方案（第 2-8 章） | graphify 方案 |
+|------|----------------------------|---------------|
+| 抽取引擎 | 自研 GraphExtractor | graphify（tree-sitter + Claude 子代理） |
+| 代码分析 | 仅 LLM 抽取 | AST 静态分析（精确）+ LLM 补充 |
+| 社区检测 | igraph + Leiden | graspologic + Leiden |
+| 图存储 | PostgreSQL（自研 ORM） | NetworkX + JSON 文件 |
+| 可视化 | ReactFlow | vis.js（graph.html） |
+| 增量更新 | 需自研 | 内置（SHA256 缓存 + --update） |
+| 多模态 | 仅文档 | 代码 + 文档 + 图片 + 视频 + 论文 |
+| 置信度 | 仅 0.0-1.0 | EXTRACTED / INFERRED / AMBIGUOUS 三级 |
+| 部署 | 嵌入后端服务 | 独立 CLI（pip install） |
+
+#### 9.5.2 推荐整合策略
+
+**方案 A：graphify 作为抽取引擎（推荐）**
+
+```
+用户上传文档/代码
+    ↓
+CkyClaw 后端调用 graphify Python API
+    ↓
+graphify 执行三阶段抽取 → 生成 graph.json
+    ↓
+CkyClaw 解析 graph.json → 导入到 PostgreSQL 图谱表
+    ↓
+CkyClaw GraphRetriever 基于 PG 数据检索
+```
+
+**优势**：
+- 利用 graphify 成熟的 AST 分析和 LLM 抽取能力
+- 保持 CkyClaw 自身的图存储和检索系统
+- graphify 的 MCP 服务器可直接暴露给 Agent 使用
+
+**实施步骤**：
+1. `pip install graphifyy` 添加为 backend 依赖
+2. 在 `knowledge_base_service.py` 中集成 graphify 的 Python API
+3. 图谱构建任务调用 graphify，输出 `graph.json`
+4. 解析 `graph.json` 中的 nodes/edges，写入 `knowledge_entities` / `knowledge_relations` 表
+5. 社区信息写入 `knowledge_communities` 表
+
+**方案 B：graphify MCP Server 直接对接**
+
+```
+Agent 运行时
+    ↓
+MCP Client 连接 graphify MCP Server（stdio）
+    ↓
+Agent 通过 query_graph / get_neighbors 查询
+    ↓
+直接返回结构化结果
+```
+
+**优势**：零开发量。**劣势**：不经过 CkyClaw 管控，无法审计和权限控制。
+
+#### 9.5.3 建议路径
+
+1. **短期**（Phase 1）：方案 B — 将 graphify MCP Server 作为预置 MCP 工具，Agent 直接使用
+2. **中期**（Phase 2）：方案 A — 集成 graphify Python API 作为抽取引擎，数据导入 PG
+3. **长期**（Phase 3）：基于 graphify 的 Wiki 输出构建 Agent 可导航知识库
+
+### 9.6 技术风险
+
+| 风险 | 等级 | 缓解 |
+|------|:----:|------|
+| graphify 依赖 Claude API（LLM 抽取） | 中 | CkyClaw 可替换为自有 Provider |
+| PyPI 包名 `graphifyy`（双 y）易混淆 | 低 | 锁定版本 + 内部文档标注 |
+| tree-sitter 安装可能需要编译 | 低 | Docker 镜像预装 |
+| graphify API 不稳定（快速迭代中） | 中 | 锁定版本 + 封装适配层 |
+| graph.json 大文件性能（>10万节点） | 中 | 按知识库分片 + PG 持久化后释放 JSON |
