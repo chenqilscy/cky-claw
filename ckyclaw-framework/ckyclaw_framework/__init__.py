@@ -144,6 +144,15 @@ from ckyclaw_framework.a2a.client import A2AClient, A2AClientError
 from ckyclaw_framework.a2a.server import A2AServer
 from ckyclaw_framework.a2a.adapter import A2AAdapter
 
+# === Compat (OpenAI Agents SDK) ===
+from ckyclaw_framework.compat.adapter import (
+    SdkAgentAdapter,
+    from_openai_agent,
+    from_openai_guardrail,
+    from_openai_handoff,
+    from_openai_tool,
+)
+
 __all__ = [
     # Core
     "Agent",
@@ -314,6 +323,12 @@ __all__ = [
     "A2AClientError",
     "A2AServer",
     "A2AAdapter",
+    # Compat (OpenAI Agents SDK)
+    "SdkAgentAdapter",
+    "from_openai_agent",
+    "from_openai_guardrail",
+    "from_openai_handoff",
+    "from_openai_tool",
 ]
 
 __version__ = "0.1.0"
