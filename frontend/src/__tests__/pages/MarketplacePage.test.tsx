@@ -41,8 +41,7 @@ describe('MarketplacePage', () => {
       ({ container } = render(
           <TestQueryWrapper>
             <MarketplacePage />
-          </TestQueryWrapper>
-        </MemoryRouter>,
+          </TestQueryWrapper>,
       ));
     });
     await waitFor(() => {
@@ -56,8 +55,7 @@ describe('MarketplacePage', () => {
       ({ container } = render(
           <TestQueryWrapper>
             <MarketplacePage />
-          </TestQueryWrapper>
-        </MemoryRouter>,
+          </TestQueryWrapper>,
       ));
     });
     await waitFor(() => {
@@ -72,8 +70,7 @@ describe('MarketplacePage', () => {
       ({ container } = render(
           <TestQueryWrapper>
             <MarketplacePage />
-          </TestQueryWrapper>
-        </MemoryRouter>,
+          </TestQueryWrapper>,
       ));
     });
     await waitFor(() => {
@@ -90,8 +87,7 @@ describe('MarketplacePage', () => {
       ({ container } = render(
           <TestQueryWrapper>
             <MarketplacePage />
-          </TestQueryWrapper>
-        </MemoryRouter>,
+          </TestQueryWrapper>,
       ));
     });
     expect(container).toBeTruthy();
