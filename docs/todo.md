@@ -48,7 +48,7 @@
 | # | 功能 | 状态 | 说明 |
 |---|------|:----:|------|
 | F1 | 全链路启动验证 | ✅ | 25/25 API 验证通过 |
-| F2 | **Kubernetes 部署** | ❌ | Helm Chart / Kustomize + HPA + PDB + Ingress |
+| F2 | **Kubernetes 部署** | ✅ | Helm Chart（deploy/helm/ckyclaw）+ 3 环境 overlay + HPA + PDB + Ingress |
 | F3 | 日志聚合 | ✅ | Promtail→Loki + request_id + AlertRule |
 | F4 | **Agents SDK 兼容层** | ❌ | OpenAI Agents SDK 适配器（优先级最低） |
 | F5 | 流式输出端到端优化 | ✅ | RAF 批处理 + tool_call/handoff UI |
@@ -60,24 +60,25 @@
 | F11 | 数据导出/报表 | ✅ | CSV 流式导出 + 注入防护 |
 | F12 | 多环境管理 | ✅ | 环境 CRUD + 绑定 + 发布 + Diff + Runner 环境感知 |
 
-**完成率：9/12（75%）。剩余 3 项：F2、F4、F10。**
+**完成率：10/12（83%）。剩余 2 项：F4、F10。**
 
 ### 3.2 各项详细分析
 
-#### F2: Kubernetes 部署（P1 — 生产就绪）
+#### F2: Kubernetes 部署（✅ 已完成）
 
-**优先级**：P1（上生产的硬性要求）
+**优先级**：P1（生产上线的硬性前提）
 
 **交付物**：
-- [ ] Helm Chart（backend/frontend/db/redis 四服务）
-- [ ] values.yaml（环境变量注入 + Secret 引用）
-- [ ] HPA 水平弹性（基于 CPU/内存 + 自定义 metrics）
-- [ ] PDB（Pod Disruption Budget，升级不中断）
-- [ ] Ingress（Nginx/Traefik + TLS + 路径路由）
-- [ ] ConfigMap / Secret 管理
-- [ ] Kustomize overlays（dev / staging / prod）
-- [ ] Health Check probes（liveness + readiness + startup）
-- [ ] 部署文档
+- [x] Helm Chart（backend/frontend/db/redis 四服务）
+- [x] values.yaml（环境变量注入 + Secret 引用）
+- [x] HPA 水平弹性（基于 CPU/内存）
+- [x] PDB（Pod Disruption Budget，升级不中断）
+- [x] Ingress（Nginx + TLS + 路径路由 + SSE 代理）
+- [x] ConfigMap / Secret 管理
+- [x] Kustomize overlays（dev / staging / prod）
+- [x] Health Check probes（liveness + readiness + startup）
+- [x] 部署文档（docs/kubernetes-deployment.md）
+- [x] Migration Job（Helm pre-install/pre-upgrade Hook）
 
 **前置条件**：Docker 镜像已有 Dockerfile，docker-compose 已就绪。
 
@@ -218,11 +219,11 @@ Boss 要求重点分析 Hermes 的多终端架构：
 
 | 排名 | 功能 | 优先级 | 理由 |
 |:----:|------|:------:|------|
-| 1 | F2 Kubernetes 部署 | P1 | 生产上线的硬性前提 |
+| 1 | ~~F2 Kubernetes 部署~~ | ✅ | Helm Chart 已完成 |
 | 2 | F10 SSO SAML 2.0 | P2 | 企业客户准入门槛 |
 | 3 | F4 Agents SDK 兼容层 | P3 | 无客户显式需求，维护成本高 |
 
-> 2026-04-12 决策：F2/F10/F4 当前统一标记为“暂不处理（低优先级）”，后续按业务窗口再启动。
+> 2026-04-15 更新：F2 已完成。F10/F4 当前标记为"暂不处理（低优先级）"。
 
 ---
 

@@ -1,0 +1,54 @@
+# CkyClaw Kustomize — Staging 环境
+# 用法: helm install ckyclaw ./deploy/helm/ckyclaw -f deploy/helm/ckyclaw/overlays/staging.yaml
+
+backend:
+  replicaCount: 2
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 70
+  podDisruptionBudget:
+    enabled: true
+    minAvailable: 1
+  env:
+    CKYCLAW_DEBUG: "false"
+    CKYCLAW_OTEL_ENABLED: "true"
+    CKYCLAW_OTEL_SERVICE_NAME: "ckyclaw-backend-staging"
+
+frontend:
+  replicaCount: 2
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 3
+
+postgresql:
+  enabled: true
+  persistence:
+    size: 20Gi
+
+redis:
+  enabled: true
+  persistence:
+    size: 5Gi
+
+ingress:
+  enabled: true
+  className: nginx
+  hosts:
+    - host: ckyclaw-staging.example.com
+      paths:
+        - path: /api
+          pathType: Prefix
+          service: backend
+        - path: /health
+          pathType: Exact
+          service: backend
+        - path: /
+          pathType: Prefix
+          service: frontend
+  tls:
+    - secretName: ckyclaw-staging-tls
+      hosts:
+        - ckyclaw-staging.example.com

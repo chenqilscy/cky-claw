@@ -1,0 +1,108 @@
+{{- if .Values.postgresql.enabled }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "ckyclaw.fullname" . }}-postgresql
+  labels:
+    {{- include "ckyclaw.labels" . | nindent 4 }}
+    {{- include "ckyclaw.postgresql.selectorLabels" . | nindent 4 }}
+spec:
+  serviceName: {{ include "ckyclaw.fullname" . }}-postgresql
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "ckyclaw.postgresql.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "ckyclaw.postgresql.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: postgresql
+          image: "{{ .Values.postgresql.image.repository }}:{{ .Values.postgresql.image.tag }}"
+          ports:
+            - name: tcp-pg
+              containerPort: 5432
+              protocol: TCP
+          env:
+            - name: POSTGRES_DB
+              value: {{ .Values.postgresql.auth.database | quote }}
+            - name: POSTGRES_USER
+              value: {{ .Values.postgresql.auth.username | quote }}
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "ckyclaw.postgresql.secretName" . }}
+                  key: {{ .Values.postgresql.auth.secretKeys.password }}
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+            {{- if .Values.postgresql.initSQL }}
+            - name: init-scripts
+              mountPath: /docker-entrypoint-initdb.d
+            {{- end }}
+          livenessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - pg_isready -U {{ .Values.postgresql.auth.username }}
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - pg_isready -U {{ .Values.postgresql.auth.username }}
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          resources:
+            {{- toYaml .Values.postgresql.resources | nindent 12 }}
+      {{- if .Values.postgresql.initSQL }}
+      volumes:
+        - name: init-scripts
+          configMap:
+            name: {{ include "ckyclaw.fullname" . }}-postgresql-init
+      {{- end }}
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        {{- if .Values.postgresql.persistence.storageClass }}
+        storageClassName: {{ .Values.postgresql.persistence.storageClass | quote }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.postgresql.persistence.size }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "ckyclaw.fullname" . }}-postgresql
+  labels:
+    {{- include "ckyclaw.labels" . | nindent 4 }}
+    {{- include "ckyclaw.postgresql.selectorLabels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: 5432
+      targetPort: tcp-pg
+      protocol: TCP
+      name: tcp-pg
+  selector:
+    {{- include "ckyclaw.postgresql.selectorLabels" . | nindent 4 }}
+---
+{{- if .Values.postgresql.initSQL }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "ckyclaw.fullname" . }}-postgresql-init
+  labels:
+    {{- include "ckyclaw.labels" . | nindent 4 }}
+data:
+  init.sql: |
+    {{- .Values.postgresql.initSQL | nindent 4 }}
+{{- end }}
+{{- end }}

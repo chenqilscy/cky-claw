@@ -1,0 +1,14 @@
+apiVersion: v2
+name: ckyclaw
+description: CkyClaw AI Agent 管理与运行平台
+type: application
+version: 0.1.0
+appVersion: "4.1.0"
+keywords:
+  - ai
+  - agent
+  - llm
+  - platform
+home: https://github.com/cky-claw/ckyclaw
+maintainers:
+  - name: CkyClaw Team
