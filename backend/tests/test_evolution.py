@@ -1315,18 +1315,18 @@ class TestApplyValueToAgent:
         from app.services.evolution import _apply_value_to_agent
 
         mock_agent = MagicMock()
-        mock_agent.tool_names = ["old"]
-        _apply_value_to_agent(mock_agent, "tools", {"tool_names": ["new1", "new2"]})
-        assert mock_agent.tool_names == ["new1", "new2"]
+        mock_agent.agent_tools = ["old"]
+        _apply_value_to_agent(mock_agent, "tools", {"agent_tools": ["new1", "new2"]})
+        assert mock_agent.agent_tools == ["new1", "new2"]
 
     def test_guardrails(self) -> None:
         """guardrails 类型正确修改。"""
         from app.services.evolution import _apply_value_to_agent
 
         mock_agent = MagicMock()
-        mock_agent.guardrail_ids = []
-        _apply_value_to_agent(mock_agent, "guardrails", {"guardrail_ids": ["g1"]})
-        assert mock_agent.guardrail_ids == ["g1"]
+        mock_agent.guardrails = {}
+        _apply_value_to_agent(mock_agent, "guardrails", {"guardrails": {"input": ["g1"]}})
+        assert mock_agent.guardrails == {"input": ["g1"]}
 
     def test_empty_proposed_no_change(self) -> None:
         """空 proposed_value 不修改。"""

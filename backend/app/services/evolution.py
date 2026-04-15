@@ -10,6 +10,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import NotFoundError, ValidationError
+from app.models.agent import AgentConfig
 from app.models.evolution import EvolutionProposalRecord, EvolutionSignalRecord
 from app.schemas.evolution import (
     EvolutionProposalCreate,
@@ -365,8 +366,6 @@ async def apply_proposal_to_agent(
         NotFoundError: Agent 不存在
         ValidationError: 状态不允许
     """
-    from app.models.agent import AgentConfig
-
     record = await get_proposal(db, proposal_id)
 
     # 如果是 pending 状态（auto-apply 场景），先推进到 approved
@@ -404,28 +403,28 @@ async def apply_proposal_to_agent(
 
 
 def _apply_value_to_agent(
-    agent: object,
+    agent: AgentConfig,
     proposal_type: str,
     proposed: dict[str, Any],
 ) -> None:
     """根据建议类型将 proposed_value 写入 Agent 对应字段。"""
     if proposal_type == "instructions":
         if "instructions" in proposed:
-            agent.instructions = proposed["instructions"]  # type: ignore[attr-defined]
+            agent.instructions = proposed["instructions"]
     elif proposal_type == "model":
         if "model" in proposed:
-            agent.model = proposed["model"]  # type: ignore[attr-defined]
+            agent.model = proposed["model"]
     elif proposal_type == "tools":
-        if "tool_names" in proposed:
-            agent.tool_names = proposed["tool_names"]  # type: ignore[attr-defined]
+        if "agent_tools" in proposed:
+            agent.agent_tools = proposed["agent_tools"]
     elif proposal_type == "guardrails":
-        if "guardrail_ids" in proposed:
-            agent.guardrail_ids = proposed["guardrail_ids"]  # type: ignore[attr-defined]
+        if "guardrails" in proposed:
+            agent.guardrails = proposed["guardrails"]
 
 
 async def _create_version_snapshot(
     db: AsyncSession,
-    agent: object,
+    agent: AgentConfig,
     change_summary: str,
 ) -> None:
     """创建 Agent 版本快照。"""
@@ -434,7 +433,7 @@ async def _create_version_snapshot(
     # 获取当前最大版本号
     from sqlalchemy import func as sa_func
 
-    agent_id = getattr(agent, "id")
+    agent_id = agent.id
     max_q = select(sa_func.max(AgentConfigVersion.version)).where(
         AgentConfigVersion.agent_config_id == agent_id
     )
@@ -442,9 +441,9 @@ async def _create_version_snapshot(
 
     # 构建快照 JSON
     snapshot = {
-        "name": getattr(agent, "name", ""),
-        "model": getattr(agent, "model", ""),
-        "instructions": getattr(agent, "instructions", ""),
+        "name": agent.name,
+        "model": agent.model or "",
+        "instructions": agent.instructions,
     }
 
     version = AgentConfigVersion(
@@ -564,7 +563,6 @@ async def _rollback_agent_config(
 
     找到该建议对应的版本快照，将 Agent 恢复到之前的配置。
     """
-    from app.models.agent import AgentConfig
     from app.models.agent_version import AgentConfigVersion
 
     stmt = select(AgentConfig).where(AgentConfig.name == record.agent_name)
