@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Button, Card, Form, Input, Select, Space, App, Spin, Switch, Steps, Divider, Typography } from 'antd';
 import { ArrowLeftOutlined, RobotOutlined } from '@ant-design/icons';
 import { PageContainer } from '../../components/PageContainer';
-import { createJsonValidatorRule, JsonEditor } from '../../components';
+import { createJsonValidatorRule, JsonEditor, OUTPUT_TYPE_META_SCHEMA } from '../../components';
 import MultiSelectList from '../../components/MultiSelectList';
 import { agentService } from '../../services/agentService';
 import type { AgentConfig, AgentCreateInput, AgentUpdateInput } from '../../services/agentService';
@@ -579,6 +579,8 @@ const AgentEditPage: React.FC = () => {
               >
                 <JsonEditor
                   height={180}
+                  schema={OUTPUT_TYPE_META_SCHEMA}
+                  schemaUri="http://ckyclaw/output-type-schema.json"
                   placeholder={'{\n  "type": "object",\n  "properties": {\n    "summary": { "type": "string" },\n    "score": { "type": "integer" }\n  },\n  "required": ["summary", "score"]\n}'}
                 />
               </Form.Item>

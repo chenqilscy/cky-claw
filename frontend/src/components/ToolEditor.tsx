@@ -18,7 +18,7 @@ import {
   CodeOutlined, FormOutlined, CopyOutlined,
 } from '@ant-design/icons';
 import type { ToolDefinition } from '../services/toolGroupService';
-import { JsonEditor } from './index';
+import { JsonEditor, TOOL_PARAMETERS_META_SCHEMA } from './index';
 
 const { Text } = Typography;
 
@@ -403,6 +403,20 @@ export interface ToolEditorProps {
   readOnly?: boolean;
 }
 
+/** 工具定义数组的元 schema — 用于 JSON 模式下 Monaco 验证 */
+const TOOL_ARRAY_META_SCHEMA: Record<string, unknown> = {
+  type: 'array',
+  items: {
+    type: 'object',
+    properties: {
+      name: { type: 'string', description: '工具名称（小写字母/数字/下划线）' },
+      description: { type: 'string', description: '工具功能描述' },
+      parameters_schema: TOOL_PARAMETERS_META_SCHEMA,
+    },
+    required: ['name', 'description', 'parameters_schema'],
+  },
+};
+
 /** 结构化工具定义编辑器——可视化列表 + JSON 模式切换 */
 export default function ToolEditor({ value = [], onChange, readOnly }: ToolEditorProps) {
   const { message } = App.useApp();
@@ -518,6 +532,8 @@ export default function ToolEditor({ value = [], onChange, readOnly }: ToolEdito
             value={jsonText}
             onChange={setJsonText}
             readOnly={readOnly}
+            schema={TOOL_ARRAY_META_SCHEMA}
+            schemaUri="http://ckyclaw/tool-definitions-schema.json"
             placeholder='[\n  {\n    "name": "tool_name",\n    "description": "工具描述",\n    "parameters_schema": { "type": "object", "properties": {} }\n  }\n]'
           />
         </div>

@@ -7,6 +7,7 @@
  * - 自动跟随暗色/亮色主题
  * - 支持只读模式
  * - 通过 Form.Item 受控：value / onChange
+ * - 可选 JSON Schema 验证（注入 schema 后提供属性提示 + 类型检查 + 错误诊断）
  */
 import { useCallback, useRef } from 'react';
 import Editor, { type OnMount, type OnChange } from '@monaco-editor/react';
@@ -28,6 +29,16 @@ export interface JsonEditorProps {
   placeholder?: string;
   /** 编辑器挂载完成回调 */
   onMount?: OnMount;
+  /**
+   * JSON Schema 对象，用于对编辑器内容进行 schema 验证。
+   * 注入后 Monaco 会提供：属性自动补全、类型检查、必填字段诊断。
+   */
+  schema?: Record<string, unknown>;
+  /**
+   * Schema 绑定的唯一 URI。同一页面多个 JsonEditor 时需唯一，避免冲突。
+   * 默认 'http://ckyclaw/schema.json'。
+   */
+  schemaUri?: string;
 }
 
 /** JSON 格式化快捷操作 */
@@ -58,6 +69,43 @@ export function createJsonValidatorRule(message = 'JSON 格式无效', required 
   };
 }
 
+/**
+ * 工具参数 JSON Schema 的元 schema。
+ * 传入 JsonEditor 的 schema prop，可为工具 parameters_schema 编辑提供：
+ * - 属性名自动补全（type/properties/required/description/enum/default/items）
+ * - 类型值约束提示
+ * - 必填字段缺失诊断
+ */
+export const TOOL_PARAMETERS_META_SCHEMA: Record<string, unknown> = {
+  type: 'object',
+  properties: {
+    type: { type: 'string', enum: ['object'] },
+    properties: {
+      type: 'object',
+      additionalProperties: {
+        type: 'object',
+        properties: {
+          type: { type: 'string', enum: ['string', 'integer', 'number', 'boolean', 'array', 'object'] },
+          description: { type: 'string' },
+          default: {},
+          enum: { type: 'array' },
+          items: { type: 'object' },
+          properties: { type: 'object' },
+          required: { type: 'array', items: { type: 'string' } },
+        },
+        required: ['type'],
+      },
+    },
+    required: { type: 'array', items: { type: 'string' } },
+  },
+  required: ['type', 'properties'],
+};
+
+/**
+ * Agent output_type 的元 schema（与工具参数相同的 JSON Schema Draft 7 子集）。
+ */
+export const OUTPUT_TYPE_META_SCHEMA: Record<string, unknown> = TOOL_PARAMETERS_META_SCHEMA;
+
 export default function JsonEditor({
   value = '',
   onChange,
@@ -65,6 +113,8 @@ export default function JsonEditor({
   readOnly = false,
   placeholder,
   onMount: onMountProp,
+  schema,
+  schemaUri = 'http://ckyclaw/schema.json',
 }: JsonEditorProps) {
   const mode = useThemeStore((s) => s.mode);
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
@@ -73,12 +123,32 @@ export default function JsonEditor({
     (ed, monaco) => {
       editorRef.current = ed;
 
-      /* JSON 诊断选项 */
-      monaco.languages.json.jsonDefaults.setDiagnosticsOptions({
+      /* JSON 诊断选项 + 可选 schema 验证 */
+      const diagOptions: Record<string, unknown> = {
         validate: true,
         allowComments: false,
         trailingCommas: 'error',
-      });
+      };
+      if (schema) {
+        const modelUri = monaco.Uri.parse(schemaUri);
+        diagOptions.schemas = [
+          {
+            uri: schemaUri,
+            fileMatch: [modelUri.toString()],
+            schema,
+          },
+        ];
+        /* 确保编辑器模型使用匹配的 URI */
+        const model = ed.getModel();
+        if (model && model.uri.toString() !== modelUri.toString()) {
+          const newModel = monaco.editor.createModel(value, 'json', modelUri);
+          ed.setModel(newModel);
+          model.dispose();
+        }
+      }
+      monaco.languages.json.jsonDefaults.setDiagnosticsOptions(
+        diagOptions as Parameters<typeof monaco.languages.json.jsonDefaults.setDiagnosticsOptions>[0],
+      );
 
       /* Shift+Alt+F 格式化 */
       ed.addAction({
@@ -97,7 +167,7 @@ export default function JsonEditor({
 
       onMountProp?.(ed, monaco);
     },
-    [onChange, onMountProp],
+    [onChange, onMountProp, schema, schemaUri, value],
   );
 
   const handleChange: OnChange = useCallback(
