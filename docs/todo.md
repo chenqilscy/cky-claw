@@ -10,7 +10,7 @@
 
 | 指标 | 数值 |
 |------|------|
-| 测试通过 | **4811+**（Backend 2238 + Framework 1971 + Frontend 561 + CLI 41） |
+| 测试通过 | **4835+**（Backend 2262 + Framework 1971 + Frontend 561 + CLI 41） |
 | 测试覆盖率 | Backend **98%** · Framework **100%** |
 | Alembic 迁移 | **61** 个（0001–0061） |
 | API 路由模块 | **48** 个（含 12 个 Benchmark 端点） |
@@ -38,6 +38,7 @@
 | D6 | IM/OAuth token 无缓存 | ✅ 已修复 | Redis 统一缓存 `token_cache.py` |
 | D7 | 日志缺少 request_id | ✅ 已修复 | `contextvars` + `_RequestIDFilter` |
 | D8 | Framework 边界无守卫 | ✅ 已修复 | 3 个 AST 扫描测试确保零反向依赖 |
+| D9 | `type: ignore` 过多（36 处） | ✅ 已修复 | 消除 21 处，剩余 15 处为第三方库限制（JUSTIFIED） |
 
 ---
 
