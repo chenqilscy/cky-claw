@@ -28,7 +28,7 @@ const ProviderListPage: React.FC = () => {
   const navigate = useNavigate();
   const [pagination, setPagination] = useState({ current: 1, pageSize: 20 });
 
-  const { data: listData, isLoading: loading, refetch } = useProviderList({
+  const { data: listData, isLoading: loading } = useProviderList({
     limit: pagination.pageSize,
     offset: (pagination.current - 1) * pagination.pageSize,
   });

@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from enum import Enum
+from datetime import UTC, datetime
+from enum import StrEnum
 from typing import Any
 
 
-class SignalType(str, Enum):
+class SignalType(StrEnum):
     """信号类型。"""
 
     EVALUATION = "evaluation"
@@ -40,7 +40,7 @@ class EvolutionSignal:
     agent_name: str
     """关联的 Agent 名称。"""
 
-    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    timestamp: datetime = field(default_factory=lambda: datetime.now(UTC))
     """信号产生时间。"""
 
     metadata: dict[str, Any] = field(default_factory=dict)

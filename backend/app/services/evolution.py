@@ -2,21 +2,25 @@
 
 from __future__ import annotations
 
-import uuid
-from datetime import datetime, timezone
-from typing import Any
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import func, select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import NotFoundError, ValidationError
 from app.models.agent import AgentConfig
 from app.models.evolution import EvolutionProposalRecord, EvolutionSignalRecord
-from app.schemas.evolution import (
-    EvolutionProposalCreate,
-    EvolutionProposalUpdate,
-    EvolutionSignalCreate,
-)
+
+if TYPE_CHECKING:
+    import uuid
+
+    from sqlalchemy.ext.asyncio import AsyncSession
+
+    from app.schemas.evolution import (
+        EvolutionProposalCreate,
+        EvolutionProposalUpdate,
+        EvolutionSignalCreate,
+    )
 
 # 合法的状态转换矩阵
 _TRANSITIONS: dict[str, set[str]] = {
@@ -132,7 +136,7 @@ async def update_proposal(
         else:
             record.status = new_status
             if new_status == "rolled_back":
-                record.rolled_back_at = datetime.now(timezone.utc)
+                record.rolled_back_at = datetime.now(UTC)
 
     if "eval_before" in update_data:
         record.eval_before = update_data["eval_before"]
@@ -141,7 +145,7 @@ async def update_proposal(
     if "metadata" in update_data and update_data["metadata"] is not None:
         record.metadata_ = update_data["metadata"]
 
-    record.updated_at = datetime.now(timezone.utc)
+    record.updated_at = datetime.now(UTC)
     await db.commit()
     await db.refresh(record)
     return record
@@ -394,8 +398,8 @@ async def apply_proposal_to_agent(
 
     # 推进状态
     record.status = "applied"
-    record.applied_at = datetime.now(timezone.utc)
-    record.updated_at = datetime.now(timezone.utc)
+    record.applied_at = datetime.now(UTC)
+    record.updated_at = datetime.now(UTC)
 
     await db.commit()
     await db.refresh(record)
@@ -417,9 +421,8 @@ def _apply_value_to_agent(
     elif proposal_type == "tools":
         if "agent_tools" in proposed:
             agent.agent_tools = proposed["agent_tools"]
-    elif proposal_type == "guardrails":
-        if "guardrails" in proposed:
-            agent.guardrails = proposed["guardrails"]
+    elif proposal_type == "guardrails" and "guardrails" in proposed:
+        agent.guardrails = proposed["guardrails"]
 
 
 async def _create_version_snapshot(
@@ -428,10 +431,10 @@ async def _create_version_snapshot(
     change_summary: str,
 ) -> None:
     """创建 Agent 版本快照。"""
-    from app.models.agent_version import AgentConfigVersion
-
     # 获取当前最大版本号
     from sqlalchemy import func as sa_func
+
+    from app.models.agent_version import AgentConfigVersion
 
     agent_id = agent.id
     max_q = select(sa_func.max(AgentConfigVersion.version)).where(
@@ -491,7 +494,7 @@ async def check_and_rollback(
 
     # 更新 eval_after
     record.eval_after = eval_after
-    record.updated_at = datetime.now(timezone.utc)
+    record.updated_at = datetime.now(UTC)
 
     # 判断是否需要回滚
     triggered = False
@@ -500,7 +503,7 @@ async def check_and_rollback(
         if drop_ratio > rollback_threshold:
             triggered = True
             record.status = "rolled_back"
-            record.rolled_back_at = datetime.now(timezone.utc)
+            record.rolled_back_at = datetime.now(UTC)
 
             # 回滚 Agent 配置到快照
             await _rollback_agent_config(db, record)
@@ -542,8 +545,8 @@ async def scan_and_rollback_all(
         drop_ratio = (record.eval_before - (record.eval_after or 0)) / record.eval_before
         if drop_ratio > rollback_threshold:
             record.status = "rolled_back"
-            record.rolled_back_at = datetime.now(timezone.utc)
-            record.updated_at = datetime.now(timezone.utc)
+            record.rolled_back_at = datetime.now(UTC)
+            record.updated_at = datetime.now(UTC)
             await _rollback_agent_config(db, record)
             rolled_back.append(record)
 

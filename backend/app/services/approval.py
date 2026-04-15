@@ -2,17 +2,20 @@
 
 from __future__ import annotations
 
-import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import func, select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import NotFoundError, ValidationError
 from app.models.approval import ApprovalRequest
 from app.services.approval_manager import ApprovalManager
-
 from ckyclaw_framework.approval.mode import ApprovalDecision
+
+if TYPE_CHECKING:
+    import uuid
+
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 VALID_STATUSES = {"pending", "approved", "rejected", "timeout"}
 VALID_ACTIONS = {"approve", "reject"}
@@ -84,7 +87,7 @@ async def resolve_approval_request(
     # 更新 DB 记录
     record.status = "approved" if action == "approve" else "rejected"
     record.comment = comment
-    record.resolved_at = datetime.now(timezone.utc)
+    record.resolved_at = datetime.now(UTC)
     await db.flush()
 
     # 通知 ApprovalManager

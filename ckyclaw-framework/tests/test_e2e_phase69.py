@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from typing import Any, AsyncIterator
+from typing import TYPE_CHECKING, Any
 
 import pytest
 
@@ -14,10 +14,8 @@ from ckyclaw_framework.guardrails.input_guardrail import InputGuardrail
 from ckyclaw_framework.guardrails.result import GuardrailResult, InputGuardrailTripwireError
 from ckyclaw_framework.model.message import Message, TokenUsage
 from ckyclaw_framework.model.provider import ModelChunk, ModelProvider, ModelResponse, ToolCall, ToolCallChunk
-from ckyclaw_framework.model.settings import ModelSettings
 from ckyclaw_framework.runner.result import RunResult, StreamEventType
 from ckyclaw_framework.runner.run_config import RunConfig
-from ckyclaw_framework.runner.run_context import RunContext
 from ckyclaw_framework.runner.runner import Runner
 from ckyclaw_framework.session.in_memory import InMemorySessionBackend
 from ckyclaw_framework.session.session import Session
@@ -27,6 +25,11 @@ from ckyclaw_framework.tools.tool_registry import ToolRegistry
 from ckyclaw_framework.tracing.processor import TraceProcessor
 from ckyclaw_framework.tracing.span import SpanStatus, SpanType
 
+if TYPE_CHECKING:
+    from collections.abc import AsyncIterator
+
+    from ckyclaw_framework.model.settings import ModelSettings
+    from ckyclaw_framework.runner.run_context import RunContext
 
 # ═══════════════════════════════════════════════════════════════════
 # 共享基础设施

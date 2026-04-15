@@ -14,13 +14,13 @@ import asyncio
 import logging
 import time
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 logger = logging.getLogger(__name__)
 
 
-class CircuitState(str, Enum):
+class CircuitState(StrEnum):
     """熔断器状态。"""
 
     CLOSED = "closed"
@@ -167,9 +167,8 @@ class CircuitBreaker:
             self._metrics.consecutive_failures = 0
             self._metrics.consecutive_successes += 1
 
-            if self._state == CircuitState.HALF_OPEN:
-                if self._metrics.consecutive_successes >= self.config.success_threshold:
-                    self._transition_to(CircuitState.CLOSED)
+            if self._state == CircuitState.HALF_OPEN and self._metrics.consecutive_successes >= self.config.success_threshold:
+                self._transition_to(CircuitState.CLOSED)
 
     async def _on_failure(self, error: Exception) -> None:
         """记录失败。"""
@@ -180,11 +179,11 @@ class CircuitBreaker:
             self._metrics.consecutive_successes = 0
             self._metrics.last_failure_time = time.monotonic()
 
-            if self._state == CircuitState.HALF_OPEN:
+            if self._state == CircuitState.HALF_OPEN or (
+                self._state == CircuitState.CLOSED
+                and self._metrics.consecutive_failures >= self.config.failure_threshold
+            ):
                 self._transition_to(CircuitState.OPEN)
-            elif self._state == CircuitState.CLOSED:
-                if self._metrics.consecutive_failures >= self.config.failure_threshold:
-                    self._transition_to(CircuitState.OPEN)
 
     def _check_state_transition(self) -> CircuitState:
         """检查并执行 OPEN → HALF_OPEN 的超时转换。"""

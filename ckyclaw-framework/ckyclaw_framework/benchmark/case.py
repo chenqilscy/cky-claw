@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 
-class EvalDimension(str, Enum):
+class EvalDimension(StrEnum):
     """评估维度。"""
 
     ACCURACY = "accuracy"
@@ -29,7 +29,7 @@ class EvalDimension(str, Enum):
     """工具选择与参数准确度。"""
 
 
-class CaseStatus(str, Enum):
+class CaseStatus(StrEnum):
     """用例执行状态。"""
 
     PENDING = "pending"

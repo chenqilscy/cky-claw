@@ -8,11 +8,10 @@
 
 from __future__ import annotations
 
-import asyncio
 import inspect
 import logging
 from dataclasses import dataclass, field
-from typing import Any, Callable
+from typing import TYPE_CHECKING, Any
 
 from ckyclaw_framework.orchestration.plan_guard import (
     ExecutionPlan,
@@ -20,6 +19,9 @@ from ckyclaw_framework.orchestration.plan_guard import (
     PlanGuard,
     PlanGuardResult,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 logger = logging.getLogger(__name__)
 
@@ -212,7 +214,7 @@ class PlanEvaluator:
             return 1.0
 
         passed_weight = 0.0
-        for criterion, result in zip(self.criteria, criteria_results):
+        for criterion, result in zip(self.criteria, criteria_results, strict=False):
             if result.passed:
                 passed_weight += criterion.weight
 

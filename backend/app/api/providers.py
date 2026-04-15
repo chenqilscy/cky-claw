@@ -2,16 +2,13 @@
 
 from __future__ import annotations
 
-import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING
 
 from fastapi import APIRouter, Depends, Query
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.deps import require_admin
-from app.models.provider import ProviderConfig
-from app.models.user import User
 from app.schemas.provider import (
     ProviderCreate,
     ProviderListResponse,
@@ -22,6 +19,14 @@ from app.schemas.provider import (
     ProviderUpdate,
 )
 from app.services import provider as provider_service
+
+if TYPE_CHECKING:
+    import uuid
+
+    from sqlalchemy.ext.asyncio import AsyncSession
+
+    from app.models.provider import ProviderConfig
+    from app.models.user import User
 
 router = APIRouter(prefix="/api/v1/providers", tags=["providers"])
 
@@ -48,7 +53,7 @@ def _to_response(p: ProviderConfig) -> ProviderResponse:
         key_last_rotated_at=p.key_last_rotated_at,
         key_expired=(
             p.key_expires_at is not None
-            and p.key_expires_at < datetime.now(timezone.utc)
+            and p.key_expires_at < datetime.now(UTC)
         ),
         created_at=p.created_at,
         updated_at=p.updated_at,

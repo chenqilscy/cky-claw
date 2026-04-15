@@ -93,7 +93,7 @@ def cosine_similarity(a: list[float], b: list[float]) -> float:
     """计算两个向量的余弦相似度。"""
     if len(a) != len(b):
         raise ValueError(f"向量维度不一致: {len(a)} vs {len(b)}")
-    dot = sum(x * y for x, y in zip(a, b))
+    dot = sum(x * y for x, y in zip(a, b, strict=False))
     norm_a = math.sqrt(sum(x * x for x in a))
     norm_b = math.sqrt(sum(x * x for x in b))
     if norm_a == 0 or norm_b == 0:
@@ -136,7 +136,7 @@ class InMemoryVectorStore(VectorStore):
 
         result_ids: list[str] = []
         async with self._lock:
-            for i, (text, emb) in enumerate(zip(texts, embeddings)):
+            for i, (text, emb) in enumerate(zip(texts, embeddings, strict=False)):
                 record_id = ids[i] if ids else f"vec_{self._counter}"
                 self._counter += 1
                 meta = metadatas[i] if metadatas else {}

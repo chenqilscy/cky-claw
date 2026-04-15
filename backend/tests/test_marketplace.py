@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -20,7 +20,7 @@ from app.schemas.marketplace import (
     ReviewResponse,
 )
 
-now = datetime.now(timezone.utc)
+now = datetime.now(UTC)
 TPL_ID = uuid.uuid4()
 USER_ID = uuid.UUID("00000000-0000-0000-0000-000000000001")
 

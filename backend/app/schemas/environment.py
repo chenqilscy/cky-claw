@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
-import uuid
-from datetime import datetime
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, ConfigDict, Field
+
+if TYPE_CHECKING:
+    import uuid
+    from datetime import datetime
 
 
 class EnvironmentCreate(BaseModel):

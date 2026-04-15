@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, AsyncIterator
+from typing import TYPE_CHECKING, Any
 
 import litellm
 
@@ -12,9 +12,13 @@ from ckyclaw_framework.model._converter import (
     litellm_response_to_model_response,
     messages_to_litellm,
 )
-from ckyclaw_framework.model.message import Message
 from ckyclaw_framework.model.provider import ModelChunk, ModelProvider, ModelResponse
-from ckyclaw_framework.model.settings import ModelSettings
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncIterator
+
+    from ckyclaw_framework.model.message import Message
+    from ckyclaw_framework.model.settings import ModelSettings
 
 logger = logging.getLogger(__name__)
 

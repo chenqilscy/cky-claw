@@ -7,12 +7,12 @@ import pytest
 from ckyclaw_framework.agent.agent import Agent
 from ckyclaw_framework.guardrails.input_guardrail import InputGuardrail
 from ckyclaw_framework.guardrails.output_guardrail import OutputGuardrail
-from ckyclaw_framework.guardrails.tool_guardrail import ToolGuardrail
 from ckyclaw_framework.guardrails.result import GuardrailResult
-from ckyclaw_framework.runner.runner import _execute_input_guardrails, _execute_output_guardrails
-from ckyclaw_framework.runner.run_context import RunContext
+from ckyclaw_framework.guardrails.tool_guardrail import ToolGuardrail
 from ckyclaw_framework.runner.run_config import RunConfig
-
+from ckyclaw_framework.runner.run_context import RunContext
+from ckyclaw_framework.runner.runner import _build_tool_schemas, _execute_input_guardrails, _execute_output_guardrails
+from ckyclaw_framework.tools.function_tool import FunctionTool
 
 # ---------------------------------------------------------------------------
 # Helper
@@ -92,7 +92,6 @@ class TestInputGuardrailCondition:
     @pytest.mark.asyncio
     async def test_mixed_conditions(self):
         """混合有无 condition 的 guardrail。"""
-        from ckyclaw_framework.guardrails.result import InputGuardrailTripwireError
 
         call_log = []
 
@@ -163,9 +162,6 @@ class TestToolGuardrailCondition:
 # ---------------------------------------------------------------------------
 # FunctionTool condition
 # ---------------------------------------------------------------------------
-
-from ckyclaw_framework.tools.function_tool import FunctionTool
-from ckyclaw_framework.runner.runner import _build_tool_schemas
 
 
 class TestFunctionToolCondition:
@@ -273,7 +269,8 @@ class TestAgentAsToolCondition:
     def test_as_tool_with_condition(self):
         """as_tool 传入 condition。"""
         agent = Agent(name="sub", description="sub agent")
-        cond = lambda ctx: ctx.context.get("use_sub", False)
+        def cond(ctx):
+            return ctx.context.get("use_sub", False)
         tool = agent.as_tool(condition=cond)
         assert tool.condition is cond
 

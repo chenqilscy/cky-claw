@@ -90,7 +90,7 @@ class LLMGuardrail:
         from ckyclaw_framework.model.message import Message, MessageRole
 
         prompt = self.prompt_template.format(content=content)
-        messages = [Message(role=MessageRole.USER, content=prompt)]
+        [Message(role=MessageRole.USER, content=prompt)]
 
         provider = self._get_provider()
         try:
@@ -102,7 +102,7 @@ class LLMGuardrail:
                 ),
                 timeout=self.timeout,
             )
-        except asyncio.TimeoutError:
+        except TimeoutError:
             logger.warning("LLMGuardrail '%s' 超时（%.1fs），fail-open", self.name, self.timeout)
             return GuardrailResult(tripwire_triggered=False, message=f"timeout ({self.timeout}s)")
         except Exception as e:
@@ -117,7 +117,7 @@ class LLMGuardrail:
             if json_str.startswith("```"):
                 # 移除代码块标记
                 lines = json_str.split("\n")
-                lines = [l for l in lines if not l.strip().startswith("```")]
+                lines = [line for line in lines if not line.strip().startswith("```")]
                 json_str = "\n".join(lines).strip()
             parsed = json.loads(json_str)
         except (json.JSONDecodeError, ValueError):

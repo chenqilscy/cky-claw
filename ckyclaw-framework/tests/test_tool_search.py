@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import pytest
-import pytest_asyncio
 
 from ckyclaw_framework.tools.function_tool import FunctionTool
 from ckyclaw_framework.tools.tool_search import DEFAULT_TOOL_SEARCH_THRESHOLD, ToolSearchTool

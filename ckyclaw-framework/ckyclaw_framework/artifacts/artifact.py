@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from typing import Any
 import uuid
+from dataclasses import dataclass, field
+from datetime import UTC, datetime
+from typing import Any
 
 
 @dataclass
@@ -34,7 +34,7 @@ class Artifact:
     metadata: dict[str, Any] = field(default_factory=dict)
     """扩展元数据（tool_name, tool_call_id 等）"""
 
-    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
 
     def to_dict(self) -> dict[str, Any]:
         """序列化为 dict。"""
@@ -57,7 +57,7 @@ class Artifact:
         elif isinstance(created_at_raw, datetime):
             created_at = created_at_raw
         else:
-            created_at = datetime.now(timezone.utc)
+            created_at = datetime.now(UTC)
         return cls(
             artifact_id=data.get("artifact_id", uuid.uuid4().hex),
             run_id=data.get("run_id", ""),

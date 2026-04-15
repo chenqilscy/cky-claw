@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from enum import Enum
+from enum import StrEnum
 
 
-class TeamProtocol(str, Enum):
+class TeamProtocol(StrEnum):
     """Agent Team 协作协议。"""
 
     SEQUENTIAL = "sequential"

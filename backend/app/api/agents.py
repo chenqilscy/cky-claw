@@ -3,19 +3,22 @@
 from __future__ import annotations
 
 import json
-import uuid
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import yaml
 from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile
 from fastapi.responses import Response
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.deps import require_permission
 from app.core.tenant import check_quota, get_org_id
 from app.schemas.agent import AgentCreate, AgentListResponse, AgentResponse, AgentUpdate
 from app.services import agent as agent_service
+
+if TYPE_CHECKING:
+    import uuid
+
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter(prefix="/api/v1/agents", tags=["agents"])
 
@@ -169,10 +172,7 @@ async def import_agent(
 
     filename = file.filename or ""
     try:
-        if filename.endswith((".yaml", ".yml")):
-            data_dict = yaml.safe_load(text)
-        else:
-            data_dict = json.loads(text)
+        data_dict = yaml.safe_load(text) if filename.endswith((".yaml", ".yml")) else json.loads(text)
     except (yaml.YAMLError, json.JSONDecodeError) as exc:
         raise HTTPException(status_code=400, detail=f"配置文件解析失败: {exc}") from exc
 

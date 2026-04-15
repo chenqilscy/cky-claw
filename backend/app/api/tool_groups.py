@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-import uuid
+from typing import TYPE_CHECKING
 
 from fastapi import APIRouter, Depends
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.deps import require_permission
@@ -17,6 +16,11 @@ from app.schemas.tool_group import (
     ToolGroupUpdate,
 )
 from app.services import tool_group as tg_service
+
+if TYPE_CHECKING:
+    import uuid
+
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter(prefix="/api/v1/tool-groups", tags=["tool-groups"])
 

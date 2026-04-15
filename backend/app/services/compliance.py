@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import func, select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import ConflictError, NotFoundError
 from app.models.compliance import (
@@ -19,6 +18,10 @@ from app.models.compliance import (
     RetentionStatus,
 )
 
+if TYPE_CHECKING:
+    import uuid
+
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 # ─── 数据分类标签 ───
 
@@ -193,7 +196,7 @@ async def process_erasure_request(
     req.scanned_resources = scanned
     req.deleted_resources = deleted
     req.report = report
-    req.completed_at = datetime.now(timezone.utc)
+    req.completed_at = datetime.now(UTC)
     await db.commit()
     await db.refresh(req)
     return req

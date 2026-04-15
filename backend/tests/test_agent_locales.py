@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -17,7 +17,6 @@ from app.core.exceptions import ConflictError, NotFoundError, ValidationError
 from app.main import app
 from app.schemas.agent_locale import AgentLocaleCreate, AgentLocaleResponse
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -25,7 +24,7 @@ from app.schemas.agent_locale import AgentLocaleCreate, AgentLocaleResponse
 
 def _make_locale_record(**overrides) -> MagicMock:  # type: ignore[no-untyped-def]
     """构造模拟 AgentLocale ORM 对象。"""
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     defaults = {
         "id": uuid.uuid4(),
         "agent_id": uuid.uuid4(),

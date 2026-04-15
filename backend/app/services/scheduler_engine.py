@@ -2,21 +2,23 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 import asyncio
 import json
 import logging
-import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING, Any
 
 from croniter import croniter
 from sqlalchemy import func, select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import async_session_factory
 from app.models.scheduled_run import ScheduledRun
 from app.models.scheduled_task import ScheduledTask
+
+if TYPE_CHECKING:
+    import uuid
+
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +40,7 @@ async def execute_task(db: AsyncSession, task: ScheduledTask, triggered_by: str 
     run = ScheduledRun(
         task_id=task.id,
         status="running",
-        started_at=datetime.now(timezone.utc),
+        started_at=datetime.now(UTC),
         triggered_by=triggered_by,
     )
     db.add(run)
@@ -52,14 +54,14 @@ async def execute_task(db: AsyncSession, task: ScheduledTask, triggered_by: str 
             # 默认 agent_run 类型
             output = await _execute_agent_run(db, task)
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         run.status = "success"
         run.output = output
         run.finished_at = now
         run.duration_ms = (now - run.started_at).total_seconds() * 1000 if run.started_at else 0
 
     except Exception as exc:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         run.status = "failed"
         run.error = str(exc)[:2000]
         run.finished_at = now
@@ -67,7 +69,7 @@ async def execute_task(db: AsyncSession, task: ScheduledTask, triggered_by: str 
         logger.exception("定时任务 %s 执行失败", task.id)
 
     # 更新任务的执行时间
-    task.last_run_at = datetime.now(timezone.utc)
+    task.last_run_at = datetime.now(UTC)
     cron = croniter(task.cron_expr, task.last_run_at)
     task.next_run_at = cron.get_next(datetime)
 
@@ -142,7 +144,7 @@ async def poll_and_execute() -> int:
         本轮执行的任务数量
     """
     async with async_session_factory() as db:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         result = await db.execute(
             select(ScheduledTask).where(
                 ScheduledTask.is_enabled == True,  # noqa: E712

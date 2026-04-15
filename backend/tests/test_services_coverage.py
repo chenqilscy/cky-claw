@@ -10,13 +10,12 @@ role, guardrail, approval, workflow, alert, tool_group, agent, pagination 等。
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
 from app.core.exceptions import AuthenticationError, ConflictError, NotFoundError
-
 
 # ── helpers ──────────────────────────────────────────────────────────────
 
@@ -131,7 +130,7 @@ class TestAuthService:
         db = _mock_db()
         data = UserRegister(username="bob", email="bob@test.com", password="secret123")
         with patch("app.services.auth.hash_password", return_value="hashed_pw"):
-            user = await register_user(db, data)
+            await register_user(db, data)
         db.add.assert_called_once()
         db.commit.assert_called_once()
 
@@ -145,9 +144,8 @@ class TestAuthService:
         db = _mock_db()
         db.flush = AsyncMock(side_effect=IntegrityError("dup", {}, None))
         data = UserRegister(username="bob", email="bob@test.com", password="secret123")
-        with patch("app.services.auth.hash_password", return_value="hashed_pw"):
-            with pytest.raises(ConflictError):
-                await register_user(db, data)
+        with patch("app.services.auth.hash_password", return_value="hashed_pw"), pytest.raises(ConflictError):
+            await register_user(db, data)
 
     @pytest.mark.asyncio
     async def test_authenticate_user_success(self) -> None:
@@ -182,9 +180,8 @@ class TestAuthService:
             hashed_password="$2b$12$test", role="user",
         )
         db = _mock_db(_scalar_one_or_none(mock_user))
-        with patch("app.services.auth.verify_password", return_value=False):
-            with pytest.raises(AuthenticationError):
-                await authenticate_user(db, "bob", "wrong")
+        with patch("app.services.auth.verify_password", return_value=False), pytest.raises(AuthenticationError):
+            await authenticate_user(db, "bob", "wrong")
 
     @pytest.mark.asyncio
     async def test_get_user_by_id_success(self) -> None:
@@ -240,8 +237,8 @@ class TestTraceService:
             agent_name="a",
             workflow_name="w",
             status="completed",
-            start_time=datetime.now(timezone.utc),
-            end_time=datetime.now(timezone.utc),
+            start_time=datetime.now(UTC),
+            end_time=datetime.now(UTC),
             min_duration_ms=100,
             max_duration_ms=5000,
             has_guardrail_triggered=True,
@@ -294,7 +291,7 @@ class TestTraceService:
             db,
             session_id=uuid.uuid4(),
             agent_name="a",
-            end_time=datetime.now(timezone.utc),
+            end_time=datetime.now(UTC),
         )
         assert result["total_traces"] == 10
         assert result["total_tokens"]["prompt_tokens"] == 300
@@ -751,7 +748,7 @@ class TestSkillService:
         from app.schemas.skill import SkillUpdate
         from app.services.skill import update_skill
 
-        mock_skill = _make_orm(id=uuid.uuid4(), is_deleted=False, updated_at=datetime.now(timezone.utc))
+        mock_skill = _make_orm(id=uuid.uuid4(), is_deleted=False, updated_at=datetime.now(UTC))
         db = _mock_db(_scalar_one_or_none(mock_skill))
         data = SkillUpdate(description="Updated")
         await update_skill(db, mock_skill.id, data)
@@ -825,7 +822,7 @@ class TestMemoryService:
         from app.schemas.memory import MemoryUpdate
         from app.services.memory import update_memory
 
-        mock_mem = _make_orm(id=uuid.uuid4(), is_deleted=False, updated_at=datetime.now(timezone.utc))
+        mock_mem = _make_orm(id=uuid.uuid4(), is_deleted=False, updated_at=datetime.now(UTC))
         db = _mock_db(_scalar_one_or_none(mock_mem))
         data = MemoryUpdate(content="updated")
         await update_memory(db, mock_mem.id, data)
@@ -865,7 +862,7 @@ class TestMemoryService:
         from app.services.memory import decay_memories
 
         db = _mock_db(_rowcount(5))
-        data = MemoryDecayRequest(before=datetime.now(timezone.utc), rate=0.05)
+        data = MemoryDecayRequest(before=datetime.now(UTC), rate=0.05)
         count = await decay_memories(db, data)
         assert count == 5
 
@@ -1004,8 +1001,8 @@ class TestSupervisionService:
 
         session_orm = _make_orm(
             id=uuid.uuid4(), agent_name="a1", status="active",
-            title="test", created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc),
+            title="test", created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         )
         row = (session_orm, 100, 5)
         result_mock = MagicMock()
@@ -1022,8 +1019,8 @@ class TestSupervisionService:
 
         session_orm = _make_orm(
             id=uuid.uuid4(), agent_name="a1", status="active",
-            title="test", created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc), metadata_={},
+            title="test", created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC), metadata_={},
         )
         session_result = _scalar_one_or_none(session_orm)
         token_row = MagicMock()
@@ -1070,7 +1067,7 @@ class TestSupervisionService:
 
         session_orm = _make_orm(id=uuid.uuid4(), status="paused")
         db = _mock_db(_scalar_one_or_none(session_orm))
-        resp = await resume_session(db, session_orm.id)
+        await resume_session(db, session_orm.id)
         assert session_orm.status == "active"
 
 
@@ -1315,7 +1312,7 @@ class TestConfigChangeService:
             changed_by=None, change_source="api",
         )
         db = _mock_db()
-        result = await rollback_change(db, mock_log, changed_by=uuid.uuid4())
+        await rollback_change(db, mock_log, changed_by=uuid.uuid4())
         db.add.assert_called_once()
 
 
@@ -1541,9 +1538,9 @@ class TestRateLimiterService:
         mock_redis.pipeline = MagicMock(return_value=mock_pipe)
         mock_redis.zremrangebyscore = AsyncMock()
 
-        with patch("app.services.rate_limiter.get_redis", AsyncMock(return_value=mock_redis)):
-            with pytest.raises(RateLimitExceeded):
-                await check_rate_limit(uuid.uuid4(), rpm_limit=100)
+        with patch("app.services.rate_limiter.get_redis", AsyncMock(return_value=mock_redis)), \
+             pytest.raises(RateLimitExceeded):
+            await check_rate_limit(uuid.uuid4(), rpm_limit=100)
 
     @pytest.mark.asyncio
     async def test_check_rate_limit_tpm_ok(self) -> None:
@@ -1574,9 +1571,9 @@ class TestRateLimiterService:
         mock_redis = MagicMock()
         mock_redis.pipeline = MagicMock(return_value=mock_pipe)
 
-        with patch("app.services.rate_limiter.get_redis", AsyncMock(return_value=mock_redis)):
-            with pytest.raises(RateLimitExceeded):
-                await check_rate_limit(uuid.uuid4(), tpm_limit=10000, token_count=600)
+        with patch("app.services.rate_limiter.get_redis", AsyncMock(return_value=mock_redis)), \
+             pytest.raises(RateLimitExceeded):
+            await check_rate_limit(uuid.uuid4(), tpm_limit=10000, token_count=600)
 
     @pytest.mark.asyncio
     async def test_get_rate_limit_status(self) -> None:

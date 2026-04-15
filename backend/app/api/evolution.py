@@ -2,12 +2,9 @@
 
 from __future__ import annotations
 
-from typing import Any
-
-import uuid
+from typing import TYPE_CHECKING, Any
 
 from fastapi import APIRouter, Depends
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.deps import require_admin
@@ -25,6 +22,11 @@ from app.schemas.evolution import (
     ScanRollbackResponse,
 )
 from app.services import evolution as svc
+
+if TYPE_CHECKING:
+    import uuid
+
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter(prefix="/api/v1/evolution", tags=["进化"])
 

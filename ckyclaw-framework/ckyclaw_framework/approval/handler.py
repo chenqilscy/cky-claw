@@ -5,9 +5,8 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any
 
-from ckyclaw_framework.approval.mode import ApprovalDecision
-
 if TYPE_CHECKING:
+    from ckyclaw_framework.approval.mode import ApprovalDecision
     from ckyclaw_framework.runner.run_context import RunContext
 
 

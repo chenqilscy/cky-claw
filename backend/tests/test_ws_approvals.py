@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import json
 import uuid
-from datetime import datetime, timezone
-from unittest.mock import AsyncMock, MagicMock, patch
+from datetime import UTC, datetime
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -56,7 +56,7 @@ class TestPublishApprovalEvent:
         with patch("app.api.ws.get_redis", return_value=mock_redis):
             await publish_approval_event("approval_resolved", {
                 "id": str(uuid.uuid4()),
-                "resolved_at": datetime.now(timezone.utc).isoformat(),
+                "resolved_at": datetime.now(UTC).isoformat(),
             })
         assert mock_redis.publish.call_count == 2
 

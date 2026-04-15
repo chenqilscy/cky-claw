@@ -4,11 +4,14 @@ from __future__ import annotations
 
 import logging
 import time
-import uuid
+from typing import TYPE_CHECKING
 
 from fastapi import HTTPException
 
 from app.core.redis import get_redis
+
+if TYPE_CHECKING:
+    import uuid
 
 logger = logging.getLogger(__name__)
 

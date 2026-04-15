@@ -18,7 +18,7 @@ import re
 from pathlib import Path
 from typing import Any
 
-from ckyclaw_framework.tools.function_tool import FunctionTool, function_tool
+from ckyclaw_framework.tools.function_tool import function_tool
 from ckyclaw_framework.tools.tool_group import ToolGroup
 from ckyclaw_framework.tools.tool_registry import ToolRegistry, get_default_registry
 
@@ -333,7 +333,7 @@ async def database_query(
             return json.dumps(result, ensure_ascii=False, indent=2, default=str)
         finally:
             await conn.close()
-    except asyncio.TimeoutError:
+    except TimeoutError:
         return "查询超时（30 秒限制）"
     except Exception as exc:
         return f"查询失败: {exc}"

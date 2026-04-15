@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timedelta, timezone
-from unittest.mock import AsyncMock, MagicMock, patch
+from datetime import UTC, datetime, timedelta
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from jose import jwt
@@ -34,7 +34,7 @@ class TestDecodeAccessTokenEdgeCases:
 
     def test_wrong_secret_key(self) -> None:
         """使用错误密钥签名的 token 应返回 None。"""
-        payload = {"sub": str(uuid.uuid4()), "exp": datetime.now(timezone.utc) + timedelta(hours=1), "type": "access"}
+        payload = {"sub": str(uuid.uuid4()), "exp": datetime.now(UTC) + timedelta(hours=1), "type": "access"}
         token = jwt.encode(payload, "wrong-secret-key", algorithm=ALGORITHM)
         assert decode_access_token(token) is None
 
@@ -81,13 +81,13 @@ class TestDecodeRefreshTokenEdgeCases:
 
     def test_expired_refresh_token(self) -> None:
         """过期的 refresh token 应返回 None。"""
-        payload_data = {"sub": str(uuid.uuid4()), "exp": datetime.now(timezone.utc) - timedelta(days=1), "type": "refresh"}
+        payload_data = {"sub": str(uuid.uuid4()), "exp": datetime.now(UTC) - timedelta(days=1), "type": "refresh"}
         token = jwt.encode(payload_data, settings.secret_key, algorithm=ALGORITHM)
         assert decode_refresh_token(token) is None
 
     def test_tampered_type_claim(self) -> None:
         """type 被篡改为非 refresh 应返回 None。"""
-        payload_data = {"sub": str(uuid.uuid4()), "exp": datetime.now(timezone.utc) + timedelta(hours=1), "type": "tampered"}
+        payload_data = {"sub": str(uuid.uuid4()), "exp": datetime.now(UTC) + timedelta(hours=1), "type": "tampered"}
         token = jwt.encode(payload_data, settings.secret_key, algorithm=ALGORITHM)
         assert decode_refresh_token(token) is None
 
@@ -165,6 +165,7 @@ class TestGetCurrentUserEdgeCases:
     def test_missing_auth_header_returns_403(self) -> None:
         """缺少 Authorization header 应返回 403（HTTPBearer 默认行为）。"""
         from fastapi.testclient import TestClient
+
         from app.main import app
 
         # 临时移除 autouse 的依赖覆盖
@@ -180,6 +181,7 @@ class TestGetCurrentUserEdgeCases:
     def test_invalid_jwt_returns_401(self) -> None:
         """无效 JWT 字符串应返回 401。"""
         from fastapi.testclient import TestClient
+
         from app.main import app
 
         original = app.dependency_overrides.copy()
@@ -199,6 +201,7 @@ class TestGetCurrentUserEdgeCases:
     def test_expired_jwt_returns_401(self) -> None:
         """过期 JWT 应返回 401。"""
         from fastapi.testclient import TestClient
+
         from app.main import app
 
         expired_token = create_access_token(

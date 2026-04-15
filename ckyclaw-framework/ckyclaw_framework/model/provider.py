@@ -4,9 +4,11 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any, AsyncIterator
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
+    from collections.abc import AsyncIterator
+
     from ckyclaw_framework.model.message import Message, TokenUsage
     from ckyclaw_framework.model.settings import ModelSettings
 

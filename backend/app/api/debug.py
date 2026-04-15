@@ -2,16 +2,13 @@
 
 from __future__ import annotations
 
-import uuid
+import contextlib
+from typing import TYPE_CHECKING
 
 from fastapi import APIRouter, Depends, HTTPException, Query, WebSocket, WebSocketDisconnect, status
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.deps import get_current_user, get_db, require_permission
-from app.models.debug_session import DebugSession
-from app.models.user import User
 from app.schemas.debug import (
-    DebugActionRequest,
     DebugContextResponse,
     DebugSessionCreate,
     DebugSessionListResponse,
@@ -19,7 +16,14 @@ from app.schemas.debug import (
 )
 from app.services import debug as debug_service
 
-from ckyclaw_framework.debug.controller import DebugController, DebugEvent
+if TYPE_CHECKING:
+    import uuid
+
+    from sqlalchemy.ext.asyncio import AsyncSession
+
+    from app.models.debug_session import DebugSession
+    from app.models.user import User
+    from ckyclaw_framework.debug.controller import DebugEvent
 
 router = APIRouter(prefix="/api/v1/debug", tags=["debug"])
 
@@ -223,14 +227,12 @@ async def debug_websocket(
     # 注册事件回调
     async def on_event(event: DebugEvent) -> None:
         """将 DebugEvent 推送给 WebSocket 客户端。"""
-        try:
+        with contextlib.suppress(Exception):
             await websocket.send_json({
                 "type": event.type.value,
                 "data": event.data,
                 "timestamp": event.timestamp,
             })
-        except Exception:
-            pass
 
     controller._on_event = on_event
 

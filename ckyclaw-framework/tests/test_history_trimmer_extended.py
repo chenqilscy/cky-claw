@@ -2,13 +2,11 @@
 
 from __future__ import annotations
 
-import pytest
-
 from ckyclaw_framework.model.message import Message, MessageRole, TokenUsage
 from ckyclaw_framework.session.history_trimmer import (
     HistoryTrimConfig,
-    HistoryTrimStrategy,
     HistoryTrimmer,
+    HistoryTrimStrategy,
 )
 
 

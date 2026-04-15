@@ -7,9 +7,11 @@ import inspect
 import json
 import logging
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any, Callable, get_args, get_origin, get_type_hints
+from typing import TYPE_CHECKING, Any, get_args, get_origin, get_type_hints
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from ckyclaw_framework.runner.run_context import RunContext
 
 logger = logging.getLogger(__name__)
@@ -181,7 +183,7 @@ class FunctionTool:
                 return result
             return json.dumps(result, ensure_ascii=False, default=str)
 
-        except asyncio.TimeoutError:
+        except TimeoutError:
             return f"Error: Tool '{self.name}' timed out after {self.timeout}s."
         except Exception as e:
             logger.exception("Tool '%s' execution failed", self.name)

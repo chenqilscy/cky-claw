@@ -1,6 +1,6 @@
 """会话管理。"""
 
-from ckyclaw_framework.session.history_trimmer import HistoryTrimConfig, HistoryTrimStrategy, HistoryTrimmer
+from ckyclaw_framework.session.history_trimmer import HistoryTrimConfig, HistoryTrimmer, HistoryTrimStrategy
 from ckyclaw_framework.session.in_memory import InMemorySessionBackend
 from ckyclaw_framework.session.session import Session, SessionBackend, SessionMetadata
 

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -11,17 +11,16 @@ from fastapi.testclient import TestClient
 
 from app.core.database import get_db as get_db_original
 from app.core.deps import require_admin as require_admin_original
-from app.core.exceptions import NotFoundError, ValidationError
+from app.core.exceptions import NotFoundError
 from app.main import app
 from app.schemas.mcp_server import (
+    VALID_TRANSPORT_TYPES,
     MCPServerCreate,
     MCPServerListResponse,
     MCPServerResponse,
     MCPServerUpdate,
-    VALID_TRANSPORT_TYPES,
     _mask_auth_config,
 )
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -36,7 +35,7 @@ def _fake_admin() -> MagicMock:
 
 
 def _make_mcp_config(**overrides) -> MagicMock:  # type: ignore[no-untyped-def]
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     defaults = {
         "id": uuid.uuid4(),
         "name": "test-mcp",
@@ -137,7 +136,7 @@ class TestMCPServerSchemas:
         assert resp.total == 0
 
     def test_valid_transport_types(self) -> None:
-        assert VALID_TRANSPORT_TYPES == {"stdio", "sse", "http"}
+        assert {"stdio", "sse", "http"} == VALID_TRANSPORT_TYPES
 
 
 class TestAuthMasking:

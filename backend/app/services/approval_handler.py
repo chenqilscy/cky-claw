@@ -10,15 +10,17 @@ from __future__ import annotations
 
 import logging
 import uuid
-from typing import Any
-
-from ckyclaw_framework.approval.handler import ApprovalHandler
-from ckyclaw_framework.approval.mode import ApprovalDecision
-from ckyclaw_framework.runner.run_context import RunContext
+from datetime import UTC
+from typing import TYPE_CHECKING, Any
 
 from app.core.database import async_session_factory
 from app.models.approval import ApprovalRequest
 from app.services.approval_manager import ApprovalManager
+from ckyclaw_framework.approval.handler import ApprovalHandler
+from ckyclaw_framework.approval.mode import ApprovalDecision
+
+if TYPE_CHECKING:
+    from ckyclaw_framework.runner.run_context import RunContext
 
 logger = logging.getLogger(__name__)
 
@@ -112,7 +114,7 @@ class HttpApprovalHandler(ApprovalHandler):  # type: ignore[misc]
         decision = await manager.wait_for_decision(approval_id, timeout=timeout)
 
         # 3. 更新 DB 记录
-        from datetime import datetime, timezone
+        from datetime import datetime
 
         from sqlalchemy import select
 
@@ -127,7 +129,7 @@ class HttpApprovalHandler(ApprovalHandler):  # type: ignore[misc]
             if db_record and db_record.status == "pending":
                 # 仅在 API 端尚未更新时由 handler 更新（超时场景）
                 db_record.status = status_map.get(decision, "timeout")
-                db_record.resolved_at = datetime.now(timezone.utc)
+                db_record.resolved_at = datetime.now(UTC)
                 await db.commit()
 
         logger.info("Approval %s resolved: %s", approval_id, decision.value)

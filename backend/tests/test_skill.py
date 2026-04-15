@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -17,7 +17,6 @@ from app.schemas.skill import (
     SkillSearchRequest,
     SkillUpdate,
 )
-
 
 # ── Schema 验证 ──────────────────────────────────────
 
@@ -77,7 +76,7 @@ class TestSkillSchemas:
 
     def test_response_from_attributes(self) -> None:
         """SkillResponse 可从 ORM 对象构建。"""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         mock_record = MagicMock()
         mock_record.id = uuid.uuid4()
         mock_record.name = "test"
@@ -108,7 +107,7 @@ class TestSkillSchemas:
 
 
 def _make_skill_dict(**overrides):
-    now = datetime.now(timezone.utc).isoformat()
+    now = datetime.now(UTC).isoformat()
     base = {
         "id": str(uuid.uuid4()),
         "name": "test-skill",

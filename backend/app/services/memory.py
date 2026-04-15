@@ -4,13 +4,10 @@ from __future__ import annotations
 
 import logging
 import math
-import uuid
-from datetime import datetime, timezone
-from typing import Any, cast
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING, Any, cast
 
 from sqlalchemy import func, select, update
-from sqlalchemy.engine import CursorResult
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import NotFoundError
 from app.models.memory import MemoryEntryRecord
@@ -22,6 +19,12 @@ from app.schemas.memory import (
     MemoryTagSearchRequest,
     MemoryUpdate,
 )
+
+if TYPE_CHECKING:
+    import uuid
+
+    from sqlalchemy.engine import CursorResult
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = logging.getLogger(__name__)
 
@@ -104,10 +107,10 @@ async def update_memory(
         update_data["type"] = update_data["type"].value
     for key, value in update_data.items():
         if key == "metadata":
-            setattr(record, "metadata_", value)
+            record.metadata_ = value
         else:
             setattr(record, key, value)
-    record.updated_at = datetime.now(timezone.utc)
+    record.updated_at = datetime.now(UTC)
     await db.commit()
     await db.refresh(record)
     return record
@@ -117,7 +120,7 @@ async def delete_memory(db: AsyncSession, entry_id: uuid.UUID) -> None:
     """软删除记忆条目。"""
     record = await get_memory(db, entry_id)
     record.is_deleted = True
-    record.deleted_at = datetime.now(timezone.utc)
+    record.deleted_at = datetime.now(UTC)
     await db.commit()
 
 
@@ -126,11 +129,11 @@ async def delete_user_memories(db: AsyncSession, user_id: str) -> int:
     stmt = (
         update(MemoryEntryRecord)
         .where(MemoryEntryRecord.user_id == user_id, MemoryEntryRecord.is_deleted == False)  # noqa: E712
-        .values(is_deleted=True, deleted_at=datetime.now(timezone.utc))
+        .values(is_deleted=True, deleted_at=datetime.now(UTC))
     )
     result = await db.execute(stmt)
     await db.commit()
-    return cast(CursorResult[Any], result).rowcount
+    return cast("CursorResult[Any]", result).rowcount
 
 
 def _escape_like(query: str) -> str:
@@ -179,12 +182,12 @@ async def decay_memories(db: AsyncSession, data: MemoryDecayRequest) -> int:
         .where(MemoryEntryRecord.updated_at < data.before)
         .values(
             confidence=func.greatest(0.0, MemoryEntryRecord.confidence - data.rate),
-            updated_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(UTC),
         )
     )
     result = await db.execute(stmt)
     await db.commit()
-    return cast(CursorResult[Any], result).rowcount
+    return cast("CursorResult[Any]", result).rowcount
 
 
 async def _decay_exponential(db: AsyncSession, data: MemoryDecayRequest) -> int:
@@ -193,7 +196,7 @@ async def _decay_exponential(db: AsyncSession, data: MemoryDecayRequest) -> int:
     逐条计算 new_confidence = confidence × e^(-λ × days)，因为 days 取决于
     每条记录各自的 updated_at，无法用单条 SQL UPDATE 表达。
     """
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     stmt = select(MemoryEntryRecord).where(
         MemoryEntryRecord.updated_at < data.before,
         MemoryEntryRecord.is_deleted == False,  # noqa: E712
@@ -231,8 +234,6 @@ async def search_by_tags(
     db: AsyncSession, data: MemoryTagSearchRequest
 ) -> list[MemoryEntryRecord]:
     """按标签搜索记忆条目（OR 匹配：条目含任一标签即命中）。"""
-    from sqlalchemy.dialects.postgresql import ARRAY as PG_ARRAY
-    from sqlalchemy import String, cast
 
     stmt = (
         select(MemoryEntryRecord)

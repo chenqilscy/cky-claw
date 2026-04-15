@@ -2,17 +2,17 @@
 
 from __future__ import annotations
 
-import asyncio
 import json
-import tempfile
-from datetime import datetime, timedelta, timezone
-from pathlib import Path
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING
 
 import pytest
 
 from ckyclaw_framework.artifacts import Artifact, InMemoryArtifactStore, LocalArtifactStore
 from ckyclaw_framework.artifacts.store import _estimate_token_count, _make_summary
 
+if TYPE_CHECKING:
+    from pathlib import Path
 
 # ───────── Artifact 数据类测试 ─────────
 
@@ -140,11 +140,11 @@ class TestInMemoryArtifactStore:
         """过期 artifact 被删除。"""
         a = await store.save("run-1", "old content")
         # 手动设置为旧时间
-        a.created_at = datetime(2020, 1, 1, tzinfo=timezone.utc)
+        a.created_at = datetime(2020, 1, 1, tzinfo=UTC)
 
         await store.save("run-1", "new content")
 
-        deleted = await store.cleanup(datetime(2025, 1, 1, tzinfo=timezone.utc))
+        deleted = await store.cleanup(datetime(2025, 1, 1, tzinfo=UTC))
         assert deleted == 1
         assert await store.load(a.artifact_id) is None
 
@@ -216,7 +216,7 @@ class TestLocalArtifactStore:
         data["created_at"] = "2020-01-01T00:00:00+00:00"
         path.write_text(json.dumps(data), encoding="utf-8")
 
-        deleted = await store.cleanup(datetime(2025, 1, 1, tzinfo=timezone.utc))
+        deleted = await store.cleanup(datetime(2025, 1, 1, tzinfo=UTC))
         assert deleted == 1
         assert not path.exists()
 
@@ -229,7 +229,7 @@ class TestLocalArtifactStore:
         data["created_at"] = "2020-01-01T00:00:00+00:00"
         path.write_text(json.dumps(data), encoding="utf-8")
 
-        await store.cleanup(datetime(2025, 1, 1, tzinfo=timezone.utc))
+        await store.cleanup(datetime(2025, 1, 1, tzinfo=UTC))
         run_dir = path.parent
         assert not run_dir.exists()
 

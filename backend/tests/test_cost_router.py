@@ -3,14 +3,13 @@
 from __future__ import annotations
 
 import uuid
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from fastapi.testclient import TestClient
 
 from app.core.database import get_db
 from app.main import app
-
 
 # ---------------------------------------------------------------------------
 # Fixtures

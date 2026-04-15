@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
-from ckyclaw_framework.skills.skill import Skill
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from ckyclaw_framework.skills.skill import Skill
 
 
 class SkillInjector:

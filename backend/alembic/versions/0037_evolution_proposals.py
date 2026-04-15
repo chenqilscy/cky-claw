@@ -7,9 +7,10 @@ Create Date: 2026-07-03
 
 from __future__ import annotations
 
-from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import JSONB, UUID
+
+from alembic import op
 
 revision = "0037"
 down_revision = "0036"

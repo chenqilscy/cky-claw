@@ -8,18 +8,22 @@
 
 from __future__ import annotations
 
+import contextlib
 import json
 import logging
 import uuid
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import litellm
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import NotFoundError, ValidationError
-from app.models.evaluation import RunEvaluation
 from app.schemas.evaluation import RunEvaluationCreate
 from app.services.evaluation import create_evaluation
+
+if TYPE_CHECKING:
+    from sqlalchemy.ext.asyncio import AsyncSession
+
+    from app.models.evaluation import RunEvaluation
 
 logger = logging.getLogger(__name__)
 
@@ -118,7 +122,7 @@ def _parse_judge_response(response_text: str) -> dict[str, Any]:
         if start >= 0 and end > start:
             data = json.loads(text[start:end])
         else:
-            raise ValidationError(f"无法解析 LLM Judge 回复为 JSON: {response_text[:200]}")
+            raise ValidationError(f"无法解析 LLM Judge 回复为 JSON: {response_text[:200]}") from None
 
     # 验证并钳位到 [0.0, 1.0]
     dimensions = ["accuracy", "relevance", "coherence", "helpfulness", "safety", "efficiency", "tool_usage"]
@@ -255,9 +259,9 @@ async def auto_evaluate_by_run_id(
     从数据库中查找 run_id 对应的 trace（通过 metadata->'run_id'）和 span，
     自动提取 user_input / agent_output / token_usage / duration 等信息。
     """
-    from app.models.trace import SpanRecord, TraceRecord
-
     from sqlalchemy import select
+
+    from app.models.trace import SpanRecord, TraceRecord
 
     # 通过 metadata->>'run_id' 查找 Trace
     trace_stmt = select(TraceRecord).where(
@@ -297,10 +301,8 @@ async def auto_evaluate_by_run_id(
     # 从 trace metadata 提取 agent_id（如果存储了的话）
     trace_meta = trace.metadata_ or {}
     if "agent_id" in trace_meta:
-        try:
+        with contextlib.suppress(ValueError, TypeError):
             agent_id = uuid.UUID(str(trace_meta["agent_id"]))
-        except (ValueError, TypeError):
-            pass
 
     # 构建 trace 摘要
     trace_summary_parts = []

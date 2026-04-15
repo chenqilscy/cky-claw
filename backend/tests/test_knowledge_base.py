@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -11,12 +11,11 @@ from fastapi.testclient import TestClient
 
 from app.main import app
 
-
 client = TestClient(app)
 
 
 def _mock_kb(**overrides: object) -> MagicMock:
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     defaults = {
         "id": uuid.uuid4(),
         "name": "kb-demo",
@@ -35,7 +34,7 @@ def _mock_kb(**overrides: object) -> MagicMock:
 
 
 def _mock_doc(kb_id: uuid.UUID, **overrides: object) -> MagicMock:
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     defaults = {
         "id": uuid.uuid4(),
         "knowledge_base_id": kb_id,
@@ -408,8 +407,8 @@ class TestKnowledgeBaseService:
 
     async def test_create_knowledge_base_calls_commit(self) -> None:
         """创建知识库应调用 db.commit 和 db.refresh。"""
-        from app.services.knowledge_base import create_knowledge_base
         from app.schemas.knowledge_base import KnowledgeBaseCreate
+        from app.services.knowledge_base import create_knowledge_base
 
         mock_db = AsyncMock()
         data = KnowledgeBaseCreate(name="test-kb")
@@ -435,8 +434,8 @@ class TestKnowledgeBaseService:
 
     async def test_update_knowledge_base_partial(self) -> None:
         """部分更新仅修改提供的字段。"""
-        from app.services.knowledge_base import update_knowledge_base
         from app.schemas.knowledge_base import KnowledgeBaseUpdate
+        from app.services.knowledge_base import update_knowledge_base
 
         mock_db = AsyncMock()
         kb_record = MagicMock()

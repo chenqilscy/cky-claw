@@ -2,13 +2,11 @@
 
 from __future__ import annotations
 
-import json
 from typing import Any
 
 import pytest
 
 from ckyclaw_framework.guardrails.llm_guardrail import LLMGuardrail
-from ckyclaw_framework.guardrails.result import GuardrailResult
 from ckyclaw_framework.model.message import TokenUsage
 from ckyclaw_framework.model.provider import ModelProvider, ModelResponse
 from ckyclaw_framework.runner.run_config import RunConfig

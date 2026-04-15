@@ -50,7 +50,7 @@ const EventReplayTimeline: React.FC<EventReplayTimelineProps> = ({ events }) => 
   );
 
   const baseTime = useMemo(
-    () => (sorted.length > 0 ? new Date(sorted[0]!.timestamp).getTime() : 0),
+    () => (sorted.length > 0 ? new Date(sorted[0]?.timestamp ?? 0).getTime() : 0),
     [sorted],
   );
 
@@ -65,9 +65,9 @@ const EventReplayTimeline: React.FC<EventReplayTimelineProps> = ({ events }) => 
         setIsPlaying(false);
         return prev;
       }
-      const currMs = new Date(sorted[next]!.timestamp).getTime() - baseTime;
+      const currMs = new Date(sorted[next]?.timestamp ?? 0).getTime() - baseTime;
       const nextMs = next + 1 < sorted.length
-        ? new Date(sorted[next + 1]!.timestamp).getTime() - baseTime
+        ? new Date(sorted[next + 1]?.timestamp ?? 0).getTime() - baseTime
         : currMs;
       const delay = Math.max(80, (nextMs - currMs) / 10);
       timerRef.current = setTimeout(playNext, delay);

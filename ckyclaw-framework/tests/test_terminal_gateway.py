@@ -13,7 +13,6 @@ from ckyclaw_framework.terminal.gateway import (
     TerminalBackend,
 )
 
-
 # ---------------------------------------------------------------------------
 # OutputType 枚举
 # ---------------------------------------------------------------------------
@@ -124,7 +123,7 @@ class TestPlainWriteStructured:
         await backend.write_structured(
             StructuredOutput(output_type=OutputType.ERROR, content="bad request"),
         )
-        assert "[Error] bad request\n" == out.getvalue()
+        assert out.getvalue() == "[Error] bad request\n"
 
     @pytest.mark.asyncio
     async def test_tool_call_with_args(self) -> None:

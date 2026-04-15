@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -12,7 +12,6 @@ from fastapi.testclient import TestClient
 
 from app.main import app
 
-
 # ═══════════════════════════════════════════════════════════════════
 # Mock 基础设施
 # ═══════════════════════════════════════════════════════════════════
@@ -20,7 +19,7 @@ from app.main import app
 
 def _make_trace_record(**overrides: Any) -> MagicMock:
     """构造模拟 TraceRecord ORM 对象。"""
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     defaults = {
         "id": str(uuid.uuid4()),
         "workflow_name": "default",
@@ -45,7 +44,7 @@ def _make_trace_record(**overrides: Any) -> MagicMock:
 
 def _make_span_record(**overrides: Any) -> MagicMock:
     """构造模拟 SpanRecord ORM 对象。"""
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     trace_id = str(uuid.uuid4())
     defaults = {
         "id": str(uuid.uuid4()),
@@ -443,10 +442,9 @@ class TestPostgresTraceProcessor:
     @pytest.mark.asyncio
     async def test_collect_trace_and_spans(self) -> None:
         """收集完整 Trace + Span 数据。"""
+        from app.services.trace_processor import PostgresTraceProcessor
         from ckyclaw_framework.tracing.span import Span, SpanStatus, SpanType
         from ckyclaw_framework.tracing.trace import Trace
-
-        from app.services.trace_processor import PostgresTraceProcessor
 
         processor = PostgresTraceProcessor(session_id="sess-123")
 
@@ -494,9 +492,8 @@ class TestPostgresTraceProcessor:
     @pytest.mark.asyncio
     async def test_empty_trace(self) -> None:
         """无 Span 的 Trace。"""
-        from ckyclaw_framework.tracing.trace import Trace
-
         from app.services.trace_processor import PostgresTraceProcessor
+        from ckyclaw_framework.tracing.trace import Trace
 
         processor = PostgresTraceProcessor()
 
@@ -522,10 +519,9 @@ class TestPostgresTraceProcessor:
     @pytest.mark.asyncio
     async def test_input_output_serialization(self) -> None:
         """Span input/output 安全序列化。"""
+        from app.services.trace_processor import PostgresTraceProcessor
         from ckyclaw_framework.tracing.span import Span, SpanStatus, SpanType
         from ckyclaw_framework.tracing.trace import Trace
-
-        from app.services.trace_processor import PostgresTraceProcessor
 
         processor = PostgresTraceProcessor()
         trace = Trace()
@@ -556,7 +552,7 @@ class TestTraceRouteRegistration:
 
     def test_traces_routes_registered(self) -> None:
         """验证 /api/v1/traces 路由已注册。"""
-        client = TestClient(app)
+        TestClient(app)
         routes = [r.path for r in app.routes]
         assert "/api/v1/traces" in routes
         assert "/api/v1/traces/{trace_id}" in routes

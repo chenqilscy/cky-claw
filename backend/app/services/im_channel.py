@@ -5,15 +5,19 @@ from __future__ import annotations
 import hashlib
 import hmac
 import logging
-import uuid
-from datetime import datetime, timezone
-from typing import Any
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import func, select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.im_channel import IMChannel
-from app.schemas.im_channel import IMChannelCreate, IMChannelUpdate
+
+if TYPE_CHECKING:
+    import uuid
+
+    from sqlalchemy.ext.asyncio import AsyncSession
+
+    from app.schemas.im_channel import IMChannelCreate, IMChannelUpdate
 
 logger = logging.getLogger(__name__)
 
@@ -88,7 +92,7 @@ async def delete_channel(db: AsyncSession, channel_id: uuid.UUID) -> bool:
     if channel is None:
         return False
     channel.is_deleted = True
-    channel.deleted_at = datetime.now(timezone.utc)
+    channel.deleted_at = datetime.now(UTC)
     await db.commit()
     return True
 

@@ -7,17 +7,21 @@ import json
 import logging
 import time
 import uuid
-from datetime import datetime, timezone
-from typing import Any, AsyncIterator
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import func, select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import NotFoundError
 from app.models.agent import AgentConfig
 from app.models.session import SessionRecord
 from app.models.token_usage import TokenUsageLog
 from app.schemas.session import RunRequest, RunResponse, SessionCreate, TokenUsageResponse
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncIterator
+
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = logging.getLogger(__name__)
 
@@ -95,7 +99,7 @@ async def delete_session(db: AsyncSession, session_id: uuid.UUID) -> None:
     """软删除 Session。"""
     session = await get_session(db, session_id)
     session.is_deleted = True
-    session.deleted_at = datetime.now(timezone.utc)
+    session.deleted_at = datetime.now(UTC)
     await db.commit()
 
 
@@ -804,7 +808,7 @@ async def _resolve_provider(
             result["api_key"] = decrypt_api_key(provider.api_key_encrypted)
         except Exception:
             logger.exception("Provider '%s' API Key 解密失败", provider_name)
-            raise NotFoundError(f"Provider '{provider_name}' API Key 解密失败，请重新配置")
+            raise NotFoundError(f"Provider '{provider_name}' API Key 解密失败，请重新配置") from None
 
     # Base URL
     if provider.base_url:
@@ -1001,6 +1005,7 @@ async def execute_run(
         # 执行
         start_time = time.monotonic()
 
+        from app.services.run_registry import run_registry
         from ckyclaw_framework.guardrails.result import (
             InputGuardrailTripwireError,
             OutputGuardrailTripwireError,
@@ -1008,8 +1013,6 @@ async def execute_run(
 
         # S6: CancellationToken — 注册到 RunRegistry 以支持外部取消
         from ckyclaw_framework.runner.cancellation import CancellationToken
-
-        from app.services.run_registry import run_registry
 
         cancel_token = CancellationToken()
         framework_config.cancel_token = cancel_token
@@ -1075,7 +1078,7 @@ async def execute_run(
         await _save_events_from_journal(db, framework_config.event_journal)
 
     # 更新 session 的 updated_at
-    session_record.updated_at = datetime.now(timezone.utc)
+    session_record.updated_at = datetime.now(UTC)
     await db.commit()
 
     # 构建响应
@@ -1258,9 +1261,8 @@ async def execute_run_stream(
         framework_config.event_journal = InMemoryEventJournal()
 
     # S6: CancellationToken — 注册到 RunRegistry 以支持外部取消
-    from ckyclaw_framework.runner.cancellation import CancellationToken
-
     from app.services.run_registry import run_registry
+    from ckyclaw_framework.runner.cancellation import CancellationToken
 
     cancel_token = CancellationToken()
     framework_config.cancel_token = cancel_token
@@ -1352,7 +1354,7 @@ async def execute_run_stream(
         await _save_events_from_journal(db, framework_config.event_journal)
 
     # 更新 session
-    session_record.updated_at = datetime.now(timezone.utc)
+    session_record.updated_at = datetime.now(UTC)
     await db.commit()
 
 

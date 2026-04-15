@@ -3,8 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-import time
-from typing import Any, AsyncIterator
+from typing import TYPE_CHECKING, Any
 from unittest.mock import AsyncMock
 
 import pytest
@@ -20,8 +19,8 @@ from ckyclaw_framework.model.fallback import (
     FallbackChainProvider,
     FallbackEntry,
 )
-from ckyclaw_framework.model.provider import ModelChunk, ModelProvider, ModelResponse
 from ckyclaw_framework.model.message import Message, MessageRole
+from ckyclaw_framework.model.provider import ModelChunk, ModelProvider, ModelResponse
 from ckyclaw_framework.tools.middleware import (
     CacheMiddleware,
     LoopGuardMiddleware,
@@ -33,6 +32,8 @@ from ckyclaw_framework.tools.middleware import (
     ToolMiddlewarePipeline,
 )
 
+if TYPE_CHECKING:
+    from collections.abc import AsyncIterator
 
 # ═══════════════════════ Helpers ═══════════════════════
 
@@ -808,8 +809,8 @@ class TestResolveProvider:
 
     def test_fallback_provider_priority(self) -> None:
         """fallback_provider 优先于 model_provider。"""
-        from ckyclaw_framework.runner.runner import _resolve_provider
         from ckyclaw_framework.runner.run_config import RunConfig
+        from ckyclaw_framework.runner.runner import _resolve_provider
 
         regular = MockProvider("regular")
         chain = FallbackChainProvider([FallbackEntry(provider=MockProvider("fb"))])
@@ -819,8 +820,8 @@ class TestResolveProvider:
 
     def test_model_provider_fallback(self) -> None:
         """无 fallback_provider 时使用 model_provider。"""
-        from ckyclaw_framework.runner.runner import _resolve_provider
         from ckyclaw_framework.runner.run_config import RunConfig
+        from ckyclaw_framework.runner.runner import _resolve_provider
 
         regular = MockProvider("regular")
         config = RunConfig(model_provider=regular)

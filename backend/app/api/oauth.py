@@ -2,17 +2,22 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from fastapi import APIRouter, Depends, Query
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.database import get_db
 from app.core.deps import get_current_user
 from app.core.oauth_providers import list_available_providers
-from app.models.user import User
 from app.schemas.auth import TokenResponse
 from app.schemas.oauth import OAuthAuthorizeResponse, OAuthCallbackRequest, OAuthConnectionResponse
 from app.services import oauth_service
+
+if TYPE_CHECKING:
+    from sqlalchemy.ext.asyncio import AsyncSession
+
+    from app.models.user import User
 
 router = APIRouter(prefix="/api/v1/auth/oauth", tags=["oauth"])
 

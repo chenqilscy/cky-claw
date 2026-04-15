@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
-import uuid
-from datetime import datetime
+from typing import TYPE_CHECKING
 
 from croniter import croniter
 from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+if TYPE_CHECKING:
+    import uuid
+    from datetime import datetime
 
 
 class ScheduledTaskCreate(BaseModel):

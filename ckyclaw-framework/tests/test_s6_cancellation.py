@@ -10,13 +10,13 @@
 from __future__ import annotations
 
 import asyncio
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
 from ckyclaw_framework.runner.cancellation import CancellationToken
 from ckyclaw_framework.runner.run_config import RunConfig
-
 
 # ===========================================================================
 # CancellationToken 基础

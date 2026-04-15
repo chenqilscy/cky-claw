@@ -8,13 +8,12 @@ trace_processor、token_usage 补充、workflow 补充、im_channel schema 等�
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
 from app.core.exceptions import ConflictError, NotFoundError, ValidationError
-
 
 # ── helpers ──────────────────────────────────────────────────────────────
 
@@ -113,7 +112,7 @@ class TestAPMInternalFunctions:
             _scalar_one(span_count),  # span count
             _one(token_row),         # token stats
         )
-        since = datetime.now(timezone.utc) - timedelta(days=30)
+        since = datetime.now(UTC) - timedelta(days=30)
         result = await _get_overview(db, since)
         assert result.total_traces == 10
         assert result.total_spans == 20
@@ -138,7 +137,7 @@ class TestAPMInternalFunctions:
             _scalar_one(0),
             _one(token_row),
         )
-        since = datetime.now(timezone.utc) - timedelta(days=30)
+        since = datetime.now(UTC) - timedelta(days=30)
         result = await _get_overview(db, since)
         assert result.total_traces == 0
         assert result.error_rate == 0.0
@@ -162,7 +161,7 @@ class TestAPMInternalFunctions:
             _rows([agent_row]),     # agent ranking rows
             _rows([token_row]),     # token stats per agent
         )
-        since = datetime.now(timezone.utc) - timedelta(days=30)
+        since = datetime.now(UTC) - timedelta(days=30)
         result = await _get_agent_ranking(db, since)
         assert len(result) == 1
         assert result[0].agent_name == "agent1"
@@ -173,7 +172,7 @@ class TestAPMInternalFunctions:
         from app.services.apm import _get_agent_ranking
 
         db = _mock_db(_rows([]))
-        since = datetime.now(timezone.utc) - timedelta(days=30)
+        since = datetime.now(UTC) - timedelta(days=30)
         result = await _get_agent_ranking(db, since)
         assert result == []
 
@@ -190,7 +189,7 @@ class TestAPMInternalFunctions:
         row.total_cost = 0.15
 
         db = _mock_db(_rows([row]))
-        since = datetime.now(timezone.utc) - timedelta(days=30)
+        since = datetime.now(UTC) - timedelta(days=30)
         result = await _get_model_usage(db, since)
         assert len(result) == 1
         assert result[0].model == "gpt-4o"
@@ -209,7 +208,7 @@ class TestAPMInternalFunctions:
         token_row.cost = 0.5
 
         db = _mock_db(_rows([trace_row]), _rows([token_row]))
-        since = datetime.now(timezone.utc) - timedelta(days=30)
+        since = datetime.now(UTC) - timedelta(days=30)
         result = await _get_daily_trend(db, since)
         assert len(result) == 1
         assert result[0].traces == 10
@@ -225,7 +224,7 @@ class TestAPMInternalFunctions:
         row.avg_duration_ms = 350.0
 
         db = _mock_db(_rows([row]))
-        since = datetime.now(timezone.utc) - timedelta(days=30)
+        since = datetime.now(UTC) - timedelta(days=30)
         result = await _get_tool_usage(db, since)
         assert len(result) == 1
         assert result[0].tool_name == "web_search"
@@ -442,7 +441,7 @@ class TestAlertServiceR2:
     async def test_evaluate_rule_cooldown_active(self) -> None:
         from app.services.alert import evaluate_rule
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         mock_rule = _make_orm(
             id=uuid.uuid4(), name="rule1", is_enabled=True,
             metric="error_rate", operator=">", threshold=0.1,
@@ -655,10 +654,10 @@ class TestMCPServerR2:
         )
         db = _mock_db(_scalar_one_or_none(mock_s))
 
-        with patch("app.services.mcp_server.get_mcp_server", AsyncMock(return_value=mock_s)):
+        with patch("app.services.mcp_server.get_mcp_server", AsyncMock(return_value=mock_s)), \
+             patch.dict("sys.modules", {"ckyclaw_framework.mcp.connection": None, "ckyclaw_framework.mcp.server": None}):
             # 让 import 存在但 connect_and_discover 抛出 ImportError
-            with patch.dict("sys.modules", {"ckyclaw_framework.mcp.connection": None, "ckyclaw_framework.mcp.server": None}):
-                result = await test_mcp_connection(db, mock_s.id)
+            result = await test_mcp_connection(db, mock_s.id)
         assert result["success"] is False
 
     @pytest.mark.asyncio
@@ -702,7 +701,7 @@ class TestTraceProcessorR2:
         mock_trace_start.trace_id = "t1"
         mock_trace_start.workflow_name = "wf1"
         mock_trace_start.group_id = "g1"
-        mock_trace_start.start_time = datetime.now(timezone.utc)
+        mock_trace_start.start_time = datetime.now(UTC)
         mock_trace_start.spans = []
         await proc.on_trace_start(mock_trace_start)
 
@@ -715,8 +714,8 @@ class TestTraceProcessorR2:
         mock_span.name = "my_agent"
         mock_span.input = {"query": "hello"}
         mock_span.output = {"response": "world"}
-        mock_span.start_time = datetime.now(timezone.utc)
-        mock_span.end_time = datetime.now(timezone.utc) + timedelta(seconds=1)
+        mock_span.start_time = datetime.now(UTC)
+        mock_span.end_time = datetime.now(UTC) + timedelta(seconds=1)
         mock_span.duration_ms = 1000
         mock_span.status = MagicMock(value="completed")
         mock_span.error = None
@@ -732,8 +731,8 @@ class TestTraceProcessorR2:
         mock_trace_end = MagicMock()
         mock_trace_end.trace_id = "t1"
         mock_trace_end.status = "completed"
-        mock_trace_end.start_time = datetime.now(timezone.utc)
-        mock_trace_end.end_time = datetime.now(timezone.utc) + timedelta(seconds=2)
+        mock_trace_end.start_time = datetime.now(UTC)
+        mock_trace_end.end_time = datetime.now(UTC) + timedelta(seconds=2)
         mock_trace_end.spans = [mock_span]
         mock_trace_end.metadata = {}
         await proc.on_trace_end(mock_trace_end)
@@ -759,8 +758,8 @@ class TestTraceProcessorR2:
         mock_span.name = "web_search"
         mock_span.input = None
         mock_span.output = None
-        mock_span.start_time = datetime.now(timezone.utc)
-        mock_span.end_time = datetime.now(timezone.utc) + timedelta(milliseconds=500)
+        mock_span.start_time = datetime.now(UTC)
+        mock_span.end_time = datetime.now(UTC) + timedelta(milliseconds=500)
         mock_span.duration_ms = 500
         mock_span.status = MagicMock(value="completed")
         mock_span.error = None
@@ -843,8 +842,8 @@ class TestTokenUsageR2:
             session_id=uuid.uuid4(),
             user_id=uuid.uuid4(),
             model="gpt-4o",
-            start_time=datetime.now(timezone.utc) - timedelta(days=1),
-            end_time=datetime.now(timezone.utc),
+            start_time=datetime.now(UTC) - timedelta(days=1),
+            end_time=datetime.now(UTC),
         )
         assert total == 3
 
@@ -1020,8 +1019,8 @@ class TestIMChannelSchemaR2:
             webhook_secret="my_secret",
             app_config={"token": "secret123", "webhook_url": "http://test"},
             agent_id=None,
-            created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         )
         assert resp.webhook_secret == "***"
         assert resp.app_config["token"] == "***"

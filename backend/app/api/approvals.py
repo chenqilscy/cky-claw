@@ -2,14 +2,18 @@
 
 from __future__ import annotations
 
-import uuid
+from typing import TYPE_CHECKING
 
 from fastapi import APIRouter, Depends, Query
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.deps import get_db, require_permission
 from app.schemas.approval import ApprovalListResponse, ApprovalResolveRequest, ApprovalResponse
 from app.services import approval as approval_service
+
+if TYPE_CHECKING:
+    import uuid
+
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter(prefix="/api/v1/approvals", tags=["approvals"])
 

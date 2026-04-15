@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
-from contextlib import AsyncExitStack
+from datetime import UTC
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
 from ckyclaw_framework.tools.function_tool import FunctionTool
-
 
 # ---------------------------------------------------------------------------
 # _resolve_agent_tools 测试
@@ -243,7 +242,7 @@ class TestAgentSchemaWithAgentTools:
         assert data.agent_tools == ["new-agent"]
 
     def test_response_schema_includes_agent_tools(self) -> None:
-        from datetime import datetime, timezone
+        from datetime import datetime
 
         from app.schemas.agent import AgentResponse
 
@@ -270,7 +269,7 @@ class TestAgentSchemaWithAgentTools:
             org_id=None,
             is_active=True,
             created_by=None,
-            created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         )
         assert data.agent_tools == ["sub-a"]

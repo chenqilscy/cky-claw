@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -28,8 +28,8 @@ def _mock_env(name: str = "dev") -> MagicMock:
     m.is_protected = False
     m.settings_override = {}
     m.org_id = None
-    m.created_at = datetime.now(timezone.utc)
-    m.updated_at = datetime.now(timezone.utc)
+    m.created_at = datetime.now(UTC)
+    m.updated_at = datetime.now(UTC)
     return m
 
 
@@ -40,7 +40,7 @@ def _mock_binding() -> MagicMock:
     m.environment_id = uuid.uuid4()
     m.version_id = uuid.uuid4()
     m.is_active = True
-    m.published_at = datetime.now(timezone.utc)
+    m.published_at = datetime.now(UTC)
     m.published_by = None
     m.rollback_from_id = None
     m.notes = "发布"

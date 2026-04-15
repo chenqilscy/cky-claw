@@ -20,12 +20,12 @@ import pytest
 from ckyclaw_framework.agent.agent import Agent
 from ckyclaw_framework.compat.adapter import (
     SdkAgentAdapter,
+    _convert_model_settings,
+    _wrap_sdk_tool_fn,
     from_openai_agent,
     from_openai_guardrail,
     from_openai_handoff,
     from_openai_tool,
-    _convert_model_settings,
-    _wrap_sdk_tool_fn,
 )
 from ckyclaw_framework.guardrails.input_guardrail import InputGuardrail
 from ckyclaw_framework.guardrails.output_guardrail import OutputGuardrail
@@ -33,7 +33,6 @@ from ckyclaw_framework.guardrails.result import GuardrailResult
 from ckyclaw_framework.handoff.handoff import Handoff
 from ckyclaw_framework.model.settings import ModelSettings
 from ckyclaw_framework.tools.function_tool import FunctionTool
-
 
 # ═══════════════════════════════════════════════════════════════════
 # Tool Conversion

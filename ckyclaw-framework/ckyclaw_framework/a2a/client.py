@@ -5,13 +5,11 @@ A2AClient 封装对远程 A2A Agent 的发现和任务发送逻辑。
 
 from __future__ import annotations
 
-import json
 import logging
-from typing import Any
 from urllib.parse import urljoin
 
 from ckyclaw_framework.a2a.agent_card import AgentCard
-from ckyclaw_framework.a2a.task import A2ATask, TaskStatus
+from ckyclaw_framework.a2a.task import A2ATask
 
 logger = logging.getLogger(__name__)
 

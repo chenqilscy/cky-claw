@@ -6,7 +6,6 @@ import pytest
 
 from ckyclaw_framework.guardrails.regex_guardrail import RegexGuardrail
 
-
 # ═══════════════════════════════════════════════════════════════════
 # case_sensitive 模式
 # ═══════════════════════════════════════════════════════════════════

@@ -5,13 +5,13 @@ from __future__ import annotations
 import math
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from enum import Enum
+from datetime import UTC, datetime
+from enum import StrEnum
 from typing import Any
 from uuid import uuid4
 
 
-class MemoryType(str, Enum):
+class MemoryType(StrEnum):
     """记忆条目类型。"""
 
     USER_PROFILE = "user_profile"
@@ -24,7 +24,7 @@ class MemoryType(str, Enum):
     """结构化事实 — Agent 执行中积累的事实数据。"""
 
 
-class DecayMode(str, Enum):
+class DecayMode(StrEnum):
     """记忆衰减模式。"""
 
     LINEAR = "linear"
@@ -62,10 +62,10 @@ class MemoryEntry:
     metadata: dict[str, Any] = field(default_factory=dict)
     """附加元数据。"""
 
-    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     """创建时间。"""
 
-    updated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     """最后更新时间。"""
 
     embedding: list[float] | None = None

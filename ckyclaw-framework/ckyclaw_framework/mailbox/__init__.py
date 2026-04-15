@@ -11,7 +11,7 @@ from __future__ import annotations
 import uuid
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 
@@ -43,7 +43,7 @@ class MailboxMessage:
     metadata: dict[str, Any] = field(default_factory=dict)
     """扩展元数据。"""
 
-    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     """创建时间。"""
 
 

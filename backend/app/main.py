@@ -3,67 +3,70 @@
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
-from collections.abc import AsyncIterator
+from typing import TYPE_CHECKING
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.a2a import router as a2a_router
+from app.api.ab_test import router as ab_test_router
+from app.api.agent_locales import router as agent_locales_router
+from app.api.agent_templates import router as agent_templates_router
+from app.api.agent_versions import router as agent_versions_router
+from app.api.agents import router as agents_router
+from app.api.alerts import router as alerts_router
+from app.api.apm import router as apm_router
+from app.api.approvals import router as approvals_router
+from app.api.audit_logs import router as audit_logs_router
+from app.api.auth import router as auth_router
+from app.api.benchmark import router as benchmark_router
+from app.api.checkpoints import router as checkpoints_router
+from app.api.compliance import router as compliance_router
+from app.api.config_reload import router as config_reload_router
+from app.api.cost_router import router as cost_router_router
+from app.api.debug import router as debug_router
+from app.api.environments import router as environments_router
+from app.api.evaluations import router as evaluations_router
+from app.api.events import router as events_router
+from app.api.evolution import router as evolution_router
+from app.api.export import router as export_router
+from app.api.guardrails import router as guardrails_router
+from app.api.health import router as health_router
+from app.api.im_channels import router as im_channels_router
+from app.api.intent import router as intent_router
+from app.api.knowledge_bases import router as knowledge_bases_router
+from app.api.mailbox import router as mailbox_router
+from app.api.marketplace import router as marketplace_router
+from app.api.mcp_servers import router as mcp_servers_router
+from app.api.media import router as media_router
+from app.api.memories import router as memories_router
+from app.api.oauth import router as oauth_router
+from app.api.organizations import router as organizations_router
+from app.api.prompt import router as prompt_router
+from app.api.provider_models import router as provider_models_router
+from app.api.providers import router as providers_router
+from app.api.roles import router as roles_router
+from app.api.saml import router as saml_router
+from app.api.sandbox import router as sandbox_router
+from app.api.scheduled_tasks import router as scheduled_tasks_router
+from app.api.sessions import router as sessions_router
+from app.api.skills import router as skills_router
+from app.api.supervision import router as supervision_router
+from app.api.teams import router as teams_router
+from app.api.token_usage import router as token_usage_router
+from app.api.tool_groups import router as tool_groups_router
+from app.api.traces import router as traces_router
+from app.api.workflows import router as workflows_router
+from app.api.ws import router as ws_router
+from app.core.audit_middleware import AuditLogMiddleware
 from app.core.config import settings
 from app.core.exceptions import register_exception_handlers
 from app.core.logging import setup_logging
 from app.core.middleware import RequestIDMiddleware
-from app.core.audit_middleware import AuditLogMiddleware
-from app.core.otel import setup_otel, instrument_fastapi, get_metrics_app
-from app.api.agents import router as agents_router
-from app.api.agent_locales import router as agent_locales_router
-from app.api.alerts import router as alerts_router
-from app.api.apm import router as apm_router
-from app.api.agent_templates import router as agent_templates_router
-from app.api.agent_versions import router as agent_versions_router
-from app.api.approvals import router as approvals_router
-from app.api.audit_logs import router as audit_logs_router
-from app.api.auth import router as auth_router
-from app.api.oauth import router as oauth_router
-from app.api.saml import router as saml_router
-from app.api.evaluations import router as evaluations_router
-from app.api.evolution import router as evolution_router
-from app.api.events import router as events_router
-from app.api.health import router as health_router
-from app.api.providers import router as providers_router
-from app.api.provider_models import router as provider_models_router
-from app.api.roles import router as roles_router
-from app.api.sandbox import router as sandbox_router
-from app.api.scheduled_tasks import router as scheduled_tasks_router
-from app.api.sessions import router as sessions_router
-from app.api.supervision import router as supervision_router
-from app.api.token_usage import router as token_usage_router
-from app.api.traces import router as traces_router
-from app.api.guardrails import router as guardrails_router
-from app.api.im_channels import router as im_channels_router
-from app.api.mcp_servers import router as mcp_servers_router
-from app.api.memories import router as memories_router
-from app.api.organizations import router as organizations_router
-from app.api.skills import router as skills_router
-from app.api.tool_groups import router as tool_groups_router
-from app.api.workflows import router as workflows_router
-from app.api.teams import router as teams_router
-from app.api.ws import router as ws_router
-from app.api.config_reload import router as config_reload_router
-from app.api.cost_router import router as cost_router_router
-from app.api.checkpoints import router as checkpoints_router
-from app.api.export import router as export_router
-from app.api.debug import router as debug_router
-from app.api.intent import router as intent_router
-from app.api.ab_test import router as ab_test_router
-from app.api.mailbox import router as mailbox_router
-from app.api.prompt import router as prompt_router
-from app.api.environments import router as environments_router
-from app.api.knowledge_bases import router as knowledge_bases_router
-from app.api.media import router as media_router
-from app.api.a2a import router as a2a_router
-from app.api.marketplace import router as marketplace_router
-from app.api.benchmark import router as benchmark_router
-from app.api.compliance import router as compliance_router
+from app.core.otel import get_metrics_app, instrument_fastapi, setup_otel
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncIterator
 
 
 @asynccontextmanager

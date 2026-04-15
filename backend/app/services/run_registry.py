@@ -6,8 +6,10 @@
 from __future__ import annotations
 
 import threading
+from typing import TYPE_CHECKING
 
-from ckyclaw_framework.runner.cancellation import CancellationToken
+if TYPE_CHECKING:
+    from ckyclaw_framework.runner.cancellation import CancellationToken
 
 
 class RunRegistry:

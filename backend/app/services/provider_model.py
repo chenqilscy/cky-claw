@@ -3,19 +3,23 @@
 from __future__ import annotations
 
 import logging
-import uuid
-from datetime import datetime, timezone
-from typing import Any
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING, Any
 
 import httpx
 from sqlalchemy import func, select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.crypto import decrypt_api_key
 from app.core.exceptions import NotFoundError
 from app.models.provider import ProviderConfig
 from app.models.provider_model import ProviderModel
-from app.schemas.provider_model import ProviderModelCreate, ProviderModelUpdate
+
+if TYPE_CHECKING:
+    import uuid
+
+    from sqlalchemy.ext.asyncio import AsyncSession
+
+    from app.schemas.provider_model import ProviderModelCreate, ProviderModelUpdate
 
 logger = logging.getLogger(__name__)
 
@@ -101,7 +105,7 @@ async def delete_model(
     """软删除模型配置。"""
     model = await get_model(db, model_id)
     model.is_deleted = True
-    model.deleted_at = datetime.now(timezone.utc)
+    model.deleted_at = datetime.now(UTC)
     await db.commit()
 
 

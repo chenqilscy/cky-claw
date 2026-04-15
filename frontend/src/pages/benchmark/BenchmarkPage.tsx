@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import {
-  Card, Row, Col, Statistic, Tag, Table, Tabs, Typography, Space, App,
+  Card, Row, Col, Statistic, Tag, Table, Tabs, Space, App,
   Progress, Button, Modal, Form, Input, Select, Descriptions, Empty,
 } from 'antd';
 import {
@@ -16,8 +16,6 @@ import { PageContainer } from '../../components/PageContainer';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { benchmarkService } from '../../services/benchmarkService';
 import type { BenchmarkSuiteItem, BenchmarkRunItem } from '../../services/benchmarkService';
-
-const { Title } = Typography;
 
 const statusColors: Record<string, string> = {
   pending: 'gold',

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -12,7 +12,6 @@ from fastapi.testclient import TestClient
 
 from app.main import app
 
-
 # ═══════════════════════════════════════════════════════════════════
 # Mock 基础设施
 # ═══════════════════════════════════════════════════════════════════
@@ -20,7 +19,7 @@ from app.main import app
 
 def _make_guardrail_rule(**overrides: Any) -> MagicMock:
     """构造模拟 GuardrailRule ORM 对象。"""
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     defaults = {
         "id": uuid.uuid4(),
         "name": "test-rule",

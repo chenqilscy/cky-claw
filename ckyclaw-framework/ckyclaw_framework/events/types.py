@@ -6,10 +6,10 @@
 
 from __future__ import annotations
 
-from enum import Enum
+from enum import StrEnum
 
 
-class EventType(str, Enum):
+class EventType(StrEnum):
     """事件类型。"""
 
     # ── Trace 级别 ──

@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -21,13 +21,12 @@ from app.schemas.agent_version import (
     AgentVersionResponse,
 )
 
-
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
 
 _AGENT_ID = uuid.uuid4()
-_NOW = datetime.now(timezone.utc)
+_NOW = datetime.now(UTC)
 
 
 def _make_version(**overrides) -> MagicMock:  # type: ignore[no-untyped-def]

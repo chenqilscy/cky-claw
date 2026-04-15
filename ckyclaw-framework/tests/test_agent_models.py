@@ -2,14 +2,13 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING
 
-import pytest
-
-from ckyclaw_framework._internal.types import JsonDict
 from ckyclaw_framework.agent.config import AgentConfig
 from ckyclaw_framework.agent.output import AgentOutput
 
+if TYPE_CHECKING:
+    from ckyclaw_framework._internal.types import JsonDict
 
 # ═══════════════════════════════════════════════════════════════════
 # AgentConfig

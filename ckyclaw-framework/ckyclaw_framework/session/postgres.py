@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import json
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from ckyclaw_framework.model.message import Message
@@ -94,51 +94,49 @@ class PostgresSessionBackend(SessionBackend):
     async def save(self, session_id: str, messages: list[Message]) -> None:
         if not messages:
             return
-        async with self._pool.acquire() as conn:
-            async with conn.transaction():
-                for msg in messages:
-                    await conn.execute(
-                        "INSERT INTO session_messages "
-                        "(session_id, role, content, agent_name, tool_call_id, "
-                        "tool_calls, token_usage, metadata) "
-                        "VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
-                        session_id,
-                        msg.role.value,
-                        msg.content,
-                        msg.agent_name,
-                        msg.tool_call_id,
-                        json.dumps(msg.tool_calls) if msg.tool_calls else None,
-                        json.dumps({
-                            "prompt_tokens": msg.token_usage.prompt_tokens,
-                            "completion_tokens": msg.token_usage.completion_tokens,
-                            "total_tokens": msg.token_usage.total_tokens,
-                        }) if msg.token_usage else None,
-                        json.dumps(msg.metadata) if msg.metadata else "{}",
-                    )
-                # 更新元数据
-                last_agent = None
-                for m in reversed(messages):
-                    if m.agent_name:
-                        last_agent = m.agent_name
-                        break
+        async with self._pool.acquire() as conn, conn.transaction():
+            for msg in messages:
                 await conn.execute(
-                    "INSERT INTO session_metadata (session_id, message_count, last_agent, updated_at) "
-                    "VALUES ($1, $2, $3, $4) "
-                    "ON CONFLICT (session_id) DO UPDATE SET "
-                    "message_count = session_metadata.message_count + $2, "
-                    "last_agent = COALESCE($3, session_metadata.last_agent), "
-                    "updated_at = $4",
+                    "INSERT INTO session_messages "
+                    "(session_id, role, content, agent_name, tool_call_id, "
+                    "tool_calls, token_usage, metadata) "
+                    "VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
                     session_id,
-                    len(messages),
-                    last_agent,
-                    datetime.now(timezone.utc),
+                    msg.role.value,
+                    msg.content,
+                    msg.agent_name,
+                    msg.tool_call_id,
+                    json.dumps(msg.tool_calls) if msg.tool_calls else None,
+                    json.dumps({
+                        "prompt_tokens": msg.token_usage.prompt_tokens,
+                        "completion_tokens": msg.token_usage.completion_tokens,
+                        "total_tokens": msg.token_usage.total_tokens,
+                    }) if msg.token_usage else None,
+                    json.dumps(msg.metadata) if msg.metadata else "{}",
                 )
+            # 更新元数据
+            last_agent = None
+            for m in reversed(messages):
+                if m.agent_name:
+                    last_agent = m.agent_name
+                    break
+            await conn.execute(
+                "INSERT INTO session_metadata (session_id, message_count, last_agent, updated_at) "
+                "VALUES ($1, $2, $3, $4) "
+                "ON CONFLICT (session_id) DO UPDATE SET "
+                "message_count = session_metadata.message_count + $2, "
+                "last_agent = COALESCE($3, session_metadata.last_agent), "
+                "updated_at = $4",
+                session_id,
+                len(messages),
+                last_agent,
+                datetime.now(UTC),
+            )
 
     async def delete(self, session_id: str) -> None:
-        async with self._pool.acquire() as conn:
-            async with conn.transaction():
-                await conn.execute("DELETE FROM session_messages WHERE session_id = $1", session_id)
-                await conn.execute("DELETE FROM session_metadata WHERE session_id = $1", session_id)
+        async with self._pool.acquire() as conn, conn.transaction():
+            await conn.execute("DELETE FROM session_messages WHERE session_id = $1", session_id)
+            await conn.execute("DELETE FROM session_metadata WHERE session_id = $1", session_id)
 
     async def list_sessions(self, **filters: Any) -> list[SessionMetadata]:
         async with self._pool.acquire() as conn:

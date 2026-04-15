@@ -2,16 +2,18 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy import func, select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.deps import get_db, require_permission
 from app.models.checkpoint import CheckpointRecord
 from app.schemas.checkpoint import CheckpointListResponse, CheckpointResponse
 from app.services.checkpoint_backend import PostgresCheckpointBackend
+
+if TYPE_CHECKING:
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter(prefix="/api/v1/checkpoints", tags=["checkpoints"])
 

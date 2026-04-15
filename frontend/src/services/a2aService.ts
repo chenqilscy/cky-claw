@@ -55,7 +55,7 @@ export const a2aService = {
   },
 
   async deleteAgentCard(id: string): Promise<void> {
-    return api.delete<void>(`/a2a/agent-cards/${id}`);
+    await api.delete(`/a2a/agent-cards/${id}`);
   },
 
   async discoverAgent(agentId: string): Promise<Record<string, unknown>> {

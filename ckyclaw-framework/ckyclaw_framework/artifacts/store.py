@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
+import contextlib
 import json
 import logging
 import os
 from abc import ABC, abstractmethod
-from datetime import datetime, timezone
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -178,10 +179,8 @@ class LocalArtifactStore(ArtifactStore):
 
             # 清理空目录
             if run_dir.exists() and not any(run_dir.iterdir()):
-                try:
+                with contextlib.suppress(OSError):
                     run_dir.rmdir()
-                except OSError:
-                    pass
 
         logger.info("Artifact cleanup: deleted %d artifacts older than %s", deleted, older_than)
         return deleted

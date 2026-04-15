@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import re
-import uuid
-from datetime import datetime
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+if TYPE_CHECKING:
+    import uuid
+    from datetime import datetime
 
 
 class GuardrailRuleCreate(BaseModel):

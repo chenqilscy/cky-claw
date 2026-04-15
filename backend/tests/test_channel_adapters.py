@@ -8,16 +8,13 @@ import hmac
 import json
 import struct
 import time
-import uuid
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import httpx
 import pytest
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives.padding import PKCS7
-
-import httpx
-
 
 # ========== ChannelAdapter 基础架构 ==========
 
@@ -93,11 +90,6 @@ class TestChannelAdapterBase:
         from app.services.channel_adapters import (
             ChannelAdapter,
             ChannelMessage,
-            CustomWebhookAdapter,
-            DingTalkAdapter,
-            FeishuAdapter,
-            WeComAdapter,
-            get_adapter,
         )
 
         assert ChannelAdapter is not None
@@ -962,7 +954,7 @@ def _build_text_xml(
         f"<Content><![CDATA[{content}]]></Content>"
         f"<MsgId>{msg_id}</MsgId>"
         "</xml>"
-    ).encode("utf-8")
+    ).encode()
 
 
 def _build_image_xml(from_user: str, to_user: str) -> bytes:
@@ -978,7 +970,7 @@ def _build_image_xml(from_user: str, to_user: str) -> bytes:
         "<MediaId><![CDATA[media_id_123]]></MediaId>"
         "<MsgId>123457</MsgId>"
         "</xml>"
-    ).encode("utf-8")
+    ).encode()
 
 
 def _build_voice_xml(from_user: str, to_user: str, recognition: str = "") -> bytes:
@@ -998,7 +990,7 @@ def _build_voice_xml(from_user: str, to_user: str, recognition: str = "") -> byt
         f"{recognition_tag}"
         "<MsgId>123458</MsgId>"
         "</xml>"
-    ).encode("utf-8")
+    ).encode()
 
 
 def _build_event_xml(from_user: str, to_user: str, event_type: str) -> bytes:
@@ -1012,7 +1004,7 @@ def _build_event_xml(from_user: str, to_user: str, event_type: str) -> bytes:
         "<MsgType><![CDATA[event]]></MsgType>"
         f"<Event><![CDATA[{event_type}]]></Event>"
         "</xml>"
-    ).encode("utf-8")
+    ).encode()
 
 
 def _build_location_xml(from_user: str, to_user: str) -> bytes:
@@ -1030,7 +1022,7 @@ def _build_location_xml(from_user: str, to_user: str) -> bytes:
         "<Label><![CDATA[天安门广场]]></Label>"
         "<MsgId>123459</MsgId>"
         "</xml>"
-    ).encode("utf-8")
+    ).encode()
 
 
 def _build_link_xml(from_user: str, to_user: str) -> bytes:
@@ -1047,7 +1039,7 @@ def _build_link_xml(from_user: str, to_user: str) -> bytes:
         "<Url><![CDATA[https://ckyclaw.com]]></Url>"
         "<MsgId>123460</MsgId>"
         "</xml>"
-    ).encode("utf-8")
+    ).encode()
 
 
 def _build_video_xml(from_user: str, to_user: str, msg_type: str = "video") -> bytes:
@@ -1063,7 +1055,7 @@ def _build_video_xml(from_user: str, to_user: str, msg_type: str = "video") -> b
         "<ThumbMediaId><![CDATA[thumb_media_123]]></ThumbMediaId>"
         "<MsgId>123461</MsgId>"
         "</xml>"
-    ).encode("utf-8")
+    ).encode()
 
 
 class TestWeChatOfficialAdapter:
@@ -1477,7 +1469,7 @@ class TestWeChatOfficialAdapter:
         random_bytes = _os.urandom(16)
         msg = "<xml><Content>test</Content></xml>"
         msg_bytes = msg.encode("utf-8")
-        wrong_appid = "wrong_appid".encode("utf-8")
+        wrong_appid = b"wrong_appid"
         content = random_bytes + struct.pack("!I", len(msg_bytes)) + msg_bytes + wrong_appid
 
         padder = PKCS7(128).padder()
@@ -1545,7 +1537,7 @@ class TestWeChatOfficialAdapter:
             "<xml>"
             f"<Encrypt><![CDATA[{encrypt_text}]]></Encrypt>"
             "</xml>"
-        ).encode("utf-8")
+        ).encode()
 
         config = {
             "appid": appid,
@@ -1565,13 +1557,13 @@ class TestWeChatOfficialAdapter:
         """未知消息类型返回空内容。"""
         adapter = self._get_adapter()
         body = (
-            "<xml>"
-            "<ToUserName><![CDATA[gh_official]]></ToUserName>"
-            "<FromUserName><![CDATA[user1]]></FromUserName>"
-            "<CreateTime>1609459200</CreateTime>"
-            "<MsgType><![CDATA[unknown_type]]></MsgType>"
-            "</xml>"
-        ).encode("utf-8")
+            b"<xml>"
+            b"<ToUserName><![CDATA[gh_official]]></ToUserName>"
+            b"<FromUserName><![CDATA[user1]]></FromUserName>"
+            b"<CreateTime>1609459200</CreateTime>"
+            b"<MsgType><![CDATA[unknown_type]]></MsgType>"
+            b"</xml>"
+        )
         msg = adapter.parse_message(body, _WECHAT_OFFICIAL_CONFIG)
         assert msg is not None
         assert msg.message_type == "unknown_type"

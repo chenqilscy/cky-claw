@@ -7,13 +7,15 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
-from typing import Any
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.skill import SkillRecord
+
+if TYPE_CHECKING:
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = logging.getLogger(__name__)
 
@@ -71,7 +73,7 @@ class PostgresSkillPersistence:
             existing.content = definition.code
             existing.category = _AGENT_CREATED_CATEGORY
             existing.metadata_ = metadata
-            existing.updated_at = datetime.now(timezone.utc)
+            existing.updated_at = datetime.now(UTC)
         else:
             record = SkillRecord(
                 name=definition.name,
@@ -135,7 +137,7 @@ class PostgresSkillPersistence:
             return False
 
         record.is_deleted = True
-        record.deleted_at = datetime.now(timezone.utc)
+        record.deleted_at = datetime.now(UTC)
         await self._db.commit()
         logger.info("删除 Agent '%s' 自创建技能 '%s'", agent_name, skill_name)
         return True

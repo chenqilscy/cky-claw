@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -12,23 +12,18 @@ from pydantic import ValidationError
 
 from app.schemas.compliance import (
     ClassificationLabelCreate,
-    ClassificationLabelListResponse,
     ClassificationLabelResponse,
     ComplianceDashboardResponse,
     ControlPointCreate,
-    ControlPointListResponse,
     ControlPointResponse,
     ControlPointUpdate,
     ErasureRequestCreate,
-    ErasureRequestListResponse,
     ErasureRequestResponse,
     RetentionPolicyCreate,
-    RetentionPolicyListResponse,
     RetentionPolicyResponse,
-    RetentionPolicyUpdate,
 )
 
-now = datetime.now(timezone.utc)
+now = datetime.now(UTC)
 USER_ID = uuid.UUID("00000000-0000-0000-0000-000000000001")
 
 

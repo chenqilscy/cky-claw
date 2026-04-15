@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from fastapi import APIRouter, Depends
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.deps import require_permission
@@ -14,6 +15,9 @@ from app.schemas.agent_locale import (
     AgentLocaleUpdate,
 )
 from app.services import agent_locale as locale_service
+
+if TYPE_CHECKING:
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter(prefix="/api/v1/agents/{name}/locales", tags=["agent-locales"])
 

@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from datetime import UTC
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
 from ckyclaw_framework.tools.function_tool import FunctionTool
-
 
 # ---------------------------------------------------------------------------
 # Schema 测试
@@ -42,7 +42,8 @@ class TestToolGroupSchemas:
         assert data.tools is None
 
     def test_response_schema(self) -> None:
-        from datetime import datetime, timezone
+        from datetime import datetime
+
         from app.schemas.tool_group import ToolGroupResponse
 
         data = ToolGroupResponse(
@@ -53,8 +54,8 @@ class TestToolGroupSchemas:
             conditions={},
             source="custom",
             is_enabled=True,
-            created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         )
         assert data.name == "web-search"
 

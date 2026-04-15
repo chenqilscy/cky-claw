@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -16,7 +16,6 @@ from app.schemas.agent_template import (
     AgentTemplateUpdate,
     CreateAgentFromTemplate,
 )
-
 
 # ── Schema 验证 ──────────────────────────────────────
 
@@ -58,7 +57,7 @@ class TestAgentTemplateSchemas:
         assert data.overrides == {}
 
     def test_response_from_attributes(self) -> None:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         mock = MagicMock()
         mock.id = uuid.uuid4()
         mock.name = "test"
@@ -84,7 +83,7 @@ class TestAgentTemplateSchemas:
 
 
 def _make_mock_record(**overrides):
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     d = {
         "id": uuid.uuid4(),
         "name": "test-template",

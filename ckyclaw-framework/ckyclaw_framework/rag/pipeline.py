@@ -4,13 +4,15 @@ from __future__ import annotations
 
 import logging
 import uuid
-from dataclasses import dataclass, field
-from typing import Any
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, Any
 
 from ckyclaw_framework.rag.chunker import Chunk, ChunkStrategy
-from ckyclaw_framework.rag.document import Document, DocumentLoader
-from ckyclaw_framework.rag.embedding import EmbeddingProvider
-from ckyclaw_framework.rag.vector_store import SearchResult, VectorStore
+
+if TYPE_CHECKING:
+    from ckyclaw_framework.rag.document import Document, DocumentLoader
+    from ckyclaw_framework.rag.embedding import EmbeddingProvider
+    from ckyclaw_framework.rag.vector_store import SearchResult, VectorStore
 
 logger = logging.getLogger(__name__)
 
@@ -85,11 +87,8 @@ class RAGPipeline:
         # 分块
         all_chunks: list[Chunk] = []
         for doc in documents:
-            if self._chunker:
-                chunks = self._chunker.split(doc)
-            else:
-                # 不分块，整篇作为单个 Chunk
-                chunks = [Chunk(content=doc.content, metadata=doc.metadata)]
+            # 不分块时，整篇作为单个 Chunk
+            chunks = self._chunker.split(doc) if self._chunker else [Chunk(content=doc.content, metadata=doc.metadata)]
             for chunk in chunks:
                 chunk.document_id = doc.metadata.get("document_id", str(uuid.uuid4()))
                 if knowledge_base_id:

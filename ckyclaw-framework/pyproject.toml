@@ -71,6 +71,13 @@ select = [
     "SIM",  # flake8-simplify
     "TCH",  # flake8-type-checking
 ]
+ignore = [
+    "E501",   # line-too-long: 格式问题，不阻塞
+    "E402",   # module-import-not-at-top: conftest / __init__.py 合理延迟导入
+    "N806",   # non-lowercase-variable: SQLAlchemy JSON 字段、API 响应映射
+    "N817",   # camelcase-imported-as-acronym: Pydantic/SDK 常见模式
+    "B027",   # empty-method-without-abstract: Mixin 占位方法
+]
 
 [tool.ruff.lint.isort]
 known-first-party = ["ckyclaw_framework"]

@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from typing import Any
 
 from sqlalchemy import DateTime, Float, ForeignKey, Integer, String, Text, text
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB, UUID
@@ -49,15 +48,15 @@ class MemoryEntryRecord(SoftDeleteMixin, Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
         server_default=text("now()"),
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
         server_default=text("now()"),
-        onupdate=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(UTC),
     )
     embedding: Mapped[list[float] | None] = mapped_column(
         ARRAY(Float), nullable=True, default=None

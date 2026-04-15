@@ -18,7 +18,6 @@ from ckyclaw_framework.orchestration import (
     PlanStep,
 )
 
-
 # ===========================================================================
 # PlanStep & ExecutionPlan 数据类
 # ===========================================================================
@@ -424,10 +423,7 @@ class TestOrchestrationExports:
     def test_orchestration_exports(self) -> None:
         """orchestration 包导出。"""
         from ckyclaw_framework.orchestration import (
-            ExecutionPlan,
-            GuardCheckResult,
             PlanGuard,
-            PlanGuardResult,
             PlanStep,
         )
         assert PlanGuard is not None

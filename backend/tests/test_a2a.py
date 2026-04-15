@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -11,12 +11,11 @@ from fastapi.testclient import TestClient
 
 from app.main import app
 
-
 client = TestClient(app)
 
 
 def _mock_agent_card(**overrides: object) -> MagicMock:
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     defaults = {
         "id": uuid.uuid4(),
         "agent_id": uuid.uuid4(),
@@ -39,7 +38,7 @@ def _mock_agent_card(**overrides: object) -> MagicMock:
 
 
 def _mock_task(**overrides: object) -> MagicMock:
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     defaults = {
         "id": uuid.uuid4(),
         "agent_card_id": uuid.uuid4(),
@@ -340,8 +339,8 @@ class TestA2AService:
     """A2A Service 层关键逻辑测试。"""
 
     async def test_create_agent_card_calls_commit(self) -> None:
-        from app.services.a2a import create_agent_card
         from app.schemas.a2a import A2AAgentCardCreate
+        from app.services.a2a import create_agent_card
 
         mock_db = AsyncMock()
         data = A2AAgentCardCreate(agent_id=uuid.uuid4(), name="test")
@@ -351,8 +350,8 @@ class TestA2AService:
 
     async def test_create_task_initial_history(self) -> None:
         """创建 Task 时包含初始历史记录。"""
-        from app.services.a2a import create_task
         from app.schemas.a2a import A2ATaskCreate
+        from app.services.a2a import create_task
 
         mock_db = AsyncMock()
         data = A2ATaskCreate(agent_card_id=uuid.uuid4())
@@ -372,9 +371,9 @@ class TestA2AService:
         task_record.status = "completed"
         task_record.is_deleted = False
 
-        with patch("app.services.a2a.get_task", new_callable=AsyncMock, return_value=task_record):
-            with pytest.raises(ValueError, match="终态"):
-                await cancel_task(mock_db, uuid.uuid4())
+        with patch("app.services.a2a.get_task", new_callable=AsyncMock, return_value=task_record), \
+             pytest.raises(ValueError, match="终态"):
+            await cancel_task(mock_db, uuid.uuid4())
 
     async def test_delete_agent_card_soft_delete(self) -> None:
         """删除 Agent Card 执行软删除。"""

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Protocol
+from typing import Protocol
 
 from ckyclaw_framework.evolution.config import EvolutionConfig
 from ckyclaw_framework.evolution.proposal import EvolutionProposal, ProposalType
@@ -11,7 +11,6 @@ from ckyclaw_framework.evolution.signals import (
     EvolutionSignal,
     FeedbackSignal,
     MetricSignal,
-    SignalType,
     ToolPerformanceSignal,
 )
 

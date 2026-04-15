@@ -2,19 +2,19 @@
 
 from __future__ import annotations
 
+import contextlib
+
 import pytest
 
 from ckyclaw_framework.agent.agent import Agent
 from ckyclaw_framework.guardrails.input_guardrail import InputGuardrail
 from ckyclaw_framework.guardrails.result import GuardrailResult, InputGuardrailTripwireError
-from ckyclaw_framework.model.message import Message, MessageRole, TokenUsage
+from ckyclaw_framework.model.message import TokenUsage
 from ckyclaw_framework.model.provider import ModelChunk, ModelProvider, ModelResponse
-from ckyclaw_framework.runner.result import RunResult
 from ckyclaw_framework.runner.run_config import RunConfig
 from ckyclaw_framework.runner.run_context import RunContext
 from ckyclaw_framework.runner.runner import Runner, _execute_input_guardrails
 from ckyclaw_framework.tracing.span import SpanType
-
 
 # ---------- helpers ----------
 
@@ -308,10 +308,8 @@ class TestGuardrailTracing:
             input_guardrails=[InputGuardrail(guardrail_function=_block_guardrail, name="blocker")],
         )
         config = RunConfig(model_provider=_MockProvider("x"), tracing_enabled=True)
-        try:
+        with contextlib.suppress(InputGuardrailTripwireError):
             await Runner.run(agent, "bad", config=config)
-        except InputGuardrailTripwireError:
-            pass
         # trace 不可获取，因为 Runner.run 抛了异常，但 trace 在异常前已 end
         # 重新验证：guardrail 内部 Span 通过 tracing ctx 记录
 

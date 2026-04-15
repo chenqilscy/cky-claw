@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -13,7 +13,6 @@ from fastapi.testclient import TestClient
 
 from app.main import app
 
-
 # ═══════════════════════════════════════════════════════════════════
 # Mock 基础设施
 # ═══════════════════════════════════════════════════════════════════
@@ -21,7 +20,7 @@ from app.main import app
 
 def _make_approval_request(**overrides: Any) -> MagicMock:
     """构造模拟 ApprovalRequest ORM 对象。"""
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     defaults = {
         "id": uuid.uuid4(),
         "session_id": uuid.uuid4(),
@@ -149,7 +148,7 @@ class TestApprovalAPI:
         resolved_item = _make_approval_request(
             status="approved",
             comment="同意",
-            resolved_at=datetime.now(timezone.utc),
+            resolved_at=datetime.now(UTC),
         )
         mock_svc.resolve_approval_request = AsyncMock(return_value=resolved_item)
         resp = client.post(
@@ -165,7 +164,7 @@ class TestApprovalAPI:
         resolved_item = _make_approval_request(
             status="rejected",
             comment="拒绝",
-            resolved_at=datetime.now(timezone.utc),
+            resolved_at=datetime.now(UTC),
         )
         mock_svc.resolve_approval_request = AsyncMock(return_value=resolved_item)
         resp = client.post(
@@ -219,9 +218,8 @@ class TestApprovalManager:
 
     @pytest.mark.asyncio
     async def test_register_and_resolve(self) -> None:
-        from ckyclaw_framework.approval.mode import ApprovalDecision
-
         from app.services.approval_manager import ApprovalManager
+        from ckyclaw_framework.approval.mode import ApprovalDecision
 
         mgr = ApprovalManager.get_instance()
         aid = uuid.uuid4()
@@ -240,9 +238,8 @@ class TestApprovalManager:
 
     @pytest.mark.asyncio
     async def test_resolve_rejected(self) -> None:
-        from ckyclaw_framework.approval.mode import ApprovalDecision
-
         from app.services.approval_manager import ApprovalManager
+        from ckyclaw_framework.approval.mode import ApprovalDecision
 
         mgr = ApprovalManager.get_instance()
         aid = uuid.uuid4()
@@ -258,9 +255,8 @@ class TestApprovalManager:
 
     @pytest.mark.asyncio
     async def test_timeout(self) -> None:
-        from ckyclaw_framework.approval.mode import ApprovalDecision
-
         from app.services.approval_manager import ApprovalManager
+        from ckyclaw_framework.approval.mode import ApprovalDecision
 
         mgr = ApprovalManager.get_instance()
         aid = uuid.uuid4()
@@ -271,18 +267,16 @@ class TestApprovalManager:
 
     @pytest.mark.asyncio
     async def test_wait_unregistered(self) -> None:
-        from ckyclaw_framework.approval.mode import ApprovalDecision
-
         from app.services.approval_manager import ApprovalManager
+        from ckyclaw_framework.approval.mode import ApprovalDecision
 
         mgr = ApprovalManager.get_instance()
         decision = await mgr.wait_for_decision(uuid.uuid4(), timeout=1)
         assert decision == ApprovalDecision.TIMEOUT
 
     def test_resolve_unknown_returns_false(self) -> None:
-        from ckyclaw_framework.approval.mode import ApprovalDecision
-
         from app.services.approval_manager import ApprovalManager
+        from ckyclaw_framework.approval.mode import ApprovalDecision
 
         mgr = ApprovalManager.get_instance()
         result = mgr.resolve(uuid.uuid4(), ApprovalDecision.APPROVED)
@@ -315,10 +309,9 @@ class TestHttpApprovalHandler:
     @pytest.mark.asyncio
     async def test_creates_db_record_and_waits(self) -> None:
         """验证 handler 创建 DB 记录并等待审批决策。"""
-        from ckyclaw_framework.approval.mode import ApprovalDecision
-
         from app.services.approval_handler import HttpApprovalHandler
         from app.services.approval_manager import ApprovalManager
+        from ckyclaw_framework.approval.mode import ApprovalDecision
 
         handler = HttpApprovalHandler(
             session_id=str(uuid.uuid4()),
@@ -362,9 +355,8 @@ class TestHttpApprovalHandler:
     @pytest.mark.asyncio
     async def test_timeout_returns_timeout(self) -> None:
         """验证超时返回 TIMEOUT。"""
-        from ckyclaw_framework.approval.mode import ApprovalDecision
-
         from app.services.approval_handler import HttpApprovalHandler
+        from ckyclaw_framework.approval.mode import ApprovalDecision
 
         handler = HttpApprovalHandler(
             session_id=str(uuid.uuid4()),
@@ -420,27 +412,24 @@ class TestBuildAgentApprovalMode:
         return mock
 
     def test_suggest_mode(self) -> None:
-        from ckyclaw_framework.approval.mode import ApprovalMode
-
         from app.services.session import _build_agent_from_config
+        from ckyclaw_framework.approval.mode import ApprovalMode
 
         config = self._make_agent_config(approval_mode="suggest")
         agent = _build_agent_from_config(config)
         assert agent.approval_mode == ApprovalMode.SUGGEST
 
     def test_auto_edit_mode(self) -> None:
-        from ckyclaw_framework.approval.mode import ApprovalMode
-
         from app.services.session import _build_agent_from_config
+        from ckyclaw_framework.approval.mode import ApprovalMode
 
         config = self._make_agent_config(approval_mode="auto-edit")
         agent = _build_agent_from_config(config)
         assert agent.approval_mode == ApprovalMode.AUTO_EDIT
 
     def test_full_auto_mode(self) -> None:
-        from ckyclaw_framework.approval.mode import ApprovalMode
-
         from app.services.session import _build_agent_from_config
+        from ckyclaw_framework.approval.mode import ApprovalMode
 
         config = self._make_agent_config(approval_mode="full-auto")
         agent = _build_agent_from_config(config)
@@ -774,8 +763,8 @@ class TestIMChannelApprovalSchema:
             description="测试渠道",
             webhook_url=None, webhook_secret=None,
             agent_id=None, org_id=None,
-            created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         )
         resp = IMChannelResponse.model_validate(mock, from_attributes=True)
         assert resp.notify_approvals is True

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 import json
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock
@@ -17,7 +16,6 @@ from ckyclaw_framework.model.settings import ModelSettings
 from ckyclaw_framework.runner.run_config import RunConfig
 from ckyclaw_framework.runner.run_context import RunContext
 from ckyclaw_framework.runner.runner import (
-    _TracingCtx,
     _accumulate_usage,
     _build_response_format,
     _build_system_message,
@@ -30,11 +28,11 @@ from ckyclaw_framework.runner.runner import (
     _resolve_model,
     _resolve_provider,
     _resolve_settings,
+    _TracingCtx,
 )
 from ckyclaw_framework.session.history_trimmer import HistoryTrimConfig, HistoryTrimStrategy
 from ckyclaw_framework.tools.function_tool import FunctionTool
-from ckyclaw_framework.tracing.span import Span, SpanStatus, SpanType
-
+from ckyclaw_framework.tracing.span import SpanStatus, SpanType
 
 # ── 辅助 fixtures ──────────────────────────────────────────────
 

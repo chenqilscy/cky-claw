@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -14,7 +14,6 @@ from app.core.database import get_db as get_db_original
 from app.core.deps import get_current_user
 from app.core.tenant import get_org_id
 from app.main import app
-
 
 # ═══════════════════════════════════════════════════════════════════
 # Mock
@@ -30,7 +29,7 @@ def _admin_user() -> MagicMock:
 
 
 def _make_task(**overrides: Any) -> MagicMock:
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     defaults = {
         "id": uuid.uuid4(),
         "name": "daily-report",
@@ -139,7 +138,7 @@ class TestScheduledTaskService:
     def test_next_run_calculation(self) -> None:
         from croniter import croniter
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         cron = croniter("0 9 * * *", now)
         next_run = cron.get_next(datetime)
         assert next_run > now
@@ -217,7 +216,7 @@ class TestScheduledTaskModel:
 
 def _make_run(**overrides: Any) -> MagicMock:
     """创建模拟 ScheduledRun 对象。"""
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     defaults = {
         "id": uuid.uuid4(),
         "task_id": uuid.uuid4(),
@@ -324,7 +323,7 @@ class TestSchedulerEngine:
         task = _make_task()
 
         # 模拟 db.execute 返回 None（flush 一次 + agent 查询一次）
-        mock_flush_result = MagicMock()
+        MagicMock()
         mock_agent_result = MagicMock()
         mock_agent_result.scalar_one_or_none.return_value = None
         db.execute.return_value = mock_agent_result

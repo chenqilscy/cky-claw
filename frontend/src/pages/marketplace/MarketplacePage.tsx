@@ -212,7 +212,7 @@ const MarketplacePage: React.FC = () => {
             key="install"
             type="primary"
             icon={<CloudDownloadOutlined />}
-            onClick={() => { setDetailOpen(false); current && handleInstall(current); }}
+            onClick={() => { setDetailOpen(false); if (current) handleInstall(current); }}
           >
             安装
           </Button>,

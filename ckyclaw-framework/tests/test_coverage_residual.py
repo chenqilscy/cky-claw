@@ -15,10 +15,13 @@ import ast
 import asyncio
 import sys
 from contextlib import contextmanager
-from typing import Any, Generator
+from typing import TYPE_CHECKING, Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+
+if TYPE_CHECKING:
+    from collections.abc import Generator
 
 # ── OTel Processor 异常分支 (Lines 68, 137-138, 163-164, 175-176, 187-188) ──
 
@@ -56,7 +59,7 @@ class TestOtelProcessorExceptionBranches:
     @pytest.mark.asyncio
     async def test_on_trace_start_exception(self) -> None:
         """on_trace_start 中 tracer 创建 span 抛异常 → 捕获并静默。"""
-        with self._mock_otel_modules() as mocks:
+        with self._mock_otel_modules():
             from ckyclaw_framework.tracing.otel_processor import OTelTraceProcessor
 
             proc = OTelTraceProcessor.__new__(OTelTraceProcessor)
@@ -73,7 +76,7 @@ class TestOtelProcessorExceptionBranches:
     @pytest.mark.asyncio
     async def test_on_span_start_exception(self) -> None:
         """on_span_start 的 tracer 异常 → 捕获并静默。"""
-        with self._mock_otel_modules() as mocks:
+        with self._mock_otel_modules():
             from ckyclaw_framework.tracing.otel_processor import OTelTraceProcessor
 
             proc = OTelTraceProcessor.__new__(OTelTraceProcessor)
@@ -96,7 +99,7 @@ class TestOtelProcessorExceptionBranches:
     @pytest.mark.asyncio
     async def test_on_span_end_exception(self) -> None:
         """on_span_end 中 otel_span.end() 异常 → 捕获并静默。"""
-        with self._mock_otel_modules() as mocks:
+        with self._mock_otel_modules():
             from ckyclaw_framework.tracing.otel_processor import OTelTraceProcessor
 
             proc = OTelTraceProcessor.__new__(OTelTraceProcessor)
@@ -123,7 +126,7 @@ class TestOtelProcessorExceptionBranches:
     @pytest.mark.asyncio
     async def test_on_trace_end_residual_span_exception(self) -> None:
         """on_trace_end 清理残留 span 时 end() 抛异常 → pass。"""
-        with self._mock_otel_modules() as mocks:
+        with self._mock_otel_modules():
             from ckyclaw_framework.tracing.otel_processor import OTelTraceProcessor
 
             proc = OTelTraceProcessor.__new__(OTelTraceProcessor)
@@ -273,8 +276,8 @@ class TestHostedToolsFileErrors:
         mock_path = MagicMock()
         mock_path.read_text = MagicMock(side_effect=FileNotFoundError("no such file"))
 
-        with patch("ckyclaw_framework.tools.hosted_tools._safe_resolve", return_value=mock_path):
-            with patch("asyncio.to_thread", side_effect=FileNotFoundError("no such file")):
+        with patch("ckyclaw_framework.tools.hosted_tools._safe_resolve", return_value=mock_path), \
+             patch("asyncio.to_thread", side_effect=FileNotFoundError("no such file")):
                 result = await file_read.execute({"path": "/nonexistent/file.txt"})
         assert "不存在" in result
 
@@ -354,12 +357,12 @@ class TestLocalSandboxProcessLookupError:
     @pytest.mark.asyncio
     async def test_process_kill_after_exit(self) -> None:
         """进程超时后 kill 的 ProcessLookupError → 忽略。"""
-        from ckyclaw_framework.sandbox.local_sandbox import LocalSandbox
         from ckyclaw_framework.sandbox.config import SandboxConfig
+        from ckyclaw_framework.sandbox.local_sandbox import LocalSandbox
 
         # 模拟 create_subprocess_exec 返回一个超时的进程
         mock_proc = AsyncMock()
-        mock_proc.communicate = AsyncMock(side_effect=asyncio.TimeoutError())
+        mock_proc.communicate = AsyncMock(side_effect=TimeoutError())
         mock_proc.kill = MagicMock(side_effect=ProcessLookupError("No such process"))
 
         sandbox = LocalSandbox(config=SandboxConfig(timeout=1))
@@ -382,8 +385,8 @@ class TestHistoryTrimmerSummaryPrefix:
         from ckyclaw_framework.model.message import Message, MessageRole
         from ckyclaw_framework.session.history_trimmer import (
             HistoryTrimConfig,
-            HistoryTrimStrategy,
             HistoryTrimmer,
+            HistoryTrimStrategy,
         )
 
         messages = [
@@ -406,8 +409,8 @@ class TestHistoryTrimmerSummaryPrefix:
         from ckyclaw_framework.model.message import Message, MessageRole
         from ckyclaw_framework.session.history_trimmer import (
             HistoryTrimConfig,
-            HistoryTrimStrategy,
             HistoryTrimmer,
+            HistoryTrimStrategy,
         )
 
         messages = [
@@ -436,8 +439,8 @@ class TestHostedToolsGenericException:
         from ckyclaw_framework.tools.hosted_tools import file_read
 
         mock_path = MagicMock()
-        with patch("ckyclaw_framework.tools.hosted_tools._safe_resolve", return_value=mock_path):
-            with patch("asyncio.to_thread", side_effect=UnicodeDecodeError("utf-8", b"", 0, 1, "bad")):
+        with patch("ckyclaw_framework.tools.hosted_tools._safe_resolve", return_value=mock_path), \
+             patch("asyncio.to_thread", side_effect=UnicodeDecodeError("utf-8", b"", 0, 1, "bad")):
                 result = await file_read.fn(path="test.bin")
         assert "读取失败" in result
 
@@ -448,8 +451,8 @@ class TestHostedToolsGenericException:
 
         mock_path = MagicMock()
         mock_path.parent = MagicMock()
-        with patch("ckyclaw_framework.tools.hosted_tools._safe_resolve", return_value=mock_path):
-            with patch("asyncio.to_thread", side_effect=OSError("disk full")):
+        with patch("ckyclaw_framework.tools.hosted_tools._safe_resolve", return_value=mock_path), \
+             patch("asyncio.to_thread", side_effect=OSError("disk full")):
                 result = await file_write.fn(path="test.txt", content="data")
         assert "写入失败" in result
 
@@ -460,8 +463,8 @@ class TestHostedToolsGenericException:
 
         mock_path = MagicMock()
         mock_path.is_dir.return_value = True
-        with patch("ckyclaw_framework.tools.hosted_tools._safe_resolve", return_value=mock_path):
-            with patch("asyncio.to_thread", side_effect=OSError("io error")):
+        with patch("ckyclaw_framework.tools.hosted_tools._safe_resolve", return_value=mock_path), \
+             patch("asyncio.to_thread", side_effect=OSError("io error")):
                 result = await file_list.fn(directory=".")
         assert "列目录失败" in result
 
@@ -504,8 +507,8 @@ class TestOtelProcessorInitAndSpanEnd:
 
     def test_init_tracer_called_when_otel_available(self) -> None:
         """_check_otel() → True → _init_tracer() 被调用（覆盖 line 68）。"""
-        with self._mock_otel_modules() as mocks:
-            from ckyclaw_framework.tracing.otel_processor import OTelTraceProcessor, _check_otel
+        with self._mock_otel_modules():
+            from ckyclaw_framework.tracing.otel_processor import OTelTraceProcessor
 
             with patch("ckyclaw_framework.tracing.otel_processor._check_otel", return_value=True):
                 proc = OTelTraceProcessor.__new__(OTelTraceProcessor)
@@ -522,8 +525,8 @@ class TestOtelProcessorInitAndSpanEnd:
     async def test_span_end_exception_suppressed(self) -> None:
         """on_trace_end 中 span.end() 抛异常 → 被 except Exception: pass 吞掉（lines 175-176）。"""
         from ckyclaw_framework.tracing.otel_processor import OTelTraceProcessor
-        from ckyclaw_framework.tracing.trace import Trace
         from ckyclaw_framework.tracing.span import Span, SpanType
+        from ckyclaw_framework.tracing.trace import Trace
 
         proc = OTelTraceProcessor.__new__(OTelTraceProcessor)
         proc._tracer = MagicMock()
@@ -574,7 +577,7 @@ class TestEvaluatorNotEqAndUnknownOps:
 
     def test_unknown_ast_node_type(self) -> None:
         """完全未知的 AST 节点类型 → UnsafeExpressionError（line 156）。"""
-        from ckyclaw_framework.workflow.evaluator import _eval_node, UnsafeExpressionError
+        from ckyclaw_framework.workflow.evaluator import UnsafeExpressionError, _eval_node
 
         # ast.Delete 是一个 statement，不应该出现在表达式求值中
         node = ast.Delete(targets=[])

@@ -2,16 +2,28 @@
 
 from __future__ import annotations
 
-import asyncio
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-# ===== LiteLLM Provider =====
+from ckyclaw_framework.mcp.connection import _connect_http, _connect_sse, _connect_stdio
 from ckyclaw_framework.model.litellm_provider import LiteLLMProvider
 from ckyclaw_framework.model.message import Message, MessageRole
 from ckyclaw_framework.model.settings import ModelSettings
+from ckyclaw_framework.session.history_trimmer import HistoryTrimConfig, HistoryTrimmer, HistoryTrimStrategy
+from ckyclaw_framework.skills.injector import SkillInjector
+from ckyclaw_framework.skills.registry import SkillRegistry
+from ckyclaw_framework.skills.skill import Skill
+from ckyclaw_framework.team.team import Team
+from ckyclaw_framework.team.team_runner import TeamRunner
+from ckyclaw_framework.workflow.step import (
+    AgentStep,
+    BranchCondition,
+    ConditionalStep,
+)
+from ckyclaw_framework.workflow.validator import validate_workflow
+from ckyclaw_framework.workflow.workflow import Edge, Workflow
 
 
 class TestLiteLLMProviderExtraSettings:
@@ -87,7 +99,6 @@ class TestLiteLLMProviderExtraSettings:
 
 
 # ===== History Trimmer =====
-from ckyclaw_framework.session.history_trimmer import HistoryTrimConfig, HistoryTrimmer, HistoryTrimStrategy
 
 
 class TestHistoryTrimmerUnknownStrategy:
@@ -103,8 +114,6 @@ class TestHistoryTrimmerUnknownStrategy:
 
 
 # ===== Skills Injector =====
-from ckyclaw_framework.skills.injector import SkillInjector
-from ckyclaw_framework.skills.skill import Skill
 
 
 class TestSkillInjectorBudgetOverflow:
@@ -124,7 +133,6 @@ class TestSkillInjectorBudgetOverflow:
 
 
 # ===== Skills Registry =====
-from ckyclaw_framework.skills.registry import SkillRegistry
 
 
 class TestSkillRegistryTagFilter:
@@ -156,8 +164,6 @@ class TestSkillRegistryTagFilter:
 
 
 # ===== Team Runner =====
-from ckyclaw_framework.team.team import Team
-from ckyclaw_framework.team.team_runner import TeamRunner
 
 
 class TestTeamRunnerUnknownProtocol:
@@ -198,13 +204,6 @@ class TestTeamAsTool:
 
 
 # ===== Workflow Validator =====
-from ckyclaw_framework.workflow.validator import validate_workflow
-from ckyclaw_framework.workflow.step import (
-    AgentStep,
-    ConditionalStep,
-    BranchCondition,
-)
-from ckyclaw_framework.workflow.workflow import Edge, Workflow
 
 
 class TestWorkflowValidatorDanglingEdge:
@@ -258,7 +257,6 @@ class TestWorkflowValidatorConditionalDefault:
 
 
 # ===== FunctionTool Schema Generation =====
-from ckyclaw_framework.tools.function_tool import FunctionTool
 
 
 class TestFunctionToolSchemaGeneration:
@@ -294,7 +292,6 @@ class TestFunctionToolSchemaGeneration:
 
 
 # ===== MCP Connection Error Paths =====
-from ckyclaw_framework.mcp.connection import _connect_stdio, _connect_sse, _connect_http
 
 
 class TestMCPConnectionTimeouts:
@@ -317,10 +314,9 @@ class TestMCPConnectionTimeouts:
 
         async with AsyncExitStack() as stack:
             # 让 stack.enter_async_context 抛超时
-            original_enter = stack.enter_async_context
 
             async def _timeout_enter(cm: Any) -> Any:
-                raise asyncio.TimeoutError
+                raise TimeoutError
 
             stack.enter_async_context = _timeout_enter  # type: ignore[assignment]
             result = await _connect_stdio(stack, config)
@@ -339,7 +335,6 @@ class TestMCPConnectionTimeouts:
         config.connect_timeout = 5
 
         async with AsyncExitStack() as stack:
-            original_enter = stack.enter_async_context
 
             async def _error_enter(cm: Any) -> Any:
                 raise RuntimeError("broken")
@@ -361,7 +356,7 @@ class TestMCPConnectionTimeouts:
 
         async with AsyncExitStack() as stack:
             async def _timeout_enter(cm: Any) -> Any:
-                raise asyncio.TimeoutError
+                raise TimeoutError
 
             stack.enter_async_context = _timeout_enter  # type: ignore[assignment]
             result = await _connect_sse(stack, config)
@@ -399,7 +394,7 @@ class TestMCPConnectionTimeouts:
 
         async with AsyncExitStack() as stack:
             async def _timeout_enter(cm: Any) -> Any:
-                raise asyncio.TimeoutError
+                raise TimeoutError
 
             stack.enter_async_context = _timeout_enter  # type: ignore[assignment]
             result = await _connect_http(stack, config)

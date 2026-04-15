@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from fastapi import APIRouter, Depends
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.deps import require_permission
@@ -15,6 +16,9 @@ from app.schemas.prompt import (
 )
 from app.services import agent as agent_service
 from app.services import prompt as prompt_service
+
+if TYPE_CHECKING:
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter(prefix="/api/v1/agents", tags=["prompt"])
 

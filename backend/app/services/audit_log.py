@@ -3,13 +3,16 @@
 from __future__ import annotations
 
 import logging
-import uuid
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import func, select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.audit_log import AuditLog
+
+if TYPE_CHECKING:
+    import uuid
+
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = logging.getLogger(__name__)
 

@@ -2,20 +2,22 @@
 
 from __future__ import annotations
 
-import json
-from typing import Any, AsyncIterator
+from typing import TYPE_CHECKING, Any
 
 import pytest
 
 from ckyclaw_framework.agent.agent import Agent
 from ckyclaw_framework.handoff.handoff import Handoff
-from ckyclaw_framework.model.message import Message, MessageRole, TokenUsage
+from ckyclaw_framework.model.message import Message, MessageRole
 from ckyclaw_framework.model.provider import ModelChunk, ModelProvider, ModelResponse, ToolCall, ToolCallChunk
-from ckyclaw_framework.model.settings import ModelSettings
 from ckyclaw_framework.runner.result import RunResult, StreamEventType
 from ckyclaw_framework.runner.run_config import RunConfig
 from ckyclaw_framework.runner.runner import Runner
 
+if TYPE_CHECKING:
+    from collections.abc import AsyncIterator
+
+    from ckyclaw_framework.model.settings import ModelSettings
 
 # ── Mock Provider ────────────────────────────────────────────────
 
@@ -230,7 +232,7 @@ class TestInputFilter:
         assert result.last_agent_name == "specialist"
         # 第二次 LLM 调用（specialist）的消息应被过滤
         # system + filtered messages，过滤后只有最后 2 条
-        specialist_messages = call_messages[1]
+        call_messages[1]
         # 过滤器保留最后 2 条 user-level 消息（不含 system）
         # system 消息在 LLM 调用时另行拼接
         assert result.output == "specialist response"

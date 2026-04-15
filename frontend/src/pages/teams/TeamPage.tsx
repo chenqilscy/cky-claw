@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Form, Input, Select, Tag, Tooltip } from 'antd';
+import { Form, Input, Select, Tag } from 'antd';
 import {
   TeamOutlined, ApartmentOutlined,
 } from '@ant-design/icons';

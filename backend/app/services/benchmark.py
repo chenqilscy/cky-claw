@@ -2,15 +2,18 @@
 
 from __future__ import annotations
 
-import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING
 
-from sqlalchemy import func, select, update
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import func, select
 
 from app.core.exceptions import NotFoundError
 from app.models.benchmark import BenchmarkRun, BenchmarkSuite
 
+if TYPE_CHECKING:
+    import uuid
+
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 # ─── Suite CRUD ───
 
@@ -74,7 +77,7 @@ async def update_suite(
     for k, v in kwargs.items():
         if v is not None:
             setattr(suite, k, v)
-    suite.updated_at = datetime.now(timezone.utc)
+    suite.updated_at = datetime.now(UTC)
     await db.commit()
     await db.refresh(suite)
     return suite
@@ -84,7 +87,7 @@ async def delete_suite(db: AsyncSession, suite_id: uuid.UUID) -> None:
     """软删除套件。"""
     suite = await get_suite(db, suite_id)
     suite.is_deleted = True
-    suite.deleted_at = datetime.now(timezone.utc)
+    suite.deleted_at = datetime.now(UTC)
     await db.commit()
 
 
@@ -101,7 +104,7 @@ async def create_run(
     run = BenchmarkRun(
         suite_id=suite_id,
         status="pending",
-        started_at=datetime.now(timezone.utc),
+        started_at=datetime.now(UTC),
     )
     db.add(run)
     await db.commit()
@@ -145,7 +148,7 @@ async def update_run(
     for k, v in kwargs.items():
         if v is not None:
             setattr(run, k, v)
-    run.updated_at = datetime.now(timezone.utc)
+    run.updated_at = datetime.now(UTC)
     await db.commit()
     await db.refresh(run)
     return run
@@ -179,8 +182,8 @@ async def complete_run(
     run.total_tokens = total_tokens
     run.dimension_summaries = dimension_summaries
     run.report = report
-    run.finished_at = datetime.now(timezone.utc)
-    run.updated_at = datetime.now(timezone.utc)
+    run.finished_at = datetime.now(UTC)
+    run.updated_at = datetime.now(UTC)
     await db.commit()
     await db.refresh(run)
     return run

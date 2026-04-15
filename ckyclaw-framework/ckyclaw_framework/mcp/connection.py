@@ -3,14 +3,16 @@
 from __future__ import annotations
 
 import asyncio
-import json
 import logging
 import shlex
-from contextlib import AsyncExitStack
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from ckyclaw_framework.mcp.server import MCPServerConfig
 from ckyclaw_framework.tools.function_tool import FunctionTool
+
+if TYPE_CHECKING:
+    from contextlib import AsyncExitStack
+
+    from ckyclaw_framework.mcp.server import MCPServerConfig
 
 logger = logging.getLogger(__name__)
 
@@ -94,7 +96,6 @@ async def connect_and_discover(
     """
     _ensure_mcp_installed()
 
-    from mcp import ClientSession
 
     if config.transport == "stdio":
         tools = await _connect_stdio(stack, config)
@@ -143,7 +144,7 @@ async def _connect_stdio(
         )
         await asyncio.wait_for(session.initialize(), timeout=config.connect_timeout)
         return await _discover_tools(session, config)
-    except asyncio.TimeoutError:
+    except TimeoutError:
         logger.error("MCP Server '%s' stdio 连接超时（%ss）", config.name, config.connect_timeout)
         return []
     except Exception:
@@ -174,7 +175,7 @@ async def _connect_sse(
         )
         await asyncio.wait_for(session.initialize(), timeout=config.connect_timeout)
         return await _discover_tools(session, config)
-    except asyncio.TimeoutError:
+    except TimeoutError:
         logger.error("MCP Server '%s' sse 连接超时（%ss）", config.name, config.connect_timeout)
         return []
     except Exception:
@@ -205,7 +206,7 @@ async def _connect_http(
         )
         await asyncio.wait_for(session.initialize(), timeout=config.connect_timeout)
         return await _discover_tools(session, config)
-    except asyncio.TimeoutError:
+    except TimeoutError:
         logger.error("MCP Server '%s' http 连接超时（%ss）", config.name, config.connect_timeout)
         return []
     except Exception:
@@ -223,7 +224,7 @@ async def _discover_tools(
             session.list_tools(),
             timeout=config.connect_timeout,
         )
-    except asyncio.TimeoutError:
+    except TimeoutError:
         logger.error("MCP Server '%s' list_tools 超时", config.name)
         return []
     except Exception:

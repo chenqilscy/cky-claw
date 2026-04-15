@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any, AsyncIterator
+from typing import TYPE_CHECKING, Any
 
 from ckyclaw_framework.model.circuit_breaker import (
     CircuitBreaker,
@@ -19,6 +19,8 @@ from ckyclaw_framework.model.circuit_breaker import (
 from ckyclaw_framework.model.provider import ModelChunk, ModelProvider, ModelResponse
 
 if TYPE_CHECKING:
+    from collections.abc import AsyncIterator
+
     from ckyclaw_framework.model.message import Message
     from ckyclaw_framework.model.settings import ModelSettings
 

@@ -11,16 +11,16 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from typing import Any
+from typing import TYPE_CHECKING
 
 from ckyclaw_framework.workflow.step import (
-    AgentStep,
     ConditionalStep,
     LoopStep,
     ParallelStep,
-    Step,
 )
-from ckyclaw_framework.workflow.workflow import Edge, Workflow
+
+if TYPE_CHECKING:
+    from ckyclaw_framework.workflow.workflow import Workflow
 
 
 class WorkflowValidationError(Exception):

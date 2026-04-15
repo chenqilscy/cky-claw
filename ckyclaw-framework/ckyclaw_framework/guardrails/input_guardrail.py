@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Awaitable, Callable
-
-from ckyclaw_framework.guardrails.result import GuardrailResult
+from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable
+
+    from ckyclaw_framework.guardrails.result import GuardrailResult
     from ckyclaw_framework.runner.run_context import RunContext
 
 
@@ -24,7 +25,7 @@ class InputGuardrail:
     name: str = ""
     """Guardrail 名称（用于日志/Span）。默认取函数名。"""
 
-    condition: Callable[["RunContext"], bool] | None = None
+    condition: Callable[[RunContext], bool] | None = None
     """运行时条件函数。返回 True 时启用该 Guardrail，False 时跳过。None 表示始终启用。"""
 
     def __post_init__(self) -> None:

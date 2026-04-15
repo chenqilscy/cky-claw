@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -22,7 +22,7 @@ from app.schemas.benchmark import (
     BenchmarkSuiteUpdate,
 )
 
-now = datetime.now(timezone.utc)
+now = datetime.now(UTC)
 USER_ID = uuid.UUID("00000000-0000-0000-0000-000000000001")
 
 
@@ -332,7 +332,7 @@ class TestBenchmarkService:
         db = AsyncMock()
         db.commit = AsyncMock()
         db.refresh = AsyncMock()
-        suite = await create_suite(db, name="test")
+        await create_suite(db, name="test")
         db.add.assert_called_once()
         db.commit.assert_awaited_once()
 

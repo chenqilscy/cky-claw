@@ -2,14 +2,14 @@
 
 from __future__ import annotations
 
-from typing import Generic, TypeVar
+from typing import TypeVar
 
 from pydantic import BaseModel, Field
 
 T = TypeVar("T")
 
 
-class PaginatedResponse(BaseModel, Generic[T]):
+class PaginatedResponse[T](BaseModel):
     """标准分页响应。
 
     统一所有列表端点的分页字段名称和语义：

@@ -10,7 +10,7 @@ import type { AgentConfig, AgentCreateInput, AgentUpdateInput } from '../../serv
 import { guardrailService } from '../../services/guardrailService';
 import type { GuardrailRuleItem } from '../../services/guardrailService';
 import { providerService } from '../../services/providerService';
-import type { ProviderResponse, ProviderModelResponse } from '../../services/providerService';
+import type { ProviderResponse } from '../../services/providerService';
 import { toolGroupService } from '../../services/toolGroupService';
 import { mcpServerService } from '../../services/mcpServerService';
 import { skillService } from '../../services/skillService';

@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
-
 from ckyclaw_framework.evolution.config import EvolutionConfig
 from ckyclaw_framework.evolution.proposal import EvolutionProposal, ProposalType
 from ckyclaw_framework.evolution.signals import (

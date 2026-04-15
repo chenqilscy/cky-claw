@@ -2,13 +2,17 @@
 
 from __future__ import annotations
 
-import uuid
+from typing import TYPE_CHECKING
 
 from sqlalchemy import case, func, select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.evaluation import RunEvaluation, RunFeedback
 from app.schemas.evaluation import AgentQualitySummary, RunEvaluationCreate, RunFeedbackCreate
+
+if TYPE_CHECKING:
+    import uuid
+
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 _DIMENSION_WEIGHTS = {
     "accuracy": 0.2,

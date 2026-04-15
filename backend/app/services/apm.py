@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
+from typing import TYPE_CHECKING
 
 from sqlalchemy import case, func, select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.token_usage import TokenUsageLog
 from app.models.trace import SpanRecord, TraceRecord
@@ -18,6 +18,9 @@ from app.schemas.apm import (
     ToolUsageItem,
 )
 
+if TYPE_CHECKING:
+    from sqlalchemy.ext.asyncio import AsyncSession
+
 
 async def get_apm_dashboard(db: AsyncSession, *, days: int = 30) -> ApmDashboardResponse:
     """聚合 APM 仪表盘数据。
@@ -26,7 +29,7 @@ async def get_apm_dashboard(db: AsyncSession, *, days: int = 30) -> ApmDashboard
         db: 数据库会话
         days: 统计范围（天）
     """
-    since = datetime.now(timezone.utc) - timedelta(days=days)
+    since = datetime.now(UTC) - timedelta(days=days)
 
     overview = await _get_overview(db, since)
     agent_ranking = await _get_agent_ranking(db, since)

@@ -3,16 +3,21 @@
 from __future__ import annotations
 
 import logging
-import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import ConflictError, NotFoundError
 from app.models.team import TeamConfig
-from app.schemas.team import TeamConfigCreate, TeamConfigUpdate
+
+if TYPE_CHECKING:
+    import uuid
+
+    from sqlalchemy.ext.asyncio import AsyncSession
+
+    from app.schemas.team import TeamConfigCreate, TeamConfigUpdate
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +43,7 @@ async def create_team(db: AsyncSession, data: TeamConfigCreate) -> TeamConfig:
         await db.commit()
     except IntegrityError:
         await db.rollback()
-        raise ConflictError(f"团队名称 '{data.name}' 已存在")
+        raise ConflictError(f"团队名称 '{data.name}' 已存在") from None
     await db.refresh(record)
     return record
 
@@ -97,7 +102,7 @@ async def update_team(db: AsyncSession, team_id: uuid.UUID, data: TeamConfigUpda
         await db.commit()
     except IntegrityError:
         await db.rollback()
-        raise ConflictError(f"团队名称 '{data.name}' 已存在")
+        raise ConflictError(f"团队名称 '{data.name}' 已存在") from None
     await db.refresh(record)
     return record
 
@@ -106,5 +111,5 @@ async def delete_team(db: AsyncSession, team_id: uuid.UUID) -> None:
     """软删除团队配置。"""
     record = await get_team(db, team_id)
     record.is_deleted = True
-    record.deleted_at = datetime.now(timezone.utc)
+    record.deleted_at = datetime.now(UTC)
     await db.commit()

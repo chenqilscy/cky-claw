@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-import uuid
+from typing import TYPE_CHECKING
 
 from fastapi import APIRouter, Depends, Query
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.deps import require_admin
@@ -17,6 +16,11 @@ from app.schemas.supervision import (
     SupervisionSessionListResponse,
 )
 from app.services import supervision as supervision_service
+
+if TYPE_CHECKING:
+    import uuid
+
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter(
     prefix="/api/v1/supervision",

@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from typing import Any
 
 from sqlalchemy import DateTime, Float, Integer, String, Text, text
 from sqlalchemy.dialects.postgresql import JSONB, UUID
@@ -52,7 +51,7 @@ class RunEvaluation(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
         server_default=text("now()"),
     )
 
@@ -81,6 +80,6 @@ class RunFeedback(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
         server_default=text("now()"),
     )

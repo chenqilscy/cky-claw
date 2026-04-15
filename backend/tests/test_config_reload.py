@@ -3,15 +3,26 @@
 from __future__ import annotations
 
 import time
-from unittest.mock import MagicMock
+import uuid
+from datetime import UTC, datetime
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from fastapi.testclient import TestClient
+from httpx import ASGITransport, AsyncClient
 
 from app.core.cache import ConfigCache, config_cache, make_cache_key, make_list_cache_key
+from app.core.database import get_db as get_db_original
 from app.core.deps import get_current_user
-from app.main import app
-
+from app.core.tenant import get_org_id
+from app.main import app, create_app
+from app.models.config_change_log import ConfigChangeLog
+from app.schemas.config_change_log import (
+    ConfigChangeLogCreate,
+    ConfigChangeLogListResponse,
+    ConfigChangeLogResponse,
+    RollbackPreviewResponse,
+)
 
 # ═══════════════════════════════════════════════════════════════════
 # ConfigCache 单元测试
@@ -160,18 +171,6 @@ class TestReloadAPI:
 # ConfigChangeLog 模型 + Schema + 服务测试
 # ═══════════════════════════════════════════════════════════════════
 
-import uuid
-from datetime import datetime, timezone
-from unittest.mock import AsyncMock
-
-from app.models.config_change_log import ConfigChangeLog
-from app.schemas.config_change_log import (
-    ConfigChangeLogCreate,
-    ConfigChangeLogListResponse,
-    ConfigChangeLogResponse,
-    RollbackPreviewResponse,
-)
-
 
 class TestConfigChangeLogModel:
     """ConfigChangeLog ORM 模型测试。"""
@@ -208,7 +207,7 @@ class TestConfigChangeLogSchema:
         assert data.description == ""
 
     def test_response_from_attributes(self) -> None:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         mock = MagicMock()
         mock.id = uuid.uuid4()
         mock.config_key = "agent.test"
@@ -299,12 +298,6 @@ class TestConfigChangeService:
 # ═══════════════════════════════════════════════════════════════════
 # ConfigChangeLog API 测试
 # ═══════════════════════════════════════════════════════════════════
-
-from httpx import ASGITransport, AsyncClient
-
-from app.core.database import get_db as get_db_original
-from app.core.tenant import get_org_id
-from app.main import create_app
 
 
 def _make_app():

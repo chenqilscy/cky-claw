@@ -5,8 +5,6 @@ from __future__ import annotations
 from typing import Any
 from unittest.mock import MagicMock
 
-import pytest
-
 from ckyclaw_framework.model._converter import (
     litellm_chunk_to_model_chunk,
     litellm_response_to_model_response,

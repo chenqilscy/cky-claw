@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from io import BytesIO
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -15,7 +15,6 @@ from fastapi.testclient import TestClient
 from app.core.exceptions import NotFoundError
 from app.main import app
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -23,7 +22,7 @@ from app.main import app
 
 def _make_agent_config(**overrides: object) -> MagicMock:
     """构造模拟 AgentConfig ORM 对象。"""
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     defaults: dict[str, object] = {
         "id": uuid.uuid4(),
         "name": "test-agent",

@@ -4,15 +4,18 @@ from __future__ import annotations
 
 import sys
 from contextlib import contextmanager
-from datetime import datetime, timezone
-from typing import Any, Generator
-from unittest.mock import MagicMock, patch
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING, Any
+from unittest.mock import MagicMock
 
 import pytest
 
 from ckyclaw_framework.tracing.otel_processor import OTelTraceProcessor
 from ckyclaw_framework.tracing.span import Span, SpanStatus, SpanType
 from ckyclaw_framework.tracing.trace import Trace
+
+if TYPE_CHECKING:
+    from collections.abc import Generator
 
 
 def _make_trace(trace_id: str = "t1", workflow_name: str = "test") -> Trace:
@@ -40,8 +43,8 @@ def _make_span(
     s.status = status
     s.output = output
     s.metadata = metadata or {}
-    s.start_time = datetime(2026, 1, 1, tzinfo=timezone.utc)
-    s.end_time = datetime(2026, 1, 1, 0, 0, 1, tzinfo=timezone.utc)
+    s.start_time = datetime(2026, 1, 1, tzinfo=UTC)
+    s.end_time = datetime(2026, 1, 1, 0, 0, 1, tzinfo=UTC)
     return s
 
 
@@ -212,7 +215,7 @@ class TestOnSpanEndWithMetadata:
     @pytest.mark.asyncio
     async def test_completed_with_metadata(self) -> None:
         """COMPLETED 状态 + metadata → set_status(OK) + set_attribute。"""
-        with _mock_otel_modules() as mocks:
+        with _mock_otel_modules():
             proc = OTelTraceProcessor.__new__(OTelTraceProcessor)
             proc._root_spans = {}
 

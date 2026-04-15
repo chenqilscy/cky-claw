@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
-from unittest.mock import AsyncMock, MagicMock, patch
+from datetime import UTC, datetime
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from fastapi.testclient import TestClient
@@ -12,9 +12,8 @@ from fastapi.testclient import TestClient
 from app.core.auth import create_access_token
 from app.core.database import get_db as get_db_original
 from app.main import app
-from app.schemas.role import RoleCreate, RoleUpdate, RoleResponse, UserRoleAssign, VALID_RESOURCES, VALID_ACTIONS
+from app.schemas.role import VALID_ACTIONS, VALID_RESOURCES, RoleCreate, RoleResponse, RoleUpdate, UserRoleAssign
 from app.services.role import check_permission
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -22,7 +21,7 @@ from app.services.role import check_permission
 
 
 def _make_role(**overrides) -> MagicMock:
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     defaults = {
         "id": uuid.uuid4(),
         "name": "test-role",
@@ -40,7 +39,7 @@ def _make_role(**overrides) -> MagicMock:
 
 
 def _make_user(**overrides) -> MagicMock:
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     defaults = {
         "id": uuid.uuid4(),
         "username": "admin",
@@ -110,7 +109,7 @@ class TestRoleSchemas:
         assert "users" in VALID_RESOURCES
 
     def test_valid_actions_complete(self) -> None:
-        assert VALID_ACTIONS == {"read", "write", "delete", "execute"}
+        assert {"read", "write", "delete", "execute"} == VALID_ACTIONS
 
     def test_user_role_assign(self) -> None:
         uid = uuid.uuid4()
@@ -157,7 +156,7 @@ class TestRoleService:
         db.refresh = AsyncMock()
 
         data = RoleCreate(name="my-role", permissions={"agents": ["read"]})
-        role = await create_role(db, data)
+        await create_role(db, data)
         assert db.add.called
 
     @pytest.mark.asyncio

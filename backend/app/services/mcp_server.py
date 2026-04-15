@@ -2,19 +2,21 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 import logging
-import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import func, select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.crypto import decrypt_api_key, encrypt_api_key
 from app.core.exceptions import NotFoundError, ValidationError
 from app.models.mcp_server import MCPServerConfig
-from app.schemas.mcp_server import MCPServerCreate, MCPServerUpdate, VALID_TRANSPORT_TYPES
+from app.schemas.mcp_server import VALID_TRANSPORT_TYPES, MCPServerCreate, MCPServerUpdate
+
+if TYPE_CHECKING:
+    import uuid
+
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = logging.getLogger(__name__)
 
@@ -127,9 +129,8 @@ async def update_mcp_server(
     for key, value in update_data.items():
         if key == "auth_config":
             value = _encrypt_auth_config(value)
-        if key == "transport_type" and value is not None:
-            if value not in VALID_TRANSPORT_TYPES:
-                raise ValidationError(f"transport_type 必须是 {VALID_TRANSPORT_TYPES} 之一")
+        if key == "transport_type" and value is not None and value not in VALID_TRANSPORT_TYPES:
+            raise ValidationError(f"transport_type 必须是 {VALID_TRANSPORT_TYPES} 之一")
         setattr(record, key, value)
 
     await db.commit()
@@ -141,7 +142,7 @@ async def delete_mcp_server(db: AsyncSession, server_id: uuid.UUID) -> None:
     """软删除 MCP Server 配置。"""
     record = await get_mcp_server(db, server_id)
     record.is_deleted = True
-    record.deleted_at = datetime.now(timezone.utc)
+    record.deleted_at = datetime.now(UTC)
     await db.commit()
 
 

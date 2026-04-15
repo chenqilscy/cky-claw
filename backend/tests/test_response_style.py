@@ -3,15 +3,14 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
 
 from app.main import app
-from app.schemas.agent import AgentCreate, AgentUpdate, AgentResponse
-
+from app.schemas.agent import AgentCreate, AgentResponse, AgentUpdate
 
 SVC = "app.services.agent"
 TENANT = "app.api.agents"
@@ -20,7 +19,7 @@ client = TestClient(app)
 
 def _make_agent_config(**overrides) -> MagicMock:  # type: ignore[no-untyped-def]
     """构造模拟 AgentConfig ORM 对象。"""
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     defaults = {
         "id": uuid.uuid4(),
         "name": "style-agent",

@@ -3,16 +3,20 @@
 from __future__ import annotations
 
 import logging
-import uuid
-from datetime import datetime, timezone
-from typing import Any
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import func, select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import NotFoundError
 from app.models.agent_template import AgentTemplate
-from app.schemas.agent_template import AgentTemplateCreate, AgentTemplateUpdate
+
+if TYPE_CHECKING:
+    import uuid
+
+    from sqlalchemy.ext.asyncio import AsyncSession
+
+    from app.schemas.agent_template import AgentTemplateCreate, AgentTemplateUpdate
 
 logger = logging.getLogger(__name__)
 
@@ -402,11 +406,11 @@ async def update_template(
     update_data = data.model_dump(exclude_unset=True)
     for key, value in update_data.items():
         if key == "metadata":
-            setattr(record, "metadata_", value)
+            record.metadata_ = value
         else:
             setattr(record, key, value)
-    from datetime import datetime, timezone
-    record.updated_at = datetime.now(timezone.utc)
+    from datetime import datetime
+    record.updated_at = datetime.now(UTC)
     await db.commit()
     await db.refresh(record)
     return record
@@ -418,7 +422,7 @@ async def delete_template(db: AsyncSession, template_id: uuid.UUID) -> None:
     if record.is_builtin:
         raise ValueError("内置模板不可删除")
     record.is_deleted = True
-    record.deleted_at = datetime.now(timezone.utc)
+    record.deleted_at = datetime.now(UTC)
     await db.commit()
 
 

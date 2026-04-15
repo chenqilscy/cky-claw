@@ -2,10 +2,8 @@
 
 from __future__ import annotations
 
-import uuid
 from unittest.mock import AsyncMock, MagicMock, patch
 
-import pytest
 from fastapi.testclient import TestClient
 
 from app.core.deps import get_db

@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any, Awaitable, Callable, Union
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from ckyclaw_framework.approval.mode import ApprovalMode
@@ -17,7 +18,7 @@ if TYPE_CHECKING:
     from ckyclaw_framework.tools.function_tool import FunctionTool
 
 # Dynamic Instructions 类型：支持 str、sync callable、async callable
-InstructionsType = Union[str, Callable[["RunContext"], str], Callable[["RunContext"], Awaitable[str]]]
+InstructionsType = str | Callable[["RunContext"], str] | Callable[["RunContext"], Awaitable[str]]
 
 
 @dataclass

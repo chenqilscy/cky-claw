@@ -2,16 +2,20 @@
 
 from __future__ import annotations
 
-import uuid
-from datetime import datetime, timezone
-from typing import Any
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import func, select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import NotFoundError
 from app.models.a2a import A2AAgentCardRecord, A2ATaskRecord
-from app.schemas.a2a import A2AAgentCardCreate, A2AAgentCardUpdate, A2ATaskCreate
+
+if TYPE_CHECKING:
+    import uuid
+
+    from sqlalchemy.ext.asyncio import AsyncSession
+
+    from app.schemas.a2a import A2AAgentCardCreate, A2AAgentCardUpdate, A2ATaskCreate
 
 
 # ---------------------------------------------------------------------------
@@ -94,7 +98,7 @@ async def update_agent_card(
             row.metadata_ = value
         else:
             setattr(row, key, value)
-    row.updated_at = datetime.now(timezone.utc)
+    row.updated_at = datetime.now(UTC)
     await db.commit()
     await db.refresh(row)
     return row
@@ -108,7 +112,7 @@ async def delete_agent_card(
 ) -> None:
     """软删除 Agent Card。"""
     row = await get_agent_card(db, card_id, org_id=org_id)
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     row.is_deleted = True
     row.deleted_at = now
     row.updated_at = now
@@ -145,7 +149,7 @@ async def create_task(
     org_id: uuid.UUID | None = None,
 ) -> A2ATaskRecord:
     """创建 A2A Task。"""
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     record = A2ATaskRecord(
         agent_card_id=data.agent_card_id,
         status="submitted",
@@ -211,7 +215,7 @@ async def cancel_task(
     row = await get_task(db, task_id, org_id=org_id)
     if row.status in ("completed", "failed", "canceled"):
         raise ValueError(f"任务已处于终态 '{row.status}'，不可取消")
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     row.status = "canceled"
     history = list(row.history or [])
     history.append({"status": "canceled", "timestamp": now.isoformat(), "message": "用户取消"})

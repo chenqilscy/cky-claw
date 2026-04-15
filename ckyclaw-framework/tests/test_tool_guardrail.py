@@ -2,21 +2,21 @@
 
 from __future__ import annotations
 
-import json
+from typing import TYPE_CHECKING
 
 import pytest
 
 from ckyclaw_framework.agent.agent import Agent
 from ckyclaw_framework.guardrails.result import GuardrailResult
 from ckyclaw_framework.guardrails.tool_guardrail import ToolGuardrail
-from ckyclaw_framework.model.message import Message, MessageRole, TokenUsage
+from ckyclaw_framework.model.message import TokenUsage
 from ckyclaw_framework.model.provider import ModelChunk, ModelProvider, ModelResponse, ToolCall
-from ckyclaw_framework.runner.result import RunResult
 from ckyclaw_framework.runner.run_config import RunConfig
-from ckyclaw_framework.runner.run_context import RunContext
 from ckyclaw_framework.runner.runner import Runner
 from ckyclaw_framework.tools.function_tool import FunctionTool
 
+if TYPE_CHECKING:
+    from ckyclaw_framework.runner.run_context import RunContext
 
 # ---------- helpers ----------
 

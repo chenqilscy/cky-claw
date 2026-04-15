@@ -2,18 +2,21 @@
 
 from __future__ import annotations
 
-
 import uuid
-from collections.abc import Callable
+from typing import TYPE_CHECKING
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth import decode_access_token, is_token_blacklisted
 from app.core.database import get_db as get_db  # noqa: PLC0414 — explicit re-export
 from app.models.user import User
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 security = HTTPBearer()
 
@@ -55,7 +58,7 @@ async def get_current_user(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail={"code": "UNAUTHORIZED", "message": "Token 用户标识无效"},
-        )
+        ) from None
 
     stmt = select(User).where(User.id == uid, User.is_active == True)  # noqa: E712
     user = (await db.execute(stmt)).scalar_one_or_none()

@@ -3,21 +3,22 @@
 from __future__ import annotations
 
 import asyncio
-import json
-from typing import Any, AsyncIterator
-from unittest.mock import AsyncMock
+from typing import TYPE_CHECKING, Any
 
 import pytest
 
 from ckyclaw_framework.agent.agent import Agent
 from ckyclaw_framework.model.message import Message, MessageRole, TokenUsage
 from ckyclaw_framework.model.provider import ModelChunk, ModelProvider, ModelResponse, ToolCall, ToolCallChunk
-from ckyclaw_framework.model.settings import ModelSettings
 from ckyclaw_framework.runner.result import RunResult, StreamEventType
 from ckyclaw_framework.runner.run_config import RunConfig
 from ckyclaw_framework.runner.runner import Runner
-from ckyclaw_framework.tools.function_tool import FunctionTool, function_tool
+from ckyclaw_framework.tools.function_tool import function_tool
 
+if TYPE_CHECKING:
+    from collections.abc import AsyncIterator
+
+    from ckyclaw_framework.model.settings import ModelSettings
 
 # ── Mock Model Provider ─────────────────────────────────────────
 

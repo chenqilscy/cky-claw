@@ -6,17 +6,18 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
-from typing import Any
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from ckyclaw_framework.model.message import Message, MessageRole, TokenUsage
-from ckyclaw_framework.model.content_block import content_block_from_dict
-from ckyclaw_framework.session.session import SessionBackend, SessionMetadata
 
 from app.models.session_message import SessionMessage, SessionMetadataRecord
+from ckyclaw_framework.model.content_block import content_block_from_dict
+from ckyclaw_framework.model.message import Message, MessageRole, TokenUsage
+from ckyclaw_framework.session.session import SessionBackend, SessionMetadata
+
+if TYPE_CHECKING:
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = logging.getLogger(__name__)
 
@@ -110,14 +111,14 @@ class SQLAlchemySessionBackend(SessionBackend):  # type: ignore[misc]
                 session_id=session_id,
                 message_count=len(messages),
                 last_agent=last_agent,
-                updated_at=datetime.now(timezone.utc),
+                updated_at=datetime.now(UTC),
             )
             self._db.add(meta)
         else:
             existing.message_count += len(messages)
             if last_agent:
                 existing.last_agent = last_agent
-            existing.updated_at = datetime.now(timezone.utc)
+            existing.updated_at = datetime.now(UTC)
 
         await self._db.flush()
 

@@ -7,14 +7,16 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from ckyclaw_framework.events.journal import EventEntry, EventJournal
-from ckyclaw_framework.events.projector import Projector
 from ckyclaw_framework.events.types import EventType
 from ckyclaw_framework.tracing.processor import TraceProcessor
 from ckyclaw_framework.tracing.span import Span, SpanStatus, SpanType
-from ckyclaw_framework.tracing.trace import Trace
+
+if TYPE_CHECKING:
+    from ckyclaw_framework.events.projector import Projector
+    from ckyclaw_framework.tracing.trace import Trace
 
 logger = logging.getLogger(__name__)
 

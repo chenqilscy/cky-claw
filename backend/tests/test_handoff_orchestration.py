@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -14,7 +14,6 @@ from app.services.session import (
     _resolve_handoff_agents,
 )
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -22,7 +21,7 @@ from app.services.session import (
 
 def _make_agent_config(**overrides) -> MagicMock:  # type: ignore[no-untyped-def]
     """创建 AgentConfig Mock 对象。"""
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     defaults = {
         "id": uuid.uuid4(),
         "name": "test-agent",
@@ -120,7 +119,7 @@ def _mock_db_execute_for_configs(configs_by_name: dict[str, MagicMock]):
 
         # 提取查询的名称（测试中直接传入）
         found = []
-        for name, config in configs_by_name.items():
+        for _name, config in configs_by_name.items():
             found.append(config)
         scalars_mock.all.return_value = found
         result_mock.scalars.return_value = scalars_mock
@@ -458,7 +457,7 @@ class TestExecuteRunHandoffIntegration:
         mock_db = AsyncMock()
         session_record = MagicMock()
         session_record.agent_name = "triage"
-        session_record.updated_at = datetime.now(timezone.utc)
+        session_record.updated_at = datetime.now(UTC)
 
         agent_config = _make_agent_config(name="triage", handoffs=["specialist"])
 

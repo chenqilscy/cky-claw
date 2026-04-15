@@ -18,7 +18,6 @@ from ckyclaw_framework.mcp.connection import (
 from ckyclaw_framework.mcp.server import MCPServerConfig
 from ckyclaw_framework.tools.function_tool import FunctionTool
 
-
 # ---------------------------------------------------------------------------
 # MCPServerConfig 数据类测试
 # ---------------------------------------------------------------------------
@@ -86,9 +85,8 @@ class TestEnsureMCPInstalled:
         _ensure_mcp_installed()
 
     def test_mcp_not_installed(self) -> None:
-        with patch.dict("sys.modules", {"mcp": None}):
-            with pytest.raises(ImportError, match="MCP SDK 未安装"):
-                _ensure_mcp_installed()
+        with patch.dict("sys.modules", {"mcp": None}), pytest.raises(ImportError, match="MCP SDK 未安装"):
+            _ensure_mcp_installed()
 
 
 # ---------------------------------------------------------------------------

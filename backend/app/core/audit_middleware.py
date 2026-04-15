@@ -6,13 +6,17 @@ import asyncio
 import logging
 import re
 from collections import deque
-from typing import Any, Callable, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.requests import Request
-from starlette.responses import Response
 
 from app.core.database import async_session_factory
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from starlette.requests import Request
+    from starlette.responses import Response
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +43,7 @@ _FLUSH_INTERVAL_SECONDS = 2.0
 _FLUSH_BATCH_SIZE = 50
 
 # 模块级单例引用，供 shutdown 使用
-_instance: "AuditLogMiddleware | None" = None
+_instance: AuditLogMiddleware | None = None
 
 
 async def flush_audit_buffer() -> None:
@@ -76,7 +80,7 @@ class AuditLogMiddleware(BaseHTTPMiddleware):
 
         # 非写操作或跳过路径，直接放行
         if method not in _AUDIT_METHODS or path in _SKIP_PATHS:
-            return cast(Response, await call_next(request))
+            return cast("Response", await call_next(request))
 
         # 确保后台刷写任务已启动
         if self._flush_task is None or self._flush_task.done():

@@ -4,11 +4,15 @@ from __future__ import annotations
 
 import contextvars
 import uuid
-from typing import Any, Callable
+from typing import TYPE_CHECKING, Any
 
 from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.requests import Request
-from starlette.responses import Response
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from starlette.requests import Request
+    from starlette.responses import Response
 
 # 全局 context var，供日志 Filter 读取
 request_id_var: contextvars.ContextVar[str] = contextvars.ContextVar("request_id", default="-")

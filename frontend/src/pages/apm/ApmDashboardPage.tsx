@@ -38,8 +38,6 @@ import { useApmDashboard } from '../../hooks/useApmQueries';
 import { useAlertRuleList, useCreateAlertRule } from '../../hooks/useAlertQueries';
 import { useSystemInfo } from '../../hooks/useSystemQueries';
 
-const { Title } = Typography;
-
 export default function ApmDashboardPage() {
   const { message } = App.useApp();
   const { token: themeToken } = theme.useToken();

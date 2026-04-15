@@ -3,24 +3,27 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from httpx import ASGITransport, AsyncClient
 
+from app.core.database import get_db as get_db_original
+from app.core.deps import get_current_user
+from app.core.tenant import get_org_id
+from app.main import create_app
 from app.models.alert import AlertEvent, AlertRule
 from app.schemas.alert import (
     VALID_METRICS,
     VALID_OPERATORS,
     VALID_SEVERITIES,
-    AlertEventListResponse,
     AlertEventResponse,
     AlertRuleCreate,
     AlertRuleListResponse,
     AlertRuleResponse,
     AlertRuleUpdate,
 )
-
 
 # ============================================================================
 # Model 单元测试
@@ -124,10 +127,10 @@ class TestAlertRuleSchemas:
         assert "trace_count" in VALID_METRICS
 
     def test_valid_operators_set(self) -> None:
-        assert VALID_OPERATORS == {">", ">=", "<", "<=", "=="}
+        assert {">", ">=", "<", "<=", "=="} == VALID_OPERATORS
 
     def test_valid_severities_set(self) -> None:
-        assert VALID_SEVERITIES == {"critical", "warning", "info"}
+        assert {"critical", "warning", "info"} == VALID_SEVERITIES
 
     def test_update_partial(self) -> None:
         data = AlertRuleUpdate(threshold=20.0, is_enabled=False)
@@ -139,7 +142,7 @@ class TestAlertRuleSchemas:
             AlertRuleUpdate(metric="bad_metric")
 
     def test_response_from_attributes(self) -> None:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         rule = MagicMock()
         rule.id = uuid.uuid4()
         rule.name = "test"
@@ -164,7 +167,7 @@ class TestAlertRuleSchemas:
         assert resp.total == 0
 
     def test_event_response(self) -> None:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         event = MagicMock()
         event.id = uuid.uuid4()
         event.rule_id = uuid.uuid4()
@@ -309,7 +312,7 @@ class TestAlertService:
             severity="warning",
         )
         rule.id = uuid.uuid4()
-        rule.last_triggered_at = datetime.now(timezone.utc) - timedelta(minutes=5)  # 5 min ago, cooldown=30
+        rule.last_triggered_at = datetime.now(UTC) - timedelta(minutes=5)  # 5 min ago, cooldown=30
         rule.agent_name = None
 
         event = await evaluate_rule(db, rule)
@@ -333,13 +336,6 @@ class TestAlertService:
 # ============================================================================
 # API 路由测试（FastAPI TestClient）
 # ============================================================================
-
-from httpx import ASGITransport, AsyncClient
-
-from app.core.database import get_db as get_db_original
-from app.core.deps import get_current_user
-from app.core.tenant import get_org_id
-from app.main import create_app
 
 
 def _make_app():
@@ -380,8 +376,8 @@ class TestAlertAPI:
         created_rule.notification_config = {}
         created_rule.last_triggered_at = None
         created_rule.org_id = None
-        created_rule.created_at = datetime.now(timezone.utc)
-        created_rule.updated_at = datetime.now(timezone.utc)
+        created_rule.created_at = datetime.now(UTC)
+        created_rule.updated_at = datetime.now(UTC)
 
         app.dependency_overrides[get_db_original] = lambda: mock_db
 
@@ -427,8 +423,8 @@ class TestAlertAPI:
         rule.cooldown_minutes = 60
         rule.notification_config = {}
         rule.last_triggered_at = None
-        rule.created_at = datetime.now(timezone.utc)
-        rule.updated_at = datetime.now(timezone.utc)
+        rule.created_at = datetime.now(UTC)
+        rule.updated_at = datetime.now(UTC)
 
         with patch("app.services.alert.get_alert_rule", return_value=rule):
             async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
@@ -442,7 +438,7 @@ class TestAlertAPI:
         mock_db = AsyncMock()
         app.dependency_overrides[get_db_original] = lambda: mock_db
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         rule = MagicMock()
         rule.id = uuid.uuid4()
         rule.name = "Updated"

@@ -3,15 +3,17 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime
-from enum import Enum
-from typing import Any
+from enum import StrEnum
+from typing import TYPE_CHECKING, Any
 
-from ckyclaw_framework.tracing.trace import Trace
-from ckyclaw_framework.workflow.step import StepStatus
+if TYPE_CHECKING:
+    from datetime import datetime
+
+    from ckyclaw_framework.tracing.trace import Trace
+    from ckyclaw_framework.workflow.step import StepStatus
 
 
-class WorkflowStatus(str, Enum):
+class WorkflowStatus(StrEnum):
     """工作流执行状态。"""
 
     PENDING = "pending"

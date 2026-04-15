@@ -2,8 +2,12 @@
 
 from __future__ import annotations
 
-from fastapi import FastAPI, Request
+from typing import TYPE_CHECKING
+
 from fastapi.responses import JSONResponse
+
+if TYPE_CHECKING:
+    from fastapi import FastAPI, Request
 
 
 class AppError(Exception):

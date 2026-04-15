@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
-import { Table, Card, Tag, Input, Select, Space, Typography, Tooltip } from 'antd';
+import { Table, Card, Tag, Input, Select, Space, Tooltip } from 'antd';
 import { AuditOutlined } from '@ant-design/icons';
 import { PageContainer } from '../../components/PageContainer';
 import type { ColumnsType } from 'antd/es/table';
 import type { AuditLog } from '../../services/auditLogService';
 import { useAuditLogList } from '../../hooks/useAuditLogQueries';
 
-const { Title } = Typography;
 const { Search } = Input;
 
 const ACTION_COLORS: Record<string, string> = {

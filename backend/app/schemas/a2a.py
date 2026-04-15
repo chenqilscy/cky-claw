@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
-import uuid
-from datetime import datetime
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, Field
+
+if TYPE_CHECKING:
+    import uuid
+    from datetime import datetime
 
 
 # ---------------------------------------------------------------------------
@@ -116,5 +118,5 @@ class A2ADiscoveryResponse(BaseModel):
     capabilities: dict[str, Any]
     skills: list[dict[str, Any]]
     authentication: dict[str, Any]
-    defaultInputModes: list[str] = ["text/plain"]
-    defaultOutputModes: list[str] = ["text/plain"]
+    defaultInputModes: list[str] = ["text/plain"]  # noqa: N815
+    defaultOutputModes: list[str] = ["text/plain"]  # noqa: N815

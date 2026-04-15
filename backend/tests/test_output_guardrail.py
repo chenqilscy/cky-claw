@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -12,14 +12,13 @@ from fastapi.testclient import TestClient
 
 from app.main import app
 
-
 # ═══════════════════════════════════════════════════════════════════
 # Mock 基础设施
 # ═══════════════════════════════════════════════════════════════════
 
 
 def _make_session_record(**overrides: Any) -> MagicMock:
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     defaults = {
         "id": uuid.uuid4(),
         "agent_name": "test-agent",
@@ -77,10 +76,9 @@ class TestExecuteRunInputGuardrailBlocked:
 
     @pytest.mark.asyncio()
     async def test_input_guardrail_blocked_returns_response(self) -> None:
-        from ckyclaw_framework.guardrails.result import InputGuardrailTripwireError
-
         from app.schemas.session import RunConfig, RunRequest
         from app.services.session import execute_run
+        from ckyclaw_framework.guardrails.result import InputGuardrailTripwireError
 
         sid = uuid.uuid4()
         session_mock = _make_session_record(id=sid)
@@ -128,10 +126,9 @@ class TestExecuteRunOutputGuardrailBlocked:
 
     @pytest.mark.asyncio()
     async def test_output_guardrail_blocked_returns_response(self) -> None:
-        from ckyclaw_framework.guardrails.result import OutputGuardrailTripwireError
-
         from app.schemas.session import RunConfig, RunRequest
         from app.services.session import execute_run
+        from ckyclaw_framework.guardrails.result import OutputGuardrailTripwireError
 
         sid = uuid.uuid4()
         session_mock = _make_session_record(id=sid)
@@ -179,10 +176,9 @@ class TestExecuteRunStreamGuardrailErrors:
     async def test_input_guardrail_sse_error_code(self) -> None:
         import json
 
-        from ckyclaw_framework.guardrails.result import InputGuardrailTripwireError
-
         from app.schemas.session import RunConfig, RunRequest
         from app.services.session import execute_run_stream
+        from ckyclaw_framework.guardrails.result import InputGuardrailTripwireError
 
         sid = uuid.uuid4()
         session_mock = _make_session_record(id=sid)
@@ -231,10 +227,9 @@ class TestExecuteRunStreamGuardrailErrors:
     async def test_output_guardrail_sse_error_code(self) -> None:
         import json
 
-        from ckyclaw_framework.guardrails.result import OutputGuardrailTripwireError
-
         from app.schemas.session import RunConfig, RunRequest
         from app.services.session import execute_run_stream
+        from ckyclaw_framework.guardrails.result import OutputGuardrailTripwireError
 
         sid = uuid.uuid4()
         session_mock = _make_session_record(id=sid)

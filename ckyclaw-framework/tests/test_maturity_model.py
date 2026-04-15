@@ -5,16 +5,13 @@ from __future__ import annotations
 import pytest
 
 from ckyclaw_framework.evolution.maturity import (
+    _LEVEL_CAPABILITIES,
+    _LEVEL_ORDER,
     MaturityConfig,
     MaturityLevel,
     MaturityModel,
     ReflectionScore,
-    _DEFAULT_DOWNGRADE_THRESHOLDS,
-    _DEFAULT_UPGRADE_THRESHOLDS,
-    _LEVEL_CAPABILITIES,
-    _LEVEL_ORDER,
 )
-
 
 # ---------------------------------------------------------------------------
 # MaturityLevel 枚举

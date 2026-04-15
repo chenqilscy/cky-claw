@@ -6,12 +6,16 @@
 
 from __future__ import annotations
 
+from datetime import UTC
+from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
 from ckyclaw_framework.tools.function_tool import FunctionTool
 
+if TYPE_CHECKING:
+    from fastapi.testclient import TestClient
 
 # ---------------------------------------------------------------------------
 # _build_agent_from_config 综合测试
@@ -326,9 +330,8 @@ class TestCombinedBuild:
 
     def test_full_featured_agent_build(self) -> None:
         """构建拥有所有特性的 Agent：Guardrail + Handoff + Tools(三路)。"""
-        from ckyclaw_framework.agent.agent import Agent as FrameworkAgent
-
         from app.services.session import _build_agent_from_config
+        from ckyclaw_framework.agent.agent import Agent as FrameworkAgent
 
         config = MagicMock()
         config.name = "full-agent"
@@ -570,7 +573,7 @@ class TestE2ENewEndpoints:
     """跨 API 端到端验证——使用 TestClient + mock service/DB 层。"""
 
     @pytest.fixture()
-    def client(self) -> "TestClient":
+    def client(self) -> TestClient:
         from fastapi.testclient import TestClient as TC
 
         from app.main import app as _app
@@ -579,13 +582,13 @@ class TestE2ENewEndpoints:
 
     # ---- rotate-key ----
 
-    def test_rotate_key_flow(self, client: "TestClient") -> None:
+    def test_rotate_key_flow(self, client: TestClient) -> None:
         """rotate-key → 响应包含更新后时间戳。"""
         import uuid
-        from datetime import datetime, timezone
+        from datetime import datetime
 
         pid = uuid.uuid4()
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         p = MagicMock()
         p.id = pid
@@ -625,10 +628,9 @@ class TestE2ENewEndpoints:
         db = AsyncMock()
         return db
 
-    def test_checkpoint_list_empty(self, client: "TestClient") -> None:
+    def test_checkpoint_list_empty(self, client: TestClient) -> None:
         """查询不存在的 run_id 返回空列表。"""
         from app.core.deps import get_db
-
         from app.main import app as _app
 
         mock_db = self._mock_db()
@@ -651,10 +653,9 @@ class TestE2ENewEndpoints:
         finally:
             _app.dependency_overrides.pop(get_db, None)
 
-    def test_checkpoint_delete(self, client: "TestClient") -> None:
+    def test_checkpoint_delete(self, client: TestClient) -> None:
         """删除检查点返回 204。"""
         from app.core.deps import get_db
-
         from app.main import app as _app
 
         mock_db = self._mock_db()
@@ -674,7 +675,7 @@ class TestE2ENewEndpoints:
 
     # ---- cost-router classify ----
 
-    def test_cost_router_classify(self, client: "TestClient") -> None:
+    def test_cost_router_classify(self, client: TestClient) -> None:
         """classify 端点返回分类层级。"""
         with patch("app.api.cost_router.classify_complexity") as mock_classify:
             from ckyclaw_framework.model.cost_router import ModelTier
@@ -689,10 +690,9 @@ class TestE2ENewEndpoints:
         assert body["tier"] == "moderate"
         assert body["text_length"] > 0
 
-    def test_cost_router_recommend(self, client: "TestClient") -> None:
+    def test_cost_router_recommend(self, client: TestClient) -> None:
         """recommend 端点通过 DB 查询 Provider 并返回推荐。"""
         from app.core.deps import get_db
-
         from app.main import app as _app
 
         mock_db = self._mock_db()
@@ -720,7 +720,7 @@ class TestE2ENewEndpoints:
 
     # ---- intent detect ----
 
-    def test_intent_detect_no_drift(self, client: "TestClient") -> None:
+    def test_intent_detect_no_drift(self, client: TestClient) -> None:
         """相同主题 → 飘移分数低，不飘移。"""
         from app.core.deps import get_current_user
         from app.main import app as _app
@@ -744,7 +744,7 @@ class TestE2ENewEndpoints:
         finally:
             _app.dependency_overrides.pop(get_current_user, None)
 
-    def test_intent_detect_drifted(self, client: "TestClient") -> None:
+    def test_intent_detect_drifted(self, client: TestClient) -> None:
         """完全不同主题 → 飘移分数高，判定飘移。"""
         from app.core.deps import get_current_user
         from app.main import app as _app
@@ -766,7 +766,7 @@ class TestE2ENewEndpoints:
         finally:
             _app.dependency_overrides.pop(get_current_user, None)
 
-    def test_intent_detect_validation(self, client: "TestClient") -> None:
+    def test_intent_detect_validation(self, client: TestClient) -> None:
         """缺少必填字段返回 422。"""
         from app.core.deps import get_current_user
         from app.main import app as _app
@@ -783,7 +783,7 @@ class TestE2ENewEndpoints:
 
     # ---- deep health check ----
 
-    def test_deep_health_check(self, client: "TestClient") -> None:
+    def test_deep_health_check(self, client: TestClient) -> None:
         """深度健康检查返回 components 结构。"""
         resp = client.get("/health/deep")
         assert resp.status_code == 200
@@ -795,7 +795,7 @@ class TestE2ENewEndpoints:
 
     # ---- token usage trend ----
 
-    def test_token_usage_trend(self, client: "TestClient") -> None:
+    def test_token_usage_trend(self, client: TestClient) -> None:
         """Token 趋势 API 返回正确结构。"""
         from app.core.deps import get_current_user, get_db
         from app.main import app as _app
@@ -825,7 +825,7 @@ class TestE2ENewEndpoints:
 
     # ---- agent realtime status ----
 
-    def test_agent_realtime_status(self, client: "TestClient") -> None:
+    def test_agent_realtime_status(self, client: TestClient) -> None:
         """Agent 实时状态 API 返回正确结构。"""
         from app.core.deps import get_current_user, get_db
         from app.main import app as _app
@@ -853,7 +853,7 @@ class TestE2ENewEndpoints:
             _app.dependency_overrides.pop(get_db, None)
             _app.dependency_overrides.pop(get_current_user, None)
 
-    def test_agent_realtime_status_invalid_minutes(self, client: "TestClient") -> None:
+    def test_agent_realtime_status_invalid_minutes(self, client: TestClient) -> None:
         """minutes 超范围返回 422。"""
         from app.core.deps import get_current_user
         from app.main import app as _app
@@ -871,7 +871,7 @@ class TestE2ENewEndpoints:
 
     # ---- agent activity trend ----
 
-    def test_agent_activity_trend(self, client: "TestClient") -> None:
+    def test_agent_activity_trend(self, client: TestClient) -> None:
         """Agent 活动趋势 API 返回正确结构。"""
         from app.core.deps import get_current_user, get_db
         from app.main import app as _app
@@ -902,7 +902,7 @@ class TestE2ENewEndpoints:
             _app.dependency_overrides.pop(get_db, None)
             _app.dependency_overrides.pop(get_current_user, None)
 
-    def test_agent_activity_trend_invalid_hours(self, client: "TestClient") -> None:
+    def test_agent_activity_trend_invalid_hours(self, client: TestClient) -> None:
         """hours 超范围返回 422。"""
         from app.core.deps import get_current_user
         from app.main import app as _app
@@ -923,9 +923,10 @@ class TestE2ENewEndpoints:
 
     # ---- template instantiate ----
 
-    def test_template_instantiate(self, client: "TestClient") -> None:
+    def test_template_instantiate(self, client: TestClient) -> None:
         """模板实例化 API 返回合并后的配置。"""
         import uuid
+
         from app.core.deps import get_current_user, get_db
         from app.main import app as _app
 
@@ -962,9 +963,10 @@ class TestE2ENewEndpoints:
             _app.dependency_overrides.pop(get_db, None)
             _app.dependency_overrides.pop(get_current_user, None)
 
-    def test_template_instantiate_no_overrides(self, client: "TestClient") -> None:
+    def test_template_instantiate_no_overrides(self, client: TestClient) -> None:
         """无覆盖参数实例化返回原始配置。"""
         import uuid
+
         from app.core.deps import get_current_user, get_db
         from app.main import app as _app
 
@@ -1004,9 +1006,9 @@ class TestE2ENewEndpoints:
 
     # ---- R15: trace flame tree ----
 
-    def test_trace_flame_tree(self, client: "TestClient") -> None:
+    def test_trace_flame_tree(self, client: TestClient) -> None:
         """火焰图 API 返回嵌套 Span 树结构。"""
-        from datetime import datetime, timezone
+        from datetime import datetime
 
         from app.core.deps import get_current_user, get_db
         from app.main import app as _app
@@ -1018,7 +1020,7 @@ class TestE2ENewEndpoints:
         trace_obj.id = "trace-flame-001"
         trace_obj.status = "completed"
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         root_span = MagicMock()
         root_span.id = "span-root"
         root_span.trace_id = "trace-flame-001"
@@ -1077,7 +1079,7 @@ class TestE2ENewEndpoints:
             _app.dependency_overrides.pop(get_db, None)
             _app.dependency_overrides.pop(get_current_user, None)
 
-    def test_trace_flame_tree_max_depth(self, client: "TestClient") -> None:
+    def test_trace_flame_tree_max_depth(self, client: TestClient) -> None:
         """火焰图 max_depth 参数校验 — 超出范围返回 422。"""
         from app.core.deps import get_current_user, get_db
         from app.main import app as _app
@@ -1097,7 +1099,7 @@ class TestE2ENewEndpoints:
 
     # ---- R15: session message search ----
 
-    def test_session_message_search(self, client: "TestClient") -> None:
+    def test_session_message_search(self, client: TestClient) -> None:
         """Session 消息搜索 — search 参数正确传递到查询。"""
         import uuid
 
@@ -1152,7 +1154,7 @@ class TestE2ENewEndpoints:
 
     # ---- R15: WebSocket events endpoint registered ----
 
-    def test_ws_events_endpoint_exists(self, client: "TestClient") -> None:
+    def test_ws_events_endpoint_exists(self, client: TestClient) -> None:
         """验证 /api/ws/events WebSocket 端点已注册。"""
         from app.main import app as _app
 
@@ -1161,7 +1163,7 @@ class TestE2ENewEndpoints:
 
     # ---- R16: Trace 回放时间轴 ----
 
-    def test_trace_replay_timeline(self, client: "TestClient") -> None:
+    def test_trace_replay_timeline(self, client: TestClient) -> None:
         """回放时间轴 API 返回正确的 timeline 结构。"""
         import datetime as _dt
 
@@ -1238,7 +1240,7 @@ class TestE2ENewEndpoints:
             _app.dependency_overrides.pop(get_db, None)
             _app.dependency_overrides.pop(get_current_user, None)
 
-    def test_trace_replay_not_found(self, client: "TestClient") -> None:
+    def test_trace_replay_not_found(self, client: TestClient) -> None:
         """不存在的 Trace 回放返回 404。"""
         from app.core.deps import get_current_user, get_db
         from app.main import app as _app
@@ -1260,7 +1262,7 @@ class TestE2ENewEndpoints:
 
     # ---- R16: A/B 测试 ----
 
-    def test_ab_test_validation(self, client: "TestClient") -> None:
+    def test_ab_test_validation(self, client: TestClient) -> None:
         """A/B 测试模型数 <2 返回 422。"""
         from app.core.deps import get_current_user, get_db
         from app.main import app as _app
@@ -1279,7 +1281,7 @@ class TestE2ENewEndpoints:
             _app.dependency_overrides.pop(get_db, None)
             _app.dependency_overrides.pop(get_current_user, None)
 
-    def test_ab_test_success(self, client: "TestClient") -> None:
+    def test_ab_test_success(self, client: TestClient) -> None:
         """A/B 测试正常返回对比结果（mock LLM）。"""
         from app.core.deps import get_current_user, get_db
         from app.main import app as _app
@@ -1327,13 +1329,13 @@ class TestE2ENewEndpoints:
 
     # ---- Marketplace 端到端 ----
 
-    def test_marketplace_browse_and_install(self, client: "TestClient") -> None:
+    def test_marketplace_browse_and_install(self, client: TestClient) -> None:
         """Marketplace 浏览 + 安装 端到端流程。"""
         import uuid
-        from datetime import datetime, timezone
-        from app.main import app as _app
+        from datetime import datetime
 
-        now = datetime.now(timezone.utc)
+
+        now = datetime.now(UTC)
         tpl_id = uuid.uuid4()
         tpl = MagicMock()
         for k, v in {
@@ -1365,13 +1367,13 @@ class TestE2ENewEndpoints:
             )
             assert resp2.status_code == 200
 
-    def test_marketplace_review_flow(self, client: "TestClient") -> None:
+    def test_marketplace_review_flow(self, client: TestClient) -> None:
         """Marketplace 评价流程。"""
         import uuid
-        from datetime import datetime, timezone
+        from datetime import datetime
 
         tpl_id = uuid.uuid4()
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         review = MagicMock()
         for k, v in {
             "id": uuid.uuid4(), "template_id": tpl_id,
@@ -1396,12 +1398,12 @@ class TestE2ENewEndpoints:
 
     # ---- Compliance 端到端 ----
 
-    def test_compliance_label_create_and_list(self, client: "TestClient") -> None:
+    def test_compliance_label_create_and_list(self, client: TestClient) -> None:
         """Compliance 数据分类标签创建 + 列表。"""
         import uuid
-        from datetime import datetime, timezone
+        from datetime import datetime
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         label = MagicMock()
         for k, v in {
             "id": uuid.uuid4(), "resource_type": "trace", "resource_id": "t-123",
@@ -1423,12 +1425,12 @@ class TestE2ENewEndpoints:
             assert resp2.status_code == 200
             assert resp2.json()["total"] == 1
 
-    def test_compliance_erasure_flow(self, client: "TestClient") -> None:
+    def test_compliance_erasure_flow(self, client: TestClient) -> None:
         """Compliance 删除请求创建 + 处理。"""
         import uuid
-        from datetime import datetime, timezone
+        from datetime import datetime
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         req_id = uuid.uuid4()
         erasure = MagicMock()
         for k, v in {
@@ -1465,7 +1467,7 @@ class TestE2ENewEndpoints:
             assert resp2.status_code == 200
             assert resp2.json()["status"] == "completed"
 
-    def test_compliance_dashboard(self, client: "TestClient") -> None:
+    def test_compliance_dashboard(self, client: TestClient) -> None:
         """Compliance 仪表盘汇总。"""
         with patch("app.api.compliance.comp_svc") as mock_svc:
             mock_svc.get_dashboard = AsyncMock(return_value={

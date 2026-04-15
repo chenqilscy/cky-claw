@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-import json
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
 
@@ -41,8 +40,8 @@ class TestConsoleTraceProcessorSpanEnd:
         """有 start_time 和 end_time 时输出 duration。"""
         proc = ConsoleTraceProcessor()
         span = _make_span("s1", "my_span")
-        span.start_time = datetime(2026, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
-        span.end_time = datetime(2026, 1, 1, 0, 0, 1, 500000, tzinfo=timezone.utc)  # 1.5 秒
+        span.start_time = datetime(2026, 1, 1, 0, 0, 0, tzinfo=UTC)
+        span.end_time = datetime(2026, 1, 1, 0, 0, 1, 500000, tzinfo=UTC)  # 1.5 秒
 
         with caplog.at_level(logging.INFO):
             await proc.on_span_end(span)
@@ -54,8 +53,8 @@ class TestConsoleTraceProcessorSpanEnd:
         """有 token_usage 时输出 token 信息。"""
         proc = ConsoleTraceProcessor()
         span = _make_span("s2", "llm_span", SpanType.LLM)
-        span.start_time = datetime(2026, 1, 1, tzinfo=timezone.utc)
-        span.end_time = datetime(2026, 1, 1, 0, 0, 0, 100000, tzinfo=timezone.utc)
+        span.start_time = datetime(2026, 1, 1, tzinfo=UTC)
+        span.end_time = datetime(2026, 1, 1, 0, 0, 0, 100000, tzinfo=UTC)
         span.token_usage = {"prompt_tokens": 100, "completion_tokens": 50, "total_tokens": 150}
 
         with caplog.at_level(logging.INFO):
@@ -82,7 +81,7 @@ class TestConsoleTraceProcessorSpanEnd:
         """只有 start_time 没有 end_time 时不输出 duration。"""
         proc = ConsoleTraceProcessor()
         span = _make_span()
-        span.start_time = datetime(2026, 1, 1, tzinfo=timezone.utc)
+        span.start_time = datetime(2026, 1, 1, tzinfo=UTC)
         span.end_time = None
 
         with caplog.at_level(logging.INFO):
@@ -99,8 +98,8 @@ class TestConsoleTraceProcessorTraceEnd:
         """Trace 有 start_time 和 end_time 时输出 duration。"""
         proc = ConsoleTraceProcessor()
         trace = _make_trace("t1", "workflow1")
-        trace.start_time = datetime(2026, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
-        trace.end_time = datetime(2026, 1, 1, 0, 0, 5, tzinfo=timezone.utc)
+        trace.start_time = datetime(2026, 1, 1, 0, 0, 0, tzinfo=UTC)
+        trace.end_time = datetime(2026, 1, 1, 0, 0, 5, tzinfo=UTC)
         trace.spans = []
 
         with caplog.at_level(logging.INFO):

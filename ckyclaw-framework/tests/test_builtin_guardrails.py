@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import json
-
 import pytest
 
 from ckyclaw_framework.guardrails.content_safety_guardrail import ContentSafetyGuardrail
@@ -11,13 +9,11 @@ from ckyclaw_framework.guardrails.llm_guardrail import LLMGuardrail
 from ckyclaw_framework.guardrails.max_token_guardrail import MaxTokenGuardrail
 from ckyclaw_framework.guardrails.pii_guardrail import PIIDetectionGuardrail
 from ckyclaw_framework.guardrails.prompt_injection_guardrail import PromptInjectionGuardrail
-from ckyclaw_framework.guardrails.result import GuardrailResult
 from ckyclaw_framework.guardrails.tool_whitelist_guardrail import ToolWhitelistGuardrail
 from ckyclaw_framework.model.message import TokenUsage
 from ckyclaw_framework.model.provider import ModelProvider, ModelResponse
 from ckyclaw_framework.runner.run_config import RunConfig
 from ckyclaw_framework.runner.run_context import RunContext
-
 
 # ---------- Mock RunContext ----------
 

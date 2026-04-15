@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from fastapi.testclient import TestClient
@@ -15,16 +15,14 @@ from app.main import app
 from app.models.checkpoint import CheckpointRecord
 from app.schemas.checkpoint import CheckpointListResponse, CheckpointResponse
 from app.services.checkpoint_backend import PostgresCheckpointBackend
-
 from ckyclaw_framework.checkpoint import Checkpoint, CheckpointBackend
 from ckyclaw_framework.model.message import Message, MessageRole
-
 
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
 
-_NOW = datetime(2026, 4, 1, 12, 0, 0, tzinfo=timezone.utc)
+_NOW = datetime(2026, 4, 1, 12, 0, 0, tzinfo=UTC)
 
 
 @pytest.fixture()

@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from ckyclaw_framework.tracing.processor import TraceProcessor
-from ckyclaw_framework.tracing.span import Span
-from ckyclaw_framework.tracing.trace import Trace
+
+if TYPE_CHECKING:
+    from ckyclaw_framework.tracing.span import Span
+    from ckyclaw_framework.tracing.trace import Trace
 
 logger = logging.getLogger(__name__)
 

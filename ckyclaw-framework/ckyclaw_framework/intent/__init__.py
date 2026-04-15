@@ -16,7 +16,6 @@ from __future__ import annotations
 import re
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Any
 
 from ckyclaw_framework.model.message import Message, MessageRole
 

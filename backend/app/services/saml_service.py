@@ -7,18 +7,15 @@
 from __future__ import annotations
 
 import base64
-import hashlib
 import logging
 import secrets
-import uuid
 import zlib
-from datetime import datetime, timezone
-from typing import Any
-from urllib.parse import quote, urlencode
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING, Any
+from urllib.parse import urlencode
 from xml.etree import ElementTree as ET
 
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth import create_access_token
 from app.core.config import settings
@@ -26,6 +23,11 @@ from app.core.exceptions import AuthenticationError, NotFoundError, ValidationEr
 from app.core.redis import get_redis
 from app.models.saml_config import SamlIdpConfig
 from app.models.user import User
+
+if TYPE_CHECKING:
+    import uuid
+
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = logging.getLogger(__name__)
 
@@ -235,7 +237,7 @@ async def create_authn_request(
 
     # 生成 AuthnRequest
     request_id = f"_ckyclaw_{secrets.token_hex(16)}"
-    issue_instant = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    issue_instant = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
 
     authn_request = (
         '<samlp:AuthnRequest'
@@ -356,7 +358,7 @@ async def process_saml_response(
     # 8. 检查 NotBefore / NotOnOrAfter（防重放）
     conditions = assertion.find("saml:Conditions", _NS)
     if conditions is not None:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         not_before = conditions.get("NotBefore")
         not_on_or_after = conditions.get("NotOnOrAfter")
         if not_before:

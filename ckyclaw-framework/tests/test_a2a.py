@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import pytest
 
-from ckyclaw_framework.a2a.agent_card import AgentCapability, AgentCard, AgentSkillCard
-from ckyclaw_framework.a2a.task import A2ATask, TaskArtifact, TaskState, TaskStatus
 from ckyclaw_framework.a2a.adapter import A2AAdapter
+from ckyclaw_framework.a2a.agent_card import AgentCapability, AgentCard, AgentSkillCard
 from ckyclaw_framework.a2a.server import A2AServer
+from ckyclaw_framework.a2a.task import A2ATask, TaskArtifact, TaskState, TaskStatus
 
 
 # ---------------------------------------------------------------------------

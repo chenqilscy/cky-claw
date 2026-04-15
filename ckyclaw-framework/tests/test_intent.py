@@ -13,7 +13,6 @@ from ckyclaw_framework.intent import (
 )
 from ckyclaw_framework.model.message import Message, MessageRole
 
-
 # ---------------------------------------------------------------------------
 # IntentSignal 测试
 # ---------------------------------------------------------------------------

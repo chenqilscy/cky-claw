@@ -2,16 +2,20 @@
 
 from __future__ import annotations
 
-
-import uuid
+from typing import TYPE_CHECKING
 
 from fastapi import Depends, HTTPException, status
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.deps import get_current_user
 from app.models.organization import Organization
-from app.models.user import User
+
+if TYPE_CHECKING:
+    import uuid
+
+    from sqlalchemy.ext.asyncio import AsyncSession
+
+    from app.models.user import User
 
 
 async def get_org_id(

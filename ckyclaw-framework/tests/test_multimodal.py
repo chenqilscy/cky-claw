@@ -16,7 +16,6 @@ from ckyclaw_framework.model.content_block import (
 )
 from ckyclaw_framework.model.message import Message, MessageRole
 
-
 # ── ContentBlock 序列化 ──────────────────────────────────
 
 

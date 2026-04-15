@@ -5,7 +5,7 @@ import { PageContainer } from '../../components/PageContainer';
 import { intentService } from '../../services/intentService';
 import type { IntentDetectResponse } from '../../services/intentService';
 
-const { Title, Text, Paragraph } = Typography;
+const { Text } = Typography;
 const { TextArea } = Input;
 
 const IntentDetectionPage: React.FC = () => {

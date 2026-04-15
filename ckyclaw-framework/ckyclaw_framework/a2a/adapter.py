@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from ckyclaw_framework.a2a.agent_card import AgentCard, AgentCapability, AgentSkillCard
+from ckyclaw_framework.a2a.agent_card import AgentCapability, AgentCard, AgentSkillCard
 from ckyclaw_framework.a2a.task import A2ATask, TaskArtifact, TaskStatus
 
 

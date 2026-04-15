@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 import re
-import uuid
-from datetime import datetime
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+if TYPE_CHECKING:
+    import uuid
+    from datetime import datetime
 
 _NAME_PATTERN = re.compile(r"^[a-z][a-z0-9_-]{1,62}[a-z0-9]$")
 

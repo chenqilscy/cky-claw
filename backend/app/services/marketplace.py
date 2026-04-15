@@ -2,13 +2,17 @@
 
 from __future__ import annotations
 
-import uuid
+from typing import TYPE_CHECKING
 
 from sqlalchemy import func, select, update
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import ConflictError, NotFoundError, ValidationError
 from app.models.agent_template import AgentTemplate, MarketplaceReview
+
+if TYPE_CHECKING:
+    import uuid
+
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 
 async def list_marketplace(

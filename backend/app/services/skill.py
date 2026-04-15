@@ -4,15 +4,20 @@ from __future__ import annotations
 
 import json  # noqa: F401 – used elsewhere
 import logging
-import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import func, or_, select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import NotFoundError
 from app.models.skill import SkillRecord
-from app.schemas.skill import SkillCreate, SkillSearchRequest, SkillUpdate
+
+if TYPE_CHECKING:
+    import uuid
+
+    from sqlalchemy.ext.asyncio import AsyncSession
+
+    from app.schemas.skill import SkillCreate, SkillSearchRequest, SkillUpdate
 
 logger = logging.getLogger(__name__)
 
@@ -102,10 +107,10 @@ async def update_skill(
         update_data["category"] = update_data["category"].value
     for key, value in update_data.items():
         if key == "metadata":
-            setattr(record, "metadata_", value)
+            record.metadata_ = value
         else:
             setattr(record, key, value)
-    record.updated_at = datetime.now(timezone.utc)
+    record.updated_at = datetime.now(UTC)
     await db.commit()
     await db.refresh(record)
     return record
@@ -115,7 +120,7 @@ async def delete_skill(db: AsyncSession, skill_id: uuid.UUID) -> None:
     """软删除技能。"""
     record = await get_skill(db, skill_id)
     record.is_deleted = True
-    record.deleted_at = datetime.now(timezone.utc)
+    record.deleted_at = datetime.now(UTC)
     await db.commit()
 
 

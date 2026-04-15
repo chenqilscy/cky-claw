@@ -18,7 +18,6 @@ from ckyclaw_framework.evolution.signals import (
 )
 from ckyclaw_framework.evolution.strategy import StrategyEngine
 
-
 # ── helper ─────────────────────────────────────────────────
 
 

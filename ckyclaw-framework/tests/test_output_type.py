@@ -3,19 +3,22 @@
 from __future__ import annotations
 
 import json
-from typing import Any, AsyncIterator
+from typing import TYPE_CHECKING, Any
 
 import pytest
 from pydantic import BaseModel
 
 from ckyclaw_framework.agent.agent import Agent
-from ckyclaw_framework.model.message import Message, MessageRole, TokenUsage
-from ckyclaw_framework.model.provider import ModelChunk, ModelProvider, ModelResponse, ToolCall, ToolCallChunk
-from ckyclaw_framework.model.settings import ModelSettings
+from ckyclaw_framework.model.message import Message, TokenUsage
+from ckyclaw_framework.model.provider import ModelChunk, ModelProvider, ModelResponse
 from ckyclaw_framework.runner.result import RunResult, StreamEventType
 from ckyclaw_framework.runner.run_config import RunConfig
 from ckyclaw_framework.runner.runner import Runner, _build_response_format, _parse_structured_output
 
+if TYPE_CHECKING:
+    from collections.abc import AsyncIterator
+
+    from ckyclaw_framework.model.settings import ModelSettings
 
 # ── 测试用 Pydantic Model ────────────────────────────────────
 

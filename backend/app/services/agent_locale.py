@@ -2,16 +2,21 @@
 
 from __future__ import annotations
 
-import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import select, update
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import ConflictError, NotFoundError, ValidationError
 from app.models.agent import AgentConfig
 from app.models.agent_locale import AgentLocale
-from app.schemas.agent_locale import AgentLocaleCreate, AgentLocaleUpdate
+
+if TYPE_CHECKING:
+    import uuid
+
+    from sqlalchemy.ext.asyncio import AsyncSession
+
+    from app.schemas.agent_locale import AgentLocaleCreate, AgentLocaleUpdate
 
 
 async def _get_agent_id_by_name(db: AsyncSession, name: str) -> uuid.UUID:
@@ -77,7 +82,7 @@ async def update_locale(
     record = await _get_locale_record(db, agent_id, locale)
 
     record.instructions = data.instructions
-    record.updated_at = datetime.now(timezone.utc)
+    record.updated_at = datetime.now(UTC)
 
     if data.is_default is True:
         await _clear_default(db, agent_id)

@@ -6,14 +6,13 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
 
 from app.main import app
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -22,7 +21,7 @@ from app.main import app
 
 def _make_event_record(**overrides) -> MagicMock:
     """构造一个模拟 EventRecord ORM 对象。"""
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     defaults: dict = {
         "id": uuid.uuid4(),
         "sequence": 1,
@@ -60,7 +59,7 @@ class TestEventSchemas:
         """EventResponse 正常属性。"""
         from app.api.events import EventResponse
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         resp = EventResponse(
             event_id="evt-1",
             sequence=1,
@@ -76,7 +75,7 @@ class TestEventSchemas:
         """EventResponse 全字段。"""
         from app.api.events import EventResponse
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         sid = str(uuid.uuid4())
         resp = EventResponse(
             event_id="evt-2",
@@ -185,7 +184,6 @@ class TestSQLAlchemyEventJournal:
     @pytest.mark.anyio()
     async def test_query_with_filters(self) -> None:
         """_query 构建正确的 SQLAlchemy 条件。"""
-        from ckyclaw_framework.events.journal import EventEntry
         from ckyclaw_framework.events.types import EventType
 
         # 构造 mock 数据库返回
@@ -197,7 +195,7 @@ class TestSQLAlchemyEventJournal:
         mock_record.session_id = None
         mock_record.agent_name = "bot"
         mock_record.span_id = None
-        mock_record.timestamp = datetime.now(timezone.utc)
+        mock_record.timestamp = datetime.now(UTC)
         mock_record.payload = {}
 
         mock_result = MagicMock()
@@ -232,9 +230,8 @@ class TestSaveEventsFromJournal:
     @pytest.mark.anyio()
     async def test_empty_journal_noop(self) -> None:
         """空 journal 不写入。"""
-        from ckyclaw_framework.events.journal import InMemoryEventJournal
-
         from app.services.session import _save_events_from_journal
+        from ckyclaw_framework.events.journal import InMemoryEventJournal
 
         mock_db = AsyncMock()
         mock_db.add_all = MagicMock()
@@ -249,10 +246,9 @@ class TestSaveEventsFromJournal:
     @pytest.mark.anyio()
     async def test_saves_events(self) -> None:
         """有事件时通过 savepoint 写入 EventRecord 列表。"""
+        from app.services.session import _save_events_from_journal
         from ckyclaw_framework.events.journal import EventEntry, InMemoryEventJournal
         from ckyclaw_framework.events.types import EventType
-
-        from app.services.session import _save_events_from_journal
 
         mock_db = AsyncMock()
         mock_db.add_all = MagicMock()
@@ -281,10 +277,9 @@ class TestSaveEventsFromJournal:
     @pytest.mark.anyio()
     async def test_handles_exception(self) -> None:
         """异常时不影响外部事务。"""
+        from app.services.session import _save_events_from_journal
         from ckyclaw_framework.events.journal import EventEntry, InMemoryEventJournal
         from ckyclaw_framework.events.types import EventType
-
-        from app.services.session import _save_events_from_journal
 
         # 模拟 begin_nested 抛出异常
         mock_db = AsyncMock()
@@ -331,7 +326,7 @@ class TestEventsReplayAPI:
 
     def test_replay_with_events(self, client: TestClient) -> None:
         """有事件正常返回。"""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         ev = _make_event_record(
             sequence=1,
             event_type="run_start",
@@ -436,7 +431,7 @@ class TestSessionEventsAPI:
 
     def test_session_events_with_data(self, client: TestClient) -> None:
         """有事件正常返回。"""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         sid = uuid.uuid4()
         ev = _make_event_record(
             sequence=1,

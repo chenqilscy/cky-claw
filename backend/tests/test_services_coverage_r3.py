@@ -8,14 +8,13 @@ deps 认证错误路径、_build_agent_from_config guardrail 分支等。
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import uuid
-from datetime import datetime, timezone
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
 from app.core.exceptions import ConflictError, NotFoundError, ValidationError
-
 
 # ── helpers ─────────────────────────────────────────────────────────────
 
@@ -488,9 +487,9 @@ class TestResolveProviderR3:
             provider_type="openai",
         )
         db = _mock_db(_scalar_one_or_none(mock_prov))
-        with patch("app.core.crypto.decrypt_api_key", side_effect=Exception("fail")):
-            with pytest.raises(NotFoundError, match="解密失败"):
-                await _resolve_provider(db, config)
+        with patch("app.core.crypto.decrypt_api_key", side_effect=Exception("fail")), \
+             pytest.raises(NotFoundError, match="解密失败"):
+            await _resolve_provider(db, config)
 
     @pytest.mark.asyncio
     async def test_provider_auth_config_decrypt_fallback(self) -> None:
@@ -1955,9 +1954,7 @@ class TestSchedulerStartR3:
             task = se._scheduler_task  # type: ignore[attr-defined]
             assert task is not None
             task.cancel()
-            try:
+            with contextlib.suppress(asyncio.CancelledError):
                 await task
-            except asyncio.CancelledError:
-                pass
         finally:
             se._scheduler_task = old_task  # type: ignore[attr-defined]

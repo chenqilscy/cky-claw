@@ -5,7 +5,7 @@ import {
 } from 'antd';
 import type { MenuProps } from 'antd';
 import {
-  SaveOutlined, PlusOutlined, CopyOutlined, RocketOutlined,
+  CopyOutlined, RocketOutlined,
   ToolOutlined, SafetyCertificateOutlined, SwapOutlined, CloudServerOutlined,
   DownloadOutlined,
 } from '@ant-design/icons';

@@ -2,16 +2,12 @@
 
 from __future__ import annotations
 
-from typing import Any
-
-import uuid
+from typing import TYPE_CHECKING, Any
 
 from fastapi import APIRouter, Depends, Query
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.deps import require_admin
-from app.models.user import User
 from app.schemas.role import (
     RoleCreate,
     RoleListResponse,
@@ -19,6 +15,13 @@ from app.schemas.role import (
     RoleUpdate,
 )
 from app.services import role as role_service
+
+if TYPE_CHECKING:
+    import uuid
+
+    from sqlalchemy.ext.asyncio import AsyncSession
+
+    from app.models.user import User
 
 router = APIRouter(prefix="/api/v1/roles", tags=["roles"])
 

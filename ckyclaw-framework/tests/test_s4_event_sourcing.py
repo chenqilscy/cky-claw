@@ -5,8 +5,8 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from typing import Any, AsyncIterator
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING, Any
 from unittest.mock import AsyncMock
 
 import pytest
@@ -15,12 +15,15 @@ from ckyclaw_framework.events.journal import EventEntry, InMemoryEventJournal
 from ckyclaw_framework.events.processor import EventJournalProcessor
 from ckyclaw_framework.events.projector import AuditProjector, CostProjector, MetricsProjector
 from ckyclaw_framework.events.types import EventType
-from ckyclaw_framework.model.message import Message, MessageRole, TokenUsage
-from ckyclaw_framework.model.provider import ModelChunk, ModelProvider, ModelResponse, ToolCall
-from ckyclaw_framework.model.settings import ModelSettings
+from ckyclaw_framework.model.message import Message, TokenUsage
+from ckyclaw_framework.model.provider import ModelChunk, ModelProvider, ModelResponse
 from ckyclaw_framework.tracing.span import Span, SpanStatus, SpanType
 from ckyclaw_framework.tracing.trace import Trace
 
+if TYPE_CHECKING:
+    from collections.abc import AsyncIterator
+
+    from ckyclaw_framework.model.settings import ModelSettings
 
 # ─────────── 辅助设施 ───────────
 
@@ -293,7 +296,7 @@ class TestEventJournalProcessor:
         p = EventJournalProcessor(j, run_id="r1")
 
         trace = _make_trace()
-        trace.end_time = datetime.now(timezone.utc)
+        trace.end_time = datetime.now(UTC)
         await p.on_trace_end(trace)
 
         events = await j.get_events()
@@ -363,7 +366,7 @@ class TestEventJournalProcessor:
         span = _make_span(SpanType.LLM, "gpt-4o", SpanStatus.COMPLETED)
         span.token_usage = {"prompt_tokens": 100, "completion_tokens": 50}
         span.model = "gpt-4o"
-        span.end_time = datetime.now(timezone.utc)
+        span.end_time = datetime.now(UTC)
         await p.on_span_end(span)
 
         events = await j.get_events()
@@ -380,7 +383,7 @@ class TestEventJournalProcessor:
 
         span = _make_span(SpanType.TOOL, "calc", SpanStatus.COMPLETED)
         span.output = "42"
-        span.end_time = datetime.now(timezone.utc)
+        span.end_time = datetime.now(UTC)
         await p.on_span_end(span)
 
         events = await j.get_events()
@@ -395,7 +398,7 @@ class TestEventJournalProcessor:
 
         span = _make_span(SpanType.TOOL, "broken_tool", SpanStatus.FAILED)
         span.output = "Connection timeout"
-        span.end_time = datetime.now(timezone.utc)
+        span.end_time = datetime.now(UTC)
         await p.on_span_end(span)
 
         events = await j.get_events()
@@ -411,7 +414,7 @@ class TestEventJournalProcessor:
 
         span = _make_span(SpanType.GUARDRAIL, "safety-check", SpanStatus.FAILED)
         span.output = "Blocked: unsafe content"
-        span.end_time = datetime.now(timezone.utc)
+        span.end_time = datetime.now(UTC)
         await p.on_span_end(span)
 
         events = await j.get_events()
@@ -449,16 +452,16 @@ class TestEventJournalProcessor:
         await p.on_span_start(llm_span)
 
         llm_span.status = SpanStatus.COMPLETED
-        llm_span.end_time = datetime.now(timezone.utc)
+        llm_span.end_time = datetime.now(UTC)
         llm_span.token_usage = {"prompt_tokens": 50, "completion_tokens": 20}
         llm_span.model = "gpt-4o"
         await p.on_span_end(llm_span)
 
         agent_span.status = SpanStatus.COMPLETED
-        agent_span.end_time = datetime.now(timezone.utc)
+        agent_span.end_time = datetime.now(UTC)
         await p.on_span_end(agent_span)
 
-        trace.end_time = datetime.now(timezone.utc)
+        trace.end_time = datetime.now(UTC)
         await p.on_trace_end(trace)
 
         events = await j.get_events()
@@ -485,7 +488,7 @@ class TestEventJournalProcessor:
         llm_span = _make_span(SpanType.LLM, "gpt-4o", SpanStatus.COMPLETED)
         llm_span.token_usage = {"prompt_tokens": 100, "completion_tokens": 50}
         llm_span.model = "gpt-4o"
-        llm_span.end_time = datetime.now(timezone.utc)
+        llm_span.end_time = datetime.now(UTC)
         await p.on_span_end(llm_span)
 
         state = cost.get_state()
@@ -515,7 +518,7 @@ class TestCostProjector:
         """聚合多条 LLM 调用的 Token。"""
         proj = CostProjector()
 
-        for i in range(3):
+        for _i in range(3):
             await proj.on_event(EventEntry(
                 event_type=EventType.LLM_CALL_END,
                 payload={

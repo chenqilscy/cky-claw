@@ -9,13 +9,12 @@ from __future__ import annotations
 
 import logging
 import secrets
-from typing import Any, Awaitable, Callable
+from typing import TYPE_CHECKING, Any
 from urllib.parse import urlencode
 
 import httpx
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth import create_access_token
 from app.core.config import settings
@@ -25,6 +24,11 @@ from app.core.oauth_providers import OAuthProviderConfig, get_provider_config
 from app.core.redis import get_redis
 from app.models.user import User
 from app.models.user_oauth import UserOAuthConnection
+
+if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable
+
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = logging.getLogger(__name__)
 
@@ -773,7 +777,7 @@ async def _find_or_create_user(
         await db.flush()
     except IntegrityError:
         await db.rollback()
-        raise ConflictError(f"用户名 '{username}' 已被注册，请使用其他方式登录")
+        raise ConflictError(f"用户名 '{username}' 已被注册，请使用其他方式登录") from None
 
     # 绑定
     conn = UserOAuthConnection(

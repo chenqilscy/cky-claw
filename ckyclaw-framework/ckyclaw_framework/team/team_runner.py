@@ -5,16 +5,15 @@ from __future__ import annotations
 import asyncio
 import logging
 from dataclasses import dataclass, field, replace
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from ckyclaw_framework.model.message import TokenUsage
     from ckyclaw_framework.runner.result import RunResult
+    from ckyclaw_framework.runner.run_config import RunConfig
+    from ckyclaw_framework.team.team import Team
 
-from ckyclaw_framework.runner.run_config import RunConfig
 from ckyclaw_framework.runner.runner import Runner
 from ckyclaw_framework.team.protocol import TeamProtocol
-from ckyclaw_framework.team.team import Team
 
 logger = logging.getLogger(__name__)
 
@@ -151,7 +150,7 @@ class TeamRunner:
                 tasks.append((agent.name, task))
 
         # TaskGroup 确保所有任务完成后才到这里
-        for agent_name, task in tasks:
+        for _agent_name, task in tasks:
             all_results.append(task.result())
 
         # 合并所有输出

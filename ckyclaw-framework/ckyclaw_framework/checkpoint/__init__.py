@@ -8,11 +8,12 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import asdict, dataclass, field, fields
-from datetime import datetime, timezone
-from typing import Any
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING, Any
 from uuid import uuid4
 
-from ckyclaw_framework.model.message import Message
+if TYPE_CHECKING:
+    from ckyclaw_framework.model.message import Message
 
 
 @dataclass
@@ -40,7 +41,7 @@ class Checkpoint:
     context: dict[str, Any] = field(default_factory=dict)
     """用户自定义上下文"""
 
-    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     """创建时间"""
 
     def to_dict(self) -> dict[str, Any]:

@@ -2,13 +2,10 @@
 
 from __future__ import annotations
 
-from typing import Any
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING, Any
 
-import uuid
-from datetime import datetime
-
-from sqlalchemy import cast, func, select, Date
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import Date, cast, func, select
 
 from app.models.token_usage import TokenUsageLog
 from app.schemas.token_usage import (
@@ -18,6 +15,11 @@ from app.schemas.token_usage import (
     TokenUsageSummaryItem,
     TokenUsageTrendItem,
 )
+
+if TYPE_CHECKING:
+    import uuid
+
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 
 async def create_token_usage_logs(
@@ -183,9 +185,9 @@ async def get_token_usage_trend(
         group_by_model: 是否按模型维度分组
         agent_name: 按 Agent 筛选
     """
-    from datetime import timedelta, timezone
+    from datetime import timedelta
 
-    cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+    cutoff = datetime.now(UTC) - timedelta(days=days)
     date_col = cast(TokenUsageLog.timestamp, Date).label("date")
 
     group_cols: list[Any] = [date_col]

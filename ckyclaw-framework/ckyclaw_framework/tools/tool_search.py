@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from typing import Any
 
 from ckyclaw_framework.tools.function_tool import FunctionTool
 

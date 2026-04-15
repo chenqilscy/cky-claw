@@ -3,17 +3,21 @@
 from __future__ import annotations
 
 import logging
-import uuid
-from datetime import datetime, timezone
-from typing import Any
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import ConflictError, NotFoundError
 from app.models.workflow import WorkflowDefinition
-from app.schemas.workflow import WorkflowCreate, WorkflowUpdate
+
+if TYPE_CHECKING:
+    import uuid
+
+    from sqlalchemy.ext.asyncio import AsyncSession
+
+    from app.schemas.workflow import WorkflowCreate, WorkflowUpdate
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +45,7 @@ async def create_workflow(db: AsyncSession, data: WorkflowCreate) -> WorkflowDef
         await db.commit()
     except IntegrityError:
         await db.rollback()
-        raise ConflictError(f"工作流名称 '{data.name}' 已存在")
+        raise ConflictError(f"工作流名称 '{data.name}' 已存在") from None
     await db.refresh(record)
     return record
 
@@ -102,10 +106,10 @@ async def update_workflow(
         update_data["edges"] = [e if isinstance(e, dict) else e.model_dump() for e in update_data["edges"]]
     for key, value in update_data.items():
         if key == "metadata":
-            setattr(record, "metadata_", value)
+            record.metadata_ = value
         else:
             setattr(record, key, value)
-    record.updated_at = datetime.now(timezone.utc)
+    record.updated_at = datetime.now(UTC)
     await db.commit()
     await db.refresh(record)
     return record
@@ -115,7 +119,7 @@ async def delete_workflow(db: AsyncSession, workflow_id: uuid.UUID) -> None:
     """软删除工作流。"""
     record = await get_workflow(db, workflow_id)
     record.is_deleted = True
-    record.deleted_at = datetime.now(timezone.utc)
+    record.deleted_at = datetime.now(UTC)
     await db.commit()
 
 

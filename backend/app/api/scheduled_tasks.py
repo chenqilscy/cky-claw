@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-import uuid
+from typing import TYPE_CHECKING
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.deps import require_admin
@@ -20,6 +19,11 @@ from app.schemas.scheduled_task import (
 )
 from app.services import scheduled_task as svc
 from app.services import scheduler_engine
+
+if TYPE_CHECKING:
+    import uuid
+
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter(prefix="/api/v1/scheduled-tasks", tags=["scheduled-tasks"])
 

@@ -8,7 +8,7 @@ import { costRouterService } from '../../services/costRouterService';
 import type { ClassifyResponse, RecommendResponse } from '../../services/costRouterService';
 
 const { TextArea } = Input;
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 const TIER_COLORS: Record<string, string> = {
   simple: 'green',

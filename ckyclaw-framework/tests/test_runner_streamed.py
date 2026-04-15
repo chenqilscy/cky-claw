@@ -22,7 +22,7 @@ from __future__ import annotations
 
 import asyncio
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock
 
 import pytest
 
@@ -48,7 +48,6 @@ from ckyclaw_framework.runner.runner import (
     _execute_output_guardrails,
 )
 from ckyclaw_framework.tools.function_tool import FunctionTool
-
 
 # ── Helpers ─────────────────────────────────────────────────
 

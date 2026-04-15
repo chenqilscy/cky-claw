@@ -2,18 +2,23 @@
 
 from __future__ import annotations
 
-import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import and_, select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import ConflictError, NotFoundError
 from app.models.agent import AgentConfig
 from app.models.agent_version import AgentConfigVersion
 from app.models.environment import AgentEnvironmentBinding, Environment
-from app.schemas.environment import EnvironmentCreate, EnvironmentUpdate
 from app.services.audit_log import create_audit_log
+
+if TYPE_CHECKING:
+    import uuid
+
+    from sqlalchemy.ext.asyncio import AsyncSession
+
+    from app.schemas.environment import EnvironmentCreate, EnvironmentUpdate
 
 
 async def list_environments(db: AsyncSession, org_id: uuid.UUID | None) -> list[Environment]:
@@ -68,7 +73,7 @@ async def update_environment(
     payload = data.model_dump(exclude_unset=True)
     for key, value in payload.items():
         setattr(env, key, value)
-    env.updated_at = datetime.now(timezone.utc)
+    env.updated_at = datetime.now(UTC)
     await db.commit()
     await db.refresh(env)
     return env
@@ -136,7 +141,7 @@ async def publish_agent(
     if existing is not None:
         rollback_from_id = existing.id
         existing.version_id = target_version_id
-        existing.published_at = datetime.now(timezone.utc)
+        existing.published_at = datetime.now(UTC)
         existing.published_by = user_id
         existing.notes = notes
         existing.rollback_from_id = rollback_from_id
@@ -215,7 +220,7 @@ async def rollback_agent(
 
     old_binding_id = binding.id
     binding.version_id = target_version_id
-    binding.published_at = datetime.now(timezone.utc)
+    binding.published_at = datetime.now(UTC)
     binding.published_by = user_id
     binding.notes = notes
     binding.rollback_from_id = old_binding_id

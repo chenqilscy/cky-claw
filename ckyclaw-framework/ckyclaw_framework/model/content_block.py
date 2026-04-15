@@ -6,11 +6,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from enum import Enum
-from typing import Any, Union
+from enum import StrEnum
+from typing import Any
 
 
-class ContentType(str, Enum):
+class ContentType(StrEnum):
     """内容块类型。"""
 
     TEXT = "text"
@@ -128,8 +128,8 @@ class FileContent:
         )
 
 
-# Union 类型别名
-ContentBlock = Union[TextContent, ImageContent, AudioContent, FileContent]
+# 联合类型别名
+ContentBlock = TextContent | ImageContent | AudioContent | FileContent
 
 # 类型 tag → 类 的映射
 _CONTENT_BLOCK_MAP: dict[str, type[TextContent | ImageContent | AudioContent | FileContent]] = {

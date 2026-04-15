@@ -14,14 +14,16 @@ import json
 import statistics
 import time
 import uuid
-from datetime import datetime, timezone
-from typing import Any, AsyncIterator
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING, Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from fastapi.testclient import TestClient
 
 from app.main import app
 
+if TYPE_CHECKING:
+    from collections.abc import AsyncIterator
 
 # ═══════════════════════════════════════════════════════════════════
 # 公共 Mock 基础设施
@@ -30,7 +32,7 @@ from app.main import app
 
 def _make_agent_config(**overrides: Any) -> MagicMock:
     """构造一个模拟 AgentConfig ORM 对象。"""
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     defaults = {
         "id": uuid.uuid4(),
         "name": "perf-agent",
@@ -66,7 +68,7 @@ def _make_agent_config(**overrides: Any) -> MagicMock:
 
 def _make_session_record(**overrides: Any) -> MagicMock:
     """构造一个模拟 SessionRecord ORM 对象。"""
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     defaults = {
         "id": uuid.uuid4(),
         "agent_name": "perf-agent",
@@ -85,7 +87,7 @@ def _make_session_record(**overrides: Any) -> MagicMock:
 
 def _make_token_usage_log(**overrides: Any) -> MagicMock:
     """构造一个模拟 TokenUsageLog ORM 对象。"""
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     defaults = {
         "id": uuid.uuid4(),
         "session_id": uuid.uuid4(),
@@ -492,7 +494,7 @@ class TestOverallBenchmark:
             results = [f.result() for f in futures]
 
         # 所有请求成功
-        for endpoint, status, elapsed in results:
+        for endpoint, status, _elapsed in results:
             assert status in (200, 201), f"{endpoint} 返回 {status}"
 
         # p95 < 500ms

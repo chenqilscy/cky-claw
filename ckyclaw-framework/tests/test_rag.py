@@ -5,7 +5,6 @@ from __future__ import annotations
 import pytest
 
 from ckyclaw_framework.rag.chunker import (
-    Chunk,
     FixedSizeChunker,
     MarkdownChunker,
     RecursiveCharacterChunker,
@@ -16,10 +15,8 @@ from ckyclaw_framework.rag.pipeline import RAGPipeline, RAGResult
 from ckyclaw_framework.rag.tool import create_knowledge_base_tool
 from ckyclaw_framework.rag.vector_store import (
     InMemoryVectorStore,
-    SearchResult,
     cosine_similarity,
 )
-
 
 # ── Document ──────────────────────────────────────────────
 

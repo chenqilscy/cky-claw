@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from typing import Any
-
-from datetime import datetime, timezone
 
 from sqlalchemy import BigInteger, DateTime, Integer, String, Text, text
 from sqlalchemy.dialects.postgresql import JSONB
@@ -33,7 +32,7 @@ class SessionMessage(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
         server_default=text("now()"),
     )
 
@@ -51,12 +50,12 @@ class SessionMetadataRecord(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
         server_default=text("now()"),
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
         server_default=text("now()"),
     )

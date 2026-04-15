@@ -2,21 +2,21 @@
 
 from __future__ import annotations
 
-from typing import Any
-
-import uuid
-from datetime import datetime
-from enum import Enum
+from enum import StrEnum
+from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, Field
 
+if TYPE_CHECKING:
+    import uuid
+    from datetime import datetime
 
 # ---------------------------------------------------------------------------
 # 会话状态枚举
 # ---------------------------------------------------------------------------
 
 
-class SessionStatus(str, Enum):
+class SessionStatus(StrEnum):
     """会话状态。"""
 
     active = "active"

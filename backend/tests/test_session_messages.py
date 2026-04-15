@@ -3,15 +3,13 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
-from typing import Any
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
 
 from app.main import app
-
 
 # ---------------------------------------------------------------------------
 # Schema 测试
@@ -32,7 +30,7 @@ class TestSessionMessageSchemas:
             tool_call_id=None,
             tool_calls=None,
             token_usage=None,
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
         )
         assert item.role == "user"
         assert item.content == "Hello"
@@ -49,7 +47,7 @@ class TestSessionMessageSchemas:
             tool_call_id=None,
             tool_calls=[{"id": "tc_1", "type": "function", "function": {"name": "foo", "arguments": "{}"}}],
             token_usage={"prompt_tokens": 10, "completion_tokens": 5, "total_tokens": 15},
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
         )
         assert item.tool_calls is not None
         assert len(item.tool_calls) == 1
@@ -58,7 +56,7 @@ class TestSessionMessageSchemas:
     def test_session_messages_response(self) -> None:
         from app.schemas.session import SessionMessageItem, SessionMessagesResponse
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         resp = SessionMessagesResponse(
             session_id="test-session-id",
             messages=[
@@ -105,7 +103,7 @@ class TestSQLAlchemySessionBackendLoad:
         from app.services.session_backend import SQLAlchemySessionBackend
 
         mock_db = AsyncMock()
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         row1 = MagicMock()
         row1.role = "user"
@@ -158,9 +156,8 @@ class TestSQLAlchemySessionBackendSave:
 
     @pytest.mark.asyncio
     async def test_save_creates_metadata_if_new(self) -> None:
-        from ckyclaw_framework.model.message import Message, MessageRole
-
         from app.services.session_backend import SQLAlchemySessionBackend
+        from ckyclaw_framework.model.message import Message, MessageRole
 
         mock_db = AsyncMock()
         mock_db.get.return_value = None  # 新 session，无 metadata
@@ -175,9 +172,8 @@ class TestSQLAlchemySessionBackendSave:
 
     @pytest.mark.asyncio
     async def test_save_updates_existing_metadata(self) -> None:
-        from ckyclaw_framework.model.message import Message, MessageRole
-
         from app.services.session_backend import SQLAlchemySessionBackend
+        from ckyclaw_framework.model.message import Message, MessageRole
 
         mock_db = AsyncMock()
         existing_meta = MagicMock()
@@ -226,7 +222,7 @@ class TestSQLAlchemySessionBackendMetadata:
         from app.services.session_backend import SQLAlchemySessionBackend
 
         mock_db = AsyncMock()
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         row = MagicMock()
         row.session_id = "session-1"
         row.created_at = now
@@ -249,7 +245,7 @@ class TestSQLAlchemySessionBackendMetadata:
         from app.services.session_backend import SQLAlchemySessionBackend
 
         mock_db = AsyncMock()
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         row = MagicMock()
         row.session_id = "s1"
         row.created_at = now
@@ -281,7 +277,7 @@ class TestGetSessionMessagesAPI:
 
     @patch("app.api.sessions.session_service")
     def test_get_messages_success(self, mock_svc: MagicMock) -> None:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         row1 = MagicMock()
         row1.id = 1
         row1.role = "user"

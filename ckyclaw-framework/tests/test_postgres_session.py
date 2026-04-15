@@ -3,15 +3,14 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
 from ckyclaw_framework.model.message import Message, MessageRole, TokenUsage
 from ckyclaw_framework.session.postgres import PostgresSessionBackend
-from ckyclaw_framework.session.session import SessionMetadata
 
 
 class _FakeRow(dict):
@@ -65,7 +64,7 @@ class TestPostgresSessionBackendLoad:
             "tool_calls": None,
             "token_usage": json.dumps({"prompt_tokens": 10, "completion_tokens": 5, "total_tokens": 15}),
             "metadata": json.dumps({"key": "val"}),
-            "created_at": datetime(2024, 1, 1, tzinfo=timezone.utc),
+            "created_at": datetime(2024, 1, 1, tzinfo=UTC),
         })
         conn.fetch = AsyncMock(return_value=[row])
         backend = PostgresSessionBackend(pool)
@@ -87,7 +86,7 @@ class TestPostgresSessionBackendLoad:
             "tool_calls": json.dumps(tc_data),
             "token_usage": None,
             "metadata": None,
-            "created_at": datetime(2024, 1, 1, tzinfo=timezone.utc),
+            "created_at": datetime(2024, 1, 1, tzinfo=UTC),
         })
         conn.fetch = AsyncMock(return_value=[row])
         backend = PostgresSessionBackend(pool)
@@ -187,7 +186,7 @@ class TestPostgresSessionBackendListSessions:
     async def test_list_with_data(self) -> None:
         """有 session 数据。"""
         pool, conn = _make_pool()
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         row = _FakeRow({
             "session_id": "s1",
             "message_count": 5,
@@ -208,7 +207,7 @@ class TestPostgresSessionBackendListSessions:
     async def test_list_null_extra(self) -> None:
         """extra 为 None 时不崩溃。"""
         pool, conn = _make_pool()
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         row = _FakeRow({
             "session_id": "s1",
             "message_count": 0,
@@ -240,7 +239,7 @@ class TestPostgresSessionBackendLoadMetadata:
     async def test_load_metadata_found(self) -> None:
         """存在 → SessionMetadata。"""
         pool, conn = _make_pool()
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         row = _FakeRow({
             "session_id": "s1",
             "message_count": 10,

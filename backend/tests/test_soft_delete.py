@@ -3,11 +3,9 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
 from unittest import mock
 
 import pytest
-from sqlalchemy import select
 
 # ---------- Model tests ----------
 

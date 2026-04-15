@@ -2,17 +2,14 @@
 
 from __future__ import annotations
 
-import asyncio
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
 
 from ckyclaw_framework.checkpoint import (
     Checkpoint,
-    CheckpointBackend,
     InMemoryCheckpointBackend,
 )
-
 
 # ═══════════════════════════════════════════════════════════════════
 # Checkpoint 数据类测试
@@ -85,7 +82,7 @@ class TestCheckpoint:
 
     def test_from_dict_datetime_object(self) -> None:
         """from_dict 接受 datetime 对象。"""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         d = {
             "checkpoint_id": "cp-2",
             "run_id": "run-2",
@@ -200,8 +197,6 @@ class TestRunnerCheckpointIntegration:
         from ckyclaw_framework.model.provider import ModelResponse, ToolCall
         from ckyclaw_framework.runner.run_config import RunConfig
         from ckyclaw_framework.runner.runner import Runner
-        from ckyclaw_framework.tools.function_tool import FunctionTool
-
         from ckyclaw_framework.tools.function_tool import function_tool
 
         # 构造一个会执行 1 轮工具调用再返回的 mock provider
@@ -265,7 +260,7 @@ class TestRunnerCheckpointIntegration:
         from ckyclaw_framework.model.provider import ModelResponse, ToolCall
         from ckyclaw_framework.runner.run_config import RunConfig
         from ckyclaw_framework.runner.runner import Runner
-        from ckyclaw_framework.tools.function_tool import FunctionTool, function_tool as ft_decorator
+        from ckyclaw_framework.tools.function_tool import function_tool as ft_decorator
 
         call_count = 0
 
@@ -344,7 +339,6 @@ class TestRunnerCheckpointIntegration:
     @pytest.mark.asyncio
     async def test_resume_from_checkpoint(self) -> None:
         """从 checkpoint 恢复执行。"""
-        from ckyclaw_framework.agent.agent import Agent
         from ckyclaw_framework.model.message import Message, MessageRole
 
         backend = InMemoryCheckpointBackend()

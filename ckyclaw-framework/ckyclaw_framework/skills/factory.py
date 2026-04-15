@@ -13,7 +13,7 @@ import logging
 import re
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from ckyclaw_framework.tools.function_tool import FunctionTool
@@ -138,7 +138,7 @@ class SkillDefinition:
     agent_name: str = ""
     """创建此技能的 Agent 名称。"""
 
-    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     """创建时间。"""
 
 

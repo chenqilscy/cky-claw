@@ -7,7 +7,7 @@ import type { ProColumns } from '@ant-design/pro-components';
 import type { CheckpointResponse } from '../../services/checkpointService';
 import { useCheckpointList, useDeleteCheckpoint } from '../../hooks/useCheckpointQueries';
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 const CheckpointPage: React.FC = () => {
   const { message } = App.useApp();

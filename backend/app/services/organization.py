@@ -2,15 +2,20 @@
 
 from __future__ import annotations
 
-import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import func, select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import ConflictError, NotFoundError
 from app.models.organization import Organization
-from app.schemas.organization import OrganizationCreate, OrganizationUpdate
+
+if TYPE_CHECKING:
+    import uuid
+
+    from sqlalchemy.ext.asyncio import AsyncSession
+
+    from app.schemas.organization import OrganizationCreate, OrganizationUpdate
 
 
 async def list_organizations(
@@ -94,6 +99,6 @@ async def delete_organization(db: AsyncSession, org_id: uuid.UUID) -> bool:
     if record is None:
         return False
     record.is_deleted = True
-    record.deleted_at = datetime.now(timezone.utc)
+    record.deleted_at = datetime.now(UTC)
     await db.commit()
     return True

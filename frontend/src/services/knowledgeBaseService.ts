@@ -62,8 +62,9 @@ export const knowledgeBaseService = {
   update: (id: string, payload: Partial<{ name: string; description: string; embedding_model: string; chunk_strategy: Record<string, unknown> }>) =>
     api.put<KnowledgeBaseItem>(`/knowledge-bases/${id}`, payload),
 
-  remove: (id: string) =>
-    api.delete<void>(`/knowledge-bases/${id}`),
+  remove: async (id: string): Promise<void> => {
+    await api.delete(`/knowledge-bases/${id}`);
+  },
 
   listDocuments: (id: string) =>
     api.get<KnowledgeDocumentItem[]>(`/knowledge-bases/${id}/documents`),

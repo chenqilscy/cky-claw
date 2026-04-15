@@ -11,7 +11,6 @@ from ckyclaw_framework.model.cost_router import (
     classify_complexity,
 )
 
-
 # ═══════════════════════════════════════════════════════════════════
 # classify_complexity 分类器测试
 # ═══════════════════════════════════════════════════════════════════

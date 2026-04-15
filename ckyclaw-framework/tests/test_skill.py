@@ -2,14 +2,13 @@
 
 from __future__ import annotations
 
-import asyncio
+from datetime import datetime
+
 import pytest
-from datetime import datetime, timezone
 
-from ckyclaw_framework.skills.skill import Skill, SkillCategory
-from ckyclaw_framework.skills.registry import SkillRegistry, SkillNotFoundError
 from ckyclaw_framework.skills.injector import SkillInjector
-
+from ckyclaw_framework.skills.registry import SkillNotFoundError, SkillRegistry
+from ckyclaw_framework.skills.skill import Skill, SkillCategory
 
 # ── SkillCategory ────────────────────────────────────
 

@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -21,9 +21,7 @@ from app.schemas.token_usage import (
     TokenUsageListResponse,
     TokenUsageLogResponse,
     TokenUsageSummaryItem,
-    TokenUsageSummaryResponse,
 )
-
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -32,7 +30,7 @@ from app.schemas.token_usage import (
 
 def _make_token_usage_log(**overrides) -> MagicMock:  # type: ignore[no-untyped-def]
     """构造一个模拟 TokenUsageLog ORM 对象。"""
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     defaults = {
         "id": uuid.uuid4(),
         "trace_id": str(uuid.uuid4()),

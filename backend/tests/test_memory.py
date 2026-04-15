@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -12,7 +12,6 @@ from fastapi.testclient import TestClient
 
 from app.main import app
 
-
 # ═══════════════════════════════════════════════════════════════════
 # Mock 基础设施
 # ═══════════════════════════════════════════════════════════════════
@@ -20,7 +19,7 @@ from app.main import app
 
 def _make_memory_entry(**overrides: Any) -> MagicMock:
     """构造模拟 MemoryEntryRecord ORM 对象。"""
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     defaults = {
         "id": uuid.uuid4(),
         "user_id": "user-001",
@@ -102,7 +101,7 @@ class TestMemorySchemas:
     def test_memory_decay_request(self) -> None:
         from app.schemas.memory import MemoryDecayRequest
         req = MemoryDecayRequest(
-            before=datetime(2024, 1, 1, tzinfo=timezone.utc),
+            before=datetime(2024, 1, 1, tzinfo=UTC),
             rate=0.05,
         )
         assert req.rate == 0.05
@@ -226,7 +225,7 @@ class TestMemoryService:
             content="测试内容",
             user_id="u1",
         )
-        result = await create_memory(mock_db, data)
+        await create_memory(mock_db, data)
         assert mock_db.add.called
         assert mock_db.commit.called
 
@@ -244,7 +243,7 @@ class TestMemoryDecayModeSchema:
         from app.schemas.memory import MemoryDecayRequest
 
         req = MemoryDecayRequest(
-            before=datetime.now(timezone.utc), rate=0.05
+            before=datetime.now(UTC), rate=0.05
         )
         assert req.mode.value == "linear"
 
@@ -253,7 +252,7 @@ class TestMemoryDecayModeSchema:
         from app.schemas.memory import MemoryDecayModeEnum, MemoryDecayRequest
 
         req = MemoryDecayRequest(
-            before=datetime.now(timezone.utc),
+            before=datetime.now(UTC),
             rate=0.1,
             mode=MemoryDecayModeEnum.EXPONENTIAL,
         )
@@ -265,7 +264,7 @@ class TestMemoryDecayModeSchema:
 
         with pytest.raises(ValueError):
             MemoryDecayRequest(
-                before=datetime.now(timezone.utc), rate=0.05, mode="invalid"
+                before=datetime.now(UTC), rate=0.05, mode="invalid"
             )
 
 
@@ -275,7 +274,7 @@ class TestMemoryDecayService:
     @pytest.mark.asyncio
     async def test_linear_decay_uses_bulk_update(self) -> None:
         """线性衰减使用批量 UPDATE。"""
-        from app.schemas.memory import MemoryDecayModeEnum, MemoryDecayRequest
+        from app.schemas.memory import MemoryDecayRequest
         from app.services.memory import decay_memories
 
         mock_db = AsyncMock()
@@ -284,7 +283,7 @@ class TestMemoryDecayService:
         mock_db.execute = AsyncMock(return_value=mock_result)
 
         data = MemoryDecayRequest(
-            before=datetime.now(timezone.utc), rate=0.05
+            before=datetime.now(UTC), rate=0.05
         )
         count = await decay_memories(mock_db, data)
         assert count == 5
@@ -298,11 +297,11 @@ class TestMemoryDecayService:
 
         # 创建 mock 记录
         record1 = MagicMock()
-        record1.updated_at = datetime.now(timezone.utc) - __import__("datetime").timedelta(days=10)
+        record1.updated_at = datetime.now(UTC) - __import__("datetime").timedelta(days=10)
         record1.confidence = 1.0
 
         record2 = MagicMock()
-        record2.updated_at = datetime.now(timezone.utc) - __import__("datetime").timedelta(days=30)
+        record2.updated_at = datetime.now(UTC) - __import__("datetime").timedelta(days=30)
         record2.confidence = 0.8
 
         mock_scalars = MagicMock()
@@ -314,7 +313,7 @@ class TestMemoryDecayService:
         mock_db.execute = AsyncMock(return_value=mock_result)
 
         data = MemoryDecayRequest(
-            before=datetime.now(timezone.utc),
+            before=datetime.now(UTC),
             rate=0.1,
             mode=MemoryDecayModeEnum.EXPONENTIAL,
         )

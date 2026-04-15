@@ -5,40 +5,46 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
-from datetime import datetime, timezone
-from typing import Any, AsyncIterator
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING, Any
 from uuid import uuid4
 
-from ckyclaw_framework.agent.agent import Agent
-from ckyclaw_framework.approval.handler import ApprovalHandler
 from ckyclaw_framework.approval.mode import ApprovalDecision, ApprovalMode, ApprovalRejectedError, classify_tool_risk
-from ckyclaw_framework.artifacts.store import ArtifactStore, _estimate_token_count, _make_summary
-from ckyclaw_framework.guardrails.input_guardrail import InputGuardrail
-from ckyclaw_framework.guardrails.output_guardrail import OutputGuardrail
-from ckyclaw_framework.guardrails.result import GuardrailResult, InputGuardrailTripwireError, OutputGuardrailTripwireError
-from ckyclaw_framework.guardrails.tool_guardrail import ToolGuardrail
-from ckyclaw_framework.checkpoint import Checkpoint, CheckpointBackend
+from ckyclaw_framework.artifacts.store import ArtifactStore, _estimate_token_count
+from ckyclaw_framework.checkpoint import Checkpoint
 from ckyclaw_framework.debug.controller import DebugStoppedError
+from ckyclaw_framework.guardrails.result import (
+    GuardrailResult,
+    InputGuardrailTripwireError,
+    OutputGuardrailTripwireError,
+)
 from ckyclaw_framework.handoff.handoff import Handoff
 from ckyclaw_framework.model._converter import (
-    messages_to_litellm,
     model_response_to_assistant_message,
     tool_result_to_message,
 )
 from ckyclaw_framework.model.litellm_provider import LiteLLMProvider
 from ckyclaw_framework.model.message import Message, MessageRole, TokenUsage
 from ckyclaw_framework.model.provider import ModelProvider, ModelResponse, ToolCall
-from ckyclaw_framework.model.settings import ModelSettings
 from ckyclaw_framework.runner.hooks import _invoke_hook
 from ckyclaw_framework.runner.result import RunResult, StreamEvent, StreamEventType
 from ckyclaw_framework.runner.run_config import RunConfig
 from ckyclaw_framework.runner.run_context import RunContext
-from ckyclaw_framework.session.history_trimmer import HistoryTrimConfig, HistoryTrimStrategy, HistoryTrimmer
-from ckyclaw_framework.session.session import Session
-from ckyclaw_framework.tools.function_tool import FunctionTool
-from ckyclaw_framework.tracing.processor import TraceProcessor
+from ckyclaw_framework.session.history_trimmer import HistoryTrimConfig, HistoryTrimmer, HistoryTrimStrategy
 from ckyclaw_framework.tracing.span import Span, SpanStatus, SpanType
 from ckyclaw_framework.tracing.trace import Trace
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncIterator
+
+    from ckyclaw_framework.agent.agent import Agent
+    from ckyclaw_framework.approval.handler import ApprovalHandler
+    from ckyclaw_framework.guardrails.input_guardrail import InputGuardrail
+    from ckyclaw_framework.guardrails.output_guardrail import OutputGuardrail
+    from ckyclaw_framework.model.settings import ModelSettings
+    from ckyclaw_framework.session.session import Session
+    from ckyclaw_framework.tools.function_tool import FunctionTool
+    from ckyclaw_framework.tracing.processor import TraceProcessor
 
 logger = logging.getLogger(__name__)
 
@@ -219,9 +225,8 @@ def _build_tool_schemas(agent: Agent, run_ctx: RunContext | None = None) -> list
     """
     schemas: list[dict[str, Any]] = []
     for tool in agent.tools:
-        if tool.condition is not None and run_ctx is not None:
-            if not tool.condition(run_ctx):
-                continue
+        if tool.condition is not None and run_ctx is not None and not tool.condition(run_ctx):
+            continue
         schemas.append(tool.to_openai_schema())
     # Handoff 生成特殊工具
     for target in agent.handoffs:
@@ -747,7 +752,7 @@ async def _execute_tool_calls(
 
             # S3: 通过中间件管道执行工具（如果配置了中间件）
             if _middleware_pipeline is not None:
-                from ckyclaw_framework.tools.middleware import ToolExecutionContext as _TEC
+                from ckyclaw_framework.tools.middleware import ToolExecutionContext as _TEC  # noqa: N814
                 _mw_ctx = _TEC(
                     tool_name=tc.name,
                     arguments=arguments,
@@ -769,7 +774,7 @@ async def _execute_tool_calls(
                     result = await asyncio.wait_for(tool.execute(arguments), timeout=_tool_timeout)
                 else:
                     result = await tool.execute(arguments)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             timeout_val = tool.timeout or _tool_timeout
             error_result = f"Error: Tool '{tc.name}' timed out after {timeout_val}s."
             tool_results[tc.id] = tool_result_to_message(tc.id, error_result, agent.name)
@@ -917,7 +922,7 @@ class _TracingCtx:
     async def end_trace(self) -> Trace | None:
         if not self.active or self.trace is None:
             return None
-        self.trace.end_time = datetime.now(timezone.utc)
+        self.trace.end_time = datetime.now(UTC)
         for p in self.processors:
             await p.on_trace_end(self.trace)
         return self.trace
@@ -978,7 +983,7 @@ class _TracingCtx:
             name=f"{from_agent} → {to_agent}",
             status=SpanStatus.COMPLETED,
         )
-        span.end_time = datetime.now(timezone.utc)
+        span.end_time = datetime.now(UTC)
         span.metadata = {"from": from_agent, "to": to_agent}
         if self.trace:
             self.trace.spans.append(span)
@@ -994,7 +999,7 @@ class _TracingCtx:
         status: SpanStatus = SpanStatus.COMPLETED,
         token_usage: TokenUsage | None = None,
     ) -> None:
-        span.end_time = datetime.now(timezone.utc)
+        span.end_time = datetime.now(UTC)
         span.status = status
         if self.include_sensitive and output is not None:
             span.output = str(output)[:1000] if isinstance(output, str) else output

@@ -251,9 +251,9 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                 </Text>
               )}
               {/* 工具调用状态标签 */}
-              {(msg as StreamMessage).toolCalls && (msg as StreamMessage).toolCalls!.length > 0 && (
+              {(msg as StreamMessage).toolCalls && (msg as StreamMessage).toolCalls?.length > 0 && (
                 <div style={{ marginBottom: 4 }}>
-                  {(msg as StreamMessage).toolCalls!.map((tc, i) => (
+                  {(msg as StreamMessage).toolCalls?.map((tc, i) => (
                     <Tag
                       key={`${tc.name}-${i}`}
                       icon={tc.status === 'running' ? <ToolOutlined spin /> : <ToolOutlined />}

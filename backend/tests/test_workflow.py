@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -19,7 +19,6 @@ from app.schemas.workflow import (
     WorkflowValidateResponse,
 )
 from app.services.workflow import validate_workflow_definition
-
 
 # ── Schema 验证 ──────────────────────────────────────
 
@@ -84,7 +83,7 @@ class TestWorkflowSchemas:
         assert e.target_step_id == "b"
 
     def test_response_from_attributes(self) -> None:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         wid = uuid.uuid4()
         obj = MagicMock()
         obj.id = wid
@@ -110,7 +109,7 @@ class TestWorkflowSchemas:
         assert not r2.valid
 
     def test_list_response(self) -> None:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         wid = uuid.uuid4()
         resp = WorkflowListResponse(
             data=[
@@ -193,7 +192,7 @@ class TestWorkflowAPI:
 
     def test_create_workflow(self) -> None:
         wid = uuid.uuid4()
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         mock_record = MagicMock()
         mock_record.id = wid
@@ -225,7 +224,7 @@ class TestWorkflowAPI:
 
     def test_get_workflow(self) -> None:
         wid = uuid.uuid4()
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         mock_record = MagicMock()
         mock_record.id = wid
         mock_record.name = "existing"
@@ -281,7 +280,7 @@ class TestWorkflowAPI:
 
     def test_update_workflow(self) -> None:
         wid = uuid.uuid4()
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         mock_record = MagicMock()
         mock_record.id = wid
         mock_record.name = "wf-update"

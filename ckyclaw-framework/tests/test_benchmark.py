@@ -13,11 +13,9 @@ from ckyclaw_framework.benchmark import (
     BenchmarkSuite,
     CaseResult,
     CaseStatus,
-    DimensionSummary,
     EvalDimension,
     RunnerConfig,
 )
-
 
 # ── Case 测试 ──
 

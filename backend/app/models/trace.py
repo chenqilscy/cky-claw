@@ -2,16 +2,17 @@
 
 from __future__ import annotations
 
-from typing import Any
-
-import uuid
-from datetime import datetime
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import DateTime, String, text
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.database import Base
+
+if TYPE_CHECKING:
+    import uuid
+    from datetime import datetime
 
 
 class TraceRecord(Base):

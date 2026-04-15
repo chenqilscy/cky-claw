@@ -12,7 +12,6 @@ from pathlib import Path
 
 import pytest
 
-
 _FRAMEWORK_ROOT = Path(__file__).resolve().parents[1] / ".." / "ckyclaw-framework" / "ckyclaw_framework"
 
 
@@ -83,7 +82,7 @@ class TestFrameworkBoundary:
                             violations.append(f"{rel_path}:{node.lineno} — import {alias.name}")
 
         assert violations == [], (
-            f"Framework 导入了 Backend 专有库:\n" + "\n".join(violations)
+            "Framework 导入了 Backend 专有库:\n" + "\n".join(violations)
         )
 
     def test_framework_has_no_sqlalchemy_hard_dependency(self) -> None:

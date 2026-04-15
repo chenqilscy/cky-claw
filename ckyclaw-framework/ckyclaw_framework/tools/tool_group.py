@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING
 
-from ckyclaw_framework.tools.function_tool import FunctionTool
+if TYPE_CHECKING:
+    from ckyclaw_framework.tools.function_tool import FunctionTool
 
 logger = logging.getLogger(__name__)
 

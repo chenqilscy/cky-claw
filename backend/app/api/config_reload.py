@@ -2,12 +2,9 @@
 
 from __future__ import annotations
 
-from typing import Any
-
-import uuid
+from typing import TYPE_CHECKING, Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.cache import config_cache
 from app.core.database import get_db
@@ -19,6 +16,11 @@ from app.schemas.config_change_log import (
     RollbackPreviewResponse,
 )
 from app.services import config_change as change_service
+
+if TYPE_CHECKING:
+    import uuid
+
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter(prefix="/api/v1/config", tags=["config"])
 

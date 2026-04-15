@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -13,7 +13,6 @@ from app.core.database import get_db as get_db_original
 from app.core.exceptions import NotFoundError
 from app.main import app
 from app.schemas.session import (
-    MessageItem,
     RunConfig,
     RunRequest,
     RunResponse,
@@ -22,14 +21,13 @@ from app.schemas.session import (
     TokenUsageResponse,
 )
 
-
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
 
 
 def _make_session_record(**overrides) -> MagicMock:  # type: ignore[no-untyped-def]
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     defaults = {
         "id": uuid.uuid4(),
         "agent_name": "test-agent",

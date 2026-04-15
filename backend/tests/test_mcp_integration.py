@@ -9,7 +9,6 @@ import pytest
 
 from ckyclaw_framework.tools.function_tool import FunctionTool
 
-
 # ---------------------------------------------------------------------------
 # _resolve_mcp_tools 测试
 # ---------------------------------------------------------------------------

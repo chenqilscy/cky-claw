@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import asyncio
+from typing import TYPE_CHECKING
 
-from ckyclaw_framework.skills.skill import Skill, SkillCategory
+if TYPE_CHECKING:
+    from ckyclaw_framework.skills.skill import Skill, SkillCategory
 
 
 class SkillNotFoundError(Exception):

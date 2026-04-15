@@ -10,16 +10,18 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from ckyclaw_framework.evolution.config import EvolutionConfig
-from ckyclaw_framework.evolution.proposal import EvolutionProposal
 from ckyclaw_framework.evolution.signals import (
     MetricSignal,
     SignalCollector,
     SignalType,
 )
 from ckyclaw_framework.evolution.strategy import StrategyEngine
+
+if TYPE_CHECKING:
+    from ckyclaw_framework.evolution.proposal import EvolutionProposal
 
 logger = logging.getLogger(__name__)
 

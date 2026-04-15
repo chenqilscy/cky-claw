@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-import json
-from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from typing import TYPE_CHECKING, Any
+from unittest.mock import AsyncMock
 
 import pytest
 
@@ -13,7 +12,6 @@ from ckyclaw_framework.approval.handler import ApprovalHandler
 from ckyclaw_framework.approval.mode import ApprovalDecision, ApprovalMode, ApprovalRejectedError
 from ckyclaw_framework.guardrails.result import GuardrailResult
 from ckyclaw_framework.guardrails.tool_guardrail import ToolGuardrail
-from ckyclaw_framework.model.message import Message, MessageRole
 from ckyclaw_framework.model.provider import ToolCall
 from ckyclaw_framework.runner.run_config import RunConfig
 from ckyclaw_framework.runner.run_context import RunContext
@@ -23,6 +21,9 @@ from ckyclaw_framework.runner.runner import (
     _resolve_approval_mode,
 )
 from ckyclaw_framework.tools.function_tool import FunctionTool
+
+if TYPE_CHECKING:
+    from ckyclaw_framework.model.message import Message
 
 
 def _agent(**kwargs: Any) -> Agent:

@@ -7,7 +7,11 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Callable
+import contextlib
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 class CancellationToken:
@@ -56,10 +60,8 @@ class CancellationToken:
             child.cancel()
         # 触发回调（单个回调异常不阻断后续回调）
         for cb in self._callbacks:
-            try:
+            with contextlib.suppress(Exception):
                 cb()
-            except Exception:
-                pass
 
     def create_child(self) -> CancellationToken:
         """创建子令牌。

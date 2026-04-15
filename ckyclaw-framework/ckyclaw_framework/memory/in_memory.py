@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from ckyclaw_framework.memory.memory import (
     DecayMode,
@@ -26,7 +26,7 @@ class InMemoryMemoryBackend(MemoryBackend):
             raise ValueError("user_id 不能为空")
         async with self._lock:
             entry.user_id = user_id
-            entry.updated_at = datetime.now(timezone.utc)
+            entry.updated_at = datetime.now(UTC)
             if entry.id in self._entries:
                 # upsert：保留 created_at
                 existing = self._entries[entry.id]
@@ -90,7 +90,7 @@ class InMemoryMemoryBackend(MemoryBackend):
         mode: DecayMode = DecayMode.LINEAR,
     ) -> int:
         """对 updated_at < before 的条目降低 confidence。"""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         count = 0
         async with self._lock:
             for entry in self._entries.values():

@@ -14,12 +14,15 @@
 
 from __future__ import annotations
 
+import contextlib
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from ckyclaw_framework.tracing.processor import TraceProcessor
-from ckyclaw_framework.tracing.span import Span, SpanStatus, SpanType
-from ckyclaw_framework.tracing.trace import Trace
+from ckyclaw_framework.tracing.span import Span, SpanStatus
+
+if TYPE_CHECKING:
+    from ckyclaw_framework.tracing.trace import Trace
 
 logger = logging.getLogger(__name__)
 
@@ -33,8 +36,8 @@ def _check_otel() -> bool:
     if _otel_available is not None:
         return _otel_available
     try:
-        import opentelemetry.trace  # noqa: F401
         import opentelemetry.sdk.trace  # noqa: F401
+        import opentelemetry.trace  # noqa: F401
         _otel_available = True
     except ImportError:
         _otel_available = False
@@ -70,11 +73,10 @@ class OTelTraceProcessor(TraceProcessor):
     def _init_tracer(self) -> None:
         """初始化 OTel tracer + OTLP exporter。"""
         try:
-            from opentelemetry import trace
+            from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+            from opentelemetry.sdk.resources import Resource
             from opentelemetry.sdk.trace import TracerProvider
             from opentelemetry.sdk.trace.export import BatchSpanProcessor
-            from opentelemetry.sdk.resources import Resource
-            from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
 
             resource = Resource.create({"service.name": self._service_name})
             provider = TracerProvider(resource=resource)
@@ -170,10 +172,8 @@ class OTelTraceProcessor(TraceProcessor):
         for sid in trace_span_ids:
             otel_span = self._otel_spans.pop(sid, None)
             if otel_span:
-                try:
+                with contextlib.suppress(Exception):
                     otel_span.end()
-                except Exception:
-                    pass
 
         root_span = self._root_spans.pop(trace.trace_id, None)
         if root_span is None:

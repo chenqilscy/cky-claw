@@ -5,7 +5,7 @@ from __future__ import annotations
 import csv
 import io
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -13,7 +13,6 @@ from fastapi.testclient import TestClient
 
 from app.api.export import _sanitize_csv_cell
 from app.main import app
-
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -27,7 +26,7 @@ def client() -> TestClient:
 
 def _make_token_usage_mock(**overrides) -> MagicMock:
     """构造模拟 TokenUsageLog 对象。"""
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     defaults = {
         "id": uuid.uuid4(),
         "timestamp": now,
@@ -51,7 +50,7 @@ def _make_token_usage_mock(**overrides) -> MagicMock:
 
 def _make_trace_mock(**overrides) -> MagicMock:
     """构造模拟 TraceRecord 对象。"""
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     defaults = {
         "id": str(uuid.uuid4()),
         "agent_name": "test-agent",
@@ -217,7 +216,7 @@ class TestExportRuns:
         """耗时计算正确。"""
         from datetime import timedelta
 
-        start = datetime(2025, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+        start = datetime(2025, 1, 1, 0, 0, 0, tzinfo=UTC)
         end = start + timedelta(seconds=2, milliseconds=500)
         rec = _make_trace_mock(start_time=start, end_time=end)
         mock_list.return_value = ([rec], 1)

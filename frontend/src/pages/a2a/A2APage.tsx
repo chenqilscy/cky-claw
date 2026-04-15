@@ -32,7 +32,7 @@ import {
   type A2ATask,
 } from '../../services/a2aService';
 
-const { Title, Text, Paragraph } = Typography;
+const { Text } = Typography;
 
 const statusColors: Record<string, string> = {
   submitted: 'blue',

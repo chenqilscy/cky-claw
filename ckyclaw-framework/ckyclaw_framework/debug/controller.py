@@ -14,10 +14,11 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from collections.abc import Callable, Coroutine
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from enum import Enum
-from typing import Any, Callable, Coroutine
+from datetime import UTC, datetime
+from enum import StrEnum
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +33,7 @@ class DebugStoppedError(Exception):
     """
 
 
-class DebugMode(str, Enum):
+class DebugMode(StrEnum):
     """调试模式。"""
 
     STEP_TURN = "step_turn"
@@ -45,7 +46,7 @@ class DebugMode(str, Enum):
     """连续运行 — 只在断点处暂停。"""
 
 
-class DebugState(str, Enum):
+class DebugState(StrEnum):
     """调试会话状态。"""
 
     IDLE = "idle"
@@ -67,7 +68,7 @@ class DebugState(str, Enum):
     """暂停超时，自动终止。"""
 
 
-class DebugEventType(str, Enum):
+class DebugEventType(StrEnum):
     """调试事件类型。"""
 
     PAUSED = "paused"
@@ -129,7 +130,7 @@ class PauseContext:
     token_usage: dict[str, int] = field(default_factory=dict)
     """累计 Token 统计。"""
 
-    paused_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    paused_at: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
     """暂停时间戳（ISO 格式）。"""
 
     metadata: dict[str, Any] = field(default_factory=dict)
@@ -146,7 +147,7 @@ class DebugEvent:
     data: dict[str, Any] = field(default_factory=dict)
     """事件数据。"""
 
-    timestamp: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    timestamp: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
     """时间戳（ISO 格式）。"""
 
 
@@ -253,11 +254,7 @@ class DebugController:
         self._state = DebugState.RUNNING
 
         should_pause = False
-        if reason == "turn_end" and self._mode in (DebugMode.STEP_TURN, DebugMode.STEP_TOOL):
-            should_pause = True
-        elif reason == "before_tool" and self._mode == DebugMode.STEP_TOOL:
-            should_pause = True
-        elif reason == "before_handoff" and self._mode in (DebugMode.STEP_TURN, DebugMode.STEP_TOOL):
+        if reason == "turn_end" and self._mode in (DebugMode.STEP_TURN, DebugMode.STEP_TOOL) or reason == "before_tool" and self._mode == DebugMode.STEP_TOOL or reason == "before_handoff" and self._mode in (DebugMode.STEP_TURN, DebugMode.STEP_TOOL):
             should_pause = True
 
         # step 操作后自动暂停（单步执行语义）
@@ -297,7 +294,7 @@ class DebugController:
         # 等待用户操作（带超时）
         try:
             await asyncio.wait_for(self._resume_event.wait(), timeout=self._pause_timeout)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             self._state = DebugState.TIMEOUT
             await self._emit(DebugEvent(type=DebugEventType.TIMEOUT))
             raise DebugStoppedError("Debug session timed out") from None

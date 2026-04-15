@@ -10,12 +10,12 @@ from __future__ import annotations
 
 import uuid
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from enum import Enum
+from datetime import UTC, datetime
+from enum import StrEnum
 from typing import Any
 
 
-class TaskStatus(str, Enum):
+class TaskStatus(StrEnum):
     """A2A 任务状态。"""
 
     SUBMITTED = "submitted"
@@ -32,7 +32,7 @@ class TaskState:
     status: TaskStatus
     """状态。"""
 
-    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    timestamp: datetime = field(default_factory=lambda: datetime.now(UTC))
     """变迁时间。"""
 
     message: str = ""
@@ -115,10 +115,10 @@ class A2ATask:
     metadata: dict[str, Any] = field(default_factory=dict)
     """附加元数据（如调用方 Agent 信息）。"""
 
-    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     """创建时间。"""
 
-    updated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     """最后更新时间。"""
 
     def __post_init__(self) -> None:
@@ -147,13 +147,13 @@ class A2ATask:
                 f"允许的目标: {[s.value for s in allowed]}"
             )
         self.status = new_status
-        self.updated_at = datetime.now(timezone.utc)
+        self.updated_at = datetime.now(UTC)
         self.history.append(TaskState(status=new_status, message=message))
 
     def add_artifact(self, artifact: TaskArtifact) -> None:
         """添加产出物。"""
         self.artifacts.append(artifact)
-        self.updated_at = datetime.now(timezone.utc)
+        self.updated_at = datetime.now(UTC)
 
     @property
     def is_terminal(self) -> bool:

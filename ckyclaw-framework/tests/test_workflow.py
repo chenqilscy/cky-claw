@@ -34,7 +34,6 @@ from ckyclaw_framework.workflow.validator import (
 )
 from ckyclaw_framework.workflow.workflow import Edge, Workflow
 
-
 # ── Fixtures ──────────────────────────────────────────────────────────
 
 
@@ -1056,7 +1055,7 @@ class TestWorkflowResult:
 # ── 辅助函数 ─────────────────────────────────────────────────────────
 
 
-class _patch_runner:
+class _patch_runner:  # noqa: N801
     """Mock Runner.run 返回固定 output 的上下文管理器。"""
 
     def __init__(self, output: Any = "ok") -> None:

@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
-
 from ckyclaw_framework.agent.i18n import LocalizedInstructions
 
 

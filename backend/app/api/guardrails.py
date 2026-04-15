@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-import uuid
+from typing import TYPE_CHECKING
 
 from fastapi import APIRouter, Depends, Query
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.deps import get_db, require_permission
 from app.core.tenant import check_quota, get_org_id
@@ -16,6 +15,11 @@ from app.schemas.guardrail import (
     GuardrailRuleUpdate,
 )
 from app.services import guardrail as guardrail_service
+
+if TYPE_CHECKING:
+    import uuid
+
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter(prefix="/api/v1/guardrails", tags=["guardrails"])
 

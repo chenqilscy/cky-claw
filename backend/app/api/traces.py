@@ -2,13 +2,9 @@
 
 from __future__ import annotations
 
-from typing import Any
-
-import uuid
-from datetime import datetime
+from typing import TYPE_CHECKING, Any
 
 from fastapi import APIRouter, Depends, Query
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.deps import get_db, require_permission
 from app.core.tenant import get_org_id
@@ -21,6 +17,12 @@ from app.schemas.trace import (
     TraceStatsResponse,
 )
 from app.services import trace as trace_service
+
+if TYPE_CHECKING:
+    import uuid
+    from datetime import datetime
+
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter(prefix="/api/v1/traces", tags=["traces"])
 

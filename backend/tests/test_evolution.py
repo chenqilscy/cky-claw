@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -16,14 +16,11 @@ from app.core.exceptions import NotFoundError, ValidationError
 from app.main import app
 from app.schemas.evolution import (
     EvolutionProposalCreate,
-    EvolutionProposalListResponse,
     EvolutionProposalResponse,
     EvolutionProposalUpdate,
     EvolutionSignalCreate,
-    EvolutionSignalListResponse,
     EvolutionSignalResponse,
 )
-
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -32,7 +29,7 @@ from app.schemas.evolution import (
 
 def _make_proposal(**overrides) -> MagicMock:  # type: ignore[no-untyped-def]
     """构造一个模拟 EvolutionProposalRecord ORM 对象。"""
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     defaults = {
         "id": uuid.uuid4(),
         "agent_name": "bot",
@@ -179,7 +176,7 @@ class TestEvolutionService:
             trigger_reason="高失败率",
             confidence_score=0.7,
         )
-        record = await create_proposal(mock_db, data)
+        await create_proposal(mock_db, data)
         mock_db.add.assert_called_once()
         mock_db.commit.assert_awaited_once()
         mock_db.refresh.assert_awaited_once()
@@ -559,7 +556,7 @@ class TestStatusTransitions:
 
 def _make_signal(**overrides) -> MagicMock:
     """构造一个模拟 EvolutionSignalRecord ORM 对象。"""
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     defaults = {
         "id": uuid.uuid4(),
         "agent_name": "bot",
@@ -705,7 +702,7 @@ class TestEvolutionSignalService:
             failure_count=2,
             avg_duration_ms=200.0,
         )
-        record = await create_signal(mock_db, data)
+        await create_signal(mock_db, data)
         mock_db.add.assert_called_once()
         mock_db.commit.assert_awaited_once()
         mock_db.refresh.assert_awaited_once()
@@ -808,7 +805,7 @@ class TestEvolutionSignalService:
             failure_count=80,
             avg_duration_ms=5000.0,
             overall_score=None,
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
         )
         mock_db = AsyncMock()
         mock_result = MagicMock()
@@ -838,7 +835,7 @@ class TestEvolutionSignalService:
             tool_name=None,
             call_count=50,
             overall_score=0.4,
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
         )
         mock_db = AsyncMock()
         mock_result = MagicMock()
@@ -869,7 +866,7 @@ class TestEvolutionSignalService:
             success_count=30,
             failure_count=70,
             overall_score=None,
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
         )
         mock_db = AsyncMock()
         mock_result = MagicMock()
@@ -894,7 +891,7 @@ class TestEvolutionSignalService:
         signal_row = _make_signal(
             signal_type="guardrail",
             agent_name="bot",
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
         )
         mock_db = AsyncMock()
         mock_result = MagicMock()
@@ -918,7 +915,7 @@ class TestEvolutionSignalService:
             success_count=10,
             failure_count=40,
             avg_duration_ms=3000.0,
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
         )
         mock_db = AsyncMock()
         mock_result = MagicMock()
@@ -1179,7 +1176,7 @@ class TestApplyProposalToAgent:
 
         from app.services.evolution import apply_proposal_to_agent
 
-        result = await apply_proposal_to_agent(mock_db, proposal_id)
+        await apply_proposal_to_agent(mock_db, proposal_id)
 
         # 验证 Agent instructions 被修改
         assert agent_mock.instructions == "优化后的指令"
@@ -1507,7 +1504,7 @@ class TestScheduledTaskType:
         """ScheduledTaskResponse 包含 task_type 字段。"""
         from app.schemas.scheduled_task import ScheduledTaskResponse
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         resp = ScheduledTaskResponse(
             id=uuid.uuid4(),
             name="test",
@@ -1698,7 +1695,7 @@ class TestRollbackCheckAPI:
             status="rolled_back",
             eval_before=0.8,
             eval_after=0.5,
-            rolled_back_at=datetime.now(timezone.utc),
+            rolled_back_at=datetime.now(UTC),
         )
         with patch(
             "app.services.evolution.check_and_rollback",
@@ -1753,7 +1750,7 @@ class TestScanRollbackAPI:
             status="rolled_back",
             eval_before=0.8,
             eval_after=0.4,
-            rolled_back_at=datetime.now(timezone.utc),
+            rolled_back_at=datetime.now(UTC),
         )
         with patch(
             "app.services.evolution.scan_and_rollback_all",

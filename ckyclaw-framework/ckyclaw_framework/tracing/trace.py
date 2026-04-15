@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from typing import Any, TYPE_CHECKING
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING, Any
 from uuid import uuid4
 
 if TYPE_CHECKING:
@@ -20,5 +20,5 @@ class Trace:
     group_id: str | None = None
     metadata: dict[str, Any] = field(default_factory=dict)
     spans: list[Span] = field(default_factory=list)
-    start_time: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    start_time: datetime = field(default_factory=lambda: datetime.now(UTC))
     end_time: datetime | None = None

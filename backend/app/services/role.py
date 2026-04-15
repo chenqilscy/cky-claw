@@ -2,18 +2,21 @@
 
 from __future__ import annotations
 
-from typing import Any
-
-import uuid
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import ConflictError, NotFoundError, ValidationError
 from app.models.role import Role
 from app.models.user import User
-from app.schemas.role import RoleCreate, RoleUpdate
+
+if TYPE_CHECKING:
+    import uuid
+
+    from sqlalchemy.ext.asyncio import AsyncSession
+
+    from app.schemas.role import RoleCreate, RoleUpdate
 
 # 系统预设角色定义
 SYSTEM_ROLES = [
@@ -118,7 +121,7 @@ async def create_role(db: AsyncSession, data: RoleCreate) -> Role:
         await db.flush()
     except IntegrityError:
         await db.rollback()
-        raise ConflictError(f"角色名 '{data.name}' 已存在")
+        raise ConflictError(f"角色名 '{data.name}' 已存在") from None
     await db.commit()
     await db.refresh(role)
     return role

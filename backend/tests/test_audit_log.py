@@ -3,15 +3,14 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
 from app.models.audit_log import AuditLog
 from app.schemas.audit_log import AuditLogListResponse, AuditLogQuery, AuditLogResponse
-from app.services.audit_log import create_audit_log, list_audit_logs, get_audit_log
-
+from app.services.audit_log import create_audit_log, get_audit_log, list_audit_logs
 
 # ─── Schema 测试 ───
 
@@ -31,7 +30,7 @@ class TestAuditLogSchemas:
             user_agent="test-agent",
             request_id="req-123",
             status_code=201,
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
         )
         assert resp.action == "CREATE"
         assert resp.resource_type == "agents"
@@ -66,7 +65,7 @@ class TestAuditLogService:
         db = AsyncMock()
         db.commit = AsyncMock()
 
-        record = await create_audit_log(
+        await create_audit_log(
             db,
             user_id="user-1",
             action="CREATE",
@@ -170,7 +169,7 @@ class TestAuditLogAPI:
         mock_record.user_agent = "test"
         mock_record.request_id = "req-1"
         mock_record.status_code = 201
-        mock_record.created_at = datetime.now(timezone.utc)
+        mock_record.created_at = datetime.now(UTC)
         with patch("app.api.audit_logs.audit_log_service.get_audit_log", new_callable=AsyncMock) as mock_svc:
             mock_svc.return_value = mock_record
             result = await api_get(log_id=mock_record.id, db=AsyncMock())

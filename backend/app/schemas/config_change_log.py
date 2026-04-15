@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-from typing import Any
-
-import uuid
-from datetime import datetime
+from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+if TYPE_CHECKING:
+    import uuid
+    from datetime import datetime
 
 VALID_CHANGE_SOURCES = {"web_ui", "api", "system", "rollback"}
 VALID_ENTITY_TYPES = {"agent", "guardrail", "provider", "tool-group", "session", "team", "workflow", "mcp-server"}

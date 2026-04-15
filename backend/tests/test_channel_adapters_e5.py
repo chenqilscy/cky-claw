@@ -3,15 +3,12 @@
 from __future__ import annotations
 
 import json
-from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from app.services.channel_adapters.base import ChannelMessage
 from app.services.channel_adapters.discord import DiscordAdapter
 from app.services.channel_adapters.telegram import TelegramAdapter
-
 
 # ---------------------------------------------------------------------------
 # Telegram 适配器

@@ -7,6 +7,8 @@
 
 from __future__ import annotations
 
+from datetime import UTC
+
 from ckyclaw_framework import Agent, Runner, function_tool
 
 
@@ -26,9 +28,9 @@ async def calculate(expression: str) -> str:
 @function_tool
 async def get_current_time() -> str:
     """获取当前系统时间。"""
-    from datetime import datetime, timezone
+    from datetime import datetime
 
-    now = datetime.now(tz=timezone.utc)
+    now = datetime.now(tz=UTC)
     return now.strftime("%Y-%m-%d %H:%M:%S UTC")
 
 

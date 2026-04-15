@@ -2,19 +2,23 @@
 
 from __future__ import annotations
 
-import uuid
-from datetime import datetime, timedelta, timezone
-from typing import Any
+from datetime import UTC, datetime, timedelta
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import ConflictError, NotFoundError
 from app.models.agent import AgentConfig
-from app.schemas.agent import AgentCreate, AgentUpdate
-from app.services.agent_version import _snapshot_from_agent, create_version
 from app.services import query_cache
+from app.services.agent_version import _snapshot_from_agent, create_version
+
+if TYPE_CHECKING:
+    import uuid
+
+    from sqlalchemy.ext.asyncio import AsyncSession
+
+    from app.schemas.agent import AgentCreate, AgentUpdate
 
 
 def _escape_like(value: str) -> str:
@@ -98,7 +102,7 @@ async def create_agent(db: AsyncSession, data: AgentCreate) -> AgentConfig:
         await db.flush()
     except IntegrityError:
         await db.rollback()
-        raise ConflictError(f"Agent 名称 '{data.name}' 已存在")
+        raise ConflictError(f"Agent 名称 '{data.name}' 已存在") from None
 
     # 创建初始版本快照（v1），与 Agent 在同一事务内
     await create_version(
@@ -132,11 +136,11 @@ async def update_agent(db: AsyncSession, name: str, data: AgentUpdate) -> AgentC
         if field == "guardrails" and value is not None:
             value = data.guardrails.model_dump() if data.guardrails is not None else value
         if field == "metadata":
-            setattr(agent, "metadata_", value)
+            agent.metadata_ = value
         else:
             setattr(agent, field, value)
 
-    agent.updated_at = datetime.now(timezone.utc)
+    agent.updated_at = datetime.now(UTC)
     await db.commit()
     await db.refresh(agent)
     await query_cache.invalidate(f"agent:{name}")
@@ -148,8 +152,8 @@ async def delete_agent(db: AsyncSession, name: str) -> None:
     agent = await get_agent_by_name(db, name)
     agent.is_active = False
     agent.is_deleted = True
-    agent.deleted_at = datetime.now(timezone.utc)
-    agent.updated_at = datetime.now(timezone.utc)
+    agent.deleted_at = datetime.now(UTC)
+    agent.updated_at = datetime.now(UTC)
     await db.commit()
     await query_cache.invalidate(f"agent:{name}")
 
@@ -163,7 +167,7 @@ async def get_agent_realtime_status(
 
     from app.models.trace import TraceRecord
 
-    cutoff = datetime.now(timezone.utc) - timedelta(minutes=minutes)
+    cutoff = datetime.now(UTC) - timedelta(minutes=minutes)
     error_count_expr = func.sum(sa_case((TraceRecord.status == "error", 1), else_=0))
     stmt = (
         select(
@@ -198,11 +202,12 @@ async def get_agent_activity_trend(
     org_id: uuid.UUID | None = None,
 ) -> list[dict[str, Any]]:
     """获取 Agent 活动趋势数据（按时间桶聚合，支持租户隔离）。"""
-    from sqlalchemy import case as sa_case, text
+    from sqlalchemy import case as sa_case
+    from sqlalchemy import text
 
     from app.models.trace import TraceRecord
 
-    cutoff = datetime.now(timezone.utc) - timedelta(hours=hours)
+    cutoff = datetime.now(UTC) - timedelta(hours=hours)
     error_expr = func.sum(sa_case((TraceRecord.status == "error", 1), else_=0))
 
     # 向下截断到指定时间间隔的桶

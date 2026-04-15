@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-import uuid
+from typing import TYPE_CHECKING
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.deps import require_permission
@@ -21,6 +20,11 @@ from app.schemas.a2a import (
     A2ATaskResponse,
 )
 from app.services import a2a as a2a_service
+
+if TYPE_CHECKING:
+    import uuid
+
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter(prefix="/api/v1/a2a", tags=["a2a"])
 
@@ -205,5 +209,5 @@ async def cancel_task(
     try:
         row = await a2a_service.cancel_task(db, task_id, org_id=org_id)
     except ValueError as e:
-        raise HTTPException(status_code=409, detail=str(e))
+        raise HTTPException(status_code=409, detail=str(e)) from e
     return A2ATaskResponse.model_validate(row)

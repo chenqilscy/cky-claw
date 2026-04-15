@@ -5,9 +5,10 @@ from __future__ import annotations
 import re
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from ckyclaw_framework.rag.document import Document
+if TYPE_CHECKING:
+    from ckyclaw_framework.rag.document import Document
 
 
 @dataclass

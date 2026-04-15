@@ -2,20 +2,23 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 import logging
 import time
-import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import func, select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.crypto import decrypt_api_key, encrypt_api_key
 from app.core.exceptions import NotFoundError
 from app.models.provider import ProviderConfig
-from app.schemas.provider import ProviderCreate, ProviderUpdate
+
+if TYPE_CHECKING:
+    import uuid
+
+    from sqlalchemy.ext.asyncio import AsyncSession
+
+    from app.schemas.provider import ProviderCreate, ProviderUpdate
 
 logger = logging.getLogger(__name__)
 
@@ -86,12 +89,12 @@ async def update_provider(
         new_key = update_data.pop("api_key")
         if new_key is not None:
             provider.api_key_encrypted = encrypt_api_key(new_key)
-            provider.key_last_rotated_at = datetime.now(timezone.utc)
+            provider.key_last_rotated_at = datetime.now(UTC)
 
     for field, value in update_data.items():
         setattr(provider, field, value)
 
-    provider.updated_at = datetime.now(timezone.utc)
+    provider.updated_at = datetime.now(UTC)
     await db.commit()
     await db.refresh(provider)
     return provider
@@ -101,7 +104,7 @@ async def delete_provider(db: AsyncSession, provider_id: uuid.UUID) -> None:
     """软删除 Provider。"""
     provider = await get_provider(db, provider_id)
     provider.is_deleted = True
-    provider.deleted_at = datetime.now(timezone.utc)
+    provider.deleted_at = datetime.now(UTC)
     await db.commit()
 
 
@@ -111,7 +114,7 @@ async def toggle_provider(
     """启用/禁用 Provider。"""
     provider = await get_provider(db, provider_id)
     provider.is_enabled = is_enabled
-    provider.updated_at = datetime.now(timezone.utc)
+    provider.updated_at = datetime.now(UTC)
     await db.commit()
     await db.refresh(provider)
     return provider
@@ -127,8 +130,8 @@ async def rotate_key(
     provider = await get_provider(db, provider_id)
     provider.api_key_encrypted = encrypt_api_key(new_api_key)
     provider.key_expires_at = key_expires_at
-    provider.key_last_rotated_at = datetime.now(timezone.utc)
-    provider.updated_at = datetime.now(timezone.utc)
+    provider.key_last_rotated_at = datetime.now(UTC)
+    provider.updated_at = datetime.now(UTC)
     await db.commit()
     await db.refresh(provider)
     return provider
@@ -209,7 +212,7 @@ async def test_connection(
 
         # 更新健康状态
         provider.health_status = "healthy"
-        provider.last_health_check = datetime.now(timezone.utc)
+        provider.last_health_check = datetime.now(UTC)
         await db.commit()
 
         return {
@@ -223,7 +226,7 @@ async def test_connection(
 
         # 更新健康状态
         provider.health_status = "unhealthy"
-        provider.last_health_check = datetime.now(timezone.utc)
+        provider.last_health_check = datetime.now(UTC)
         await db.commit()
 
         return {

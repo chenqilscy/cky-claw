@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { ProColumns } from '@ant-design/pro-components';
 import { ProTable } from '@ant-design/pro-components';
-import { Button, Modal, Form, Input, Select, Tag, App, Space, theme } from 'antd';
+import { Button, Modal, Form, Input, Select, Tag, theme } from 'antd';
 import { SearchOutlined, EyeOutlined, ThunderboltOutlined } from '@ant-design/icons';
 import type { FormInstance } from 'antd';
 import type { SkillItem, SkillCreateParams, SkillUpdateParams } from '../../services/skillService';
@@ -25,14 +25,11 @@ const categoryColorMap: Record<string, string> = {
   custom: 'green',
 };
 
-type DesignToken = ReturnType<typeof theme.useToken>['token'];
-
 /* ---- 列定义 ---- */
 
 const buildColumns = (
   actions: CrudTableActions<SkillItem>,
   onPreview: (record: SkillItem) => void,
-  token: DesignToken,
 ): ProColumns<SkillItem>[] => [
   {
     title: '名称',
@@ -139,7 +136,6 @@ const renderForm = (_form: FormInstance, editing: SkillItem | null) => (
 /* ---- 页面组件 ---- */
 
 const SkillPage: React.FC = () => {
-  const { message: _msg } = App.useApp();
   const { token } = theme.useToken();
   const [pagination, setPagination] = useState({ current: 1, pageSize: 20 });
   const [previewModalOpen, setPreviewModalOpen] = useState(false);
@@ -192,7 +188,7 @@ const SkillPage: React.FC = () => {
         createButtonText="新建技能"
         modalTitle={(editing) => (editing ? '编辑技能' : '新建技能')}
         modalWidth={720}
-        columns={(actions) => buildColumns(actions, handlePreview, token)}
+        columns={(actions) => buildColumns(actions, handlePreview)}
         renderForm={renderForm}
         createDefaults={{ version: '1.0.0', category: 'custom' }}
         toFormValues={(record) => ({

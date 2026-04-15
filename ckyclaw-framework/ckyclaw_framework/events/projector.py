@@ -10,10 +10,12 @@ import logging
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from dataclasses import dataclass, field
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from ckyclaw_framework.events.journal import EventEntry
 from ckyclaw_framework.events.types import EventType
+
+if TYPE_CHECKING:
+    from ckyclaw_framework.events.journal import EventEntry
 
 logger = logging.getLogger(__name__)
 
@@ -36,6 +38,7 @@ class Projector(ABC):
         """获取当前聚合状态。"""
         ...
 
+    @abstractmethod
     def reset(self) -> None:
         """重置状态。"""
 

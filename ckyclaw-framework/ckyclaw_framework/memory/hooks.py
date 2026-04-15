@@ -18,12 +18,14 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any, Awaitable, Callable
+from typing import TYPE_CHECKING
 
 from ckyclaw_framework.memory.memory import MemoryBackend, MemoryEntry, MemoryType
 from ckyclaw_framework.runner.hooks import RunHooks
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from ckyclaw_framework.runner.result import RunResult
     from ckyclaw_framework.runner.run_context import RunContext
 
@@ -97,10 +99,7 @@ class MemoryExtractionHook:
         agent_name = result.last_agent_name or self._agent_name or ctx.agent.name
 
         # 使用自定义提取函数或默认逻辑
-        if self.extract_fn is not None:
-            texts = self.extract_fn(output, agent_name)
-        else:
-            texts = [output]
+        texts = self.extract_fn(output, agent_name) if self.extract_fn is not None else [output]
 
         for text in texts:
             if not text or len(text) < self.min_output_length:

@@ -2,10 +2,8 @@
 
 from __future__ import annotations
 
-import asyncio
 import json
 from typing import Any
-from unittest.mock import MagicMock
 
 import pytest
 
@@ -15,7 +13,6 @@ from ckyclaw_framework.tools.function_tool import (
     _python_type_to_json_schema,
     function_tool,
 )
-
 
 # ═══════════════════════════════════════════════════════════════════
 # _python_type_to_json_schema 边界类型测试

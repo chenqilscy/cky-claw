@@ -8,14 +8,11 @@ from ckyclaw_framework.agent.agent import Agent
 from ckyclaw_framework.guardrails.output_guardrail import OutputGuardrail
 from ckyclaw_framework.guardrails.regex_guardrail import RegexGuardrail
 from ckyclaw_framework.guardrails.result import GuardrailResult, OutputGuardrailTripwireError
-from ckyclaw_framework.model.message import Message, MessageRole, TokenUsage
+from ckyclaw_framework.model.message import TokenUsage
 from ckyclaw_framework.model.provider import ModelChunk, ModelProvider, ModelResponse
-from ckyclaw_framework.runner.result import RunResult
 from ckyclaw_framework.runner.run_config import RunConfig
 from ckyclaw_framework.runner.run_context import RunContext
 from ckyclaw_framework.runner.runner import Runner, _execute_output_guardrails
-from ckyclaw_framework.tracing.span import SpanType
-
 
 # ---------- helpers ----------
 

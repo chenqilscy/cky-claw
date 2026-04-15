@@ -3,13 +3,17 @@
 from __future__ import annotations
 
 import uuid
+from typing import TYPE_CHECKING
 
-from sqlalchemy import delete, select, or_, and_, update
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import and_, delete, or_, select, update
 
 from app.core.exceptions import NotFoundError
 from app.models.mailbox import MailboxRecord
-from app.schemas.mailbox import MailboxSendRequest
+
+if TYPE_CHECKING:
+    from sqlalchemy.ext.asyncio import AsyncSession
+
+    from app.schemas.mailbox import MailboxSendRequest
 
 
 async def send_message(db: AsyncSession, data: MailboxSendRequest) -> MailboxRecord:

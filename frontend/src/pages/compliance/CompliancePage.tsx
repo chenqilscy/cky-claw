@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import {
-  Card, Row, Col, Statistic, Tag, Table, Tabs, Typography, Space, App,
+  Card, Row, Col, Statistic, Tag, Table, Tabs, Space, App,
   Progress, Button, Modal, Form, Input, Select, InputNumber,
 } from 'antd';
 import {
@@ -14,8 +14,6 @@ import { PageContainer } from '../../components/PageContainer';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { complianceService } from '../../services/complianceService';
 import type { ControlPointItem, RetentionPolicyItem, ErasureRequestItem, ClassificationLabel } from '../../services/complianceService';
-
-const { Title } = Typography;
 
 const classificationColors: Record<string, string> = {
   public: 'green',

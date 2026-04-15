@@ -30,8 +30,9 @@ from __future__ import annotations
 
 import inspect
 import json
+from contextlib import suppress
 from dataclasses import dataclass, field
-from typing import Any, Callable, Awaitable
+from typing import TYPE_CHECKING, Any
 
 from ckyclaw_framework.agent.agent import Agent
 from ckyclaw_framework.guardrails.input_guardrail import InputGuardrail
@@ -39,12 +40,15 @@ from ckyclaw_framework.guardrails.output_guardrail import OutputGuardrail
 from ckyclaw_framework.guardrails.result import GuardrailResult
 from ckyclaw_framework.handoff.handoff import Handoff
 from ckyclaw_framework.model.settings import ModelSettings
-from ckyclaw_framework.runner.result import RunResult
-from ckyclaw_framework.runner.run_config import RunConfig
-from ckyclaw_framework.runner.run_context import RunContext
 from ckyclaw_framework.runner.runner import Runner
 from ckyclaw_framework.tools.function_tool import FunctionTool
 
+if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable
+
+    from ckyclaw_framework.runner.result import RunResult
+    from ckyclaw_framework.runner.run_config import RunConfig
+    from ckyclaw_framework.runner.run_context import RunContext
 
 # ---------------------------------------------------------------------------
 # Tool Conversion
@@ -298,10 +302,7 @@ def _resolve_agent(sdk_agent: Any, cache: dict[str, Agent]) -> Agent:
     if isinstance(sdk_agent, Agent):
         return sdk_agent
 
-    if isinstance(sdk_agent, dict):
-        name = sdk_agent.get("name", "unnamed")
-    else:
-        name = getattr(sdk_agent, "name", "unnamed")
+    name = sdk_agent.get("name", "unnamed") if isinstance(sdk_agent, dict) else getattr(sdk_agent, "name", "unnamed")
 
     if name in cache:
         return cache[name]
@@ -396,10 +397,8 @@ def _convert_agent_from_object(obj: Any, cache: dict[str, Agent]) -> Agent:
     raw_tools = getattr(obj, "tools", []) or []
     tools = []
     for t in raw_tools:
-        try:
-            tools.append(from_openai_tool(t))
-        except Exception:
-            pass  # 跳过无法转换的工具（如 hosted tools）
+        with suppress(Exception):
+            tools.append(from_openai_tool(t))  # 跳过无法转换的工具（如 hosted tools）
 
     # Handoffs
     raw_handoffs = getattr(obj, "handoffs", []) or []

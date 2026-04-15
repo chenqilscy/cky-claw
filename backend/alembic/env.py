@@ -5,13 +5,12 @@ from __future__ import annotations
 import asyncio
 from logging.config import fileConfig
 
-from alembic import context
 from sqlalchemy.ext.asyncio import create_async_engine
 
+import app.models  # noqa: F401 — 确保所有模型注册到 Base.metadata
+from alembic import context
 from app.core.config import settings
 from app.core.database import Base
-
-import app.models  # noqa: F401 — 确保所有模型注册到 Base.metadata
 
 # Alembic Config 对象
 config = context.config

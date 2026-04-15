@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import uuid
+from datetime import UTC
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -99,13 +100,13 @@ class TestQueryCache:
     @pytest.mark.asyncio
     async def test_cache_serializes_datetime(self) -> None:
         """缓存能序列化包含 datetime 的数据（default=str）。"""
-        from datetime import datetime, timezone
+        from datetime import datetime
 
         mock_redis = AsyncMock()
         mock_redis.get = AsyncMock(return_value=None)
         mock_redis.setex = AsyncMock()
 
-        data = {"ts": datetime.now(timezone.utc), "count": 42}
+        data = {"ts": datetime.now(UTC), "count": 42}
         fetch_fn = AsyncMock(return_value=data)
 
         with patch("app.services.query_cache.get_redis", return_value=mock_redis):

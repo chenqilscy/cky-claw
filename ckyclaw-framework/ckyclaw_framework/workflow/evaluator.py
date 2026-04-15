@@ -65,9 +65,7 @@ def _validate_ast(node: ast.AST) -> None:
                 raise UnsafeExpressionError(f"不允许的比较运算: {type(op).__name__}")
         for comp in node.comparators:
             _validate_ast(comp)
-    elif isinstance(node, ast.Constant):
-        pass
-    elif isinstance(node, ast.Name):
+    elif isinstance(node, (ast.Constant, ast.Name)):
         pass
     elif isinstance(node, ast.Attribute):
         _validate_ast(node.value)
@@ -121,7 +119,7 @@ def _eval_node(node: ast.AST, context: dict[str, Any]) -> Any:
 
     elif isinstance(node, ast.Compare):
         left = _eval_node(node.left, context)
-        for op, comparator in zip(node.ops, node.comparators):
+        for op, comparator in zip(node.ops, node.comparators, strict=False):
             right = _eval_node(comparator, context)
             if isinstance(op, ast.Eq):
                 result = left == right

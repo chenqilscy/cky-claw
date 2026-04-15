@@ -15,20 +15,19 @@ from __future__ import annotations
 import asyncio
 import statistics
 import time
+from datetime import UTC
 from typing import Any
 
 import pytest
 
 from ckyclaw_framework.agent.agent import Agent
 from ckyclaw_framework.guardrails.regex_guardrail import RegexGuardrail
-from ckyclaw_framework.handoff.handoff import Handoff
 from ckyclaw_framework.model.message import Message, MessageRole
 from ckyclaw_framework.runner.runner import _build_tool_schemas
 from ckyclaw_framework.session.in_memory import InMemorySessionBackend
 from ckyclaw_framework.tools.function_tool import FunctionTool
 from ckyclaw_framework.tracing.span import Span, SpanStatus, SpanType
 from ckyclaw_framework.tracing.trace import Trace
-
 
 # ═══════════════════════════════════════════════════════════════════
 # 辅助工具
@@ -299,8 +298,8 @@ class TestTracingOverhead:
 
     def test_span_duration_calculation(self) -> None:
         """Span.duration_ms 属性计算无开销。"""
-        from datetime import datetime, timedelta, timezone
-        start = datetime(2025, 1, 1, tzinfo=timezone.utc)
+        from datetime import datetime, timedelta
+        start = datetime(2025, 1, 1, tzinfo=UTC)
         end = start + timedelta(milliseconds=150)
         span = Span(start_time=start, end_time=end)
 

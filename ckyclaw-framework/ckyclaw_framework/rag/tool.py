@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from ckyclaw_framework.rag.pipeline import RAGPipeline
 from ckyclaw_framework.tools.function_tool import FunctionTool
+
+if TYPE_CHECKING:
+    from ckyclaw_framework.rag.pipeline import RAGPipeline
 
 
 def create_knowledge_base_tool(

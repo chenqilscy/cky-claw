@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from enum import Enum
+from datetime import UTC, datetime
+from enum import StrEnum
 from typing import Any
 from uuid import uuid4
 
 
-class SpanType(str, Enum):
+class SpanType(StrEnum):
     """Span 类型。"""
 
     AGENT = "agent"
@@ -20,7 +20,7 @@ class SpanType(str, Enum):
     WORKFLOW_STEP = "workflow_step"
 
 
-class SpanStatus(str, Enum):
+class SpanStatus(StrEnum):
     """Span 状态。"""
 
     PENDING = "pending"
@@ -40,7 +40,7 @@ class Span:
     type: SpanType = SpanType.AGENT
     name: str = ""
     status: SpanStatus = SpanStatus.PENDING
-    start_time: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    start_time: datetime = field(default_factory=lambda: datetime.now(UTC))
     end_time: datetime | None = None
     input: Any | None = None
     output: Any | None = None

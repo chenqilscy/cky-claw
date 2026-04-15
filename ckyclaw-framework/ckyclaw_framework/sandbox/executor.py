@@ -46,6 +46,7 @@ class SandboxExecutor(ABC):
         """
         ...
 
+    @abstractmethod
     async def cleanup(self) -> None:
         """清理沙箱资源。子类可覆盖。"""
         pass

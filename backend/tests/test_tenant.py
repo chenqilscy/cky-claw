@@ -3,25 +3,23 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from fastapi import HTTPException
 from fastapi.testclient import TestClient
 
-from app.core.auth import create_access_token
 from app.core.database import get_db as get_db_original
 from app.core.deps import get_current_user
 from app.core.tenant import (
-    DEFAULT_QUOTA,
     _QUOTA_TABLE_MAP,
+    DEFAULT_QUOTA,
     check_quota,
     get_org_id,
     get_org_id_required,
 )
 from app.main import app
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -30,7 +28,7 @@ from app.main import app
 
 def _make_user(**overrides) -> MagicMock:
     """创建模拟用户对象。"""
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     defaults = {
         "id": uuid.uuid4(),
         "username": "testuser",
@@ -269,7 +267,7 @@ class TestQuotaConfig:
 
 def _make_agent_mock(**overrides) -> MagicMock:
     """创建模拟 AgentConfig 对象，用于 API 返回。"""
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     defaults = {
         "id": uuid.uuid4(),
         "name": "test-agent",
@@ -340,7 +338,7 @@ class TestAgentApiTenantIsolation:
         user = _make_user(org_id=org_id, role="admin")
         _override_deps(user)
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         mock_agent = _make_agent_mock(name="test-agent", created_at=now, updated_at=now)
         mock_svc.create_agent = AsyncMock(return_value=mock_agent)
 
@@ -543,7 +541,7 @@ class TestAdminGlobalAccess:
         app.dependency_overrides[get_current_user] = lambda: user
         app.dependency_overrides[get_org_id] = lambda: None
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         mock_agent = _make_agent_mock(name="new-agent", created_at=now, updated_at=now)
         mock_svc.create_agent = AsyncMock(return_value=mock_agent)
 

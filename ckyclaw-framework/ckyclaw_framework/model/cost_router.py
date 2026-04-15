@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import StrEnum
 
 
-class ModelTier(str, Enum):
+class ModelTier(StrEnum):
     """模型层级枚举。"""
 
     SIMPLE = "simple"

@@ -2,20 +2,23 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, Field
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.deps import get_db, require_permission
 from app.models.provider import ProviderConfig
-
 from ckyclaw_framework.model.cost_router import (
     CostRouter,
     ModelTier,
     ProviderCandidate,
     classify_complexity,
 )
+
+if TYPE_CHECKING:
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter(prefix="/api/v1/cost-router", tags=["cost-router"])
 

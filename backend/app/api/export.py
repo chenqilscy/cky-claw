@@ -4,18 +4,20 @@ from __future__ import annotations
 
 import csv
 import io
-import re
 from datetime import datetime
-from collections.abc import Iterator
-from typing import Any
-from uuid import UUID
+from typing import TYPE_CHECKING, Any
 
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import StreamingResponse
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.deps import require_permission
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
+    from uuid import UUID
+
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter(prefix="/api/v1/export", tags=["export"])
 

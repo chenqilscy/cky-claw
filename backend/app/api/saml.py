@@ -2,15 +2,13 @@
 
 from __future__ import annotations
 
-import uuid
+from typing import TYPE_CHECKING
 
 from fastapi import APIRouter, Depends, Form, Response
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.database import get_db
-from app.core.deps import get_current_user, require_admin
-from app.models.user import User
+from app.core.deps import require_admin
 from app.schemas.auth import TokenResponse
 from app.schemas.saml import (
     SamlIdpConfigCreate,
@@ -21,6 +19,13 @@ from app.schemas.saml import (
     SamlSpMetadataResponse,
 )
 from app.services import saml_service
+
+if TYPE_CHECKING:
+    import uuid
+
+    from sqlalchemy.ext.asyncio import AsyncSession
+
+    from app.models.user import User
 
 router = APIRouter(prefix="/api/v1/auth/saml", tags=["saml"])
 
@@ -61,7 +66,7 @@ async def saml_login(
 
 
 @router.post("/acs", response_model=TokenResponse)
-async def assertion_consumer_service(
+async def assertion_consumer_service(  # noqa: N803
     SAMLResponse: str = Form(..., description="Base64 编码的 SAML Response"),
     RelayState: str | None = Form(None, description="RelayState 回传参数"),
     db: AsyncSession = Depends(get_db),

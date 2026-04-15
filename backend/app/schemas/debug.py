@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
-import uuid
-from datetime import datetime
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 from pydantic import BaseModel, Field
+
+if TYPE_CHECKING:
+    import uuid
+    from datetime import datetime
 
 
 class DebugSessionCreate(BaseModel):

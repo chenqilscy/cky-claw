@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
-
 from ckyclaw_framework.agent.response_style import (
     CONCISE_STYLE_PROMPT,
     CREATIVE_STYLE_PROMPT,

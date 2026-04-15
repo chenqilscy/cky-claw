@@ -2,16 +2,18 @@
 
 from __future__ import annotations
 
-from typing import Any
-
-import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import case, func, select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import NotFoundError
 from app.models.trace import SpanRecord, TraceRecord
+
+if TYPE_CHECKING:
+    import uuid
+
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 
 async def list_traces(
@@ -114,7 +116,7 @@ async def get_trace_stats(
 ) -> dict[str, Any]:
     """获取 Trace 统计数据。默认最近 7 天。"""
     if start_time is None:
-        start_time = datetime.now(timezone.utc) - timedelta(days=7)
+        start_time = datetime.now(UTC) - timedelta(days=7)
 
     # ── Trace 级统计 ──
     trace_base = select(TraceRecord).where(TraceRecord.start_time >= start_time)

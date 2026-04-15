@@ -8,8 +8,8 @@ from ckyclaw_framework.artifacts.store import InMemoryArtifactStore, _estimate_t
 from ckyclaw_framework.model.message import Message, MessageRole, TokenUsage
 from ckyclaw_framework.session.history_trimmer import (
     HistoryTrimConfig,
-    HistoryTrimStrategy,
     HistoryTrimmer,
+    HistoryTrimStrategy,
 )
 
 

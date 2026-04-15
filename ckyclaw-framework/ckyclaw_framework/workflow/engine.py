@@ -14,15 +14,14 @@ from __future__ import annotations
 import asyncio
 import re
 from collections import defaultdict
-from datetime import datetime, timezone
-from typing import TYPE_CHECKING, Any, Callable, Coroutine
+from collections.abc import Callable, Coroutine
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING, Any
 
-from ckyclaw_framework.runner.result import RunResult
 from ckyclaw_framework.runner.run_config import RunConfig
 from ckyclaw_framework.runner.runner import Runner
 from ckyclaw_framework.tracing.span import Span, SpanStatus, SpanType
 from ckyclaw_framework.tracing.trace import Trace
-from ckyclaw_framework.tracing.processor import TraceProcessor
 from ckyclaw_framework.workflow.config import WorkflowRunConfig
 from ckyclaw_framework.workflow.evaluator import evaluate
 from ckyclaw_framework.workflow.result import StepResult, WorkflowResult, WorkflowStatus
@@ -33,13 +32,14 @@ from ckyclaw_framework.workflow.step import (
     ParallelStep,
     Step,
     StepStatus,
-    StepType,
 )
 from ckyclaw_framework.workflow.validator import validate_workflow_strict
-from ckyclaw_framework.workflow.workflow import Workflow
 
 if TYPE_CHECKING:
     from ckyclaw_framework.agent.agent import Agent
+    from ckyclaw_framework.runner.result import RunResult
+    from ckyclaw_framework.tracing.processor import TraceProcessor
+    from ckyclaw_framework.workflow.workflow import Workflow
 
 # 模板渲染正则：匹配 {{key}} 占位符
 _TEMPLATE_RE = re.compile(r"\{\{(\w+(?:\.\w+)*)\}\}")
@@ -86,7 +86,7 @@ class WorkflowEngine:
         processors = trace_processors or []
 
         # 初始化结果
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         result = WorkflowResult(
             workflow_name=workflow.name,
             status=WorkflowStatus.RUNNING,
@@ -122,14 +122,14 @@ class WorkflowEngine:
             result.status = WorkflowStatus.FAILED
             result.error = str(exc)
         finally:
-            result.finished_at = datetime.now(timezone.utc)
+            result.finished_at = datetime.now(UTC)
             if result.started_at:
                 delta = result.finished_at - result.started_at
                 result.duration_ms = int(delta.total_seconds() * 1000)
             result.context = ctx
             result.trace = trace
             if trace and config.tracing_enabled:
-                trace.end_time = datetime.now(timezone.utc)
+                trace.end_time = datetime.now(UTC)
                 for p in processors:
                     await p.on_trace_end(trace)
 
@@ -255,7 +255,7 @@ async def _execute_step(
     step_map: dict[str, Step],
 ) -> None:
     """执行单个步骤（含重试）。"""
-    started_at = datetime.now(timezone.utc)
+    started_at = datetime.now(UTC)
 
     # 创建 Span
     span = _create_span(step, trace)
@@ -320,7 +320,7 @@ async def _execute_step(
             last_error = f"Agent not found: '{step.agent_name}'" if isinstance(step, AgentStep) else "Agent not found"
             break
 
-        except (TimeoutError, asyncio.TimeoutError) as exc:
+        except TimeoutError as exc:
             last_error = f"步骤超时: {exc}"
             if attempt < max_attempts - 1:
                 await asyncio.sleep(delay)
@@ -457,7 +457,7 @@ async def _run_sub_step(
     processors: list[TraceProcessor],
 ) -> None:
     """执行 ParallelStep / LoopStep 的子步骤。"""
-    started_at = datetime.now(timezone.utc)
+    started_at = datetime.now(UTC)
     span = _create_span(sub, trace)
     if span:
         for p in processors:
@@ -648,7 +648,7 @@ def _record_step_result(
     error: str | None = None,
 ) -> None:
     """记录步骤执行结果。"""
-    finished_at = datetime.now(timezone.utc)
+    finished_at = datetime.now(UTC)
     delta = finished_at - started_at
     result.step_results[step_id] = StepResult(
         step_id=step_id,
@@ -686,7 +686,7 @@ async def _end_span(
     """结束 Span。"""
     if span is None:
         return
-    span.end_time = datetime.now(timezone.utc)
+    span.end_time = datetime.now(UTC)
     span.status = status
     if output is not None:
         span.output = output

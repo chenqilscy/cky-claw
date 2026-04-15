@@ -2,21 +2,22 @@
 
 from __future__ import annotations
 
-import json
-from typing import Any, AsyncIterator
+from typing import TYPE_CHECKING, Any
 
 import pytest
-from pydantic import BaseModel
 
 from ckyclaw_framework.agent.agent import Agent
-from ckyclaw_framework.model.message import Message, MessageRole, TokenUsage
-from ckyclaw_framework.model.provider import ModelChunk, ModelProvider, ModelResponse, ToolCall, ToolCallChunk
-from ckyclaw_framework.model.settings import ModelSettings
+from ckyclaw_framework.model.message import Message, TokenUsage
+from ckyclaw_framework.model.provider import ModelChunk, ModelProvider, ModelResponse, ToolCall
 from ckyclaw_framework.runner.run_config import RunConfig
 from ckyclaw_framework.team.protocol import TeamProtocol
 from ckyclaw_framework.team.team import Team, TeamConfig
 from ckyclaw_framework.team.team_runner import TeamResult, TeamRunner, _sum_token_usage
 
+if TYPE_CHECKING:
+    from collections.abc import AsyncIterator
+
+    from ckyclaw_framework.model.settings import ModelSettings
 
 # ── Mock Provider ────────────────────────────────────────────
 
@@ -155,8 +156,8 @@ class TestTeamRunnerSequential:
     @pytest.mark.asyncio
     async def test_sequential_chain(self) -> None:
         """SEQUENTIAL: A → B，A 输出变成 B 输入。"""
-        provider_a = MockSequentialProvider("Step A 结果")
-        provider_b = MockSequentialProvider("Step B 最终结果")
+        MockSequentialProvider("Step A 结果")
+        MockSequentialProvider("Step B 最终结果")
         agent_a = Agent(name="agent-a", instructions="You are step A.")
         agent_b = Agent(name="agent-b", instructions="You are step B.")
 
@@ -261,7 +262,7 @@ class TestTeamRunnerCoordinator:
     async def test_coordinator_runs_with_member_tools(self) -> None:
         """COORDINATOR: coordinator agent 获得 member as_tool。"""
         # Member agent 使用独立 provider
-        member_provider = MockSequentialProvider("Member analysis done")
+        MockSequentialProvider("Member analysis done")
         coordinator_provider = MockSequentialProvider("Coordinator final answer")
 
         worker = Agent(
@@ -324,7 +325,7 @@ class TestTeamExports:
         assert hasattr(ckyclaw_framework, "TeamRunner")
 
     def test_submodule_exports(self) -> None:
-        from ckyclaw_framework.team import Team, TeamConfig, TeamProtocol, TeamResult, TeamRunner
+        from ckyclaw_framework.team import Team, TeamRunner
 
         assert Team is not None
         assert TeamRunner is not None

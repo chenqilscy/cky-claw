@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -15,7 +15,6 @@ from app.schemas.team import (
     TeamConfigResponse,
     TeamConfigUpdate,
 )
-
 
 # ── Schema 验证 ──────────────────────────────────────
 
@@ -49,7 +48,7 @@ class TestTeamSchemas:
         assert "protocol" not in dumped
 
     def test_response_from_dict(self) -> None:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         resp = TeamConfigResponse(
             id=uuid.uuid4(),
             name="test",
@@ -86,7 +85,7 @@ class TestTeamService:
             protocol="SEQUENTIAL",
             member_agent_ids=["agent-1"],
         )
-        result = await create_team(mock_db, data)
+        await create_team(mock_db, data)
         mock_db.add.assert_called_once()
         mock_db.commit.assert_called_once()
 
@@ -183,7 +182,7 @@ class TestTeamAPI:
 
     def test_create_team(self, client: TestClient) -> None:
         with patch("app.services.team.create_team", new_callable=AsyncMock) as mock_create:
-            now = datetime.now(timezone.utc)
+            now = datetime.now(UTC)
             mock_record = MagicMock()
             mock_record.configure_mock(
                 id=uuid.uuid4(),
@@ -218,7 +217,7 @@ class TestTeamAPI:
     def test_get_team(self, client: TestClient) -> None:
         tid = uuid.uuid4()
         with patch("app.services.team.get_team", new_callable=AsyncMock) as mock_get:
-            now = datetime.now(timezone.utc)
+            now = datetime.now(UTC)
             mock_record = MagicMock()
             mock_record.configure_mock(
                 id=tid,
@@ -239,7 +238,7 @@ class TestTeamAPI:
     def test_update_team(self, client: TestClient) -> None:
         tid = uuid.uuid4()
         with patch("app.services.team.update_team", new_callable=AsyncMock) as mock_update:
-            now = datetime.now(timezone.utc)
+            now = datetime.now(UTC)
             mock_record = MagicMock()
             mock_record.configure_mock(
                 id=tid,

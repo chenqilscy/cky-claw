@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import StrEnum
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
@@ -37,7 +37,7 @@ class RunResult:
     """运行 ID（用于 checkpoint 恢复）"""
 
 
-class StreamEventType(str, Enum):
+class StreamEventType(StrEnum):
     """流式事件类型。"""
 
     AGENT_START = "agent_start"

@@ -2,16 +2,20 @@
 
 from __future__ import annotations
 
-import uuid
-from datetime import datetime
+from typing import TYPE_CHECKING
 
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, Field
 from sqlalchemy import func, select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.deps import get_db, require_permission
 from app.models.event import EventRecord
+
+if TYPE_CHECKING:
+    import uuid
+    from datetime import datetime
+
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter(prefix="/api/v1/events", tags=["events"])
 

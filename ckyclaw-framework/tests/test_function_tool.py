@@ -9,7 +9,6 @@ import pytest
 
 from ckyclaw_framework.tools.function_tool import FunctionTool, function_tool
 
-
 # ── @function_tool 装饰器测试 ───────────────────────────────────
 
 

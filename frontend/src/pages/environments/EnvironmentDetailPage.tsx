@@ -1,12 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Card, Descriptions, Tag, Table, Button, App, Space, Modal, Form, Input, Select, Typography } from 'antd';
+import { Card, Descriptions, Tag, Table, Button, App, Space, Modal, Form, Input, Select } from 'antd';
 import { ArrowLeftOutlined, RocketOutlined } from '@ant-design/icons';
 import { PageContainer } from '../../components/PageContainer';
 import { environmentService } from '../../services/environmentService';
 import type { Environment, BindingResponse } from '../../services/environmentService';
-
-const { Text } = Typography;
 
 const EnvironmentDetailPage: React.FC = () => {
   const { envName } = useParams<{ envName: string }>();

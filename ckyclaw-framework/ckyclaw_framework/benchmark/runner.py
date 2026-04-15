@@ -5,9 +5,9 @@ from __future__ import annotations
 import asyncio
 import logging
 import time
-from collections.abc import Coroutine
-from dataclasses import dataclass, field
-from typing import Any, Callable
+from collections.abc import Callable, Coroutine
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, Any
 
 from ckyclaw_framework.benchmark.case import (
     BenchmarkCase,
@@ -16,7 +16,9 @@ from ckyclaw_framework.benchmark.case import (
     EvalDimension,
 )
 from ckyclaw_framework.benchmark.report import BenchmarkReport
-from ckyclaw_framework.benchmark.suite import BenchmarkSuite
+
+if TYPE_CHECKING:
+    from ckyclaw_framework.benchmark.suite import BenchmarkSuite
 
 logger = logging.getLogger(__name__)
 
@@ -134,7 +136,7 @@ class BenchmarkRunner:
                 else CaseStatus.FAILED
             )
 
-        except asyncio.TimeoutError:
+        except TimeoutError:
             result.status = CaseStatus.TIMEOUT
             result.error = f"用例超时（{timeout_ms}ms）"
             result.latency_ms = timeout_ms

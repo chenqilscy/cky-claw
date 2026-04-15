@@ -10,7 +10,7 @@ from app.core.database import engine
 
 
 async def main() -> None:
-    hashed = bcrypt.hashpw("Admin888!".encode("utf-8"), bcrypt.gensalt(rounds=12)).decode("utf-8")
+    hashed = bcrypt.hashpw(b"Admin888!", bcrypt.gensalt(rounds=12)).decode("utf-8")
     async with engine.begin() as conn:
         r = await conn.execute(
             text("UPDATE users SET hashed_password = :pw WHERE username = 'admin' RETURNING id, username, role"),

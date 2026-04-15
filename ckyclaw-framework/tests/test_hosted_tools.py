@@ -8,7 +8,7 @@ import sys
 import tempfile
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Generator
+from typing import TYPE_CHECKING, Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -32,8 +32,10 @@ from ckyclaw_framework.tools.hosted_tools import (
     register_hosted_tools,
     web_search,
 )
-from ckyclaw_framework.tools.tool_group import ToolGroup
 from ckyclaw_framework.tools.tool_registry import ToolRegistry
+
+if TYPE_CHECKING:
+    from collections.abc import Generator
 
 
 @contextmanager
@@ -268,15 +270,14 @@ class TestFileOpsTools:
 
     def test_safe_resolve_traversal_blocked(self) -> None:
         """目录穿越攻击被阻止。"""
-        with tempfile.TemporaryDirectory() as tmp:
-            with pytest.raises(PermissionError, match="超出允许的工作目录"):
-                _safe_resolve(tmp, "../../etc/passwd")
+        with tempfile.TemporaryDirectory() as tmp, pytest.raises(PermissionError, match="超出允许的工作目录"):
+            _safe_resolve(tmp, "../../etc/passwd")
 
     @pytest.mark.asyncio
     async def test_file_write_read_roundtrip(self) -> None:
         """文件写入后读取，内容一致。"""
-        with tempfile.TemporaryDirectory() as tmp:
-            with patch("ckyclaw_framework.tools.hosted_tools._FILE_OPS_BASE_DIR", tmp):
+        with tempfile.TemporaryDirectory() as tmp, \
+             patch("ckyclaw_framework.tools.hosted_tools._FILE_OPS_BASE_DIR", tmp):
                 write_result = await file_write.execute({"path": "hello.txt", "content": "你好世界"})
                 assert "已写入" in write_result
                 read_result = await file_read.execute({"path": "hello.txt"})
@@ -285,18 +286,18 @@ class TestFileOpsTools:
     @pytest.mark.asyncio
     async def test_file_read_not_found(self) -> None:
         """读取不存在的文件返回错误。"""
-        with tempfile.TemporaryDirectory() as tmp:
-            with patch("ckyclaw_framework.tools.hosted_tools._FILE_OPS_BASE_DIR", tmp):
+        with tempfile.TemporaryDirectory() as tmp, \
+             patch("ckyclaw_framework.tools.hosted_tools._FILE_OPS_BASE_DIR", tmp):
                 result = await file_read.execute({"path": "nonexistent.txt"})
                 assert "不存在" in result
 
     @pytest.mark.asyncio
     async def test_file_list_directory(self) -> None:
         """列出目录内容。"""
-        with tempfile.TemporaryDirectory() as tmp:
-            (Path(tmp) / "a.txt").write_text("a")
-            (Path(tmp) / "b.txt").write_text("b")
-            with patch("ckyclaw_framework.tools.hosted_tools._FILE_OPS_BASE_DIR", tmp):
+        with tempfile.TemporaryDirectory() as tmp, \
+             patch("ckyclaw_framework.tools.hosted_tools._FILE_OPS_BASE_DIR", tmp):
+                (Path(tmp) / "a.txt").write_text("a")
+                (Path(tmp) / "b.txt").write_text("b")
                 result = await file_list.execute({"directory": "."})
                 entries = json.loads(result)
                 names = {e["name"] for e in entries}
@@ -306,8 +307,8 @@ class TestFileOpsTools:
     @pytest.mark.asyncio
     async def test_file_write_creates_subdirectory(self) -> None:
         """写入时自动创建子目录。"""
-        with tempfile.TemporaryDirectory() as tmp:
-            with patch("ckyclaw_framework.tools.hosted_tools._FILE_OPS_BASE_DIR", tmp):
+        with tempfile.TemporaryDirectory() as tmp, \
+             patch("ckyclaw_framework.tools.hosted_tools._FILE_OPS_BASE_DIR", tmp):
                 result = await file_write.execute({"path": "sub/dir/file.txt", "content": "nested"})
                 assert "已写入" in result
                 assert (Path(tmp) / "sub" / "dir" / "file.txt").read_text() == "nested"
@@ -315,18 +316,18 @@ class TestFileOpsTools:
     @pytest.mark.asyncio
     async def test_file_list_nonexistent_directory(self) -> None:
         """列出不存在的目录返回错误提示。"""
-        with tempfile.TemporaryDirectory() as tmp:
-            with patch("ckyclaw_framework.tools.hosted_tools._FILE_OPS_BASE_DIR", tmp):
+        with tempfile.TemporaryDirectory() as tmp, \
+             patch("ckyclaw_framework.tools.hosted_tools._FILE_OPS_BASE_DIR", tmp):
                 result = await file_list.execute({"directory": "nonexistent"})
                 assert "不存在" in result
 
     @pytest.mark.asyncio
     async def test_file_list_with_subdirectory(self) -> None:
         """列出包含子目录的目录，返回正确 type。"""
-        with tempfile.TemporaryDirectory() as tmp:
-            (Path(tmp) / "file.txt").write_text("content")
-            (Path(tmp) / "subdir").mkdir()
-            with patch("ckyclaw_framework.tools.hosted_tools._FILE_OPS_BASE_DIR", tmp):
+        with tempfile.TemporaryDirectory() as tmp, \
+             patch("ckyclaw_framework.tools.hosted_tools._FILE_OPS_BASE_DIR", tmp):
+                (Path(tmp) / "file.txt").write_text("content")
+                (Path(tmp) / "subdir").mkdir()
                 result = await file_list.execute({"directory": "."})
                 entries = json.loads(result)
                 types = {e["name"]: e["type"] for e in entries}
@@ -340,24 +341,24 @@ class TestFileOpsTools:
     @pytest.mark.asyncio
     async def test_file_read_traversal_error(self) -> None:
         """路径穿越读取返回权限错误。"""
-        with tempfile.TemporaryDirectory() as tmp:
-            with patch("ckyclaw_framework.tools.hosted_tools._FILE_OPS_BASE_DIR", tmp):
+        with tempfile.TemporaryDirectory() as tmp, \
+             patch("ckyclaw_framework.tools.hosted_tools._FILE_OPS_BASE_DIR", tmp):
                 result = await file_read.execute({"path": "../../etc/passwd"})
                 assert "权限错误" in result
 
     @pytest.mark.asyncio
     async def test_file_write_traversal_error(self) -> None:
         """路径穿越写入返回权限错误。"""
-        with tempfile.TemporaryDirectory() as tmp:
-            with patch("ckyclaw_framework.tools.hosted_tools._FILE_OPS_BASE_DIR", tmp):
+        with tempfile.TemporaryDirectory() as tmp, \
+             patch("ckyclaw_framework.tools.hosted_tools._FILE_OPS_BASE_DIR", tmp):
                 result = await file_write.execute({"path": "../../tmp/hack.txt", "content": "bad"})
                 assert "权限错误" in result
 
     @pytest.mark.asyncio
     async def test_file_list_traversal_error(self) -> None:
         """路径穿越列目录返回权限错误。"""
-        with tempfile.TemporaryDirectory() as tmp:
-            with patch("ckyclaw_framework.tools.hosted_tools._FILE_OPS_BASE_DIR", tmp):
+        with tempfile.TemporaryDirectory() as tmp, \
+             patch("ckyclaw_framework.tools.hosted_tools._FILE_OPS_BASE_DIR", tmp):
                 result = await file_list.execute({"directory": "../../"})
                 assert "权限错误" in result
 
@@ -498,8 +499,8 @@ class TestDatabaseTools:
     @pytest.mark.asyncio
     async def test_database_query_no_asyncpg(self) -> None:
         """asyncpg 不可用时返回错误提示。"""
-        with patch.dict(os.environ, {"CKYCLAW_DB_QUERY_DSN": "postgresql://x"}, clear=False):
-            with patch.dict("sys.modules", {"asyncpg": None}):
+        with patch.dict(os.environ, {"CKYCLAW_DB_QUERY_DSN": "postgresql://x"}, clear=False), \
+             patch.dict("sys.modules", {"asyncpg": None}):
                 result = await database_query.execute({"query": "SELECT 1"})
         assert "asyncpg" in result
 
@@ -516,8 +517,8 @@ class TestDatabaseTools:
         mock_asyncpg = MagicMock()
         mock_asyncpg.connect = AsyncMock(return_value=mock_conn)
 
-        with patch.dict(os.environ, {"CKYCLAW_DB_QUERY_DSN": "postgresql://x"}, clear=False):
-            with _mock_module("asyncpg", mock_asyncpg):
+        with patch.dict(os.environ, {"CKYCLAW_DB_QUERY_DSN": "postgresql://x"}, clear=False), \
+             _mock_module("asyncpg", mock_asyncpg):
                 result = await database_query.execute({"query": "SELECT * FROM users", "max_rows": 10})
         parsed = json.loads(result)
         assert len(parsed) == 2
@@ -529,25 +530,24 @@ class TestDatabaseTools:
         mock_asyncpg = MagicMock()
         mock_asyncpg.connect = AsyncMock(side_effect=Exception("connection refused"))
 
-        with patch.dict(os.environ, {"CKYCLAW_DB_QUERY_DSN": "postgresql://x"}, clear=False):
-            with patch.dict("sys.modules", {"asyncpg": mock_asyncpg}):
+        with patch.dict(os.environ, {"CKYCLAW_DB_QUERY_DSN": "postgresql://x"}, clear=False), \
+             patch.dict("sys.modules", {"asyncpg": mock_asyncpg}):
                 result = await database_query.execute({"query": "SELECT 1"})
         assert "查询失败" in result
 
     @pytest.mark.asyncio
     async def test_database_query_timeout(self) -> None:
         """查询超时返回超时信息。"""
-        import asyncio as _asyncio
 
         mock_conn = AsyncMock()
-        mock_conn.fetch = AsyncMock(side_effect=_asyncio.TimeoutError())
+        mock_conn.fetch = AsyncMock(side_effect=TimeoutError())
         mock_conn.close = AsyncMock()
 
         mock_asyncpg = MagicMock()
         mock_asyncpg.connect = AsyncMock(return_value=mock_conn)
 
-        with patch.dict(os.environ, {"CKYCLAW_DB_QUERY_DSN": "postgresql://x"}, clear=False):
-            with patch.dict("sys.modules", {"asyncpg": mock_asyncpg}):
+        with patch.dict(os.environ, {"CKYCLAW_DB_QUERY_DSN": "postgresql://x"}, clear=False), \
+             patch.dict("sys.modules", {"asyncpg": mock_asyncpg}):
                 result = await database_query.execute({"query": "SELECT 1"})
         assert "超时" in result
 
@@ -562,8 +562,8 @@ class TestDatabaseTools:
         mock_asyncpg = MagicMock()
         mock_asyncpg.connect = AsyncMock(return_value=mock_conn)
 
-        with patch.dict(os.environ, {"CKYCLAW_DB_QUERY_DSN": "postgresql://x"}, clear=False):
-            with patch.dict("sys.modules", {"asyncpg": mock_asyncpg}):
+        with patch.dict(os.environ, {"CKYCLAW_DB_QUERY_DSN": "postgresql://x"}, clear=False), \
+             patch.dict("sys.modules", {"asyncpg": mock_asyncpg}):
                 result = await database_query.execute({"query": "SELECT * FROM big", "max_rows": 5})
         parsed = json.loads(result)
         assert len(parsed) == 5

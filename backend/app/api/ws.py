@@ -7,12 +7,11 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 import asyncio
 import json
 import logging
 from contextlib import suppress
+from typing import Any
 
 from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect
 

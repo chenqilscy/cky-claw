@@ -64,7 +64,7 @@ async def deep_health_check() -> dict[str, Any]:
         db_result, redis_result = await asyncio.wait_for(
             _gather_probes(), timeout=_PROBE_TIMEOUT
         )
-    except asyncio.TimeoutError:
+    except TimeoutError:
         db_result = {"status": "timeout"}
         redis_result = {"status": "timeout"}
 

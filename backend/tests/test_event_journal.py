@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -18,10 +18,10 @@ def _make_event_entry(**overrides: object) -> MagicMock:
     entry.sequence = overrides.get("sequence", 0)
     entry.event_type = overrides.get("event_type", MagicMock(value="run_start"))
     entry.run_id = overrides.get("run_id", "run-001")
-    entry.session_id = overrides.get("session_id", None)
+    entry.session_id = overrides.get("session_id")
     entry.agent_name = overrides.get("agent_name", "test-agent")
-    entry.span_id = overrides.get("span_id", None)
-    entry.timestamp = overrides.get("timestamp", datetime.now(timezone.utc))
+    entry.span_id = overrides.get("span_id")
+    entry.timestamp = overrides.get("timestamp", datetime.now(UTC))
     entry.payload = overrides.get("payload", {})
     for k, v in overrides.items():
         setattr(entry, k, v)
@@ -79,7 +79,7 @@ class TestEventJournalAppend:
         with patch("app.models.event.EventRecord"):
             await journal._append(entry)
         # entry.sequence 应被赋值
-        assert entry.sequence != 0 or initial_seq != 0
+        assert entry.sequence != 0
 
 
 class TestEventJournalQuery:

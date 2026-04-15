@@ -2,12 +2,9 @@
 
 from __future__ import annotations
 
-from typing import Any
-
-import uuid
+from typing import TYPE_CHECKING, Any
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.deps import require_admin
@@ -18,6 +15,11 @@ from app.schemas.organization import (
     OrganizationUpdate,
 )
 from app.services import organization as svc
+
+if TYPE_CHECKING:
+    import uuid
+
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter(prefix="/api/v1/organizations", tags=["组织"])
 

@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING
 
-from ckyclaw_framework.tools.function_tool import FunctionTool
-from ckyclaw_framework.tools.tool_group import ToolGroup
+if TYPE_CHECKING:
+    from ckyclaw_framework.tools.function_tool import FunctionTool
+    from ckyclaw_framework.tools.tool_group import ToolGroup
 
 logger = logging.getLogger(__name__)
 

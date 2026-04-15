@@ -7,11 +7,12 @@ from __future__ import annotations
 
 import logging
 import math
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import func, select, update
-from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.models.memory import MemoryEntryRecord
 from ckyclaw_framework.memory.memory import (
     DecayMode,
     MemoryBackend,
@@ -19,7 +20,8 @@ from ckyclaw_framework.memory.memory import (
     MemoryType,
 )
 
-from app.models.memory import MemoryEntryRecord
+if TYPE_CHECKING:
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = logging.getLogger(__name__)
 
@@ -83,7 +85,7 @@ class SQLAlchemyMemoryBackend(MemoryBackend):  # type: ignore[misc]
             existing.embedding = entry.embedding
             existing.tags = entry.tags
             existing.access_count = entry.access_count
-            existing.updated_at = datetime.now(timezone.utc)
+            existing.updated_at = datetime.now(UTC)
         else:
             record = MemoryEntryRecord(
                 id=entry_uuid,
@@ -172,7 +174,7 @@ class SQLAlchemyMemoryBackend(MemoryBackend):  # type: ignore[misc]
         record = (await self._db.execute(stmt)).scalar_one_or_none()
         if record:
             record.is_deleted = True
-            record.deleted_at = datetime.now(timezone.utc)
+            record.deleted_at = datetime.now(UTC)
             await self._db.flush()
 
     async def delete_by_user(self, user_id: str) -> int:
@@ -183,7 +185,7 @@ class SQLAlchemyMemoryBackend(MemoryBackend):  # type: ignore[misc]
                 MemoryEntryRecord.user_id == user_id,
                 MemoryEntryRecord.is_deleted == False,  # noqa: E712
             )
-            .values(is_deleted=True, deleted_at=datetime.now(timezone.utc))
+            .values(is_deleted=True, deleted_at=datetime.now(UTC))
         )
         result = await self._db.execute(stmt)
         await self._db.flush()
@@ -210,7 +212,7 @@ class SQLAlchemyMemoryBackend(MemoryBackend):  # type: ignore[misc]
             return result.rowcount or 0  # type: ignore[attr-defined]
 
         # 指数衰减需逐条计算
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         select_stmt = select(MemoryEntryRecord).where(
             MemoryEntryRecord.updated_at < before,
             MemoryEntryRecord.is_deleted == False,  # noqa: E712

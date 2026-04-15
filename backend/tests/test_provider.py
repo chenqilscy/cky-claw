@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -16,15 +16,14 @@ from app.core.database import get_db as get_db_original
 from app.core.deps import require_admin as require_admin_original
 from app.core.exceptions import NotFoundError
 from app.main import app
-from app.schemas.provider import ProviderCreate, ProviderResponse, ProviderUpdate
 from app.schemas.agent import AgentCreate, AgentResponse, AgentUpdate
-
+from app.schemas.provider import ProviderCreate, ProviderResponse, ProviderUpdate
 
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
 
-_NOW = datetime(2026, 4, 1, 12, 0, 0, tzinfo=timezone.utc)
+_NOW = datetime(2026, 4, 1, 12, 0, 0, tzinfo=UTC)
 
 
 def _fake_admin() -> MagicMock:
@@ -743,7 +742,7 @@ class TestRotateKeyAPI:
     def test_rotate_key_success(self, mock_svc: MagicMock, client: TestClient) -> None:
         """成功轮换 API Key。"""
         pid = uuid.uuid4()
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         p = _make_provider(id=pid, key_last_rotated_at=now)
         mock_svc.rotate_key = AsyncMock(return_value=p)
         _setup_overrides()
@@ -764,7 +763,7 @@ class TestRotateKeyAPI:
     def test_rotate_key_with_expiry(self, mock_svc: MagicMock, client: TestClient) -> None:
         """轮换 API Key 并设置过期时间。"""
         pid = uuid.uuid4()
-        expires = datetime(2027, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+        expires = datetime(2027, 1, 1, 0, 0, 0, tzinfo=UTC)
         p = _make_provider(id=pid, key_expires_at=expires, key_last_rotated_at=_NOW)
         mock_svc.rotate_key = AsyncMock(return_value=p)
         _setup_overrides()
@@ -830,7 +829,7 @@ class TestKeyExpiryLogic:
 
     def test_key_expired_when_past(self) -> None:
         """过期时间在过去 → key_expired=True。"""
-        past = datetime(2020, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+        past = datetime(2020, 1, 1, 0, 0, 0, tzinfo=UTC)
         p = _make_provider(key_expires_at=past)
         from app.api.providers import _to_response
         resp = _to_response(p)
@@ -838,7 +837,7 @@ class TestKeyExpiryLogic:
 
     def test_key_not_expired_when_future(self) -> None:
         """过期时间在未来 → key_expired=False。"""
-        future = datetime(2099, 12, 31, 23, 59, 59, tzinfo=timezone.utc)
+        future = datetime(2099, 12, 31, 23, 59, 59, tzinfo=UTC)
         p = _make_provider(key_expires_at=future)
         from app.api.providers import _to_response
         resp = _to_response(p)
@@ -853,7 +852,7 @@ class TestKeyExpiryLogic:
 
     def test_response_includes_rotation_timestamp(self) -> None:
         """key_last_rotated_at 正确传递到 ProviderResponse。"""
-        rotated_at = datetime(2026, 6, 1, 12, 0, 0, tzinfo=timezone.utc)
+        rotated_at = datetime(2026, 6, 1, 12, 0, 0, tzinfo=UTC)
         p = _make_provider(key_last_rotated_at=rotated_at)
         from app.api.providers import _to_response
         resp = _to_response(p)
@@ -873,7 +872,7 @@ class TestProviderRotateKeySchema:
         from app.schemas.provider import ProviderRotateKey
         data = ProviderRotateKey(
             new_api_key="sk-test-key-123",
-            key_expires_at=datetime(2027, 6, 1, tzinfo=timezone.utc),
+            key_expires_at=datetime(2027, 6, 1, tzinfo=UTC),
         )
         assert data.key_expires_at is not None
 

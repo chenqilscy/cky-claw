@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from ckyclaw_framework.benchmark.case import CaseResult, CaseStatus, EvalDimension
 
@@ -37,7 +37,7 @@ class BenchmarkReport:
     agent_name: str = ""
     model: str = ""
     results: list[CaseResult] = field(default_factory=list)
-    started_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    started_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     finished_at: datetime | None = None
     dimension_summaries: list[DimensionSummary] = field(default_factory=list)
 

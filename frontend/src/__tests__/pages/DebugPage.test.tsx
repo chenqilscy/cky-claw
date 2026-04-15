@@ -51,7 +51,7 @@ const MOCK_SESSION = {
   finished_at: null,
 };
 
-const MOCK_PAUSED_SESSION = {
+const _MOCK_PAUSED_SESSION = {
   ...MOCK_SESSION,
   id: 'sess-2',
   state: 'paused',

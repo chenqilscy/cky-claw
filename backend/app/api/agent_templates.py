@@ -2,12 +2,9 @@
 
 from __future__ import annotations
 
-from typing import Any
-
-import uuid
+from typing import TYPE_CHECKING, Any
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.deps import require_permission
@@ -18,6 +15,11 @@ from app.schemas.agent_template import (
     AgentTemplateUpdate,
 )
 from app.services import agent_template as template_service
+
+if TYPE_CHECKING:
+    import uuid
+
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter(prefix="/api/v1/agent-templates", tags=["agent-templates"])
 
@@ -89,7 +91,7 @@ async def update_template(
     try:
         record = await template_service.update_template(db, template_id, data)
     except ValueError as e:
-        raise HTTPException(status_code=403, detail=str(e))
+        raise HTTPException(status_code=403, detail=str(e)) from e
     return AgentTemplateResponse.model_validate(record)
 
 
@@ -106,7 +108,7 @@ async def delete_template(
     try:
         await template_service.delete_template(db, template_id)
     except ValueError as e:
-        raise HTTPException(status_code=403, detail=str(e))
+        raise HTTPException(status_code=403, detail=str(e)) from e
 
 
 @router.post(

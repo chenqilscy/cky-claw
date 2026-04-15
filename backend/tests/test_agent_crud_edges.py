@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+from datetime import UTC
 from unittest.mock import AsyncMock, MagicMock, patch
 
-import pytest
 from fastapi import HTTPException
 from fastapi.testclient import TestClient
 
@@ -103,7 +103,7 @@ class TestAgentGetNotFound:
     def test_get_existing_agent(self, mock_get: AsyncMock) -> None:
         """请求存在的 Agent 应返回 200。"""
         import uuid
-        from datetime import datetime, timezone
+        from datetime import datetime
 
         mock_agent = MagicMock()
         mock_agent.id = uuid.uuid4()
@@ -127,8 +127,8 @@ class TestAgentGetNotFound:
         mock_agent.org_id = None
         mock_agent.is_active = True
         mock_agent.created_by = None
-        mock_agent.created_at = datetime.now(timezone.utc)
-        mock_agent.updated_at = datetime.now(timezone.utc)
+        mock_agent.created_at = datetime.now(UTC)
+        mock_agent.updated_at = datetime.now(UTC)
         mock_get.return_value = mock_agent
         resp = client.get("/api/v1/agents/my-agent")
         assert resp.status_code == 200
@@ -160,7 +160,7 @@ class TestAgentCreateEdgeCases:
     def test_missing_instructions(self, mock_create: AsyncMock, mock_quota: AsyncMock) -> None:
         """缺少 instructions 字段会使用默认空字符串（schema 有 default）。"""
         import uuid
-        from datetime import datetime, timezone
+        from datetime import datetime
 
         mock_agent = MagicMock()
         mock_agent.id = uuid.uuid4()
@@ -184,8 +184,8 @@ class TestAgentCreateEdgeCases:
         mock_agent.org_id = None
         mock_agent.is_active = True
         mock_agent.created_by = None
-        mock_agent.created_at = datetime.now(timezone.utc)
-        mock_agent.updated_at = datetime.now(timezone.utc)
+        mock_agent.created_at = datetime.now(UTC)
+        mock_agent.updated_at = datetime.now(UTC)
         mock_create.return_value = mock_agent
         resp = client.post(
             "/api/v1/agents",

@@ -2,24 +2,26 @@
 
 from __future__ import annotations
 
-import json
-from datetime import datetime, timezone
-from typing import Any, AsyncIterator
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING, Any
 
 import pytest
 
 from ckyclaw_framework.agent.agent import Agent
 from ckyclaw_framework.model.message import Message, MessageRole, TokenUsage
 from ckyclaw_framework.model.provider import ModelChunk, ModelProvider, ModelResponse, ToolCall, ToolCallChunk
-from ckyclaw_framework.model.settings import ModelSettings
-from ckyclaw_framework.runner.result import RunResult, StreamEventType
+from ckyclaw_framework.runner.result import StreamEventType
 from ckyclaw_framework.runner.run_config import RunConfig
 from ckyclaw_framework.runner.runner import Runner
+from ckyclaw_framework.session.history_trimmer import HistoryTrimConfig, HistoryTrimmer, HistoryTrimStrategy
 from ckyclaw_framework.session.in_memory import InMemorySessionBackend
-from ckyclaw_framework.session.session import Session, SessionMetadata
-from ckyclaw_framework.session.history_trimmer import HistoryTrimConfig, HistoryTrimStrategy, HistoryTrimmer
+from ckyclaw_framework.session.session import Session
 from ckyclaw_framework.tools.function_tool import function_tool
 
+if TYPE_CHECKING:
+    from collections.abc import AsyncIterator
+
+    from ckyclaw_framework.model.settings import ModelSettings
 
 # ── Mock Model Provider ─────────────────────────────────────────
 
@@ -117,7 +119,7 @@ class TestMessageSerialization:
 
     def test_timestamp_preserved(self) -> None:
         """时间戳序列化精度。"""
-        ts = datetime(2025, 7, 15, 12, 0, 0, tzinfo=timezone.utc)
+        ts = datetime(2025, 7, 15, 12, 0, 0, tzinfo=UTC)
         msg = Message(role=MessageRole.USER, content="hi", timestamp=ts)
         d = msg.to_dict()
         restored = Message.from_dict(d)

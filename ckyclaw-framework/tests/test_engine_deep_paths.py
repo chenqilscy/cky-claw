@@ -24,28 +24,25 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+from ckyclaw_framework.workflow.config import WorkflowRunConfig
 from ckyclaw_framework.workflow.engine import (
     WorkflowEngine,
     _eval_conditional_inline,
     _run_loop_step,
     _run_sub_step,
 )
-from ckyclaw_framework.workflow.config import WorkflowRunConfig
-from ckyclaw_framework.workflow.result import StepResult, StepStatus, WorkflowResult, WorkflowStatus
+from ckyclaw_framework.workflow.result import StepStatus, WorkflowResult, WorkflowStatus
 from ckyclaw_framework.workflow.step import (
     AgentStep,
     BranchCondition,
     ConditionalStep,
     LoopStep,
     ParallelStep,
+    RetryConfig,
     Step,
     StepIO,
-    StepType,
-    RetryConfig,
 )
 from ckyclaw_framework.workflow.workflow import Edge, Workflow
-from ckyclaw_framework.tracing.span import Span
-
 
 # ── _eval_conditional_inline (Lines 559, 568) ─────────────────
 
@@ -148,8 +145,8 @@ class TestLoopStepCancel:
         async def resolver(name: str) -> Any:
             return MagicMock()
 
-        with patch("ckyclaw_framework.workflow.engine._run_agent_step", side_effect=_mock_run_agent):
-            with pytest.raises(asyncio.CancelledError):
+        with patch("ckyclaw_framework.workflow.engine._run_agent_step", side_effect=_mock_run_agent), \
+             pytest.raises(asyncio.CancelledError):
                 await _run_loop_step(loop, {}, result, resolver, WorkflowRunConfig(), cancel, None, [])
 
 
@@ -300,7 +297,7 @@ class TestStepTimeoutRetry:
 
         with patch("ckyclaw_framework.workflow.engine.Runner") as MockRunner:
             MockRunner.run = AsyncMock(side_effect=_slow_then_fast)
-            result = await WorkflowEngine.run(
+            await WorkflowEngine.run(
                 workflow, agent_resolver=resolver,
                 config=WorkflowRunConfig(fail_fast=False),
             )
@@ -547,7 +544,7 @@ class TestLoopIterationOutput:
         async def _counting_run(*args: Any, **kwargs: Any) -> MagicMock:
             nonlocal call_count
             call_count += 1
-            ctx = args[2] if len(args) > 2 else kwargs.get("context", {})
+            args[2] if len(args) > 2 else kwargs.get("context", {})
             r = MagicMock(spec=["output", "token_usage"])
             r.output = f"iter_{call_count}"
             r.token_usage = None
@@ -677,8 +674,8 @@ class TestLoopCancelInMultiStepBody:
         async def resolver(name: str) -> Any:
             return MagicMock()
 
-        with patch("ckyclaw_framework.workflow.engine._run_agent_step", side_effect=_agent_step_with_cancel):
-            with pytest.raises(asyncio.CancelledError):
+        with patch("ckyclaw_framework.workflow.engine._run_agent_step", side_effect=_agent_step_with_cancel), \
+             pytest.raises(asyncio.CancelledError):
                 await _run_loop_step(loop, {}, result, resolver, WorkflowRunConfig(), cancel, None, [])
 
         assert "b1" in call_order

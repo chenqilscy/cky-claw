@@ -3,13 +3,10 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
-
-import uuid
+from typing import TYPE_CHECKING, Any
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import PlainTextResponse
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.deps import require_admin
@@ -22,6 +19,11 @@ from app.schemas.im_channel import (
 )
 from app.services import im_channel as svc
 from app.services.channel_adapters import get_adapter
+
+if TYPE_CHECKING:
+    import uuid
+
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = logging.getLogger(__name__)
 
@@ -180,7 +182,7 @@ async def receive_webhook(
     try:
         payload = await request.json()
     except Exception:
-        raise HTTPException(status_code=400, detail="无效的 JSON 请求体")
+        raise HTTPException(status_code=400, detail="无效的 JSON 请求体") from None
 
     # 路由到绑定的 Agent
     result = await svc.route_message(

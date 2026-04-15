@@ -5,7 +5,6 @@ from __future__ import annotations
 import pytest
 
 from ckyclaw_framework.evolution.signals import (
-    EvolutionSignal,
     FeedbackSignal,
     MetricSignal,
     SignalCollector,

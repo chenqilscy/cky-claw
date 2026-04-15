@@ -15,13 +15,12 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from typing import Any
 
 import pytest
 
 from ckyclaw_framework.agent.agent import Agent
 from ckyclaw_framework.model.litellm_provider import LiteLLMProvider
-from ckyclaw_framework.model.message import Message, MessageRole
+from ckyclaw_framework.model.message import MessageRole
 from ckyclaw_framework.runner.result import StreamEventType
 from ckyclaw_framework.runner.run_config import RunConfig
 from ckyclaw_framework.runner.runner import Runner

@@ -2,17 +2,19 @@
 
 from __future__ import annotations
 
-from typing import Any
-
-import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import func, select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import NotFoundError
 from app.models.agent import AgentConfig
 from app.models.agent_version import AgentConfigVersion
+
+if TYPE_CHECKING:
+    import uuid
+
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 
 def _snapshot_from_agent(agent: AgentConfig) -> dict[str, Any]:
@@ -132,7 +134,7 @@ async def rollback_to_version(
     agent.agent_tools = snap.get("agent_tools", agent.agent_tools)
     agent.skills = snap.get("skills", agent.skills)
     agent.metadata_ = snap.get("metadata", agent.metadata_)
-    agent.updated_at = datetime.now(timezone.utc)
+    agent.updated_at = datetime.now(UTC)
 
     summary = change_summary or f"回滚至 v{version}"
     new_version = await create_version(

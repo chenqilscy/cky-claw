@@ -2,15 +2,13 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock
 
 import pytest
 
 from ckyclaw_framework.memory.in_memory import InMemoryMemoryBackend
 from ckyclaw_framework.memory.injector import MemoryInjectionConfig, MemoryInjector
 from ckyclaw_framework.memory.memory import MemoryBackend, MemoryEntry, MemoryType
-
 
 # ---------------------------------------------------------------------------
 # MemoryEntry 新增字段

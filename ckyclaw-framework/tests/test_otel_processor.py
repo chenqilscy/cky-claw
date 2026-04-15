@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-import asyncio
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -38,8 +37,8 @@ def _make_span(
     s.status = status
     s.output = output
     s.metadata = metadata or {}
-    s.start_time = datetime(2026, 1, 1, tzinfo=timezone.utc)
-    s.end_time = datetime(2026, 1, 1, 0, 0, 1, tzinfo=timezone.utc)
+    s.start_time = datetime(2026, 1, 1, tzinfo=UTC)
+    s.end_time = datetime(2026, 1, 1, 0, 0, 1, tzinfo=UTC)
     return s
 
 
@@ -52,8 +51,8 @@ class TestCheckOtel:
         original = mod._otel_available
         mod._otel_available = None  # 重置缓存
         try:
-            with patch.dict("sys.modules", {"opentelemetry.trace": None, "opentelemetry.sdk.trace": None}):
-                with patch.dict("sys.modules", {"opentelemetry": None}):
+            with patch.dict("sys.modules", {"opentelemetry.trace": None, "opentelemetry.sdk.trace": None}), \
+                 patch.dict("sys.modules", {"opentelemetry": None}):
                     result = _check_otel()
             # 不管结果如何，函数不应崩溃
             assert isinstance(result, bool)

@@ -2,13 +2,16 @@
 
 from __future__ import annotations
 
-from sqlalchemy import delete, select
-from sqlalchemy.ext.asyncio import AsyncSession
+from typing import TYPE_CHECKING
 
+from sqlalchemy import delete, select
+
+from app.models.checkpoint import CheckpointRecord
 from ckyclaw_framework.checkpoint import Checkpoint, CheckpointBackend
 from ckyclaw_framework.model.message import Message
 
-from app.models.checkpoint import CheckpointRecord
+if TYPE_CHECKING:
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 
 class PostgresCheckpointBackend(CheckpointBackend):  # type: ignore[misc]

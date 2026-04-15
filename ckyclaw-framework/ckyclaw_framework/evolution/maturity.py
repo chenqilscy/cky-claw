@@ -10,13 +10,13 @@ from __future__ import annotations
 import logging
 from collections import deque
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 logger = logging.getLogger(__name__)
 
 
-class MaturityLevel(str, Enum):
+class MaturityLevel(StrEnum):
     """Agent 成熟度等级。"""
 
     NEWBORN = "newborn"

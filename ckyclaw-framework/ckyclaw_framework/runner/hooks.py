@@ -3,12 +3,9 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Awaitable, Callable
-
-if TYPE_CHECKING:
-    from ckyclaw_framework.model.response import ModelResponse
-    from ckyclaw_framework.runner.run_context import RunContext
+from typing import Any
 
 logger = logging.getLogger(__name__)
 

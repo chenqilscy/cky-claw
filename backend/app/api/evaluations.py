@@ -2,12 +2,10 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 import uuid
+from typing import TYPE_CHECKING, Any
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.deps import get_current_user, require_admin
@@ -23,6 +21,9 @@ from app.schemas.evaluation import (
     RunFeedbackResponse,
 )
 from app.services import evaluation as svc
+
+if TYPE_CHECKING:
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter(prefix="/api/v1/evaluations", tags=["评估"])
 
@@ -96,7 +97,7 @@ async def auto_evaluate(
     _: dict[str, Any] = Depends(require_admin),
 ) -> RunEvaluationResponse:
     """使用 LLM-as-Judge 自动评估一次运行（由调用方提供上下文）。"""
-    from app.services.auto_evaluator import auto_evaluate_run, _resolve_judge_provider
+    from app.services.auto_evaluator import _resolve_judge_provider, auto_evaluate_run
 
     try:
         judge_model = data.judge_model or "deepseek/deepseek-chat"
@@ -115,7 +116,7 @@ async def auto_evaluate(
             judge_provider_kwargs=provider_kwargs,
         )
     except ValidationError as e:
-        raise HTTPException(status_code=422, detail=str(e.message))
+        raise HTTPException(status_code=422, detail=str(e.message)) from e
     return RunEvaluationResponse.model_validate(record)
 
 
@@ -132,9 +133,9 @@ async def auto_evaluate_by_trace(
     try:
         record = await auto_evaluate_by_run_id(db, run_id, judge_model=judge_model)
     except NotFoundError as e:
-        raise HTTPException(status_code=404, detail=str(e.message))
+        raise HTTPException(status_code=404, detail=str(e.message)) from e
     except ValidationError as e:
-        raise HTTPException(status_code=422, detail=str(e.message))
+        raise HTTPException(status_code=422, detail=str(e.message)) from e
     return RunEvaluationResponse.model_validate(record)
 
 

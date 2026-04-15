@@ -2,13 +2,11 @@
 
 from __future__ import annotations
 
-import uuid
+from typing import TYPE_CHECKING
 
 from fastapi import APIRouter, Depends, Query
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.deps import get_db, require_admin
-from app.models.user import User
 from app.schemas.mcp_server import (
     MCPServerCreate,
     MCPServerListResponse,
@@ -17,6 +15,13 @@ from app.schemas.mcp_server import (
     MCPTestResult,
 )
 from app.services import mcp_server as mcp_service
+
+if TYPE_CHECKING:
+    import uuid
+
+    from sqlalchemy.ext.asyncio import AsyncSession
+
+    from app.models.user import User
 
 router = APIRouter(prefix="/api/v1/mcp/servers", tags=["MCP Servers"])
 

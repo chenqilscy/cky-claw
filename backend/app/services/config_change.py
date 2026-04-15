@@ -2,13 +2,18 @@
 
 from __future__ import annotations
 
-import uuid
+from typing import TYPE_CHECKING
 
 from sqlalchemy import func, select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.config_change_log import ConfigChangeLog
-from app.schemas.config_change_log import ConfigChangeLogCreate
+
+if TYPE_CHECKING:
+    import uuid
+
+    from sqlalchemy.ext.asyncio import AsyncSession
+
+    from app.schemas.config_change_log import ConfigChangeLogCreate
 
 
 async def record_change(

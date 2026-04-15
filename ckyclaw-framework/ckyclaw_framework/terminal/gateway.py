@@ -13,13 +13,13 @@ import logging
 import sys
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import StrEnum
 from typing import Any, TextIO
 
 logger = logging.getLogger(__name__)
 
 
-class OutputType(str, Enum):
+class OutputType(StrEnum):
     """输出内容类型。"""
 
     TEXT = "text"
@@ -96,9 +96,11 @@ class TerminalBackend(ABC):
 
     async def start(self) -> None:
         """终端后端启动时的初始化（可选覆盖）。"""
+        return None
 
     async def stop(self) -> None:
         """终端后端关闭时的清理（可选覆盖）。"""
+        return None
 
     async def __aenter__(self) -> TerminalBackend:
         """异步上下文管理器入口。"""

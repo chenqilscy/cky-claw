@@ -186,9 +186,8 @@ def validate_template(
 
     # 必填变量检查
     for d in definitions:
-        if d.required and (d.default is None or d.default == ""):
-            if d.name in referenced:
-                warnings.append(f"必填变量 '{d.name}' 无默认值，运行时必须提供")
+        if d.required and (d.default is None or d.default == "") and d.name in referenced:
+            warnings.append(f"必填变量 '{d.name}' 无默认值，运行时必须提供")
 
     # enum 类型检查
     for d in definitions:

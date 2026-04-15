@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, waitFor, screen, fireEvent } from '@testing-library/react';
+import { render, waitFor, screen } from '@testing-library/react';
 import { TestQueryWrapper } from '../test-utils';
 
 vi.mock('react-router-dom', async () => {

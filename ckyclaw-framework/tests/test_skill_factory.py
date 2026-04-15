@@ -14,7 +14,6 @@ from ckyclaw_framework.skills.factory import (
 )
 from ckyclaw_framework.tools.function_tool import FunctionTool
 
-
 # ==================== 代码验证测试 ====================
 
 

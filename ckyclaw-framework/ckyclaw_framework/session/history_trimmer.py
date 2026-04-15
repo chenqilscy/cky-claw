@@ -3,14 +3,14 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from ckyclaw_framework.model.message import Message, MessageRole
+    from ckyclaw_framework.model.message import Message
 
 
-class HistoryTrimStrategy(str, Enum):
+class HistoryTrimStrategy(StrEnum):
     """历史裁剪策略。"""
 
     SLIDING_WINDOW = "sliding_window"
@@ -152,7 +152,8 @@ class HistoryTrimmer:
         Phase 2: 如果 Phase 1 丢弃了过多消息（>50%非系统消息被裁），
                  先压缩长工具结果再重新 TOKEN_BUDGET 裁剪，在同等预算下保留更多轮次。
         """
-        from ckyclaw_framework.model.message import Message as Msg, MessageRole
+        from ckyclaw_framework.model.message import Message as Msg
+        from ckyclaw_framework.model.message import MessageRole
 
         # Phase 1: 标准 TOKEN_BUDGET
         phase1 = HistoryTrimmer._trim_token_budget(messages, config)
@@ -189,7 +190,8 @@ class HistoryTrimmer:
         不依赖 LLM，使用提取式摘要：每条被裁消息取首行（最多 80 字符）。
         摘要作为 system 消息插在保留消息之前，提供对话历史概览。
         """
-        from ckyclaw_framework.model.message import Message as Msg, MessageRole
+        from ckyclaw_framework.model.message import Message as Msg
+        from ckyclaw_framework.model.message import MessageRole
 
         # 用 TOKEN_BUDGET 确定保留哪些消息
         kept = HistoryTrimmer._trim_token_budget(messages, config)

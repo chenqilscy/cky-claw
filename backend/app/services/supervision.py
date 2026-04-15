@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-import uuid
+from typing import TYPE_CHECKING
 
 from sqlalchemy import func, select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import ConflictError, NotFoundError
 from app.models.session import SessionRecord
@@ -17,6 +16,11 @@ from app.schemas.supervision import (
     SupervisionSessionItem,
     SupervisionSessionListResponse,
 )
+
+if TYPE_CHECKING:
+    import uuid
+
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 
 async def list_active_sessions(

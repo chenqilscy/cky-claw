@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from ckyclaw_framework.workflow.step import Step
+if TYPE_CHECKING:
+    from ckyclaw_framework.workflow.step import Step
 
 
 @dataclass

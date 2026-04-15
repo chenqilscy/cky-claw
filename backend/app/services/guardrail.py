@@ -2,17 +2,19 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 import re
-import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import func, select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import ConflictError, NotFoundError, ValidationError
 from app.models.guardrail import GuardrailRule
+
+if TYPE_CHECKING:
+    import uuid
+
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 VALID_TYPES = {"input", "output", "tool"}
 VALID_MODES = {"regex", "keyword", "llm"}
@@ -52,9 +54,8 @@ def _validate_config(mode: str, config: dict[str, Any]) -> None:
             if not template or "{content}" not in template:
                 raise ValidationError("自定义 LLM 模式必须提供包含 {content} 占位符的 prompt_template")
         threshold = config.get("threshold")
-        if threshold is not None:
-            if not isinstance(threshold, (int, float)) or not (0.0 <= threshold <= 1.0):
-                raise ValidationError("threshold 必须在 0.0 到 1.0 之间")
+        if threshold is not None and (not isinstance(threshold, (int, float)) or not (0.0 <= threshold <= 1.0)):
+            raise ValidationError("threshold 必须在 0.0 到 1.0 之间")
         model = config.get("model")
         if model is not None and not isinstance(model, str):
             raise ValidationError("model 必须是字符串")
@@ -201,5 +202,5 @@ async def delete_guardrail_rule(
     """软删除 Guardrail 规则。"""
     rule = await get_guardrail_rule(db, rule_id)
     rule.is_deleted = True
-    rule.deleted_at = datetime.now(timezone.utc)
+    rule.deleted_at = datetime.now(UTC)
     await db.flush()

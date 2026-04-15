@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-import uuid
-from datetime import datetime
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+if TYPE_CHECKING:
+    import uuid
+    from datetime import datetime
 
 _VALID_PROPOSAL_TYPES = {"instructions", "tools", "guardrails", "model", "memory"}
 _VALID_STATUSES = {"pending", "approved", "rejected", "applied", "rolled_back"}

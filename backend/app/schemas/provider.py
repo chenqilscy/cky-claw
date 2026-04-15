@@ -2,17 +2,17 @@
 
 from __future__ import annotations
 
-from typing import Any
-
-import uuid
-from datetime import datetime
-
-from enum import Enum
+from enum import StrEnum
+from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+if TYPE_CHECKING:
+    import uuid
+    from datetime import datetime
 
-class ModelTierEnum(str, Enum):
+
+class ModelTierEnum(StrEnum):
     """模型层级枚举。"""
 
     SIMPLE = "simple"

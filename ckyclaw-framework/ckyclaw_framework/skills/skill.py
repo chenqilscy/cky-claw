@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from enum import Enum
+from datetime import UTC, datetime
+from enum import StrEnum
 from typing import Any
 
 
-class SkillCategory(str, Enum):
+class SkillCategory(StrEnum):
     """Skill 分类。"""
 
     PUBLIC = "public"
@@ -53,8 +53,8 @@ class Skill:
     metadata: dict[str, Any] = field(default_factory=dict)
     """附加元数据。"""
 
-    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     """创建时间。"""
 
-    updated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     """最后更新时间。"""

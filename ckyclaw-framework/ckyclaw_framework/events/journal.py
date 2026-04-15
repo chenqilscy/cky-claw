@@ -8,7 +8,7 @@ from __future__ import annotations
 import itertools
 import threading
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 from uuid import uuid4
 
@@ -40,7 +40,7 @@ class EventEntry:
     span_id: str | None = None
     """关联的 Span ID（如有）"""
 
-    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    timestamp: datetime = field(default_factory=lambda: datetime.now(UTC))
     """事件时间戳"""
 
     payload: dict[str, Any] = field(default_factory=dict)

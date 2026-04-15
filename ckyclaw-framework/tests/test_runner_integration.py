@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-import asyncio
-from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from typing import TYPE_CHECKING, Any
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from pydantic import BaseModel
@@ -20,11 +19,13 @@ from ckyclaw_framework.guardrails.result import (
 from ckyclaw_framework.model.message import Message, MessageRole, TokenUsage
 from ckyclaw_framework.model.provider import ModelResponse, ToolCall
 from ckyclaw_framework.runner.hooks import RunHooks
-from ckyclaw_framework.runner.result import RunResult
 from ckyclaw_framework.runner.run_config import RunConfig
-from ckyclaw_framework.runner.run_context import RunContext
 from ckyclaw_framework.runner.runner import Runner
 from ckyclaw_framework.tools.function_tool import FunctionTool
+
+if TYPE_CHECKING:
+    from ckyclaw_framework.runner.result import RunResult
+    from ckyclaw_framework.runner.run_context import RunContext
 
 
 class SampleOutput(BaseModel):

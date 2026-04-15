@@ -3,14 +3,13 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
 
 from app.main import app
-
 
 # ---------------------------------------------------------------------------
 # Fixtures & Helpers
@@ -24,7 +23,7 @@ def client() -> TestClient:
 
 def _make_debug_session_mock(**overrides) -> MagicMock:
     """构造模拟 DebugSession 对象。"""
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     defaults = {
         "id": uuid.uuid4(),
         "agent_id": uuid.uuid4(),

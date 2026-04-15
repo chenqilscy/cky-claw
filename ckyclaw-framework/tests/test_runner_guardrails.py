@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock
 
 import pytest
 
@@ -18,11 +18,11 @@ from ckyclaw_framework.guardrails.result import (
 from ckyclaw_framework.runner.run_config import RunConfig
 from ckyclaw_framework.runner.run_context import RunContext
 from ckyclaw_framework.runner.runner import (
-    _TracingCtx,
     _execute_input_guardrails,
     _execute_input_guardrails_parallel,
     _execute_output_guardrails,
     _execute_output_guardrails_parallel,
+    _TracingCtx,
 )
 from ckyclaw_framework.tracing.span import SpanStatus
 

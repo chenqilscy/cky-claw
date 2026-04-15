@@ -2,14 +2,17 @@
 
 from __future__ import annotations
 
-import uuid
-from datetime import datetime
-from enum import Enum
+from enum import StrEnum
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, Field
 
+if TYPE_CHECKING:
+    import uuid
+    from datetime import datetime
 
-class SummaryGroupBy(str, Enum):
+
+class SummaryGroupBy(StrEnum):
     """汇总维度枚举。"""
 
     agent_model = "agent_model"

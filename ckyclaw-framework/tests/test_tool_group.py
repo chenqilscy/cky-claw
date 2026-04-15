@@ -2,12 +2,9 @@
 
 from __future__ import annotations
 
-import pytest
-
 from ckyclaw_framework.tools.function_tool import FunctionTool
 from ckyclaw_framework.tools.tool_group import ToolGroup
 from ckyclaw_framework.tools.tool_registry import ToolRegistry, get_default_registry
-
 
 # ---------------------------------------------------------------------------
 # ToolGroup 测试

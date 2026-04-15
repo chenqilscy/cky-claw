@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-import json
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import pytest
 
@@ -14,13 +13,14 @@ from ckyclaw_framework.approval.mode import (
     ApprovalMode,
     ApprovalRejectedError,
 )
-from ckyclaw_framework.model.message import Message, MessageRole, TokenUsage
+from ckyclaw_framework.model.message import TokenUsage
 from ckyclaw_framework.model.provider import ModelChunk, ModelProvider, ModelResponse, ToolCall
 from ckyclaw_framework.runner.run_config import RunConfig
-from ckyclaw_framework.runner.run_context import RunContext
 from ckyclaw_framework.runner.runner import Runner
 from ckyclaw_framework.tools.function_tool import function_tool
 
+if TYPE_CHECKING:
+    from ckyclaw_framework.runner.run_context import RunContext
 
 # ---------- helpers ----------
 
@@ -234,7 +234,7 @@ class TestApprovalModeOverride:
         handler = _AutoApproveHandler()
         agent = Agent(name="bot", tools=[get_weather], approval_mode=ApprovalMode.SUGGEST)
         config = RunConfig(model_provider=_ToolCallProvider(), approval_handler=handler)
-        result = await Runner.run(agent, "北京天气", config=config)
+        await Runner.run(agent, "北京天气", config=config)
         assert len(handler.requests) == 1  # suggest → 触发审批
 
 

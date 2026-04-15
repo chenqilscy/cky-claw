@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from enum import Enum
+from enum import StrEnum
 
 
-class ApprovalMode(str, Enum):
+class ApprovalMode(StrEnum):
     """Agent 审批模式。"""
 
     SUGGEST = "suggest"
@@ -18,7 +18,7 @@ class ApprovalMode(str, Enum):
     """完全自动执行，不需要审批。"""
 
 
-class ApprovalDecision(str, Enum):
+class ApprovalDecision(StrEnum):
     """审批决策结果。"""
 
     APPROVED = "approved"

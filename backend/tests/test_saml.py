@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import base64
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 from xml.etree import ElementTree as ET
 
@@ -38,8 +38,8 @@ def _make_idp_config(**overrides):
         "attribute_mapping": {"email": "urn:oid:0.9.2342.19200300.100.1.3"},
         "is_enabled": True,
         "is_default": True,
-        "created_at": datetime.now(timezone.utc),
-        "updated_at": datetime.now(timezone.utc),
+        "created_at": datetime.now(UTC),
+        "updated_at": datetime.now(UTC),
     }
     defaults.update(overrides)
 
@@ -57,7 +57,7 @@ def _build_saml_response_xml(
     status: str = "urn:oasis:names:tc:SAML:2.0:status:Success",
 ) -> str:
     """构建最小化合法的 SAML Response XML。"""
-    now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    now = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
     in_resp = f' InResponseTo="{in_response_to}"' if in_response_to else ""
     return (
         f'<samlp:Response xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol"'
@@ -365,8 +365,8 @@ class TestSamlServiceUnit:
 
     def test_generate_sp_metadata_not_configured(self):
         """SP 未配置时抛出异常。"""
-        from app.services.saml_service import generate_sp_metadata
         from app.core.exceptions import ValidationError
+        from app.services.saml_service import generate_sp_metadata
 
         with patch("app.services.saml_service.settings") as mock_settings:
             mock_settings.saml_sp_entity_id = ""
@@ -423,8 +423,8 @@ class TestSamlServiceUnit:
     @pytest.mark.anyio
     async def test_process_saml_response_bad_base64(self):
         """无效 Base64 输入。"""
-        from app.services.saml_service import process_saml_response
         from app.core.exceptions import AuthenticationError
+        from app.services.saml_service import process_saml_response
 
         mock_db = AsyncMock()
         with pytest.raises(AuthenticationError, match="解码失败"):
@@ -433,8 +433,8 @@ class TestSamlServiceUnit:
     @pytest.mark.anyio
     async def test_process_saml_response_bad_xml(self):
         """无效 XML。"""
-        from app.services.saml_service import process_saml_response
         from app.core.exceptions import AuthenticationError
+        from app.services.saml_service import process_saml_response
 
         mock_db = AsyncMock()
         encoded = base64.b64encode(b"not xml").decode()
@@ -444,8 +444,8 @@ class TestSamlServiceUnit:
     @pytest.mark.anyio
     async def test_process_saml_response_failed_status(self):
         """SAML 认证失败状态。"""
-        from app.services.saml_service import process_saml_response
         from app.core.exceptions import AuthenticationError
+        from app.services.saml_service import process_saml_response
 
         mock_db = AsyncMock()
         xml = _build_saml_response_xml(

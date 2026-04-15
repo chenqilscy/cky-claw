@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from ckyclaw_framework.approval.handler import ApprovalHandler
     from ckyclaw_framework.approval.mode import ApprovalMode
     from ckyclaw_framework.artifacts.store import ArtifactStore

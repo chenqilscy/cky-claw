@@ -2,14 +2,12 @@
 
 from __future__ import annotations
 
-import uuid
+from typing import TYPE_CHECKING
 
 from fastapi import APIRouter, Depends, Query
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.deps import require_admin
-from app.models.user import User
 from app.schemas.provider_model import (
     ProviderModelCreate,
     ProviderModelListResponse,
@@ -17,6 +15,13 @@ from app.schemas.provider_model import (
     ProviderModelUpdate,
 )
 from app.services import provider_model as pm_service
+
+if TYPE_CHECKING:
+    import uuid
+
+    from sqlalchemy.ext.asyncio import AsyncSession
+
+    from app.models.user import User
 
 router = APIRouter(prefix="/api/v1/providers", tags=["provider-models"])
 

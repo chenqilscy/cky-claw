@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import json
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -23,14 +23,13 @@ from app.core.database import get_db as get_db_dep
 from app.core.deps import require_admin
 from app.main import app
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
 
 
 def _now() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 def _orm(**fields: object) -> SimpleNamespace:
@@ -315,7 +314,7 @@ class TestAutoEvaluateRun:
             patch("app.services.auto_evaluator.create_evaluation", new_callable=AsyncMock, return_value=mock_eval),
         ):
             mock_litellm.acompletion = AsyncMock(return_value=mock_llm_response)
-            result = await auto_evaluate_run(
+            await auto_evaluate_run(
                 db,
                 run_id="run-custom",
                 user_input="test",

@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 import re
-import uuid
-from datetime import datetime
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+if TYPE_CHECKING:
+    import uuid
+    from datetime import datetime
 
 # BCP 47 简化校验：语言[-脚本][-地区]，如 zh-CN、en-US、ja-JP、pt-BR
 _BCP47_PATTERN = re.compile(r"^[a-z]{2,3}(-[A-Za-z]{4})?(-[A-Z]{2}|\d{3})?$")

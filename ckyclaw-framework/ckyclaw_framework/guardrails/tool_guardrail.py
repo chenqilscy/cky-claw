@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Awaitable, Callable
-
-from ckyclaw_framework.guardrails.result import GuardrailResult
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable
+
+    from ckyclaw_framework.guardrails.result import GuardrailResult
     from ckyclaw_framework.runner.run_context import RunContext
 
 
@@ -33,7 +34,7 @@ class ToolGuardrail:
     """工具执行后检测函数。接收 (RunContext, tool_name, result)，返回 GuardrailResult。
     tripwire 触发时替换 ToolResult 为错误消息。"""
 
-    condition: Callable[["RunContext"], bool] | None = None
+    condition: Callable[[RunContext], bool] | None = None
     """运行时条件函数。返回 True 时启用，False 时跳过。None 表示始终启用。"""
 
     def __post_init__(self) -> None:

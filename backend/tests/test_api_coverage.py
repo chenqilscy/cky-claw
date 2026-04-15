@@ -11,20 +11,19 @@
 
 from __future__ import annotations
 
+import contextlib
 import uuid
-from datetime import datetime, timezone
-from unittest.mock import AsyncMock, MagicMock, patch
-
+from datetime import UTC, datetime
 from types import SimpleNamespace
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
 
 from app.core.database import get_db as get_db_dep
-from app.core.deps import get_current_user, require_admin, require_permission
+from app.core.deps import get_current_user, require_admin
 from app.core.tenant import check_quota, get_org_id
 from app.main import app
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -32,7 +31,7 @@ from app.main import app
 
 
 def _now() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 def _orm(**fields: object) -> SimpleNamespace:
@@ -584,6 +583,7 @@ class TestSchedulerEngine:
     async def test_scheduler_loop_handles_exception(self) -> None:
         """调度循环异常后继续运行。"""
         import asyncio
+
         import app.services.scheduler_engine as engine
 
         call_count = 0
@@ -598,11 +598,8 @@ class TestSchedulerEngine:
             return 0
 
         with patch.object(engine, "poll_and_execute", side_effect=mock_poll), \
-             patch.object(engine, "POLL_INTERVAL", 0):
-            try:
-                await engine._scheduler_loop()
-            except asyncio.CancelledError:
-                pass
+             patch.object(engine, "POLL_INTERVAL", 0), contextlib.suppress(asyncio.CancelledError):
+            await engine._scheduler_loop()
 
         assert call_count >= 2  # 异常后继续
 
@@ -644,9 +641,8 @@ class TestMCPServerService:
         mock_db = AsyncMock()
 
         with patch("app.services.mcp_server.get_mcp_server", new_callable=AsyncMock,
-                    side_effect=NotFoundError("不存在")):
-            with pytest.raises(NotFoundError):
-                await test_mcp_connection(mock_db, uuid.uuid4())
+                    side_effect=NotFoundError("不存在")), pytest.raises(NotFoundError):
+            await test_mcp_connection(mock_db, uuid.uuid4())
 
     @pytest.mark.asyncio
     async def test_decrypt_auth_config_fallback(self) -> None:
@@ -986,6 +982,7 @@ class TestSchemaValidators:
     def test_guardrail_update_invalid_type(self) -> None:
         """GuardrailRuleUpdate type 无效值触发验证错误。"""
         from pydantic import ValidationError as PydanticValidationError
+
         from app.schemas.guardrail import GuardrailRuleUpdate
 
         with pytest.raises(PydanticValidationError, match="type"):
@@ -994,6 +991,7 @@ class TestSchemaValidators:
     def test_guardrail_update_invalid_mode(self) -> None:
         """GuardrailRuleUpdate mode 无效值触发验证错误。"""
         from pydantic import ValidationError as PydanticValidationError
+
         from app.schemas.guardrail import GuardrailRuleUpdate
 
         with pytest.raises(PydanticValidationError, match="mode"):
@@ -1009,6 +1007,7 @@ class TestSchemaValidators:
     def test_agent_update_invalid_approval_mode(self) -> None:
         """AgentUpdate approval_mode 无效值触发验证错误。"""
         from pydantic import ValidationError as PydanticValidationError
+
         from app.schemas.agent import AgentUpdate
 
         with pytest.raises(PydanticValidationError, match="approval_mode"):
@@ -1034,6 +1033,7 @@ class TestServiceEdgeCases:
     async def test_tool_group_conflict_integrity(self) -> None:
         """create_tool_group 名称冲突 IntegrityError 分支。"""
         from sqlalchemy.exc import IntegrityError
+
         from app.services.tool_group import create_tool_group
 
         mock_db = AsyncMock()
@@ -1041,8 +1041,8 @@ class TestServiceEdgeCases:
         mock_db.execute = AsyncMock(return_value=MagicMock(scalar_one_or_none=MagicMock(return_value=None)))
         mock_db.flush = AsyncMock(side_effect=IntegrityError("dup", params=None, orig=Exception()))
 
-        from app.schemas.tool_group import ToolGroupCreate
         from app.core.exceptions import ConflictError
+        from app.schemas.tool_group import ToolGroupCreate
         data = ToolGroupCreate(name="dup-group", tools=[])
         with pytest.raises(ConflictError, match="已存在"):
             await create_tool_group(mock_db, data)
@@ -1050,9 +1050,9 @@ class TestServiceEdgeCases:
     @pytest.mark.asyncio
     async def test_tool_group_name_conflict_check(self) -> None:
         """create_tool_group 名称已存在时直接 409。"""
-        from app.services.tool_group import create_tool_group
         from app.core.exceptions import ConflictError
         from app.schemas.tool_group import ToolGroupCreate
+        from app.services.tool_group import create_tool_group
 
         mock_db = AsyncMock()
         mock_db.execute = AsyncMock(return_value=MagicMock(scalar_one_or_none=MagicMock(return_value=uuid.uuid4())))
@@ -1075,8 +1075,8 @@ class TestServiceEdgeCases:
     @pytest.mark.asyncio
     async def test_workflow_update_with_metadata(self) -> None:
         """update_workflow 包含 metadata 字段。"""
-        from app.services.workflow import update_workflow, get_workflow
         from app.schemas.workflow import WorkflowUpdate
+        from app.services.workflow import update_workflow
 
         mock_db = AsyncMock()
         record = _orm(
@@ -1092,8 +1092,8 @@ class TestServiceEdgeCases:
     @pytest.mark.asyncio
     async def test_supervision_status_mismatch(self) -> None:
         """session 状态不匹配时抛出 ConflictError。"""
-        from app.services.supervision import _get_and_validate_session
         from app.core.exceptions import ConflictError
+        from app.services.supervision import _get_and_validate_session
 
         mock_db = AsyncMock()
         record = _orm(id=uuid.uuid4(), status="active")
@@ -1107,8 +1107,8 @@ class TestServiceEdgeCases:
     @pytest.mark.asyncio
     async def test_im_channel_update_not_found(self) -> None:
         """update_channel 不存在返回 None。"""
-        from app.services.im_channel import update_channel
         from app.schemas.im_channel import IMChannelUpdate
+        from app.services.im_channel import update_channel
 
         mock_db = AsyncMock()
         mock_result = MagicMock()
@@ -1384,7 +1384,7 @@ class TestWSBroadcast:
     @pytest.mark.asyncio
     async def test_broadcast_removes_dead_connections(self) -> None:
         """_broadcast_to 移除死连接。"""
-        from app.api.ws import _broadcast_to, _active_connections
+        from app.api.ws import _active_connections, _broadcast_to
 
         ws_ok = AsyncMock()
         ws_dead = AsyncMock()
@@ -1424,6 +1424,7 @@ class TestWSBroadcast:
     async def test_stop_subscriber(self) -> None:
         """stop_subscriber 取消后台任务。"""
         import asyncio
+
         import app.api.ws as ws_module
 
         async def _forever() -> None:
@@ -1449,6 +1450,7 @@ class TestSchemaValidatorsR2:
     def test_alert_rule_update_invalid_metric(self) -> None:
         """AlertRuleUpdate 无效 metric。"""
         from pydantic import ValidationError as PydanticValidationError
+
         from app.schemas.alert import AlertRuleUpdate
 
         with pytest.raises(PydanticValidationError, match="指标"):
@@ -1457,6 +1459,7 @@ class TestSchemaValidatorsR2:
     def test_alert_rule_update_invalid_operator(self) -> None:
         """AlertRuleUpdate 无效 operator。"""
         from pydantic import ValidationError as PydanticValidationError
+
         from app.schemas.alert import AlertRuleUpdate
 
         with pytest.raises(PydanticValidationError, match="运算符"):
@@ -1465,6 +1468,7 @@ class TestSchemaValidatorsR2:
     def test_alert_rule_update_invalid_severity(self) -> None:
         """AlertRuleUpdate 无效 severity。"""
         from pydantic import ValidationError as PydanticValidationError
+
         from app.schemas.alert import AlertRuleUpdate
 
         with pytest.raises(PydanticValidationError, match="严重级别"):
@@ -1473,6 +1477,7 @@ class TestSchemaValidatorsR2:
     def test_config_change_log_invalid_entity_type(self) -> None:
         """ConfigChangeLogCreate 无效 entity_type。"""
         from pydantic import ValidationError as PydanticValidationError
+
         from app.schemas.config_change_log import ConfigChangeLogCreate
 
         with pytest.raises(PydanticValidationError, match="实体类型"):
@@ -1483,6 +1488,7 @@ class TestSchemaValidatorsR2:
     def test_config_change_log_invalid_change_source(self) -> None:
         """ConfigChangeLogCreate 无效 change_source。"""
         from pydantic import ValidationError as PydanticValidationError
+
         from app.schemas.config_change_log import ConfigChangeLogCreate
 
         with pytest.raises(PydanticValidationError, match="变更来源"):
@@ -1552,6 +1558,7 @@ class TestChannelAdapterEdgeCases:
     async def test_wecom_send_message_http_error(self) -> None:
         """企微发送消息网络异常返回 False。"""
         import httpx
+
         from app.services.channel_adapters.wecom import WeComAdapter
 
         adapter = WeComAdapter()
@@ -1616,6 +1623,7 @@ class TestChannelAdapterEdgeCases:
     async def test_wecom_get_access_token_http_error(self) -> None:
         """企微 _get_access_token 网络异常返回 None。"""
         import httpx
+
         from app.services.channel_adapters.wecom import _get_access_token
 
         cm = self._mock_httpx_client(get_side_effect=httpx.HTTPError("network"))
@@ -1655,6 +1663,7 @@ class TestChannelAdapterEdgeCases:
     async def test_feishu_send_message_http_error(self) -> None:
         """飞书发送消息网络异常返回 False。"""
         import httpx
+
         from app.services.channel_adapters.feishu import FeishuAdapter
 
         adapter = FeishuAdapter()
@@ -1669,6 +1678,7 @@ class TestChannelAdapterEdgeCases:
     async def test_feishu_get_token_http_error(self) -> None:
         """飞书 _get_tenant_access_token 网络异常返回 None。"""
         import httpx
+
         from app.services.channel_adapters.feishu import FeishuAdapter
 
         adapter = FeishuAdapter()
@@ -1689,6 +1699,7 @@ class TestChannelAdapterEdgeCases:
     def test_feishu_handle_verification_empty_challenge(self) -> None:
         """飞书 URL 验证 challenge 为空返回 None。"""
         import json
+
         from app.services.channel_adapters.feishu import FeishuAdapter
 
         adapter = FeishuAdapter()
@@ -1699,6 +1710,7 @@ class TestChannelAdapterEdgeCases:
     def test_feishu_handle_verification_token_mismatch(self) -> None:
         """飞书 URL 验证 token 不匹配返回 None。"""
         import json
+
         from app.services.channel_adapters.feishu import FeishuAdapter
 
         adapter = FeishuAdapter()
@@ -1711,6 +1723,7 @@ class TestChannelAdapterEdgeCases:
     def test_feishu_parse_message_invalid_content_json(self) -> None:
         """飞书消息 content 字段非有效 JSON 回退为文本。"""
         import json
+
         from app.services.channel_adapters.feishu import FeishuAdapter
 
         adapter = FeishuAdapter()
@@ -1763,6 +1776,7 @@ class TestChannelAdapterEdgeCases:
     async def test_dingtalk_send_message_http_error(self) -> None:
         """钉钉发送消息网络异常返回 False。"""
         import httpx
+
         from app.services.channel_adapters.dingtalk import DingTalkAdapter
 
         adapter = DingTalkAdapter()
@@ -1802,6 +1816,7 @@ class TestChannelAdapterEdgeCases:
     async def test_custom_webhook_send_http_error(self) -> None:
         """自定义 Webhook 推送网络异常返回 False。"""
         import httpx
+
         from app.services.channel_adapters.custom_webhook import CustomWebhookAdapter
 
         adapter = CustomWebhookAdapter()

@@ -3,14 +3,14 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
 
 from app.core.database import get_db as get_db_original
-from app.core.exceptions import AuthenticationError, ConflictError, NotFoundError, ValidationError
+from app.core.exceptions import AuthenticationError, ConflictError, ValidationError
 from app.main import app
 from app.schemas.auth import (
     ChangePasswordRequest,
@@ -23,14 +23,13 @@ from app.schemas.auth import (
     UserResponse,
 )
 
-
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
 
 
 def _make_user(**overrides) -> MagicMock:
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     defaults = {
         "id": uuid.uuid4(),
         "username": "testuser",
@@ -395,9 +394,9 @@ class TestAuthService:
 
         user = _make_user(hashed_password="$2b$12$somehash")
         db = AsyncMock()
-        with patch("app.services.auth.verify_password", return_value=False):
-            with pytest.raises(AuthenticationError, match="当前密码错误"):
-                await change_password(db, user, "wrong", "newpwd")
+        with patch("app.services.auth.verify_password", return_value=False), \
+             pytest.raises(AuthenticationError, match="当前密码错误"):
+            await change_password(db, user, "wrong", "newpwd")
 
     @pytest.mark.asyncio
     async def test_change_password_same_as_current(self) -> None:
@@ -405,9 +404,9 @@ class TestAuthService:
 
         user = _make_user()
         db = AsyncMock()
-        with patch("app.services.auth.verify_password", return_value=True):
-            with pytest.raises(ValidationError, match="新密码不能与当前密码相同"):
-                await change_password(db, user, "same", "same")
+        with patch("app.services.auth.verify_password", return_value=True), \
+             pytest.raises(ValidationError, match="新密码不能与当前密码相同"):
+            await change_password(db, user, "same", "same")
 
     @pytest.mark.asyncio
     async def test_change_password_success(self) -> None:
@@ -426,15 +425,15 @@ class TestAuthService:
         from app.services.auth import confirm_password_reset
 
         db = AsyncMock()
-        with patch("app.services.auth.validate_password_reset_token", new_callable=AsyncMock, return_value=None):
-            with pytest.raises(AuthenticationError, match="重置令牌无效"):
-                await confirm_password_reset(db, "bad-token", "newpwd")
+        with patch("app.services.auth.validate_password_reset_token", new_callable=AsyncMock, return_value=None), \
+             pytest.raises(AuthenticationError, match="重置令牌无效"):
+            await confirm_password_reset(db, "bad-token", "newpwd")
 
     @pytest.mark.asyncio
     async def test_logout_user_blacklists_token(self) -> None:
-        from app.services.auth import logout_user
-
         import time
+
+        from app.services.auth import logout_user
         future_exp = int(time.time()) + 3600
         with patch("app.services.auth.decode_access_token", return_value={"sub": "uid", "exp": future_exp}), \
              patch("app.services.auth.blacklist_token", new_callable=AsyncMock) as mock_bl:
@@ -446,9 +445,9 @@ class TestAuthService:
         from app.services.auth import refresh_access_token
 
         db = AsyncMock()
-        with patch("app.services.auth.is_token_blacklisted", new_callable=AsyncMock, return_value=True):
-            with pytest.raises(AuthenticationError, match="已失效"):
-                await refresh_access_token(db, "old.refresh")
+        with patch("app.services.auth.is_token_blacklisted", new_callable=AsyncMock, return_value=True), \
+             pytest.raises(AuthenticationError, match="已失效"):
+            await refresh_access_token(db, "old.refresh")
 
 
 # ---------------------------------------------------------------------------

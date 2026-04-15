@@ -3,14 +3,13 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
 
 from app.core.auth import create_access_token
-from app.core.database import get_db as get_db_original
 from app.main import app
 from app.schemas.organization import (
     OrganizationCreate,
@@ -19,14 +18,13 @@ from app.schemas.organization import (
     OrganizationUpdate,
 )
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
 
 
 def _make_org(**overrides) -> MagicMock:
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     defaults = {
         "id": uuid.uuid4(),
         "name": "Acme Corp",
@@ -46,7 +44,7 @@ def _make_org(**overrides) -> MagicMock:
 
 
 def _make_user(**overrides) -> MagicMock:
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     defaults = {
         "id": uuid.uuid4(),
         "username": "admin",
@@ -158,14 +156,14 @@ class TestOrganizationService:
         result_mock.scalar_one_or_none.return_value = None
         db.execute.return_value = result_mock
 
-        result = await create_organization(db, data)
+        await create_organization(db, data)
         db.add.assert_called_once()
         db.commit.assert_awaited_once()
 
     @pytest.mark.asyncio
     async def test_create_duplicate_slug(self):
-        from app.services.organization import create_organization
         from app.core.exceptions import ConflictError
+        from app.services.organization import create_organization
 
         db = AsyncMock()
         data = OrganizationCreate(name="Acme", slug="acme-corp")
@@ -396,15 +394,15 @@ class TestOrganizationModel:
     def test_core_models_have_org_id(self):
         """验证核心模型都有 org_id 列。"""
         from app.models.agent import AgentConfig
-        from app.models.session import SessionRecord
-        from app.models.team import TeamConfig
-        from app.models.workflow import WorkflowDefinition
-        from app.models.memory import MemoryEntryRecord
-        from app.models.skill import SkillRecord
-        from app.models.im_channel import IMChannel
         from app.models.guardrail import GuardrailRule
+        from app.models.im_channel import IMChannel
+        from app.models.memory import MemoryEntryRecord
+        from app.models.session import SessionRecord
+        from app.models.skill import SkillRecord
+        from app.models.team import TeamConfig
         from app.models.tool_group import ToolGroupConfig
         from app.models.user import User
+        from app.models.workflow import WorkflowDefinition
 
         models = [
             AgentConfig, SessionRecord, TeamConfig, WorkflowDefinition,

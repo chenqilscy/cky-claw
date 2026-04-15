@@ -9,11 +9,14 @@ A2AServer 提供 A2A 协议的服务端实现，负责：
 from __future__ import annotations
 
 import logging
-from typing import Any, Callable, Awaitable
+from collections.abc import Awaitable, Callable
+from typing import TYPE_CHECKING, Any
 
 from ckyclaw_framework.a2a.adapter import A2AAdapter
-from ckyclaw_framework.a2a.agent_card import AgentCard
 from ckyclaw_framework.a2a.task import A2ATask, TaskStatus
+
+if TYPE_CHECKING:
+    from ckyclaw_framework.a2a.agent_card import AgentCard
 
 logger = logging.getLogger(__name__)
 

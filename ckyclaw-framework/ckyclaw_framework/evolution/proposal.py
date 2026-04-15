@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from enum import Enum
+from datetime import UTC, datetime
+from enum import StrEnum
 from typing import Any
 from uuid import uuid4
 
 
-class ProposalType(str, Enum):
+class ProposalType(StrEnum):
     """建议类型。"""
 
     INSTRUCTIONS = "instructions"
@@ -28,7 +28,7 @@ class ProposalType(str, Enum):
     """合并/清理记忆条目。"""
 
 
-class ProposalStatus(str, Enum):
+class ProposalStatus(StrEnum):
     """建议状态。"""
 
     PENDING = "pending"
@@ -79,7 +79,7 @@ class EvolutionProposal:
     confidence_score: float = 0.0
     """置信度（0.0~1.0）。越高表示优化效果越确信。"""
 
-    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     """创建时间。"""
 
     applied_at: datetime | None = None
@@ -121,7 +121,7 @@ class EvolutionProposal:
             msg = f"只能应用 APPROVED 状态的建议，当前状态: {self.status.value}"
             raise ValueError(msg)
         self.status = ProposalStatus.APPLIED
-        self.applied_at = datetime.now(timezone.utc)
+        self.applied_at = datetime.now(UTC)
         self.eval_before = eval_before
 
     def mark_rolled_back(self, eval_after: float | None = None) -> None:
@@ -134,7 +134,7 @@ class EvolutionProposal:
             msg = f"只能回滚 APPLIED 状态的建议，当前状态: {self.status.value}"
             raise ValueError(msg)
         self.status = ProposalStatus.ROLLED_BACK
-        self.rolled_back_at = datetime.now(timezone.utc)
+        self.rolled_back_at = datetime.now(UTC)
         self.eval_after = eval_after
 
     def update_eval_after(self, eval_after: float) -> None:

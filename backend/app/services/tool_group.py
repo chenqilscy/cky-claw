@@ -3,16 +3,21 @@
 from __future__ import annotations
 
 import logging
-import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import ConflictError, NotFoundError
 from app.models.tool_group import ToolGroupConfig
-from app.schemas.tool_group import ToolGroupCreate, ToolGroupUpdate
+
+if TYPE_CHECKING:
+    import uuid
+
+    from sqlalchemy.ext.asyncio import AsyncSession
+
+    from app.schemas.tool_group import ToolGroupCreate, ToolGroupUpdate
 
 logger = logging.getLogger(__name__)
 
@@ -68,7 +73,7 @@ async def create_tool_group(db: AsyncSession, data: ToolGroupCreate) -> ToolGrou
         await db.flush()
     except IntegrityError:
         await db.rollback()
-        raise ConflictError(f"工具组名称 '{data.name}' 已存在")
+        raise ConflictError(f"工具组名称 '{data.name}' 已存在") from None
 
     await db.commit()
     await db.refresh(tg)
@@ -88,7 +93,7 @@ async def update_tool_group(
     if data.is_enabled is not None:
         tg.is_enabled = data.is_enabled
 
-    tg.updated_at = datetime.now(timezone.utc)
+    tg.updated_at = datetime.now(UTC)
     await db.commit()
     await db.refresh(tg)
     return tg
@@ -98,7 +103,7 @@ async def delete_tool_group(db: AsyncSession, name: str) -> None:
     """软删除工具组配置。"""
     tg = await get_tool_group_by_name(db, name)
     tg.is_deleted = True
-    tg.deleted_at = datetime.now(timezone.utc)
+    tg.deleted_at = datetime.now(UTC)
     await db.commit()
 
 

@@ -6,10 +6,9 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
-import pytest
 from fastapi.testclient import TestClient
 
 from app.core.database import get_db as get_db_original
@@ -27,12 +26,11 @@ from app.schemas.supervision import (
     SupervisionSessionListResponse,
 )
 
-
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
 
-_NOW = datetime(2026, 4, 1, 12, 0, 0, tzinfo=timezone.utc)
+_NOW = datetime(2026, 4, 1, 12, 0, 0, tzinfo=UTC)
 _SESSION_ID = uuid.UUID("550e8400-e29b-41d4-a716-446655440000")
 
 

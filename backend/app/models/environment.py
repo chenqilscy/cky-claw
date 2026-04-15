@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint, text
@@ -35,14 +35,14 @@ class Environment(Base):
     )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
         server_default=text("now()"),
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
         server_default=text("now()"),
-        onupdate=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(UTC),
     )
 
 
@@ -69,7 +69,7 @@ class AgentEnvironmentBinding(Base):
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("true"))
     published_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
         server_default=text("now()"),
     )
     published_by: Mapped[uuid.UUID | None] = mapped_column(

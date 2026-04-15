@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-import asyncio
-from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
-from unittest.mock import AsyncMock, MagicMock
+from datetime import UTC, datetime, timedelta
+from unittest.mock import MagicMock
 
 import pytest
 
+from ckyclaw_framework.memory.hooks import MemoryExtractionHook
+from ckyclaw_framework.memory.in_memory import InMemoryMemoryBackend
 from ckyclaw_framework.memory.memory import (
     DecayMode,
     MemoryBackend,
@@ -16,10 +16,7 @@ from ckyclaw_framework.memory.memory import (
     MemoryType,
     compute_exponential_decay,
 )
-from ckyclaw_framework.memory.in_memory import InMemoryMemoryBackend
 from ckyclaw_framework.memory.retriever import MemoryRetriever
-from ckyclaw_framework.memory.hooks import MemoryExtractionHook
-
 
 # ---------------------------------------------------------------------------
 # MemoryType & MemoryEntry
@@ -219,8 +216,8 @@ class TestInMemoryMemoryBackend:
 
     @pytest.mark.asyncio
     async def test_decay(self, backend: InMemoryMemoryBackend) -> None:
-        old_time = datetime.now(timezone.utc) - timedelta(days=10)
-        new_time = datetime.now(timezone.utc)
+        old_time = datetime.now(UTC) - timedelta(days=10)
+        datetime.now(UTC)
 
         entry_old = MemoryEntry(id="e1", content="old", user_id="u1", confidence=0.8)
         entry_old.updated_at = old_time
@@ -231,7 +228,7 @@ class TestInMemoryMemoryBackend:
         entry_new = MemoryEntry(id="e2", content="new", user_id="u1", confidence=0.9)
         await backend.store("u1", entry_new)
 
-        threshold = datetime.now(timezone.utc) - timedelta(days=1)
+        threshold = datetime.now(UTC) - timedelta(days=1)
         affected = await backend.decay(threshold, 0.1)
         assert affected == 1
 
@@ -245,12 +242,12 @@ class TestInMemoryMemoryBackend:
 
     @pytest.mark.asyncio
     async def test_decay_floor_zero(self, backend: InMemoryMemoryBackend) -> None:
-        old_time = datetime.now(timezone.utc) - timedelta(days=10)
+        old_time = datetime.now(UTC) - timedelta(days=10)
         entry = MemoryEntry(id="e1", content="x", user_id="u1", confidence=0.05)
         await backend.store("u1", entry)
         backend._entries["e1"].updated_at = old_time
 
-        threshold = datetime.now(timezone.utc) - timedelta(days=1)
+        threshold = datetime.now(UTC) - timedelta(days=1)
         await backend.decay(threshold, 0.1)
 
         result = await backend.get("e1")
@@ -344,13 +341,13 @@ class TestModuleExports:
 
     def test_memory_init_exports(self) -> None:
         from ckyclaw_framework.memory import (
-            MemoryType,
-            MemoryEntry,
-            MemoryBackend,
-            InMemoryMemoryBackend,
-            MemoryRetriever,
             DecayMode,
+            InMemoryMemoryBackend,
+            MemoryBackend,
+            MemoryEntry,
             MemoryExtractionHook,
+            MemoryRetriever,
+            MemoryType,
             compute_exponential_decay,
         )
         assert MemoryType is not None
@@ -408,7 +405,7 @@ class TestInMemoryExponentialDecay:
     async def test_decay_exponential_mode(self) -> None:
         """exponential 模式下衰减值合理。"""
         backend = InMemoryMemoryBackend()
-        old_time = datetime.now(timezone.utc) - timedelta(days=10)
+        old_time = datetime.now(UTC) - timedelta(days=10)
         await backend.store(
             "u1",
             MemoryEntry(id="e1", content="old fact", user_id="u1", confidence=1.0),
@@ -417,7 +414,7 @@ class TestInMemoryExponentialDecay:
         backend._entries["e1"].updated_at = old_time
 
         count = await backend.decay(
-            before=datetime.now(timezone.utc), rate=0.1, mode=DecayMode.EXPONENTIAL
+            before=datetime.now(UTC), rate=0.1, mode=DecayMode.EXPONENTIAL
         )
         assert count == 1
         entry = await backend.get("e1")
@@ -429,14 +426,14 @@ class TestInMemoryExponentialDecay:
     async def test_decay_linear_default(self) -> None:
         """默认 LINEAR 模式兼容旧行为。"""
         backend = InMemoryMemoryBackend()
-        old_time = datetime.now(timezone.utc) - timedelta(hours=1)
+        old_time = datetime.now(UTC) - timedelta(hours=1)
         await backend.store(
             "u1",
             MemoryEntry(id="e1", content="fact", user_id="u1", confidence=0.8),
         )
         backend._entries["e1"].updated_at = old_time
 
-        count = await backend.decay(before=datetime.now(timezone.utc), rate=0.2)
+        count = await backend.decay(before=datetime.now(UTC), rate=0.2)
         assert count == 1
         entry = await backend.get("e1")
         assert entry is not None
@@ -452,7 +449,7 @@ class TestInMemoryExponentialDecay:
         )
         # updated_at 默认是现在，before 设置为 1 小时前
         count = await backend.decay(
-            before=datetime.now(timezone.utc) - timedelta(hours=1),
+            before=datetime.now(UTC) - timedelta(hours=1),
             rate=0.1,
             mode=DecayMode.EXPONENTIAL,
         )

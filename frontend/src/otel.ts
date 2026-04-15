@@ -79,10 +79,8 @@ export function initOtel(): void {
       ],
     });
 
-    // eslint-disable-next-line no-console
     console.info('[OTel] Frontend tracing initialized → %s/v1/traces', OTLP_ENDPOINT);
   } catch (e) {
-    // eslint-disable-next-line no-console
     console.warn('[OTel] Failed to initialize frontend tracing:', e);
   }
 }

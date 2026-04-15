@@ -7,8 +7,9 @@ Revises: 0058
 from __future__ import annotations
 
 import sqlalchemy as sa
-from alembic import op
 from sqlalchemy.dialects.postgresql import ARRAY
+
+from alembic import op
 
 revision = "0059"
 down_revision = "0058"

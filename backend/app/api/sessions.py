@@ -2,17 +2,14 @@
 
 from __future__ import annotations
 
-import uuid
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import StreamingResponse
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.core.deps import get_current_user, require_permission
+from app.core.deps import require_permission
 from app.core.tenant import check_quota, get_org_id
-from app.models.user import User
 from app.schemas.session import (
     RunRequest,
     RunResponse,
@@ -23,6 +20,13 @@ from app.schemas.session import (
     SessionResponse,
 )
 from app.services import session as session_service
+
+if TYPE_CHECKING:
+    import uuid
+
+    from sqlalchemy.ext.asyncio import AsyncSession
+
+    from app.models.user import User
 
 router = APIRouter(prefix="/api/v1/sessions", tags=["sessions"])
 

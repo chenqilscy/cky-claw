@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
-from unittest.mock import AsyncMock, MagicMock, patch
+from datetime import UTC, datetime
+from unittest.mock import AsyncMock, MagicMock
 
-import pytest
 from fastapi.testclient import TestClient
 
 from app.core.deps import get_db
@@ -14,7 +13,7 @@ from app.main import app
 
 client = TestClient(app)
 
-now = datetime.now(timezone.utc)
+now = datetime.now(UTC)
 
 
 def _mock_event(**overrides: object) -> MagicMock:
@@ -154,12 +153,6 @@ class TestEventStats:
     def test_stats_with_run_id_filter(self) -> None:
         """带 run_id 过滤的统计请求。"""
         resp = client.get("/api/v1/events/stats?run_id=run-001")
-        assert resp.status_code == 200
-
-    def test_stats_with_session_id_filter(self) -> None:
-        """带 session_id 过滤的统计请求。"""
-        sid = str(uuid.uuid4())
-        resp = client.get(f"/api/v1/events/stats?session_id={sid}")
         assert resp.status_code == 200
 
     def test_stats_with_session_id_filter(self) -> None:

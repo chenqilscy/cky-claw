@@ -3,21 +3,23 @@
 from __future__ import annotations
 
 import asyncio
-import json
-from typing import Any, AsyncIterator
-from unittest.mock import AsyncMock, patch
+from typing import TYPE_CHECKING, Any
+from unittest.mock import patch
 
 import pytest
 
 from ckyclaw_framework.agent.agent import Agent
 from ckyclaw_framework.handoff.handoff import Handoff
-from ckyclaw_framework.model.message import Message, MessageRole, TokenUsage
-from ckyclaw_framework.model.provider import ModelChunk, ModelProvider, ModelResponse, ToolCall, ToolCallChunk
-from ckyclaw_framework.model.settings import ModelSettings
+from ckyclaw_framework.model.message import Message, TokenUsage
+from ckyclaw_framework.model.provider import ModelChunk, ModelProvider, ModelResponse, ToolCall
 from ckyclaw_framework.runner.run_config import RunConfig
 from ckyclaw_framework.runner.run_context import RunContext
 from ckyclaw_framework.runner.runner import Runner, _build_system_message, _build_tool_schemas
 
+if TYPE_CHECKING:
+    from collections.abc import AsyncIterator
+
+    from ckyclaw_framework.model.settings import ModelSettings
 
 # ── Mock Provider ────────────────────────────────────────────────
 
@@ -309,7 +311,6 @@ class TestRunnerRetry:
     async def test_retry_exponential_backoff(self) -> None:
         """验证指数退避延迟。"""
         delays: list[float] = []
-        original_sleep = asyncio.sleep
 
         async def mock_sleep(seconds: float) -> None:
             delays.append(seconds)

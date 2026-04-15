@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import uuid
+from typing import TYPE_CHECKING
 
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth import (
     blacklist_token,
@@ -21,10 +21,13 @@ from app.core.auth import (
     validate_password_reset_token,
     verify_password,
 )
-from app.core.config import settings
 from app.core.exceptions import AuthenticationError, ConflictError, NotFoundError, ValidationError
 from app.models.user import User
-from app.schemas.auth import UserRegister
+
+if TYPE_CHECKING:
+    from sqlalchemy.ext.asyncio import AsyncSession
+
+    from app.schemas.auth import UserRegister
 
 
 async def register_user(db: AsyncSession, data: UserRegister) -> User:
@@ -39,7 +42,7 @@ async def register_user(db: AsyncSession, data: UserRegister) -> User:
         await db.flush()
     except IntegrityError:
         await db.rollback()
-        raise ConflictError(f"用户名 '{data.username}' 或邮箱 '{data.email}' 已被注册")
+        raise ConflictError(f"用户名 '{data.username}' 或邮箱 '{data.email}' 已被注册") from None
     await db.commit()
     await db.refresh(user)
     return user
@@ -147,7 +150,7 @@ async def get_user_by_id(db: AsyncSession, user_id: str) -> User:
     try:
         uid = uuid.UUID(user_id)
     except ValueError:
-        raise NotFoundError("用户不存在")
+        raise NotFoundError("用户不存在") from None
     stmt = select(User).where(User.id == uid, User.is_active == True)  # noqa: E712
     user = (await db.execute(stmt)).scalar_one_or_none()
     if user is None:

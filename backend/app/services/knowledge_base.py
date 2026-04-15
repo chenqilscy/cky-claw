@@ -2,17 +2,10 @@
 
 from __future__ import annotations
 
-import uuid
-from datetime import datetime, timezone
-from typing import Any
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import func, select
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from ckyclaw_framework.rag.chunker import FixedSizeChunker
-from ckyclaw_framework.rag.document import Document
-from ckyclaw_framework.rag.embedding import InMemoryEmbeddingProvider
-from ckyclaw_framework.rag.vector_store import cosine_similarity
 
 from app.core.exceptions import NotFoundError
 from app.models.knowledge_base import (
@@ -20,7 +13,17 @@ from app.models.knowledge_base import (
     KnowledgeChunkRecord,
     KnowledgeDocumentRecord,
 )
-from app.schemas.knowledge_base import KnowledgeBaseCreate, KnowledgeBaseUpdate
+from ckyclaw_framework.rag.chunker import FixedSizeChunker
+from ckyclaw_framework.rag.document import Document
+from ckyclaw_framework.rag.embedding import InMemoryEmbeddingProvider
+from ckyclaw_framework.rag.vector_store import cosine_similarity
+
+if TYPE_CHECKING:
+    import uuid
+
+    from sqlalchemy.ext.asyncio import AsyncSession
+
+    from app.schemas.knowledge_base import KnowledgeBaseCreate, KnowledgeBaseUpdate
 
 
 async def create_knowledge_base(
@@ -99,7 +102,7 @@ async def update_knowledge_base(
             row.metadata_ = value
         else:
             setattr(row, key, value)
-    row.updated_at = datetime.now(timezone.utc)
+    row.updated_at = datetime.now(UTC)
     await db.commit()
     await db.refresh(row)
     return row
@@ -113,7 +116,7 @@ async def delete_knowledge_base(
 ) -> None:
     """软删除知识库。"""
     row = await get_knowledge_base(db, kb_id, org_id=org_id)
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     row.is_deleted = True
     row.deleted_at = now
     row.updated_at = now
@@ -186,7 +189,7 @@ async def ingest_document(
 
     document.status = "indexed"
     document.chunk_count = len(chunks)
-    document.updated_at = datetime.now(timezone.utc)
+    document.updated_at = datetime.now(UTC)
     await db.commit()
     await db.refresh(document)
     return document

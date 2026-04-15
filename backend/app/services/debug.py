@@ -5,19 +5,20 @@
 
 from __future__ import annotations
 
-import asyncio
 import logging
-import uuid
-from datetime import datetime, timezone
-from typing import Any
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import func, select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.agent import AgentConfig
 from app.models.debug_session import DebugSession
-
 from ckyclaw_framework.debug.controller import DebugController, DebugMode
+
+if TYPE_CHECKING:
+    import uuid
+
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = logging.getLogger(__name__)
 
@@ -150,9 +151,9 @@ async def update_session_state(
     if error is not None:
         session.error = error
     if finished:
-        session.finished_at = datetime.now(timezone.utc)
+        session.finished_at = datetime.now(UTC)
 
-    session.updated_at = datetime.now(timezone.utc)
+    session.updated_at = datetime.now(UTC)
     await db.commit()
     await db.refresh(session)
     return session

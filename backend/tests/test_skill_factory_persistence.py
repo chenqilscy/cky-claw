@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from unittest.mock import AsyncMock, MagicMock, patch
+from datetime import UTC, datetime
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -37,8 +37,8 @@ class _FakeSkillRecord:
         self.content = content
         self.category = category
         self.metadata_ = metadata_
-        self.created_at = created_at or datetime.now(timezone.utc)
-        self.updated_at = datetime.now(timezone.utc)
+        self.created_at = created_at or datetime.now(UTC)
+        self.updated_at = datetime.now(UTC)
         self.is_deleted = is_deleted
         self.deleted_at = deleted_at
 

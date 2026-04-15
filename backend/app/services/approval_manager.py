@@ -8,9 +8,12 @@ from __future__ import annotations
 
 import asyncio
 import logging
-import uuid
+from typing import TYPE_CHECKING
 
 from ckyclaw_framework.approval.mode import ApprovalDecision
+
+if TYPE_CHECKING:
+    import uuid
 
 logger = logging.getLogger(__name__)
 
@@ -52,7 +55,7 @@ class ApprovalManager:
             return ApprovalDecision.TIMEOUT
         try:
             await asyncio.wait_for(event.wait(), timeout=timeout)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             logger.info("Approval %s timed out after %ds", approval_id, timeout)
             return ApprovalDecision.TIMEOUT
         finally:

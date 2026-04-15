@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import os
 import tempfile
 import time
 
-from ckyclaw_framework.sandbox.config import SandboxConfig
 from ckyclaw_framework.sandbox.executor import SandboxExecutor, SandboxResult
 
 # 语言 → 命令映射
@@ -88,12 +88,10 @@ class LocalSandbox(SandboxExecutor):
                     proc.communicate(),
                     timeout=timeout,
                 )
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 timed_out = True
-                try:
+                with contextlib.suppress(ProcessLookupError):
                     proc.kill()
-                except ProcessLookupError:
-                    pass
                 stdout_bytes = b""
                 stderr_bytes = b"Execution timed out"
 
@@ -118,3 +116,7 @@ class LocalSandbox(SandboxExecutor):
                 import shutil
 
                 shutil.rmtree(tmp_dir, ignore_errors=True)
+
+    async def cleanup(self) -> None:
+        """本地沙箱无需额外清理。"""
+        pass

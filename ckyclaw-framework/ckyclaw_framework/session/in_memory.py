@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime, timezone
-from typing import Any
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING, Any
 
-from ckyclaw_framework.model.message import Message
 from ckyclaw_framework.session.session import SessionBackend, SessionMetadata
+
+if TYPE_CHECKING:
+    from ckyclaw_framework.model.message import Message
 
 
 class InMemorySessionBackend(SessionBackend):
@@ -33,7 +35,7 @@ class InMemorySessionBackend(SessionBackend):
             self._messages[session_id].extend(messages)
             meta = self._metadata[session_id]
             meta.message_count = len(self._messages[session_id])
-            meta.updated_at = datetime.now(timezone.utc)
+            meta.updated_at = datetime.now(UTC)
             # 更新 last_agent_name
             for msg in reversed(messages):
                 if msg.agent_name:

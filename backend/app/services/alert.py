@@ -2,18 +2,21 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 import logging
 import operator as op_module
-import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import func, select, text
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.alert import AlertEvent, AlertRule
-from app.schemas.alert import AlertRuleCreate, AlertRuleUpdate
+
+if TYPE_CHECKING:
+    import uuid
+
+    from sqlalchemy.ext.asyncio import AsyncSession
+
+    from app.schemas.alert import AlertRuleCreate, AlertRuleUpdate
 
 logger = logging.getLogger(__name__)
 
@@ -110,7 +113,7 @@ async def update_alert_rule(db: AsyncSession, rule: AlertRule, data: AlertRuleUp
 async def delete_alert_rule(db: AsyncSession, rule: AlertRule) -> None:
     """软删除告警规则。"""
     rule.is_deleted = True
-    rule.deleted_at = datetime.now(timezone.utc)
+    rule.deleted_at = datetime.now(UTC)
     await db.commit()
 
 
@@ -189,7 +192,7 @@ async def _compute_metric(
     if sql_template is None:
         return 0.0
 
-    since = datetime.now(timezone.utc) - timedelta(minutes=window_minutes)
+    since = datetime.now(UTC) - timedelta(minutes=window_minutes)
     agent_filter = ""
     params: dict[str, Any] = {"since": since}
 
@@ -226,7 +229,7 @@ async def evaluate_rule(
     # 冷却检查
     if rule.last_triggered_at is not None:
         cooldown_until = rule.last_triggered_at + timedelta(minutes=rule.cooldown_minutes)
-        if datetime.now(timezone.utc) < cooldown_until:
+        if datetime.now(UTC) < cooldown_until:
             return None
 
     metric_value = await _compute_metric(db, rule.metric, rule.window_minutes, rule.agent_name)
@@ -254,7 +257,7 @@ async def evaluate_rule(
         message=message,
     )
     db.add(event)
-    rule.last_triggered_at = datetime.now(timezone.utc)
+    rule.last_triggered_at = datetime.now(UTC)
 
     if auto_commit:
         await db.commit()

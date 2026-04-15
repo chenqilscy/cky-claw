@@ -2,14 +2,12 @@
 
 from __future__ import annotations
 
-import uuid
+from typing import TYPE_CHECKING
 
 from fastapi import APIRouter, Depends, Query
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.deps import get_current_user, require_permission
-from app.models.user import User
 from app.schemas.marketplace import (
     InstallTemplateRequest,
     MarketplaceListResponse,
@@ -20,6 +18,13 @@ from app.schemas.marketplace import (
     ReviewResponse,
 )
 from app.services import marketplace as mp_svc
+
+if TYPE_CHECKING:
+    import uuid
+
+    from sqlalchemy.ext.asyncio import AsyncSession
+
+    from app.models.user import User
 
 router = APIRouter(prefix="/api/v1/marketplace", tags=["marketplace"])
 
