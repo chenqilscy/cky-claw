@@ -56,11 +56,11 @@
 | F7 | Agent 调试器 | ✅ | DebugController + 3 检查点 + WebSocket |
 | F8 | 高级 Prompt Editor | ✅ | 模板变量引擎 render/validate/extract + 前端编辑器 |
 | F9 | 移动端适配 | ✅ | useResponsive Hook + 审批/对话/仪表盘/布局 4 页面响应式 |
-| F10 | **SSO SAML 2.0** | ❌ | 企业 SAML 单点登录集成 |
+| F10 | SSO SAML 2.0 | ✅ | SAML SP + 多 IdP + AuthnRequest/ACS + 前端 SSO 按钮 + 管理页 |
 | F11 | 数据导出/报表 | ✅ | CSV 流式导出 + 注入防护 |
 | F12 | 多环境管理 | ✅ | 环境 CRUD + 绑定 + 发布 + Diff + Runner 环境感知 |
 
-**完成率：10/12（83%）。剩余 2 项：F4、F10。**
+**完成率：11/12（91.7%）。剩余 1 项：F4。**
 
 ### 3.2 各项详细分析
 
@@ -95,18 +95,20 @@
 
 **风险**：OpenAI SDK 频繁迭代，维护成本高。
 
-#### F10: SSO SAML 2.0（P2 — 企业能力）
+#### F10: SSO SAML 2.0（✅ 已完成）
 
 **优先级**：P2（企业客户需求驱动）
 
 **交付物**：
-- [ ] SAML 2.0 SP（Service Provider）实现
-- [ ] IdP 元数据解析 + 证书管理
-- [ ] SSO 登录流程：SP-Initiated + IdP-Initiated
-- [ ] SLO（Single Logout）
-- [ ] 属性映射（email/name/role → CkyClaw User）
-- [ ] 前端 SSO 登录按钮 + 回调页
-- [ ] 对接测试（Azure AD / Okta / OneLogin）
+- [x] SAML 2.0 SP（Service Provider）实现 — 轻量级 stdlib XML 实现，无 python3-saml 依赖
+- [x] IdP 元数据解析 + 证书管理 — SamlIdpConfig ORM + 多 IdP 支持 + 默认 IdP
+- [x] SSO 登录流程：SP-Initiated（AuthnRequest HTTP-Redirect Binding + ACS POST Binding）
+- [ ] SLO（Single Logout）— 延期，按需实现
+- [x] 属性映射（email/name/role → CkyClaw User）— JSONB attribute_mapping + 默认回退
+- [x] 前端 SSO 登录按钮 + 回调页 — Login.tsx SAML 按钮 + SamlCallbackPage
+- [x] IdP 管理页 — SamlPage.tsx（CRUD + SP 元数据查看 + 启用/禁用切换）
+- [x] 后端测试 24/24 通过
+- [ ] 对接测试（Azure AD / Okta / OneLogin）— 待实际 IdP 环境验证
 
 ---
 
@@ -220,10 +222,10 @@ Boss 要求重点分析 Hermes 的多终端架构：
 | 排名 | 功能 | 优先级 | 理由 |
 |:----:|------|:------:|------|
 | 1 | ~~F2 Kubernetes 部署~~ | ✅ | Helm Chart 已完成 |
-| 2 | F10 SSO SAML 2.0 | P2 | 企业客户准入门槛 |
+| 2 | ~~F10 SSO SAML 2.0~~ | ✅ | SAML SP + 多 IdP + 前后端集成 |
 | 3 | F4 Agents SDK 兼容层 | P3 | 无客户显式需求，维护成本高 |
 
-> 2026-04-15 更新：F2 已完成。F10/F4 当前标记为"暂不处理（低优先级）"。
+> 2026-04-16 更新：F2、F10 已完成。仅剩 F4（P3，暂不处理）。
 
 ---
 
