@@ -292,3 +292,207 @@ HTTP Request
 | **审计** | AuditLogMiddleware 全量操作审计 |
 | **数据** | SoftDeleteMixin 软删除 + 数据分类标签 |
 | **合规** | 数据保留策略 + Right-to-Erasure + SOC2 控制点 |
+
+---
+
+## 9. 功能图谱（Mermaid）
+
+### 9.1 系统全景功能图谱
+
+```mermaid
+graph TB
+    subgraph User["用户入口"]
+        WebUI["前端 SPA<br/>React 19 + Ant Design"]
+        API["REST API<br/>/api/v1/*"]
+        CLI["ckyclaw-cli<br/>命令行工具"]
+        Telegram["Telegram Bot"]
+        Discord["Discord Bot"]
+    end
+
+    subgraph Core["核心引擎 (CkyClaw Framework)"]
+        Agent["Agent 定义<br/>指令/模型/工具/护栏"]
+        Runner["Runner 执行引擎<br/>Agent Loop + max_turns"]
+        Model["ModelProvider<br/>LiteLLM → 10+ 厂商"]
+        Tools["工具系统<br/>FunctionTool + ToolGroup"]
+        Handoff["Handoff 编排<br/>Agent 间任务交接"]
+        Guardrails["三级护栏<br/>Input/Output/Tool"]
+        Approval["审批模式<br/>suggest/auto-edit/full-auto"]
+    end
+
+    subgraph Extended["扩展能力"]
+        Session["会话管理<br/>Postgres/InMemory"]
+        Tracing["链路追踪<br/>Trace → Span 树"]
+        MCP["MCP 集成<br/>stdio/sse/http"]
+        Memory["三分类记忆<br/>Episodic/Semantic/Procedural"]
+        Events["事件溯源<br/>EventStore + Replay"]
+        Skills["技能工厂<br/>Agent 自主创建 Skill"]
+        RAG["知识检索<br/>图谱 RAG"]
+    end
+
+    subgraph Advanced["高级能力"]
+        Context["上下文工程<br/>ContextBuilder + Budget"]
+        Evolution["自改进循环<br/>LearningLoop + Reflector"]
+        Orchestration["智能编排<br/>PlanGuard + Mailbox"]
+        Checkpoint["断点恢复<br/>CancellationToken + Resume"]
+        Maturity["成熟度模型<br/>四维评分 + 四级成长"]
+    end
+
+    subgraph Backend["后端服务 (FastAPI)"]
+        AgentAPI["Agent CRUD<br/>版本/快照/回滚"]
+        ProviderAPI["Provider 管理<br/>多厂商 + 加密"]
+        SessionAPI["Session API<br/>对话/消息"]
+        ToolAPI["工具组 API<br/>Hosted + Custom"]
+        TraceAPI["Trace API<br/>查询/可视化"]
+        AuthAPI["认证授权<br/>JWT + OAuth + SAML"]
+        DashboardAPI["Dashboard<br/>统计/Token/护栏"]
+        EnvAPI["多环境管理<br/>Dev/Staging/Prod"]
+        BenchmarkAPI["评测套件<br/>Case/Suite/Report"]
+    end
+
+    subgraph Infra["基础设施"]
+        PG["PostgreSQL 16<br/>asyncpg + 61 迁移"]
+        Redis["Redis 7<br/>pub/sub + 缓存"]
+        Docker["Docker Compose<br/>全栈编排"]
+        K8s["Kubernetes<br/>Helm + HPA + PDB"]
+        CI["CI/CD<br/>GitHub Actions + Jenkins"]
+    end
+
+    WebUI --> API
+    CLI --> API
+    Telegram --> API
+    Discord --> API
+    API --> Backend
+
+    Backend --> Core
+    Backend --> Extended
+    Backend --> PG
+    Backend --> Redis
+
+    Runner --> Agent
+    Runner --> Model
+    Runner --> Tools
+    Runner --> Handoff
+    Runner --> Guardrails
+    Runner --> Approval
+    Runner --> Session
+    Runner --> Tracing
+    Runner --> Memory
+    Runner --> Context
+    Runner --> Checkpoint
+
+    Agent --> MCP
+    Agent --> Skills
+    Agent --> RAG
+    Evolution --> Maturity
+    Orchestration --> Runner
+```
+
+### 9.2 Agent 执行流程图谱
+
+```mermaid
+flowchart LR
+    Input["用户输入"] --> Resume{"检查点<br/>恢复?"}
+    Resume -->|否| Load["加载 Session<br/>历史消息"]
+    Resume -->|是| Restore["恢复执行状态"]
+    Restore --> Load
+    Load --> Trim["History Trim<br/>Token 预算裁剪"]
+    Trim --> IG["Input Guardrails<br/>Regex/Keyword/LLM"]
+    IG -->|拒绝| Block["拒绝响应"]
+    IG -->|通过| Build["构建 System Message<br/>指令+记忆+模板+风格"]
+
+    subgraph Loop["Agent Loop (max_turns)"]
+        Build --> LLM["调用 LLM<br/>ModelProvider"]
+        LLM --> Check{"响应类型?"}
+        Check -->|tool_calls| TG["Tool Guardrails"]
+        TG --> ApprovalCheck{"需要审批?"}
+        ApprovalCheck -->|是| Wait["等待人工审批"]
+        Wait --> Exec
+        ApprovalCheck -->|否| Exec["并行执行工具<br/>asyncio.TaskGroup"]
+        Exec --> HandoffCheck{"Handoff?"}
+        HandoffCheck -->|是| Switch["切换 Agent"] --> Build
+        HandoffCheck -->|否| Build
+        Check -->|text| OG["Output Guardrails"]
+    end
+
+    OG -->|拒绝| Block
+    OG -->|通过| Parse["结构化输出解析"]
+    Parse --> Save["Session 持久化"]
+    Save --> Trace["Trace 导出"]
+    Trace --> Result["返回 RunResult"]
+```
+
+### 9.3 前端页面功能矩阵
+
+```mermaid
+graph LR
+    subgraph Dashboard["仪表盘"]
+        D1["统计概览"]
+        D2["Token 分布"]
+        D3["Guardrail 状态"]
+        D4["Span 类型分布"]
+    end
+
+    subgraph AgentMgmt["Agent 管理"]
+        A1["Agent 列表"]
+        A2["Agent 创建向导<br/>5步骤"]
+        A3["Agent 编辑"]
+        A4["版本历史"]
+        A5["Visual Builder<br/>可视化搭建"]
+    end
+
+    subgraph Chat["对话运行"]
+        C1["多会话管理"]
+        C2["实时对话"]
+        C3["审批队列"]
+        C4["SSE 流式"]
+    end
+
+    subgraph Config["配置管理"]
+        P1["模型厂商"]
+        T1["工具组"]
+        G1["护栏规则"]
+        M1["MCP Server"]
+        S1["Skill 管理"]
+        K1["知识库"]
+    end
+
+    subgraph Monitor["监控分析"]
+        R1["运行记录"]
+        TR1["链路追踪"]
+        TK1["Token 审计"]
+        B1["评测套件"]
+    end
+
+    subgraph System["系统设置"]
+        U1["用户管理"]
+        E1["多环境"]
+        SA1["SSO SAML"]
+        CO1["合规中心"]
+        MK1["Agent 市场"]
+    end
+```
+
+### 9.4 API 功能域矩阵
+
+| 功能域 | 端点数 | 关键路由 |
+|--------|:------:|---------|
+| **Agent** | 8 | CRUD + versions + snapshots + compare + rollback |
+| **Provider** | 6 | CRUD + test-connection + sync-models |
+| **Session** | 5 | create + list + messages + run + stream |
+| **Tool Groups** | 5 | CRUD + seed |
+| **Guardrails** | 5 | CRUD + toggle |
+| **MCP Server** | 6 | CRUD + test + tools-preview |
+| **Tracing** | 4 | traces + spans + waterfall + export |
+| **Token Usage** | 3 | stats + by-agent + by-model |
+| **Auth** | 8 | login + register + refresh + me + oauth + saml |
+| **Users** | 5 | CRUD + roles |
+| **Dashboard** | 3 | stats + token-distribution + guardrail-status |
+| **Environments** | 5 | CRUD + publish + rollback + diff |
+| **Knowledge Base** | 5 | CRUD + upload + search |
+| **Skills** | 7 | CRUD + search + find-for-agent |
+| **Marketplace** | 8 | browse + publish + install + review |
+| **Benchmark** | 12 | cases + suites + runs + reports |
+| **Compliance** | 6 | classification + retention + erasure + controls |
+| **Cost Router** | 2 | route + test |
+| **Approval** | 4 | queue + approve + reject + status |
+| **Hooks** | 2 | list + test |
