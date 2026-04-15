@@ -83,3 +83,17 @@ async def delete_provider_model(
     """删除 Provider Model。"""
     await pm_service.delete_model(db, model_id)
     return {"message": "模型已删除"}
+
+
+@router.post("/{provider_id}/models/sync")
+async def sync_provider_models(
+    provider_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    _user: User = Depends(require_admin),
+) -> dict:
+    """从模型厂商自动同步模型列表。
+
+    调用厂商的 /v1/models 端点获取可用模型，批量导入到数据库。
+    """
+    result = await pm_service.sync_models_from_provider(db, provider_id)
+    return result

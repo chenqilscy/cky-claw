@@ -9,8 +9,8 @@ import { theme } from 'antd';
 
 /* ---------- 品牌色系 ---------- */
 
-/** 主色 — 科技蓝偏靛（区别于默认 Ant Design 蓝） */
-const BRAND_PRIMARY = '#4F46E5';
+/** 主色 — 琥珀橙黄（蓝黑底配橙黄点缀，突出品牌轨达感） */
+const BRAND_PRIMARY = '#F59E0B';
 
 /** 成功 / 警告 / 错误 — 柔和企业风 */
 const COLOR_SUCCESS = '#16A34A';
@@ -154,11 +154,11 @@ export const darkTheme: ThemeConfig = {
   token: {
     ...sharedToken,
     /* 暗色微调 — 低对比度，护眼 */
-    colorBgContainer: '#18181B',
-    colorBgLayout: '#09090B',
-    colorBgElevated: '#27272A',
-    colorBorder: '#3F3F46',
-    colorBorderSecondary: '#27272A',
+    colorBgContainer: '#111827',
+    colorBgLayout: '#0A1628',
+    colorBgElevated: '#1F2937',
+    colorBorder: '#374151',
+    colorBorderSecondary: '#1F2937',
     colorText: '#F4F4F5',
     colorTextSecondary: '#A1A1AA',
     colorTextTertiary: '#71717A',
@@ -169,11 +169,11 @@ export const darkTheme: ThemeConfig = {
     ...sharedComponents,
     Layout: {
       ...sharedComponents.Layout,
-      bodyBg: '#09090B',
+      bodyBg: '#0A1628',
     },
     Card: {
       ...sharedComponents.Card,
-      colorBgContainer: '#18181B',
+      colorBgContainer: '#111827',
     },
   },
 };

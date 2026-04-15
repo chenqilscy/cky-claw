@@ -50,7 +50,7 @@ async def get_agents_activity_trend(
 @router.get("", response_model=AgentListResponse, dependencies=[Depends(require_permission("agents", "read"))])
 async def list_agents(
     search: str | None = Query(None, description="按名称/描述模糊搜索"),
-    limit: int = Query(20, ge=1, le=100, description="分页大小"),
+    limit: int = Query(20, ge=1, le=200, description="分页大小"),
     offset: int = Query(0, ge=0, description="偏移量"),
     db: AsyncSession = Depends(get_db),
     org_id: uuid.UUID | None = Depends(get_org_id),

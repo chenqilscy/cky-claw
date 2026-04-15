@@ -89,6 +89,8 @@ interface PageContainerProps {
   extra?: ReactNode;
   /** 是否隐藏面包屑（默认不隐藏） */
   hideBreadcrumb?: boolean;
+  /** 覆盖面包屑中特定 URL 段的显示文本，key 为 URL 段原始值 */
+  breadcrumbOverrides?: Record<string, string>;
   children: ReactNode;
 }
 
@@ -101,6 +103,7 @@ export const PageContainer: React.FC<PageContainerProps> = ({
   description,
   extra,
   hideBreadcrumb,
+  breadcrumbOverrides,
   children,
 }) => {
   const location = useLocation();
@@ -113,7 +116,7 @@ export const PageContainer: React.FC<PageContainerProps> = ({
     { title: <a onClick={() => navigate('/dashboard')}>首页</a>, key: 'home' },
     ...pathSegments.map((seg, idx) => {
       const path = '/' + pathSegments.slice(0, idx + 1).join('/');
-      const label = BREADCRUMB_MAP[seg] ?? seg;
+      const label = breadcrumbOverrides?.[seg] ?? BREADCRUMB_MAP[seg] ?? seg;
       const isLast = idx === pathSegments.length - 1;
       return {
         title: isLast ? label : <a onClick={() => navigate(path)}>{label}</a>,

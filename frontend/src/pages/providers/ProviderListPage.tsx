@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Button, DatePicker, Form, Input, App, Modal, Popconfirm, Switch, Tag, Space, theme } from 'antd';
-import { KeyOutlined, PlusOutlined, ReloadOutlined, ThunderboltOutlined } from '@ant-design/icons';
+import { KeyOutlined, PlusOutlined, ThunderboltOutlined } from '@ant-design/icons';
 import { PageContainer } from '../../components/PageContainer';
 import { ProTable } from '@ant-design/pro-components';
 import type { ProColumns } from '@ant-design/pro-components';
@@ -219,6 +219,8 @@ const ProviderListPage: React.FC = () => {
       dataSource={data}
       loading={loading}
       search={false}
+      options={{ reload: false }}
+      scroll={{ x: 1200 }}
       pagination={{
         current: pagination.current,
         pageSize: pagination.pageSize,
@@ -235,11 +237,6 @@ const ProviderListPage: React.FC = () => {
         >
           注册厂商
         </Button>,
-        <ReloadOutlined
-          key="reload"
-          style={{ cursor: 'pointer', fontSize: 16 }}
-          onClick={() => void refetch()}
-        />,
       ]}
     />
 

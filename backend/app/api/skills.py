@@ -43,7 +43,7 @@ async def create_skill(
 async def list_skills(
     category: str | None = Query(None, description="按分类筛选"),
     tag: str | None = Query(None, description="按标签筛选"),
-    limit: int = Query(20, ge=1, le=100, description="分页大小"),
+    limit: int = Query(20, ge=1, le=200, description="分页大小"),
     offset: int = Query(0, ge=0, description="分页偏移"),
     db: AsyncSession = Depends(get_db),
     org_id: uuid.UUID | None = Depends(get_org_id),

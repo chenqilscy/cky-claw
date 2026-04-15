@@ -47,7 +47,7 @@ async def create_knowledge_base(
     dependencies=[Depends(require_permission("memories", "read"))],
 )
 async def list_knowledge_bases(
-    limit: int = Query(20, ge=1, le=100),
+    limit: int = Query(20, ge=1, le=200),
     offset: int = Query(0, ge=0),
     db: AsyncSession = Depends(get_db),
     org_id: uuid.UUID | None = Depends(get_org_id),

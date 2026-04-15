@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button, Card, Form, Input, InputNumber, Modal, Popconfirm, Select, Space, Switch, Table, Tabs, Tag, App, Spin } from 'antd';
-import { ArrowLeftOutlined, ApiOutlined, PlusOutlined } from '@ant-design/icons';
+import { ArrowLeftOutlined, ApiOutlined, PlusOutlined, SyncOutlined } from '@ant-design/icons';
 import { PageContainer } from '../../components/PageContainer';
 import { providerService, PROVIDER_TYPES, AUTH_TYPES, PROVIDER_BASE_URLS, PROVIDER_TYPE_LABELS } from '../../services/providerService';
 import type { ProviderCreateRequest, ProviderUpdateRequest, ProviderModelResponse, ProviderModelCreateRequest, ProviderModelUpdateRequest } from '../../services/providerService';
@@ -51,6 +51,7 @@ const ProviderEditPage: React.FC = () => {
   const [editingModel, setEditingModel] = useState<ProviderModelResponse | null>(null);
   const [modelForm] = Form.useForm();
   const [modelSaving, setModelSaving] = useState(false);
+  const [syncing, setSyncing] = useState(false);
 
   /** 切换厂商类型时自动填写 Base URL（仅当 base_url 为空或匹配已知厂商 URL 时覆盖） */
   const handleProviderTypeChange = (type: string) => {
@@ -242,6 +243,25 @@ const ProviderEditPage: React.FC = () => {
     }
   };
 
+  /** 从厂商自动同步模型列表 */
+  const handleSyncModels = async () => {
+    if (!id) return;
+    setSyncing(true);
+    try {
+      const result = await providerService.syncModels(id);
+      if (result.errors.length > 0) {
+        message.warning(`同步完成，但有 ${result.errors.length} 个错误：${result.errors[0]}`);
+      } else {
+        message.success(`同步完成：新增 ${result.created} 个，更新 ${result.updated} 个`);
+      }
+      loadModels();
+    } catch {
+      message.error('模型同步失败，请确认厂商已配置正确的 Base URL 和 API Key');
+    } finally {
+      setSyncing(false);
+    }
+  };
+
   const modelColumns: ColumnsType<ProviderModelResponse> = [
     { title: '模型标识', dataIndex: 'model_name', key: 'model_name', width: 200 },
     { title: '显示名称', dataIndex: 'display_name', key: 'display_name', width: 160, render: (v: string) => v || '-' },
@@ -394,9 +414,14 @@ const ProviderEditPage: React.FC = () => {
             children: (
               <Card>
                 <div style={{ marginBottom: 16 }}>
-                  <Button type="primary" icon={<PlusOutlined />} onClick={openModelCreate}>
-                    添加模型
-                  </Button>
+                  <Space>
+                    <Button type="primary" icon={<PlusOutlined />} onClick={openModelCreate}>
+                      添加模型
+                    </Button>
+                    <Button icon={<SyncOutlined spin={syncing} />} onClick={handleSyncModels} loading={syncing}>
+                      从厂商同步
+                    </Button>
+                  </Space>
                 </div>
                 <Table<ProviderModelResponse>
                   rowKey="id"

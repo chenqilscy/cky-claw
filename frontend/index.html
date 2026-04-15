@@ -7,6 +7,20 @@
     <title>CkyClaw — AI Agent 平台</title>
   </head>
   <body>
+    <script>
+      // 同步读取主题，避免暗色模式下白屏闪烁
+      (function(){
+        var t=localStorage.getItem('ckyclaw_theme');
+        if(!t)t=window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';
+        if(t==='dark'){
+          document.documentElement.style.backgroundColor='#0A1628';
+          document.body.style.backgroundColor='#0A1628';
+        }else{
+          document.documentElement.style.backgroundColor='#F5F5F7';
+          document.body.style.backgroundColor='#F5F5F7';
+        }
+      })();
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

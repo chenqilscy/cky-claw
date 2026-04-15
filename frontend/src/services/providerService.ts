@@ -184,4 +184,7 @@ export const providerService = {
 
   deleteModel: (providerId: string, modelId: string) =>
     api.delete<undefined>(`/providers/${providerId}/models/${modelId}`),
+
+  syncModels: (providerId: string) =>
+    api.post<{ synced: number; created: number; updated: number; errors: string[] }>(`/providers/${providerId}/models/sync`),
 };

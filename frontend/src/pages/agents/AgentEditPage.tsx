@@ -33,7 +33,8 @@ const RESPONSE_STYLES = [
 
 const STEP_ITEMS = [
   { title: '基本信息' },
-  { title: '模型与工具' },
+  { title: '模型配置' },
+  { title: '工具与编排' },
   { title: '安全与高级' },
 ];
 
@@ -92,7 +93,7 @@ const AgentEditPage: React.FC = () => {
       .catch(() => { message.error('加载工具组失败'); });
 
     // 加载可选的 Agent 列表（用于 Agent-as-Tool 选择）
-    agentService.list({ limit: 200 })
+    agentService.list({ limit: 100 })
       .then((res) => {
         setAgentOptions(
           res.data
@@ -126,7 +127,7 @@ const AgentEditPage: React.FC = () => {
       .catch(() => { message.error('加载 MCP Server 列表失败'); });
 
     // 加载可选的 Skill 列表
-    skillService.list({ limit: 200 })
+    skillService.list({ limit: 100 })
       .then((res) => {
         setSkillOptions(
           res.data.map((s) => ({ label: `${s.name} v${s.version}`, value: s.name }))
@@ -135,7 +136,7 @@ const AgentEditPage: React.FC = () => {
       .catch(() => { message.error('加载 Skill 列表失败'); });
 
     // 加载可选的知识库列表
-    knowledgeBaseService.list({ limit: 200 })
+    knowledgeBaseService.list({ limit: 100 })
       .then((res) => {
         setKbOptions(
           res.data.map((kb) => ({ label: kb.name, value: kb.id }))
@@ -191,7 +192,7 @@ const AgentEditPage: React.FC = () => {
             provider_name: agent.provider_name || undefined,
             approval_mode: agent.approval_mode,
             tool_groups: agent.tool_groups || [],
-            handoffs: agent.handoffs?.join(', ') || '',
+            handoffs: agent.handoffs || [],
             agent_tools: agent.agent_tools || [],
             mcp_servers: agent.mcp_servers || [],
             skills: agent.skills || [],
@@ -231,9 +232,7 @@ const AgentEditPage: React.FC = () => {
         approval_mode: (values.approval_mode as string) || 'suggest',
         response_style: (values.response_style as string) || null,
         tool_groups: (values.tool_groups as string[]) || [],
-        handoffs: (values.handoffs as string)
-          ? (values.handoffs as string).split(',').map((s) => s.trim()).filter(Boolean)
-          : [],
+        handoffs: (values.handoffs as string[]) || [],
         agent_tools: (values.agent_tools as string[]) || [],
         mcp_servers: (values.mcp_servers as string[]) || [],
         skills: (values.skills as string[]) || [],
@@ -276,9 +275,16 @@ const AgentEditPage: React.FC = () => {
   // 步骤切换前校验当前步骤的字段
   const stepFields: string[][] = [
     ['name', 'description', 'instructions'],
-    ['provider_name', 'model', 'approval_mode', 'response_style', 'tool_groups', 'handoffs', 'agent_tools', 'mcp_servers', 'skills', 'knowledge_bases'],
+    ['provider_name', 'model', 'approval_mode', 'response_style'],
+    ['tool_groups', 'handoffs', 'agent_tools', 'mcp_servers', 'skills', 'knowledge_bases'],
     ['input_guardrails', 'output_guardrails', 'tool_guardrails', 'output_type'],
   ];
+
+  // 面包屑中将 agent name 显示为描述性文本
+  const agentDisplayName = form.getFieldValue('description')
+    ? `${name} — ${form.getFieldValue('description')}`
+    : name;
+  const breadcrumbOverrides = name ? { [name]: agentDisplayName ?? name } : undefined;
 
   const handleNext = async () => {
     try {
@@ -296,6 +302,7 @@ const AgentEditPage: React.FC = () => {
       title={isEdit ? '编辑 Agent' : '新建 Agent'}
       icon={<RobotOutlined />}
       description="配置 Agent 基本信息、模型、工具与护栏"
+      breadcrumbOverrides={breadcrumbOverrides}
       extra={
         <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/agents')}>
           返回列表
@@ -380,7 +387,7 @@ const AgentEditPage: React.FC = () => {
               </Form.List>
             </div>
 
-            {/* ========== 步骤 2：模型与工具 ========== */}
+            {/* ========== 步骤 2：模型配置 ========== */}
             <div style={{ display: currentStep === 1 ? 'block' : 'none' }}>
               <Divider orientation="left">模型配置</Divider>
 
@@ -432,8 +439,11 @@ const AgentEditPage: React.FC = () => {
               <Form.Item name="response_style" label="输出风格">
                 <Select options={RESPONSE_STYLES} allowClear placeholder="默认" />
               </Form.Item>
+            </div>
 
-              <Divider orientation="left">工具与编排</Divider>
+            {/* ========== 步骤 3：工具与编排 ========== */}
+            <div style={{ display: currentStep === 2 ? 'block' : 'none' }}>
+              <Divider orientation="left">工具配置</Divider>
 
               <Form.Item name="tool_groups" label="工具组">
                 <Select
@@ -441,34 +451,22 @@ const AgentEditPage: React.FC = () => {
                   placeholder="选择要关联的工具组"
                   options={toolGroupOptions}
                   allowClear
-                />
-              </Form.Item>
-
-              <Form.Item name="handoffs" label="Handoff 目标（逗号分隔）">
-                <Input placeholder="specialist-agent, reviewer-agent" />
-              </Form.Item>
-
-              <Form.Item
-                name="agent_tools"
-                label="Agent-as-Tool（子 Agent 作为工具）"
-                tooltip="可选 — 将其他 Agent 注册为当前 Agent 可调用的工具"
-              >
-                <Select
-                  mode="multiple"
-                  placeholder="可选 — 选择要作为工具调用的子 Agent"
-                  options={agentOptions}
-                  allowClear
+                  optionRender={(option) => (
+                    <Space direction="vertical" size={0}>
+                      <Text strong>{option.label}</Text>
+                    </Space>
+                  )}
                 />
               </Form.Item>
 
               <Form.Item
                 name="mcp_servers"
                 label="MCP Server"
-                tooltip="可选 — 关联 MCP Server 以获取其提供的工具"
+                tooltip="关联 MCP Server 以获取其提供的工具"
               >
                 <Select
                   mode="multiple"
-                  placeholder="可选 — 选择要关联的 MCP Server"
+                  placeholder="选择要关联的 MCP Server"
                   options={mcpServerOptions}
                   allowClear
                 />
@@ -477,11 +475,11 @@ const AgentEditPage: React.FC = () => {
               <Form.Item
                 name="skills"
                 label="技能（Skills）"
-                tooltip="可选 — 为 Agent 启用已注册的技能"
+                tooltip="为 Agent 启用已注册的技能"
               >
                 <Select
                   mode="multiple"
-                  placeholder="可选 — 选择要启用的技能"
+                  placeholder="选择要启用的技能"
                   options={skillOptions}
                   allowClear
                 />
@@ -490,20 +488,60 @@ const AgentEditPage: React.FC = () => {
               <Form.Item
                 name="knowledge_bases"
                 label="知识库"
-                tooltip="可选 — 关联知识库以启用 RAG 检索增强"
+                tooltip="关联知识库以启用 RAG 检索增强"
               >
                 <Select
                   mode="multiple"
-                  placeholder="可选 — 选择要关联的知识库"
+                  placeholder="选择要关联的知识库"
                   options={kbOptions}
+                  allowClear
+                />
+              </Form.Item>
+
+              <Divider orientation="left">编排配置</Divider>
+
+              <Form.Item name="handoffs" label="Handoff 目标">
+                <Select
+                  mode="multiple"
+                  placeholder="选择可移交的目标 Agent"
+                  options={agentOptions}
+                  allowClear
+                />
+              </Form.Item>
+
+              <Form.Item
+                name="agent_tools"
+                label="Agent-as-Tool（子 Agent 作为工具）"
+                tooltip="将其他 Agent 注册为当前 Agent 可调用的工具"
+              >
+                <Select
+                  mode="multiple"
+                  placeholder="选择要作为工具调用的子 Agent"
+                  options={agentOptions}
                   allowClear
                 />
               </Form.Item>
             </div>
 
-            {/* ========== 步骤 3：安全与高级 ========== */}
-            <div style={{ display: currentStep === 2 ? 'block' : 'none' }}>
-              <Divider orientation="left">安全护栏</Divider>
+            {/* ========== 步骤 4：安全与高级 ========== */}
+            <div style={{ display: currentStep === 3 ? 'block' : 'none' }}>
+              <Divider orientation="left">
+                <Space>
+                  安全护栏
+                  <Button type="link" size="small" onClick={() => navigate('/guardrails')}>
+                    管理护栏规则 →
+                  </Button>
+                </Space>
+              </Divider>
+
+              {guardrailOptions.length === 0 && outputGuardrailOptions.length === 0 && toolGuardrailOptions.length === 0 && (
+                <Card size="small" style={{ marginBottom: 16, textAlign: 'center' }}>
+                  <Text type="secondary">暂无已启用的护栏规则，</Text>
+                  <Button type="link" size="small" onClick={() => navigate('/guardrails')}>
+                    前往配置 →
+                  </Button>
+                </Card>
+              )}
 
               <Form.Item name="input_guardrails" label="Input Guardrails">
                 <Select

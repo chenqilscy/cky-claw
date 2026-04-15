@@ -231,7 +231,7 @@ const BasicLayout: React.FC = () => {
       <main
         role="main"
         aria-label="页面内容"
-        style={{ padding: 24, minHeight: 'calc(100vh - 56px)' }}
+        style={{ padding: 24, minHeight: 'calc(100vh - 56px)', background: token.colorBgLayout }}
       >
         <Outlet />
       </main>
