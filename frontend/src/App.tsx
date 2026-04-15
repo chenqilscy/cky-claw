@@ -1,6 +1,6 @@
 import { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { ConfigProvider, Spin } from 'antd';
+import { ConfigProvider, Spin, theme } from 'antd';
 import zhCN from 'antd/locale/zh_CN';
 import BasicLayout from './layouts/BasicLayout';
 import RouteErrorBoundary from './components/RouteErrorBoundary';
@@ -58,11 +58,14 @@ const OAuthCallbackPage = lazy(() => import('./pages/oauth/OAuthCallbackPage'));
 const SamlPage = lazy(() => import('./pages/saml/SamlPage'));
 const SamlCallbackPage = lazy(() => import('./pages/saml/SamlCallbackPage'));
 
-const PageLoading = () => (
-  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 300, background: 'transparent' }}>
-    <Spin size="large" />
-  </div>
-);
+const PageLoading = () => {
+  const { token } = theme.useToken();
+  return (
+    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', background: token.colorBgLayout }}>
+      <Spin size="large" />
+    </div>
+  );
+};
 
 /** 为路由页面包裹错误边界 */
 const guarded = (element: React.ReactNode) => (

@@ -124,7 +124,7 @@ const AgentListPage: React.FC = () => {
                   key: 'versions',
                   icon: <HistoryOutlined />,
                   label: '版本历史',
-                  onClick: () => navigate(`/agents/${record.id}/versions`),
+                  onClick: () => navigate(`/agents/${record.id}/versions`, { state: { agentName: record.name } }),
                 },
                 {
                   key: 'export',

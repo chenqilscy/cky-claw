@@ -240,6 +240,7 @@ const ProviderListPage: React.FC = () => {
       icon={<KeyOutlined />}
       description="管理 LLM 厂商连接、密钥轮换与健康检测"
     >
+    <div style={{ overflowX: 'auto', width: '100%' }}>
     <ProTable<ProviderResponse>
       headerTitle="模型厂商管理"
       rowKey="id"
@@ -247,7 +248,7 @@ const ProviderListPage: React.FC = () => {
       dataSource={data}
       loading={loading}
       search={false}
-      options={{ reload: false }}
+      options={false}
       scroll={{ x: 1500 }}
       pagination={{
         current: pagination.current,
@@ -267,6 +268,7 @@ const ProviderListPage: React.FC = () => {
         </Button>,
       ]}
     />
+    </div>
 
     <Modal
       title={`轮换密钥 — ${rotateTarget?.name ?? ''}`}

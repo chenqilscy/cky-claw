@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import {
   Button,
   Card,
@@ -26,6 +26,9 @@ const AgentVersionPage: React.FC = () => {
   const { token } = theme.useToken();
   const navigate = useNavigate();
   const { agentId } = useParams<{ agentId: string }>();
+  const location = useLocation();
+  const agentName = (location.state as { agentName?: string } | null)?.agentName ?? agentId;
+  const breadcrumbOverrides = agentId ? { [agentId]: agentName ?? agentId } : undefined;
   const [pagination, setPagination] = useState({ current: 1, pageSize: 20 });
 
   // Snapshot detail modal
@@ -131,6 +134,7 @@ const AgentVersionPage: React.FC = () => {
       title="版本历史"
       icon={<DiffOutlined />}
       description="查看 Agent 快照版本、对比差异与回滚"
+      breadcrumbOverrides={breadcrumbOverrides}
       extra={
         <Space>
           <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/agents')}>
