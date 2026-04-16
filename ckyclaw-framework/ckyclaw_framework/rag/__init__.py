@@ -13,8 +13,27 @@ from ckyclaw_framework.rag.chunker import (
 )
 from ckyclaw_framework.rag.document import Document, DocumentLoader, TextLoader
 from ckyclaw_framework.rag.embedding import EmbeddingProvider, InMemoryEmbeddingProvider
+from ckyclaw_framework.rag.graph.community import CommunityDetector
+from ckyclaw_framework.rag.graph.entity import (
+    Community,
+    ConfidenceLabel,
+    Entity,
+    ExtractionResult,
+    Relation,
+)
+from ckyclaw_framework.rag.graph.extractor import GraphExtractor, LLMGraphExtractor
+from ckyclaw_framework.rag.graph.retriever import GraphRetriever, RetrievalResult
+from ckyclaw_framework.rag.graph.store import (
+    GraphData,
+    GraphStore,
+    InMemoryGraphStore,
+    NeighborResult,
+)
 from ckyclaw_framework.rag.pipeline import RAGPipeline, RAGResult
-from ckyclaw_framework.rag.tool import create_knowledge_base_tool
+from ckyclaw_framework.rag.tool import (
+    create_knowledge_base_tool,
+    create_knowledge_graph_tool,
+)
 from ckyclaw_framework.rag.vector_store import (
     InMemoryVectorStore,
     SearchResult,
@@ -44,4 +63,20 @@ __all__ = [
     "RAGResult",
     # Tool
     "create_knowledge_base_tool",
+    "create_knowledge_graph_tool",
+    # Graph
+    "Community",
+    "CommunityDetector",
+    "ConfidenceLabel",
+    "Entity",
+    "ExtractionResult",
+    "Relation",
+    "GraphExtractor",
+    "LLMGraphExtractor",
+    "GraphRetriever",
+    "RetrievalResult",
+    "GraphStore",
+    "InMemoryGraphStore",
+    "GraphData",
+    "NeighborResult",
 ]

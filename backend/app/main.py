@@ -35,6 +35,7 @@ from app.api.health import router as health_router
 from app.api.im_channels import router as im_channels_router
 from app.api.intent import router as intent_router
 from app.api.knowledge_bases import router as knowledge_bases_router
+from app.api.knowledge_graph import router as knowledge_graph_router
 from app.api.mailbox import router as mailbox_router
 from app.api.marketplace import router as marketplace_router
 from app.api.mcp_servers import router as mcp_servers_router
@@ -214,6 +215,7 @@ def create_app() -> FastAPI:
     app.include_router(mcp_servers_router)
     app.include_router(memories_router)
     app.include_router(knowledge_bases_router)
+    app.include_router(knowledge_graph_router)
     app.include_router(media_router)
     app.include_router(a2a_router)
     app.include_router(marketplace_router)

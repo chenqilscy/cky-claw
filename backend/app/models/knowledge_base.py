@@ -24,6 +24,7 @@ class KnowledgeBaseRecord(SoftDeleteMixin, Base):
     embedding_model: Mapped[str] = mapped_column(String(128), nullable=False, server_default=text("'hash-embedding-v1'"))
     chunk_strategy: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, server_default=text("'{}'::jsonb"))
     metadata_: Mapped[dict[str, Any]] = mapped_column("metadata", JSONB, nullable=False, server_default=text("'{}'::jsonb"))
+    mode: Mapped[str] = mapped_column(String(16), nullable=False, server_default=text("'vector'"))
     org_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("organizations.id"), nullable=True, index=True
     )

@@ -19,6 +19,7 @@ class KnowledgeBaseCreate(BaseModel):
     embedding_model: str = Field("hash-embedding-v1", max_length=128, description="Embedding 模型")
     chunk_strategy: dict[str, Any] = Field(default_factory=dict, description="分块策略")
     metadata: dict[str, Any] = Field(default_factory=dict, description="自定义元数据")
+    mode: str = Field("vector", pattern=r"^(vector|graph|hybrid)$", description="知识库模式")
 
 
 class KnowledgeBaseUpdate(BaseModel):
@@ -29,6 +30,7 @@ class KnowledgeBaseUpdate(BaseModel):
     embedding_model: str | None = Field(None, max_length=128, description="Embedding 模型")
     chunk_strategy: dict[str, Any] | None = Field(None, description="分块策略")
     metadata: dict[str, Any] | None = Field(None, description="自定义元数据")
+    mode: str | None = Field(None, pattern=r"^(vector|graph|hybrid)$", description="知识库模式")
 
 
 class KnowledgeBaseResponse(BaseModel):
@@ -42,6 +44,7 @@ class KnowledgeBaseResponse(BaseModel):
     embedding_model: str
     chunk_strategy: dict[str, Any]
     metadata: dict[str, Any] = Field(default_factory=dict, alias="metadata_")
+    mode: str = "vector"
     created_at: datetime
     updated_at: datetime
 

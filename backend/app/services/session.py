@@ -426,6 +426,94 @@ def _build_agent_from_config(
     )
 
 
+async def _inject_graph_knowledge(
+    db: AsyncSession,
+    agent_config: AgentConfig,
+    user_input: str,
+    instructions: str,
+) -> str:
+    """如果 Agent 绑定了图谱模式的知识库，检索图谱知识并追加到 instructions。
+
+    向后兼容：如果 Agent 未绑定知识库或绑定的知识库不是 graph/hybrid 模式，
+    或检索失败，返回原始 instructions 不变。
+    """
+    kb_names = agent_config.knowledge_bases
+    if not kb_names:
+        return instructions
+
+    from app.models.knowledge_base import KnowledgeBaseRecord
+
+    # 查找绑定的知识库中 graph/hybrid 模式的
+    stmt = select(KnowledgeBaseRecord).where(
+        KnowledgeBaseRecord.name.in_(kb_names),
+        KnowledgeBaseRecord.mode.in_(["graph", "hybrid"]),
+    )
+    rows = (await db.execute(stmt)).scalars().all()
+    if not rows:
+        return instructions
+
+    from app.services import knowledge_graph as kg_service
+
+    graph_context_parts: list[str] = []
+
+    for kb in rows:
+        try:
+            results = await kg_service.graph_search(
+                db,
+                kb.id,
+                query=user_input,
+                top_k=8,
+                max_depth=2,
+                search_mode="hybrid",
+            )
+            if not results:
+                continue
+
+            entities_text: list[str] = []
+            relations_text: list[str] = []
+            communities_text: list[str] = []
+
+            for item in results:
+                ent = item.get("entity")
+                rel = item.get("relation")
+                comm = item.get("community")
+
+                if ent and ent["name"] not in [e.split(" (")[0] for e in entities_text]:
+                    label = ent.get("confidence_label", "extracted")
+                    entities_text.append(
+                        f"- {ent['name']} ({ent['entity_type']}): {ent['description']} [{label}]"
+                    )
+                if rel:
+                    rel_key = rel["relation_type"]
+                    if rel_key not in [r.split(":")[0].strip() for r in relations_text]:
+                        relations_text.append(
+                            f"- {rel['relation_type']}: {rel['description']}"
+                        )
+                if comm and comm["name"] not in [c.split(":")[0].strip("- ") for c in communities_text]:
+                    communities_text.append(
+                        f"- {comm['name']}: {comm['summary']}"
+                    )
+
+            if entities_text or relations_text or communities_text:
+                section = f"## 知识库「{kb.name}」图谱检索结果\n"
+                if entities_text:
+                    section += "### 相关实体\n" + "\n".join(entities_text[:10]) + "\n"
+                if relations_text:
+                    section += "### 相关关系\n" + "\n".join(relations_text[:6]) + "\n"
+                if communities_text:
+                    section += "### 相关社区\n" + "\n".join(communities_text[:3]) + "\n"
+                graph_context_parts.append(section)
+        except Exception:
+            logger.warning("知识库 '%s' 图谱检索失败，跳过", kb.name, exc_info=True)
+            continue
+
+    if not graph_context_parts:
+        return instructions
+
+    graph_block = "\n\n---\n# 图谱知识上下文\n\n" + "\n".join(graph_context_parts)
+    return instructions + graph_block
+
+
 async def _resolve_handoff_agents(
     db: AsyncSession,
     config: AgentConfig,
@@ -909,6 +997,11 @@ async def execute_run(
             agent_config, guardrail_rules=guardrail_rules, handoff_agents=handoff_agents, mcp_tools=all_tools,
         )
 
+        # 图谱知识注入：如果 Agent 绑定了 graph/hybrid 模式知识库，将检索结果追加到 instructions
+        agent.instructions = await _inject_graph_knowledge(
+            db, agent_config, request.input, agent.instructions or "",
+        )
+
         # 构建 Framework Session（持久化到 PostgreSQL）
         from app.services.session_backend import SQLAlchemySessionBackend
 
@@ -1172,6 +1265,11 @@ async def execute_run_stream(
 
     agent = _build_agent_from_config(
         agent_config, guardrail_rules=guardrail_rules, handoff_agents=handoff_agents, mcp_tools=all_tools,
+    )
+
+    # 图谱知识注入：如果 Agent 绑定了 graph/hybrid 模式知识库，将检索结果追加到 instructions
+    agent.instructions = await _inject_graph_knowledge(
+        db, agent_config, request.input, agent.instructions or "",
     )
 
     from app.services.session_backend import SQLAlchemySessionBackend
