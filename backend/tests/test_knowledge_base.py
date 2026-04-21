@@ -229,7 +229,7 @@ class TestKnowledgeBaseDocumentFlow:
 
         # 1. 上传文档
         mock_ingest.return_value = _mock_doc(kb_id, id=doc_id, filename="faq.txt", chunk_count=3)
-        files = {"file": ("faq.txt", b"what is CkyClaw? CkyClaw is an AI Agent platform.", "text/plain")}
+        files = {"file": ("faq.txt", b"what is Kasaya? Kasaya is an AI Agent platform.", "text/plain")}
         upload_resp = client.post(f"/api/v1/knowledge-bases/{kb_id}/documents", files=files)
         assert upload_resp.status_code == 201
         assert upload_resp.json()["chunk_count"] == 3
@@ -247,20 +247,20 @@ class TestKnowledgeBaseDocumentFlow:
             {
                 "chunk_id": chunk_id,
                 "document_id": str(doc_id),
-                "content": "CkyClaw is an AI Agent platform.",
+                "content": "Kasaya is an AI Agent platform.",
                 "score": 0.92,
                 "metadata": {"source": "faq.txt"},
             }
         ]
         search_resp = client.post(
             f"/api/v1/knowledge-bases/{kb_id}/search",
-            json={"query": "what is CkyClaw", "top_k": 3, "min_score": 0.5},
+            json={"query": "what is Kasaya", "top_k": 3, "min_score": 0.5},
         )
         assert search_resp.status_code == 200
         results = search_resp.json()["results"]
         assert len(results) == 1
         assert results[0]["score"] >= 0.5
-        assert "CkyClaw" in results[0]["content"]
+        assert "Kasaya" in results[0]["content"]
 
     @patch("app.api.knowledge_bases.kb_service.ingest_document", new_callable=AsyncMock)
     @patch("app.api.knowledge_bases.get_db")

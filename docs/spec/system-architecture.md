@@ -1,14 +1,14 @@
-# CkyClaw 系统架构文档
+# Kasaya 系统架构文档
 
 > 最后更新：2026-04-14
 
 ## 1. 系统概览
 
-CkyClaw 是基于自研 **CkyClaw Framework** 构建的 AI Agent 管理与运行平台。系统采用 Monorepo 结构，包含三个核心包：
+Kasaya 是基于自研 **Kasaya Framework** 构建的 AI Agent 管理与运行平台。系统采用 Monorepo 结构，包含三个核心包：
 
 | 包 | 路径 | 技术栈 | 说明 |
 |---|---|---|---|
-| **ckyclaw-framework** | `ckyclaw-framework/` | Python 3.12+ | Agent 运行时库（独立 pip 包） |
+| **kasaya-framework** | `kasaya-framework/` | Python 3.12+ | Agent 运行时库（独立 pip 包） |
 | **backend** | `backend/` | FastAPI + SQLAlchemy | REST API 后端服务 |
 | **frontend** | `frontend/` | React 19 + TypeScript | SPA 管理面板 |
 
@@ -73,7 +73,7 @@ App.tsx (ConfigProvider + Routes + RequireAuth)
 
 | 模块 | 职责 |
 |------|------|
-| `config.py` | `Settings(BaseSettings)`，`CKYCLAW_` 前缀环境变量 |
+| `config.py` | `Settings(BaseSettings)`，`KASAYA_` 前缀环境变量 |
 | `database.py` | 异步引擎 + `get_db()` 依赖注入 + `SoftDeleteMixin` |
 | `auth.py` | JWT + bcrypt + Token 黑名单(Redis) + Refresh Token |
 | `deps.py` | `get_current_user`、`require_admin` 依赖 |
@@ -304,12 +304,12 @@ graph TB
     subgraph User["用户入口"]
         WebUI["前端 SPA<br/>React 19 + Ant Design"]
         API["REST API<br/>/api/v1/*"]
-        CLI["ckyclaw-cli<br/>命令行工具"]
+        CLI["kasaya-cli<br/>命令行工具"]
         Telegram["Telegram Bot"]
         Discord["Discord Bot"]
     end
 
-    subgraph Core["核心引擎 (CkyClaw Framework)"]
+    subgraph Core["核心引擎 (Kasaya Framework)"]
         Agent["Agent 定义<br/>指令/模型/工具/护栏"]
         Runner["Runner 执行引擎<br/>Agent Loop + max_turns"]
         Model["ModelProvider<br/>LiteLLM → 10+ 厂商"]

@@ -1,6 +1,7 @@
 """Agent 版本管理 API 路由。"""
 
 from __future__ import annotations
+import uuid
 
 from typing import TYPE_CHECKING
 
@@ -17,7 +18,6 @@ from app.schemas.agent_version import (
 from app.services import agent_version as version_service
 
 if TYPE_CHECKING:
-    import uuid
 
     from sqlalchemy.ext.asyncio import AsyncSession
 

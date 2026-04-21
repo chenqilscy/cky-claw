@@ -33,7 +33,8 @@ import type { ProviderResponse } from '../../services/providerService';
 const { Text } = Typography;
 
 /** 节点类型配色与图标映射。 */
-const NODE_STYLES: Record<string, { color: string; bg: string; icon: string }> = {
+type NodeStyleDef = { color: string; bg: string; icon: string };
+const NODE_STYLES: Record<string, NodeStyleDef> & { agent: NodeStyleDef; tool: NodeStyleDef; guardrail: NodeStyleDef; handoff: NodeStyleDef; mcp: NodeStyleDef } = {
   agent:     { color: '#1677ff', bg: '#e6f4ff', icon: '🤖' },
   tool:      { color: '#52c41a', bg: '#f6ffed', icon: '🔧' },
   guardrail: { color: '#faad14', bg: '#fffbe6', icon: '🛡️' },
@@ -87,7 +88,7 @@ const VisualBuilderPage: React.FC = () => {
   const addStyledNode = useCallback((kind: string, label: string) => {
     const id = `${kind}-${Date.now()}`;
     const count = nodes.filter((n) => nodeKind(n.id) === kind).length;
-    const s = NODE_STYLES[kind] ?? NODE_STYLES.tool;
+    const s: NodeStyleDef = NODE_STYLES[kind] ?? NODE_STYLES.tool;
     const next: Node = {
       id,
       data: { label: `${s.icon} ${label}` },
@@ -118,7 +119,7 @@ const VisualBuilderPage: React.FC = () => {
       const newEdges: Edge[] = [];
 
       const addGroup = (items: string[], kind: string, offsetX: number) => {
-        const st = NODE_STYLES[kind] ?? NODE_STYLES.tool;
+        const st: NodeStyleDef = NODE_STYLES[kind] ?? NODE_STYLES.tool;
         items.forEach((name, i) => {
           const id = `${kind}-loaded-${i}`;
           newNodes.push({

@@ -11,7 +11,7 @@ import {
 import { registerMocks } from './mocks/index';
 
 /**
- * CkyClaw Chat 模块 E2E 测试。
+ * Kasaya Chat 模块 E2E 测试。
  *
  * 所有 API 请求通过 Playwright route mock 拦截，不依赖真实后端。
  * Mock 注册在 beforeEach 中，每个测试拥有独立的内存数据。
@@ -24,7 +24,7 @@ test.describe('Chat 对话模块', () => {
     // 注入 JWT Token 以绕过前端认证守卫
     await page.addInitScript(() => {
       localStorage.setItem(
-        'ckyclaw_token',
+        'kasaya_token',
         'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0QGV4YW1wbGUuY29tIiwiZXhwIjozMjUxODA0ODAwfQ.fake',
       );
     });

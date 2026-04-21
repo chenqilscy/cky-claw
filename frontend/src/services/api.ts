@@ -17,7 +17,7 @@ class ApiError extends Error {
 }
 
 function getToken(): string | null {
-  return localStorage.getItem('ckyclaw_token');
+  return localStorage.getItem('kasaya_token');
 }
 
 function buildUrl(path: string, params?: Record<string, string | number | undefined>): string {
@@ -60,6 +60,17 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
     } catch {
       // ignore parse error
     }
+
+    // 401 未认证 → 清除 token 并跳转登录页
+    if (response.status === 401) {
+      localStorage.removeItem('kasaya_token');
+      // 避免在登录页本身死循环跳转
+      if (!window.location.pathname.startsWith('/login')) {
+        window.location.href = '/login';
+      }
+      return undefined as T;
+    }
+
     throw new ApiError(response.status, code, message);
   }
 

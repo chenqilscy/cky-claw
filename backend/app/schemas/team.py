@@ -1,15 +1,12 @@
 """Team 团队请求/响应模型。"""
 
 from __future__ import annotations
+import uuid
+from datetime import datetime
 
 from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, ConfigDict, Field
-
-if TYPE_CHECKING:
-    import uuid
-    from datetime import datetime
-
 
 class TeamConfigCreate(BaseModel):
     """创建团队配置请求。"""
@@ -21,7 +18,6 @@ class TeamConfigCreate(BaseModel):
     coordinator_agent_id: str | None = Field(None, max_length=64, description="Coordinator Agent ID")
     config: dict[str, Any] = Field(default_factory=dict, description="TeamConfig 扩展配置")
 
-
 class TeamConfigUpdate(BaseModel):
     """更新团队配置请求（部分更新）。"""
 
@@ -31,7 +27,6 @@ class TeamConfigUpdate(BaseModel):
     member_agent_ids: list[str] | None = None
     coordinator_agent_id: str | None = None
     config: dict[str, Any] | None = None
-
 
 class TeamConfigResponse(BaseModel):
     """团队配置响应。"""
@@ -47,7 +42,6 @@ class TeamConfigResponse(BaseModel):
     config: dict[str, Any]
     created_at: datetime
     updated_at: datetime
-
 
 class TeamConfigListResponse(BaseModel):
     """团队配置列表响应。"""

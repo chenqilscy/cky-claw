@@ -1,7 +1,7 @@
 import { test, expect, type Page } from '@playwright/test';
 
 /**
- * CkyClaw UI 自动化测试 — 基于真实后端的端到端交互验证。
+ * Kasaya UI 自动化测试 — 基于真实后端的端到端交互验证。
  *
  * 前置条件：前端 localhost:3000 + 后端 localhost:8000 已启动。
  * 认证状态通过 auth.setup.ts 提前注入。
@@ -48,7 +48,7 @@ test.describe('登录流程', () => {
     // 等待跳转
     await expect(page).toHaveURL(/\/(chat|dashboard)/, { timeout: 15_000 });
     // localStorage 应有 token
-    const token = await page.evaluate(() => localStorage.getItem('ckyclaw_token'));
+    const token = await page.evaluate(() => localStorage.getItem('kasaya_token'));
     expect(token).toBeTruthy();
   });
 
@@ -445,7 +445,7 @@ test.describe('API 健康', () => {
     // 先导航到应用页面，才能从同源 localStorage 取 JWT
     await page.goto('/');
     await page.waitForLoadState('domcontentloaded');
-    const token = await page.evaluate(() => localStorage.getItem('ckyclaw_token'));
+    const token = await page.evaluate(() => localStorage.getItem('kasaya_token'));
     expect(token).toBeTruthy();
     const response = await page.request.get('/api/v1/auth/me', {
       headers: { Authorization: `Bearer ${token}` },

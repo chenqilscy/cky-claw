@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
+import logging
 from typing import TYPE_CHECKING
 
 from fastapi.responses import JSONResponse
 
 if TYPE_CHECKING:
     from fastapi import FastAPI, Request
+
+logger = logging.getLogger(__name__)
 
 
 class AppError(Exception):
@@ -64,7 +67,8 @@ def register_exception_handlers(app: FastAPI) -> None:
         )
 
     @app.exception_handler(Exception)
-    async def unhandled_error_handler(_request: Request, _exc: Exception) -> JSONResponse:
+    async def unhandled_error_handler(_request: Request, exc: Exception) -> JSONResponse:
+        logger.exception("Unhandled exception: %s", exc)
         return JSONResponse(
             status_code=500,
             content={

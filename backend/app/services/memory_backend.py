@@ -1,6 +1,6 @@
 """SQLAlchemyMemoryBackend — 基于 SQLAlchemy Async 的记忆存储后端。
 
-实现 Framework 的 MemoryBackend 接口，使用 CkyClaw Backend 已有的 SQLAlchemy 连接池。
+实现 Framework 的 MemoryBackend 接口，使用 Kasaya Backend 已有的 SQLAlchemy 连接池。
 """
 
 from __future__ import annotations
@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING
 from sqlalchemy import func, select, update
 
 from app.models.memory import MemoryEntryRecord
-from ckyclaw_framework.memory.memory import (
+from kasaya.memory.memory import (
     DecayMode,
     MemoryBackend,
     MemoryEntry,

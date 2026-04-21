@@ -626,7 +626,7 @@ class TestMCPServerService:
 
         mock_tool = _orm(name="tool1", description="desc", parameters_schema={})
         with patch("app.services.mcp_server.get_mcp_server", new_callable=AsyncMock, return_value=record), \
-             patch("ckyclaw_framework.mcp.connection.connect_and_discover", new_callable=AsyncMock, return_value=[mock_tool]):
+             patch("kasaya.mcp.connection.connect_and_discover", new_callable=AsyncMock, return_value=[mock_tool]):
             result = await test_mcp_connection(mock_db, record.id)
 
         assert result["success"] is True
@@ -659,7 +659,7 @@ class TestMCPServerService:
 
         with patch("app.services.mcp_server.get_mcp_server", new_callable=AsyncMock, return_value=record), \
              patch("app.services.mcp_server.decrypt_api_key", side_effect=Exception("decrypt failed")), \
-             patch("ckyclaw_framework.mcp.connection.connect_and_discover", new_callable=AsyncMock, return_value=[]):
+             patch("kasaya.mcp.connection.connect_and_discover", new_callable=AsyncMock, return_value=[]):
             result = await test_mcp_connection(mock_db, record.id)
 
         assert result["success"] is True

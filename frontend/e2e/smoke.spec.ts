@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 /**
- * CkyClaw 前端 E2E 烟雾测试 — 验证关键页面可加载。
+ * Kasaya 前端 E2E 烟雾测试 — 验证关键页面可加载。
  */
 
 test.describe('关键页面加载', () => {
@@ -30,7 +30,7 @@ test.describe('认证后页面', () => {
     // 模拟已认证状态 — 注入 JWT token
     await page.addInitScript(() => {
       localStorage.setItem(
-        'ckyclaw_token',
+        'kasaya_token',
         'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0QGV4YW1wbGUuY29tIiwiZXhwIjozMjUxODA0ODAwfQ.fake'
       );
     });

@@ -157,7 +157,7 @@ class TestSQLAlchemySessionBackendSave:
     @pytest.mark.asyncio
     async def test_save_creates_metadata_if_new(self) -> None:
         from app.services.session_backend import SQLAlchemySessionBackend
-        from ckyclaw_framework.model.message import Message, MessageRole
+        from kasaya.model.message import Message, MessageRole
 
         mock_db = AsyncMock()
         mock_db.get.return_value = None  # 新 session，无 metadata
@@ -173,7 +173,7 @@ class TestSQLAlchemySessionBackendSave:
     @pytest.mark.asyncio
     async def test_save_updates_existing_metadata(self) -> None:
         from app.services.session_backend import SQLAlchemySessionBackend
-        from ckyclaw_framework.model.message import Message, MessageRole
+        from kasaya.model.message import Message, MessageRole
 
         mock_db = AsyncMock()
         existing_meta = MagicMock()

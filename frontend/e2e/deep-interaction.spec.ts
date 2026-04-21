@@ -1,7 +1,7 @@
 import { test, expect, type Page } from '@playwright/test';
 
 /**
- * CkyClaw 深度交互 E2E 测试 — 验证多步骤表单、级联选择、CRUD 完整流程等。
+ * Kasaya 深度交互 E2E 测试 — 验证多步骤表单、级联选择、CRUD 完整流程等。
  *
  * 前置条件：localhost:3000 + localhost:8000 已启动，数据库已有 Provider 和 Model 数据。
  */
@@ -670,7 +670,7 @@ test.describe('错误处理', () => {
     // 设置一个假 token
     await page.goto('/login');
     await page.evaluate(() => {
-      localStorage.setItem('ckyclaw_token', 'expired.fake.token');
+      localStorage.setItem('kasaya_token', 'expired.fake.token');
     });
 
     await page.goto('/agents');

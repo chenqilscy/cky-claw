@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 /**
- * CkyClaw 前端 E2E 功能测试 — 验证核心用户交互流程。
+ * Kasaya 前端 E2E 功能测试 — 验证核心用户交互流程。
  */
 
 test.describe('认证流程', () => {
@@ -36,7 +36,7 @@ test.describe('认证后导航', () => {
   test.beforeEach(async ({ page }) => {
     await page.addInitScript(() => {
       localStorage.setItem(
-        'ckyclaw_token',
+        'kasaya_token',
         'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0QGV4YW1wbGUuY29tIiwiZXhwIjozMjUxODA0ODAwfQ.fake'
       );
     });

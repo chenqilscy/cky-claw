@@ -1,4 +1,4 @@
-# CkyClaw 项目总结报告
+# Kasaya 项目总结报告
 
 > 生成日期：2026-04-05
 
@@ -6,11 +6,11 @@
 
 ## 一、项目概述
 
-CkyClaw 是基于自研 **CkyClaw Framework** 构建的 AI Agent 管理与运行平台。项目采用 Monorepo 架构，包含三个核心包：
+Kasaya 是基于自研 **Kasaya Framework** 构建的 AI Agent 管理与运行平台。项目采用 Monorepo 架构，包含三个核心包：
 
 | 包 | 技术栈 | 说明 |
 |---|--------|------|
-| **ckyclaw-framework** | Python 3.12+ | Agent 运行时库（独立 pip 包） |
+| **kasaya** | Python 3.12+ | Agent 运行时库（独立 pip 包） |
 | **backend** | FastAPI + SQLAlchemy async + Alembic | 后端 API 服务 |
 | **frontend** | React 19 + Vite 6 + TypeScript 5.8 + Ant Design 5 | Web 管理面板 |
 
@@ -192,4 +192,4 @@ CkyClaw 是基于自研 **CkyClaw Framework** 构建的 AI Agent 管理与运行
 
 ---
 
-*报告由 CkyClaw AI 助手 cky 自动生成*
+*报告由 Kasaya AI 助手 cky 自动生成*

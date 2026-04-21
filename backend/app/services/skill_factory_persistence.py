@@ -29,7 +29,7 @@ def _ensure_imports() -> None:
     """延迟导入 Framework 类型。"""
     global _FACTORY_IMPORTED, _SkillPersistence, _SkillDefinition  # noqa: PLW0603
     if not _FACTORY_IMPORTED:
-        from ckyclaw_framework.skills.factory import (
+        from kasaya.skills.factory import (
             SkillDefinition,
             SkillPersistence,
         )

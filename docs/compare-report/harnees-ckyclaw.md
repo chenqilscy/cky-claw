@@ -128,12 +128,12 @@
   │ A2A  │ 远程 Agent ↔ 远程 Agent    │
   └──────┴────────────────────────────┘
 
-  8. 与 CkyClaw 的映射
+  8. 与 Kasaya 的映射
 
-  CkyClaw Framework 虽然不使用 "Harness" 这个术语，但其架构实际上已经实现了 Harness 模式的核心要素：
+  Kasaya Framework 虽然不使用 "Harness" 这个术语，但其架构实际上已经实现了 Harness 模式的核心要素：
 
   ┌───────────────────┬──────────────────────────────────┐
-  │   Harness 概念    │         CkyClaw 对应模块         │
+  │   Harness 概念    │         Kasaya 对应模块         │
   ├───────────────────┼──────────────────────────────────┤
   │ Execution Runtime │ runner/ — Runner 核心循环        │
   ├───────────────────┼──────────────────────────────────┤
@@ -160,9 +160,9 @@
   │ Observability     │ tracing/ — Trace/Span            │
   └───────────────────┴──────────────────────────────────┘
 
-  9. CkyClaw 可以借鉴的改进方向
+  9. Kasaya 可以借鉴的改进方向
 
-  基于 Harness 蓝图，CkyClaw 可考虑的增强：
+  基于 Harness 蓝图，Kasaya 可考虑的增强：
 
   1. Artifact Store 外部化 — 大型工具输出写出到文件系统/对象存储，只返回引用
   2. Cache-First Prompt 布局 — 固定 System Prompt 前缀 + 追加式历史

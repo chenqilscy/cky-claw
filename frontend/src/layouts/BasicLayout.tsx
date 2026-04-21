@@ -1,10 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { ProLayout } from '@ant-design/pro-components';
-import { Button, Select, Tag, Tooltip, theme } from 'antd';
-import useEnvironmentStore from '../stores/environmentStore';
-import { environmentService } from '../services/environmentService';
-import type { Environment } from '../services/environmentService';
+import { Button, Dropdown, Select, Tag, Tooltip, theme } from 'antd';
 import {
   DashboardOutlined,
   MessageOutlined,
@@ -40,8 +37,13 @@ import {
   DeploymentUnitOutlined,
   SwapOutlined,
   ShopOutlined,
+  BgColorsOutlined,
 } from '@ant-design/icons';
+import useEnvironmentStore from '../stores/environmentStore';
+import { environmentService } from '../services/environmentService';
+import type { Environment } from '../services/environmentService';
 import useThemeStore from '../stores/themeStore';
+import type { PaletteType } from '../theme/themeConfig';
 import { useResponsive } from '../hooks/useResponsive';
 
 const menuRoutes = {
@@ -146,8 +148,10 @@ const menuRoutes = {
 const BasicLayout: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const themeMode = useThemeStore((s: { mode: 'light' | 'dark' }) => s.mode);
-  const toggleTheme = useThemeStore((s: { toggle: () => void }) => s.toggle);
+  const themeMode = useThemeStore((s) => s.mode);
+  const toggleTheme = useThemeStore((s) => s.toggle);
+  const palette = useThemeStore((s) => s.palette);
+  const setPalette = useThemeStore((s) => s.setPalette);
   const { isMobile } = useResponsive();
   const { token } = theme.useToken();
 
@@ -161,7 +165,7 @@ const BasicLayout: React.FC = () => {
 
   return (
     <ProLayout
-      title="CkyClaw"
+      title="Kasaya"
       logo={false}
       layout="mix"
       fixSiderbar
@@ -219,6 +223,21 @@ const BasicLayout: React.FC = () => {
             </Select.Option>
           ))}
         </Select>,
+        <Dropdown
+          key="palette"
+          menu={{
+            selectedKeys: [palette],
+            onClick: ({ key }) => setPalette(key as PaletteType),
+            items: [
+              { key: 'aurora', label: <span><span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: '50%', background: '#4F46E5', marginRight: 6, verticalAlign: 'middle' }} />极光蓝紫</span> },
+              { key: 'dawn', label: <span><span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: '50%', background: '#1677FF', marginRight: 6, verticalAlign: 'middle' }} />拂晓蓝</span> },
+            ],
+          }}
+        >
+          <Tooltip title="切换色系">
+            <Button type="text" icon={<BgColorsOutlined />} />
+          </Tooltip>
+        </Dropdown>,
         <Tooltip key="theme" title={themeMode === 'dark' ? '切换亮色模式' : '切换暗色模式'}>
           <Button
             type="text"

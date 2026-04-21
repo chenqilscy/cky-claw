@@ -1,15 +1,12 @@
 """Mailbox 请求/响应 Schema。"""
 
 from __future__ import annotations
+import uuid
+from datetime import datetime
 
 from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, Field
-
-if TYPE_CHECKING:
-    import uuid
-    from datetime import datetime
-
 
 class MailboxSendRequest(BaseModel):
     """发送消息请求。"""
@@ -20,7 +17,6 @@ class MailboxSendRequest(BaseModel):
     content: str = Field(..., description="消息内容")
     message_type: str = Field(default="handoff", description="消息类型")
     metadata: dict[str, Any] = Field(default_factory=dict)
-
 
 class MailboxMessageResponse(BaseModel):
     """消息响应。"""
@@ -36,7 +32,6 @@ class MailboxMessageResponse(BaseModel):
     created_at: datetime
 
     model_config = {"from_attributes": True, "populate_by_name": True}
-
 
 class MailboxListResponse(BaseModel):
     """消息列表响应。"""

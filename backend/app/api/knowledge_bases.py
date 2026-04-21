@@ -1,6 +1,7 @@
 """知识库 API 路由。"""
 
 from __future__ import annotations
+import uuid
 
 from typing import TYPE_CHECKING
 
@@ -22,7 +23,6 @@ from app.schemas.knowledge_base import (
 from app.services import knowledge_base as kb_service
 
 if TYPE_CHECKING:
-    import uuid
 
     from sqlalchemy.ext.asyncio import AsyncSession
 

@@ -1,21 +1,18 @@
 """Tool Group 请求/响应模型。"""
 
 from __future__ import annotations
+import uuid
+from datetime import datetime
 
 import re
 from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-if TYPE_CHECKING:
-    import uuid
-    from datetime import datetime
-
 _TOOL_GROUP_NAME_PATTERN = re.compile(r"^[a-z0-9][a-z0-9-]{1,62}[a-z0-9]$")
 _TOOL_NAME_PATTERN = re.compile(r"^[a-z][a-z0-9_]{0,127}$")
 
 _VALID_SCHEMA_TYPES = {"string", "integer", "number", "boolean", "array", "object"}
-
 
 class ToolDefinition(BaseModel):
     """工具组内单个工具的元数据定义。"""
@@ -65,7 +62,6 @@ class ToolDefinition(BaseModel):
                         )
         return v
 
-
 class ToolGroupCreate(BaseModel):
     """创建工具组请求体。"""
 
@@ -81,7 +77,6 @@ class ToolGroupCreate(BaseModel):
             raise ValueError("名称只能包含小写字母、数字和连字符，且以字母或数字开头结尾，长度 3-64")
         return v
 
-
 class ToolGroupUpdate(BaseModel):
     """更新工具组请求体（PATCH 语义，所有字段可选）。"""
 
@@ -89,7 +84,6 @@ class ToolGroupUpdate(BaseModel):
     tools: list[ToolDefinition] | None = None
     conditions: dict[str, Any] | None = None
     is_enabled: bool | None = None
-
 
 class ToolGroupResponse(BaseModel):
     """工具组详情响应。"""
@@ -105,7 +99,6 @@ class ToolGroupResponse(BaseModel):
     is_enabled: bool
     created_at: datetime
     updated_at: datetime
-
 
 class ToolGroupListResponse(BaseModel):
     """工具组列表响应。"""

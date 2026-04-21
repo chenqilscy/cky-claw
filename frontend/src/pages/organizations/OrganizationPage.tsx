@@ -74,10 +74,10 @@ const buildColumns = (
 const renderForm = (_form: FormInstance, editing: OrganizationItem | null) => (
   <>
     <Form.Item name="name" label="名称" rules={[{ required: true, message: '请输入组织名称' }]}>
-      <Input placeholder="CkyClaw Tech" />
+      <Input placeholder="Kasaya Tech" />
     </Form.Item>
     <Form.Item name="slug" label="Slug" rules={[{ required: !editing, message: '请输入唯一标识' }]}>
-      <Input placeholder="ckyclaw-tech" disabled={!!editing} />
+      <Input placeholder="kasaya-tech" disabled={!!editing} />
     </Form.Item>
     <Form.Item name="description" label="描述">
       <TextArea rows={2} placeholder="组织描述" />

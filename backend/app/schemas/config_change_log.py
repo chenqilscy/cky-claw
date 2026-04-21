@@ -1,18 +1,15 @@
 """配置变更日志 Schema。"""
 
 from __future__ import annotations
+import uuid
+from datetime import datetime
 
 from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-if TYPE_CHECKING:
-    import uuid
-    from datetime import datetime
-
 VALID_CHANGE_SOURCES = {"web_ui", "api", "system", "rollback"}
 VALID_ENTITY_TYPES = {"agent", "guardrail", "provider", "tool-group", "session", "team", "workflow", "mcp-server"}
-
 
 class ConfigChangeLogCreate(BaseModel):
     """创建配置变更日志。"""
@@ -39,7 +36,6 @@ class ConfigChangeLogCreate(BaseModel):
             raise ValueError(f"不支持的变更来源: {v}，可选: {VALID_CHANGE_SOURCES}")
         return v
 
-
 class ConfigChangeLogResponse(BaseModel):
     """配置变更日志响应。"""
 
@@ -58,13 +54,11 @@ class ConfigChangeLogResponse(BaseModel):
     org_id: uuid.UUID | None
     created_at: datetime
 
-
 class ConfigChangeLogListResponse(BaseModel):
     """配置变更日志列表响应。"""
 
     data: list[ConfigChangeLogResponse]
     total: int
-
 
 class RollbackPreviewResponse(BaseModel):
     """回滚预览响应。

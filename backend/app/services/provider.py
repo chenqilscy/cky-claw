@@ -69,6 +69,8 @@ async def create_provider(db: AsyncSession, data: ProviderCreate) -> ProviderCon
         auth_config=data.auth_config,
         rate_limit_rpm=data.rate_limit_rpm,
         rate_limit_tpm=data.rate_limit_tpm,
+        model_tier=data.model_tier,
+        capabilities=data.capabilities,
         key_expires_at=data.key_expires_at,
     )
     db.add(provider)

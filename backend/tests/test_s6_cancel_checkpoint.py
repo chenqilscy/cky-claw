@@ -28,7 +28,7 @@ class TestRunRegistry:
     def test_register_and_cancel(self) -> None:
         """注册 run 后可取消。"""
         from app.services.run_registry import RunRegistry
-        from ckyclaw_framework.runner.cancellation import CancellationToken
+        from kasaya.runner.cancellation import CancellationToken
 
         registry = RunRegistry()
         token = CancellationToken()
@@ -52,7 +52,7 @@ class TestRunRegistry:
     def test_unregister(self) -> None:
         """注销 run 后不可取消。"""
         from app.services.run_registry import RunRegistry
-        from ckyclaw_framework.runner.cancellation import CancellationToken
+        from kasaya.runner.cancellation import CancellationToken
 
         registry = RunRegistry()
         token = CancellationToken()
@@ -65,7 +65,7 @@ class TestRunRegistry:
     def test_active_count(self) -> None:
         """活跃 run 计数。"""
         from app.services.run_registry import RunRegistry
-        from ckyclaw_framework.runner.cancellation import CancellationToken
+        from kasaya.runner.cancellation import CancellationToken
 
         registry = RunRegistry()
         t1 = CancellationToken()
@@ -81,7 +81,7 @@ class TestRunRegistry:
     def test_is_running_cancelled(self) -> None:
         """已取消的 run 不算 running。"""
         from app.services.run_registry import RunRegistry
-        from ckyclaw_framework.runner.cancellation import CancellationToken
+        from kasaya.runner.cancellation import CancellationToken
 
         registry = RunRegistry()
         token = CancellationToken()
@@ -102,7 +102,7 @@ class TestCancelRunAPI:
     async def test_cancel_existing_run(self) -> None:
         """取消正在运行的 Run。"""
         from app.services.run_registry import run_registry
-        from ckyclaw_framework.runner.cancellation import CancellationToken
+        from kasaya.runner.cancellation import CancellationToken
 
         run_id = f"run-{uuid.uuid4().hex[:8]}"
         token = CancellationToken()
@@ -144,7 +144,7 @@ class TestSessionServiceCancelRun:
         """取消已注册的 run。"""
         from app.services import session as session_service
         from app.services.run_registry import run_registry
-        from ckyclaw_framework.runner.cancellation import CancellationToken
+        from kasaya.runner.cancellation import CancellationToken
 
         run_id = f"run-{uuid.uuid4().hex[:8]}"
         token = CancellationToken()

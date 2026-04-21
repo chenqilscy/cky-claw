@@ -1,19 +1,16 @@
 """IM 渠道配置请求/响应模型。"""
 
 from __future__ import annotations
+import uuid
+from datetime import datetime
 
 from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-if TYPE_CHECKING:
-    import uuid
-    from datetime import datetime
-
 VALID_CHANNEL_TYPES = {"wecom", "dingtalk", "slack", "telegram", "feishu", "webhook", "discord", "wechat_official"}
 
 _SENSITIVE_CONFIG_FIELDS = {"token", "secret", "api_key", "app_secret", "client_secret", "password"}
-
 
 def _mask_app_config(config: dict[str, Any]) -> dict[str, Any]:
     """对 app_config 中的敏感字段进行脱敏。"""
@@ -24,7 +21,6 @@ def _mask_app_config(config: dict[str, Any]) -> dict[str, Any]:
         else:
             masked[key] = value
     return masked
-
 
 class IMChannelCreate(BaseModel):
     """创建 IM 渠道。"""
@@ -47,7 +43,6 @@ class IMChannelCreate(BaseModel):
             raise ValueError(f"channel_type 必须是 {VALID_CHANNEL_TYPES} 之一")
         return v
 
-
 class IMChannelUpdate(BaseModel):
     """更新 IM 渠道（PATCH 语义）。"""
 
@@ -67,7 +62,6 @@ class IMChannelUpdate(BaseModel):
         if v is not None and v not in VALID_CHANNEL_TYPES:
             raise ValueError(f"channel_type 必须是 {VALID_CHANNEL_TYPES} 之一")
         return v
-
 
 class IMChannelResponse(BaseModel):
     """IM 渠道响应。"""
@@ -100,7 +94,6 @@ class IMChannelResponse(BaseModel):
     def mask_config(cls, v: dict[str, Any]) -> dict[str, Any]:
         return _mask_app_config(v) if v else v
 
-
 class IMChannelListResponse(BaseModel):
     """IM 渠道列表响应。"""
 
@@ -108,7 +101,6 @@ class IMChannelListResponse(BaseModel):
     total: int
     limit: int = 20
     offset: int = 0
-
 
 class IMWebhookPayload(BaseModel):
     """IM 渠道 Webhook 入站消息。"""

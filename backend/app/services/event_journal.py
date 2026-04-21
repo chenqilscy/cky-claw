@@ -8,8 +8,8 @@ from typing import TYPE_CHECKING
 
 from sqlalchemy import select
 
-from ckyclaw_framework.events.journal import EventEntry, EventJournal
-from ckyclaw_framework.events.types import EventType
+from kasaya.events.journal import EventEntry, EventJournal
+from kasaya.events.types import EventType
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession

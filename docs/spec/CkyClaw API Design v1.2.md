@@ -1,4 +1,4 @@
-# CkyClaw API 接口设计 v1.2
+# Kasaya API 接口设计 v1.2
 
 ## 文档信息
 
@@ -7,8 +7,8 @@
 | 版本 | v1.2.0 |
 | 日期 | 2026-04-02 |
 | 状态 | 进行中 |
-| 维护人 | CkyClaw Team |
-| 依赖 | CkyClaw PRD v2.0（第十一章）、CkyClaw 数据模型详细设计 v1.3 |
+| 维护人 | Kasaya Team |
+| 依赖 | Kasaya PRD v2.0（第十一章）、Kasaya 数据模型详细设计 v1.3 |
 | 协议 | REST API: OpenAPI 3.1；实时事件: AsyncAPI 3.0 |
 
 ---
@@ -364,7 +364,7 @@
 
 ```json
 {
-  "input": "帮我搜索一下 CkyClaw 的最新文档",
+  "input": "帮我搜索一下 Kasaya 的最新文档",
   "config": {
     "model_override": null,
     "max_turns": 10,
@@ -387,7 +387,7 @@
   "data": {
     "run_id": "660e8400-...",
     "status": "completed",
-    "output": "根据搜索结果，CkyClaw 最新版本...",
+    "output": "根据搜索结果，Kasaya 最新版本...",
     "token_usage": {
       "prompt_tokens": 850,
       "completion_tokens": 320,
@@ -587,7 +587,7 @@
 ```json
 {
   "source": "url",
-  "url": "https://registry.ckyclaw.dev/skills/data-analysis-v1.0.skill"
+  "url": "https://registry.kasaya.dev/skills/data-analysis-v1.0.skill"
 }
 ```
 
@@ -659,7 +659,7 @@
 
 ```json
 {
-  "name": "CkyClaw Corp",
+  "name": "Kasaya Corp",
   "description": "Main organization",
   "quota_config": {
     "monthly_token_limit": 10000000,
@@ -1302,7 +1302,7 @@ data: {json_payload}
     "levels": [
       {
         "scope": "organization",
-        "name": "CkyClaw Corp",
+        "name": "Kasaya Corp",
         "used_tokens": 980000,
         "limit_tokens": 10000000,
         "used_cost_usd": 156.30,
@@ -1840,4 +1840,4 @@ data: {json_payload}
 
 *文档版本：v1.2.0*
 *最后更新：2026-04-02*
-*作者：CkyClaw Team*
+*作者：Kasaya Team*

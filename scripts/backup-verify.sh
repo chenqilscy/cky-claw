@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# CkyClaw 备份完整性验证脚本
+# Kasaya 备份完整性验证脚本
 # 用法: ./scripts/backup-verify.sh [备份目录]
 #
 # 功能:
@@ -9,7 +9,7 @@
 
 set -euo pipefail
 
-BACKUP_DIR="${1:-${BACKUP_DIR:-/var/backups/ckyclaw}}"
+BACKUP_DIR="${1:-${BACKUP_DIR:-/var/backups/kasaya}}"
 PG_BACKUP_DIR="${BACKUP_DIR}/postgresql"
 REDIS_BACKUP_DIR="${BACKUP_DIR}/redis"
 
@@ -21,7 +21,7 @@ fail() { echo "  ✗ $*"; ERRORS=$((ERRORS + 1)); }
 ERRORS=0
 
 echo "======================================"
-echo " CkyClaw 备份完整性验证"
+echo " Kasaya 备份完整性验证"
 echo "======================================"
 echo ""
 
@@ -31,7 +31,7 @@ echo "▸ PostgreSQL 备份 (${PG_BACKUP_DIR})"
 if [ ! -d "${PG_BACKUP_DIR}" ]; then
     fail "备份目录不存在: ${PG_BACKUP_DIR}"
 else
-    PG_LATEST=$(find "${PG_BACKUP_DIR}" -name "ckyclaw_*.dump" -type f | sort -r | head -1)
+    PG_LATEST=$(find "${PG_BACKUP_DIR}" -name "kasaya_*.dump" -type f | sort -r | head -1)
     if [ -z "${PG_LATEST}" ]; then
         fail "未找到 PostgreSQL 备份文件"
     else
@@ -48,7 +48,7 @@ else
         fi
 
         # 备份数量统计
-        PG_COUNT=$(find "${PG_BACKUP_DIR}" -name "ckyclaw_*.dump" | wc -l)
+        PG_COUNT=$(find "${PG_BACKUP_DIR}" -name "kasaya_*.dump" | wc -l)
         ok "备份文件数量: ${PG_COUNT}"
     fi
 fi

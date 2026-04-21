@@ -6,7 +6,7 @@ import { PageContainer } from '../../components/PageContainer';
 import { createJsonValidatorRule, JsonEditor, OUTPUT_TYPE_META_SCHEMA } from '../../components';
 import MultiSelectList from '../../components/MultiSelectList';
 import { agentService } from '../../services/agentService';
-import type { AgentConfig, AgentCreateInput, AgentUpdateInput } from '../../services/agentService';
+import type { AgentConfig, AgentCreateInput, AgentUpdateInput, PromptVariableDefinition } from '../../services/agentService';
 import { guardrailService } from '../../services/guardrailService';
 import type { GuardrailRuleItem } from '../../services/guardrailService';
 import { providerService } from '../../services/providerService';
@@ -233,7 +233,7 @@ const AgentEditPage: React.FC = () => {
         name: values.name as string,
         description: (values.description as string) || '',
         instructions: (values.instructions as string) || '',
-        prompt_variables: (values.prompt_variables as Array<Record<string, unknown>> | undefined) || [],
+        prompt_variables: (values.prompt_variables as PromptVariableDefinition[] | undefined) || [],
         model: (values.model as string) || 'openai/glm-4-flash',
         provider_name: (values.provider_name as string) || null,
         approval_mode: (values.approval_mode as string) || 'suggest',
@@ -580,7 +580,7 @@ const AgentEditPage: React.FC = () => {
                 <JsonEditor
                   height={180}
                   schema={OUTPUT_TYPE_META_SCHEMA}
-                  schemaUri="http://ckyclaw/output-type-schema.json"
+                  schemaUri="http://kasaya/output-type-schema.json"
                   placeholder={'{\n  "type": "object",\n  "properties": {\n    "summary": { "type": "string" },\n    "score": { "type": "integer" }\n  },\n  "required": ["summary", "score"]\n}'}
                 />
               </Form.Item>

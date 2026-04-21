@@ -1,4 +1,4 @@
-# CkyClaw Backend Dockerfile
+# Kasaya Backend Dockerfile
 FROM python:3.12-slim AS base
 
 WORKDIR /app
@@ -8,10 +8,10 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
 # 先复制依赖文件，利用 Docker 缓存层
 COPY backend/pyproject.toml backend/README.md backend/
-COPY ckyclaw-framework/pyproject.toml ckyclaw-framework/
-COPY ckyclaw-framework/ckyclaw_framework/ ckyclaw-framework/ckyclaw_framework/
-COPY ckyclaw-framework/py.typed ckyclaw-framework/
-COPY ckyclaw-framework/README.md ckyclaw-framework/
+COPY kasaya/pyproject.toml kasaya/
+COPY kasaya/kasaya/ kasaya/kasaya/
+COPY kasaya/py.typed kasaya/
+COPY kasaya/README.md kasaya/
 
 # 安装依赖
 WORKDIR /app/backend

@@ -1,15 +1,13 @@
 """角色 Schema。"""
 
 from __future__ import annotations
+import uuid
+from datetime import datetime
 
 import re
 from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
-
-if TYPE_CHECKING:
-    import uuid
-    from datetime import datetime
 
 _NAME_PATTERN = re.compile(r"^[a-z][a-z0-9_-]{1,62}[a-z0-9]$")
 
@@ -23,7 +21,6 @@ VALID_RESOURCES = {
 
 # 有效的操作
 VALID_ACTIONS = {"read", "write", "delete", "execute"}
-
 
 class RoleCreate(BaseModel):
     """创建角色请求。"""
@@ -50,7 +47,6 @@ class RoleCreate(BaseModel):
                     raise ValueError(f"无效的操作: {action}")
         return v
 
-
 class RoleUpdate(BaseModel):
     """更新角色请求。"""
 
@@ -70,7 +66,6 @@ class RoleUpdate(BaseModel):
                     raise ValueError(f"无效的操作: {action}")
         return v
 
-
 class RoleResponse(BaseModel):
     """角色响应。"""
 
@@ -84,7 +79,6 @@ class RoleResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-
 class RoleListResponse(BaseModel):
     """角色列表响应。"""
 
@@ -92,7 +86,6 @@ class RoleListResponse(BaseModel):
     total: int
     limit: int = 20
     offset: int = 0
-
 
 class UserRoleAssign(BaseModel):
     """分配角色请求。"""

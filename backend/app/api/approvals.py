@@ -1,6 +1,7 @@
 """Approval 审批请求 API。"""
 
 from __future__ import annotations
+import uuid
 
 from typing import TYPE_CHECKING
 
@@ -11,7 +12,6 @@ from app.schemas.approval import ApprovalListResponse, ApprovalResolveRequest, A
 from app.services import approval as approval_service
 
 if TYPE_CHECKING:
-    import uuid
 
     from sqlalchemy.ext.asyncio import AsyncSession
 

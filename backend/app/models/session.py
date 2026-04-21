@@ -16,7 +16,7 @@ from app.core.database import Base, SoftDeleteMixin
 class SessionRecord(SoftDeleteMixin, Base):
     """会话记录表 — 追踪会话元数据与 Agent 绑定关系。
 
-    消息历史由 Framework 的 PostgresSessionBackend 管理（ckyclaw_sessions 表）。
+    消息历史由 Framework 的 PostgresSessionBackend 管理（kasaya_sessions 表）。
     """
 
     __tablename__ = "sessions"

@@ -1,17 +1,14 @@
 """SAML 2.0 请求/响应模型。"""
 
 from __future__ import annotations
+import uuid
+from datetime import datetime
 
 from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, Field
 
-if TYPE_CHECKING:
-    import uuid
-    from datetime import datetime
-
 # ---- IdP 配置 CRUD ----
-
 
 class SamlIdpConfigCreate(BaseModel):
     """创建 SAML IdP 配置请求。"""
@@ -29,7 +26,6 @@ class SamlIdpConfigCreate(BaseModel):
     is_enabled: bool = True
     is_default: bool = False
 
-
 class SamlIdpConfigUpdate(BaseModel):
     """更新 SAML IdP 配置请求。"""
 
@@ -42,7 +38,6 @@ class SamlIdpConfigUpdate(BaseModel):
     attribute_mapping: dict[str, str] | None = None
     is_enabled: bool | None = None
     is_default: bool | None = None
-
 
 class SamlIdpConfigResponse(BaseModel):
     """SAML IdP 配置响应。"""
@@ -62,21 +57,17 @@ class SamlIdpConfigResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-
 # ---- SAML 登录流程 ----
-
 
 class SamlLoginRequest(BaseModel):
     """SAML 登录请求 — 可选指定 IdP ID。"""
 
     idp_id: uuid.UUID | None = Field(None, description="指定 IdP ID，为空则使用默认 IdP")
 
-
 class SamlLoginResponse(BaseModel):
     """SAML 登录响应 — 返回 AuthnRequest 重定向信息。"""
 
     redirect_url: str = Field(..., description="IdP SSO 重定向 URL（含 SAMLRequest 参数）")
-
 
 class SamlSpMetadataResponse(BaseModel):
     """SP 元数据响应。"""

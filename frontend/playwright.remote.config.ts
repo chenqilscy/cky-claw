@@ -1,7 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
 /**
- * CkyClaw 远程站点 E2E 测试配置。
+ * Kasaya 远程站点 E2E 测试配置。
  * 目标：http://fn.cky:3000（远程部署站点）。
  */
 export default defineConfig({

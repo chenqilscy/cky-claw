@@ -1,6 +1,6 @@
-# CkyClaw 待办事项与演进规划
+# Kasaya 待办事项与演进规划
 
-> 本文件记录 CkyClaw 项目的当前状态、未来演进方向和历史交付归档。
+> 本文件记录 Kasaya 项目的当前状态、未来演进方向和历史交付归档。
 >
 > 最后更新：2026-04-16 · 文档版本 v4.0.0
 
@@ -50,7 +50,7 @@
 | # | 功能 | 状态 | 说明 |
 |---|------|:----:|------|
 | F1 | 全链路启动验证 | ✅ | 25/25 API 验证通过 |
-| F2 | **Kubernetes 部署** | ✅ | Helm Chart（deploy/helm/ckyclaw）+ 3 环境 overlay + HPA + PDB + Ingress |
+| F2 | **Kubernetes 部署** | ✅ | Helm Chart（deploy/helm/kasaya）+ 3 环境 overlay + HPA + PDB + Ingress |
 | F3 | 日志聚合 | ✅ | Promtail→Loki + request_id + AlertRule |
 | F4 | **Agents SDK 兼容层** | ✅ | compat 模块：from_openai_agent/tool/handoff/guardrail + SdkAgentAdapter + 52 测试 |
 | F5 | 流式输出端到端优化 | ✅ | RAF 批处理 + tool_call/handoff UI |
@@ -89,11 +89,11 @@
 **优先级**：P3
 
 **交付物**：
-- [x] `ckyclaw_framework/compat/adapter.py` — 541 行适配器实现
-- [x] `from_openai_agent()` — SDK Agent dict/对象 → CkyClaw Agent（递归转换 + 循环引用防护）
-- [x] `from_openai_tool()` — SDK FunctionTool → CkyClaw FunctionTool（签名自动适配）
-- [x] `from_openai_handoff()` — SDK Handoff → CkyClaw Handoff（递归 Agent 解析）
-- [x] `from_openai_guardrail()` — SDK Guardrail → CkyClaw InputGuardrail/OutputGuardrail
+- [x] `kasaya/compat/adapter.py` — 541 行适配器实现
+- [x] `from_openai_agent()` — SDK Agent dict/对象 → Kasaya Agent（递归转换 + 循环引用防护）
+- [x] `from_openai_tool()` — SDK FunctionTool → Kasaya FunctionTool（签名自动适配）
+- [x] `from_openai_handoff()` — SDK Handoff → Kasaya Handoff（递归 Agent 解析）
+- [x] `from_openai_guardrail()` — SDK Guardrail → Kasaya InputGuardrail/OutputGuardrail
 - [x] `SdkAgentAdapter` — 高级适配器类（批量转换 + 直接运行）
 - [x] `ModelSettings` 转换（含 max_output_tokens → max_tokens 兼容）
 - [x] 52 个单元测试（test_compat.py）
@@ -108,7 +108,7 @@
 - [x] IdP 元数据解析 + 证书管理 — SamlIdpConfig ORM + 多 IdP 支持 + 默认 IdP
 - [x] SSO 登录流程：SP-Initiated（AuthnRequest HTTP-Redirect Binding + ACS POST Binding）
 - [ ] SLO（Single Logout）— 延期，按需实现
-- [x] 属性映射（email/name/role → CkyClaw User）— JSONB attribute_mapping + 默认回退
+- [x] 属性映射（email/name/role → Kasaya User）— JSONB attribute_mapping + 默认回退
 - [x] 前端 SSO 登录按钮 + 回调页 — Login.tsx SAML 按钮 + SamlCallbackPage
 - [x] IdP 管理页 — SamlPage.tsx（CRUD + SP 元数据查看 + 启用/禁用切换）
 - [x] 后端测试 24/24 通过
@@ -122,9 +122,9 @@
 
 ### 4.1 竞品启示项落地状态
 
-报告中提出的 12 项行动建议，逐项检查 CkyClaw 当前落地情况：
+报告中提出的 12 项行动建议，逐项检查 Kasaya 当前落地情况：
 
-| # | 方向 | 来源 | CkyClaw 状态 | 说明 |
+| # | 方向 | 来源 | Kasaya 状态 | 说明 |
 |---|------|------|:----:|------|
 | 1 | 5 层上下文压缩 | Harness | ✅ 已有 | S1 ContextBuilder + ContextBudget + ContextSource + HistoryTrimmer 2 策略 |
 | 2 | Artifact Store | Harness | ✅ 已有 | RunConfig.artifact_store + artifact_threshold（Token 外部化） |
@@ -165,12 +165,12 @@ Boss 要求重点分析 Hermes 的多终端架构：
      └────────────┘  └──────────────┘  └────────────┘
 ```
 
-**CkyClaw vs Hermes 终端覆盖对比**：
+**Kasaya vs Hermes 终端覆盖对比**：
 
-| 终端类型 | Hermes | CkyClaw | 差距 |
+| 终端类型 | Hermes | Kasaya | 差距 |
 |---------|:------:|:-------:|------|
 | Web UI | ✅ | ✅ React SPA | — |
-| CLI | ❌ | ✅ ckyclaw-cli | CkyClaw 领先 |
+| CLI | ❌ | ✅ kasaya-cli | Kasaya 领先 |
 | Rich Terminal | ✅ | ✅ PlainTerminalBackend | E4 TerminalBackend ABC |
 | Plain/Prompt Terminal | ✅ | ✅ PlainTerminalBackend | E4 实现 |
 | IPython/Notebook | ✅ | ❌ | 数据科学场景 |
@@ -180,15 +180,15 @@ Boss 要求重点分析 Hermes 的多终端架构：
 | Slack | ✅ | ✅ IM 适配器 | — |
 | WhatsApp | ✅ | ❌ | 海外社交 |
 | Signal | ✅ | ❌ | 隐私社交 |
-| 企微/钉钉/飞书 | ❌ | ✅ IM 适配器 | CkyClaw 国内领先 |
-| 微信公众号 | ❌ | ✅ IM 适配器 | CkyClaw 国内领先 |
-| 自定义 Webhook | ❌ | ✅ IM 适配器 | CkyClaw 灵活性领先 |
+| 企微/钉钉/飞书 | ❌ | ✅ IM 适配器 | Kasaya 国内领先 |
+| 微信公众号 | ❌ | ✅ IM 适配器 | Kasaya 国内领先 |
+| 自定义 Webhook | ❌ | ✅ IM 适配器 | Kasaya 灵活性领先 |
 
 **分析结论**：
-1. **CkyClaw 国内渠道远超 Hermes**（企微/钉钉/飞书/微信是 Hermes 完全没有的）
-2. **CkyClaw CLI 是 Hermes 没有的独立包**
-3. Hermes 的 Terminal backends 面向开发者/研究者场景（Rich/IPython/Textual），CkyClaw 以 Web UI 为主交互面
-4. 海外社交（Telegram/Discord/WhatsApp/Signal）是 CkyClaw 的空白，但**不是中国企业 AI 团队的刚需**
+1. **Kasaya 国内渠道远超 Hermes**（企微/钉钉/飞书/微信是 Hermes 完全没有的）
+2. **Kasaya CLI 是 Hermes 没有的独立包**
+3. Hermes 的 Terminal backends 面向开发者/研究者场景（Rich/IPython/Textual），Kasaya 以 Web UI 为主交互面
+4. 海外社交（Telegram/Discord/WhatsApp/Signal）是 Kasaya 的空白，但**不是中国企业 AI 团队的刚需**
 
 **建议优先级**：
 - P3：Terminal backends（Rich/Textual）— 开发者体验提升，但 CLI 已覆盖核心场景
@@ -235,7 +235,7 @@ Boss 要求重点分析 Hermes 的多终端架构：
 
 ## 六、已完成能力归档
 
-### 6.1 核心框架（CkyClaw Framework）
+### 6.1 核心框架（Kasaya Framework）
 
 | 能力 | 版本 | 说明 |
 |------|:----:|------|
@@ -326,7 +326,7 @@ Boss 要求重点分析 Hermes 的多终端架构：
 | Docker Compose | PG + Redis + Backend + Frontend + 健康检查 + 自动迁移 |
 | GitHub Actions | 5 Job（lint-py / lint-fe / test-py / test-fe / build） |
 | Jenkinsfile | 5 Stage 容器化流水线 |
-| ckyclaw-cli | CLI MVP: login/version/agent/provider + 32 测试 |
+| kasaya-cli | CLI MVP: login/version/agent/provider + 32 测试 |
 | Token 缓存 | Redis 统一缓存层 |
 | OTel + Jaeger | OTelTraceProcessor + FastAPI 中间件 + OTel Web SDK 前端追踪 |
 | Prometheus + Loki | Promtail 3.0 docker_sd + Loki TSDB + AlertRule + Grafana 数据源 |
@@ -338,7 +338,7 @@ Boss 要求重点分析 Hermes 的多终端架构：
 
 ## 七、竞品定位
 
-| 维度 | CkyClaw | 直接依赖 Agents SDK | Hermes Agent |
+| 维度 | Kasaya | 直接依赖 Agents SDK | Hermes Agent |
 |------|---------|:---:|:---:|
 | 多 Provider（10+） | ✅ | ❌ | ⚠️ OpenRouter |
 | 国产模型适配 | ✅ | ❌ | ❌ |
@@ -373,7 +373,7 @@ Boss 要求重点分析 Hermes 的多终端架构：
 
 **动机**：知识密集型场景（客服/法律/医疗/技术文档）是 AI Agent 最高频应用，缺少 RAG 等于砍掉 50% 场景。
 
-**Framework 层** — `ckyclaw_framework/rag/`
+**Framework 层** — `kasaya/rag/`
 
 | 模块 | 职责 |
 |------|------|
@@ -448,13 +448,13 @@ ContentBlock (Union)
 **动机**：Google 2024 发布 Agent-to-Agent 协议，是跨平台 Agent 互操作的未来标准。提前布局可建立先发优势。
 
 **交付物**（已完成）
-- Framework: `ckyclaw_framework/a2a/` — AgentCard + A2ATask(状态机) + A2AAdapter + A2AClient(httpx) + A2AServer(JSON-RPC) + 31 测试
+- Framework: `kasaya/a2a/` — AgentCard + A2ATask(状态机) + A2AAdapter + A2AClient(httpx) + A2AServer(JSON-RPC) + 31 测试
 - Backend: ORM(a2a_agent_cards + a2a_tasks) + Pydantic Schema + Service + API(10 端点) + 迁移 0053 + 23 测试
 - Frontend: A2APage(Agent Card CRUD + Task 管理 + 服务发现) + a2aService + 路由菜单注册 + smoke 测试
 
 ### 8.6 N5: Agent Marketplace（P2 — 生态护城河）
 
-**动机**：竞品 Hermes 有 Skill Marketplace、NextCrab 有远端 Marketplace API，CkyClaw 仅有内部模板。
+**动机**：竞品 Hermes 有 Skill Marketplace、NextCrab 有远端 Marketplace API，Kasaya 仅有内部模板。
 
 **交付物**
 - AgentTemplate 扩展：新增 `published`、`downloads`、`rating`、`author_org_id` 字段

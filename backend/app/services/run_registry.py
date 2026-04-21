@@ -9,7 +9,7 @@ import threading
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from ckyclaw_framework.runner.cancellation import CancellationToken
+    from kasaya.runner.cancellation import CancellationToken
 
 
 class RunRegistry:

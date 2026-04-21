@@ -1,15 +1,12 @@
 """Debug Session 请求/响应 Schema。"""
 
 from __future__ import annotations
+import uuid
+from datetime import datetime
 
 from typing import TYPE_CHECKING, Any, Literal
 
 from pydantic import BaseModel, Field
-
-if TYPE_CHECKING:
-    import uuid
-    from datetime import datetime
-
 
 class DebugSessionCreate(BaseModel):
     """创建调试会话请求。"""
@@ -19,7 +16,6 @@ class DebugSessionCreate(BaseModel):
     mode: Literal["step_turn", "step_tool", "continue"] = Field(default="step_turn", description="调试模式")
 
     model_config = {"json_schema_extra": {"examples": [{"agent_id": "550e8400-e29b-41d4-a716-446655440000", "input_message": "你好", "mode": "step_turn"}]}}
-
 
 class DebugSessionResponse(BaseModel):
     """调试会话响应。"""
@@ -43,19 +39,16 @@ class DebugSessionResponse(BaseModel):
 
     model_config = {"from_attributes": True}
 
-
 class DebugSessionListResponse(BaseModel):
     """调试会话列表响应。"""
 
     items: list[DebugSessionResponse]
     total: int
 
-
 class DebugActionRequest(BaseModel):
     """调试控制操作请求（step/continue/stop）。"""
 
     pass
-
 
 class DebugContextResponse(BaseModel):
     """调试上下文响应 — 暂停时的详细状态。"""
@@ -68,7 +61,6 @@ class DebugContextResponse(BaseModel):
     last_tool_calls: list[dict[str, Any]] | None = None
     token_usage: dict[str, int] = Field(default_factory=dict)
     paused_at: str | None = None
-
 
 class DebugEventMessage(BaseModel):
     """WebSocket 事件消息。"""

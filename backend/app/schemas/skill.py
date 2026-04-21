@@ -1,16 +1,13 @@
 """Skill 技能知识包请求/响应模型。"""
 
 from __future__ import annotations
+import uuid
+from datetime import datetime
 
 from enum import StrEnum
 from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, ConfigDict, Field
-
-if TYPE_CHECKING:
-    import uuid
-    from datetime import datetime
-
 
 class SkillCategoryEnum(StrEnum):
     """技能分类。"""
@@ -18,11 +15,9 @@ class SkillCategoryEnum(StrEnum):
     PUBLIC = "public"
     CUSTOM = "custom"
 
-
 # ---------------------------------------------------------------------------
 # Request
 # ---------------------------------------------------------------------------
-
 
 class SkillCreate(BaseModel):
     """创建技能请求体。"""
@@ -37,7 +32,6 @@ class SkillCreate(BaseModel):
     author: str = Field("", max_length=64, description="作者")
     metadata: dict[str, Any] = Field(default_factory=dict, description="自定义元数据")
 
-
 class SkillUpdate(BaseModel):
     """更新技能请求体。"""
 
@@ -50,7 +44,6 @@ class SkillUpdate(BaseModel):
     author: str | None = Field(None, max_length=64, description="作者")
     metadata: dict[str, Any] | None = Field(None, description="自定义元数据")
 
-
 class SkillSearchRequest(BaseModel):
     """搜索技能请求体。"""
 
@@ -58,11 +51,9 @@ class SkillSearchRequest(BaseModel):
     category: SkillCategoryEnum | None = Field(None, description="按分类筛选")
     limit: int = Field(20, ge=1, le=100, description="返回上限")
 
-
 # ---------------------------------------------------------------------------
 # Response
 # ---------------------------------------------------------------------------
-
 
 class SkillResponse(BaseModel):
     """技能响应。"""
@@ -81,7 +72,6 @@ class SkillResponse(BaseModel):
     metadata: dict[str, Any] = Field(default_factory=dict, alias="metadata_")
     created_at: datetime
     updated_at: datetime
-
 
 class SkillListResponse(BaseModel):
     """技能列表响应。"""

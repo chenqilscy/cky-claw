@@ -79,7 +79,7 @@ describe('authStore', () => {
     const state = useAuthStore.getState();
     expect(state.token).toBe('jwt-token-123');
     expect(state.user?.username).toBe('admin');
-    expect(storage['ckyclaw_token']).toBe('jwt-token-123');
+    expect(storage['kasaya_token']).toBe('jwt-token-123');
   });
 
   it('login 失败设置 error', async () => {
@@ -95,7 +95,7 @@ describe('authStore', () => {
   });
 
   it('logout 清除 token 和 user', async () => {
-    storage['ckyclaw_token'] = 'old-token';
+    storage['kasaya_token'] = 'old-token';
 
     const { default: useAuthStore } = await import('../stores/authStore');
     useAuthStore.setState({ token: 'old-token', user: { id: '1', username: 'u', email: '', role: 'user', is_active: true } });
@@ -105,7 +105,7 @@ describe('authStore', () => {
     const state = useAuthStore.getState();
     expect(state.token).toBeNull();
     expect(state.user).toBeNull();
-    expect(storage['ckyclaw_token']).toBeUndefined();
+    expect(storage['kasaya_token']).toBeUndefined();
   });
 
   it('fetchMe 获取当前用户', async () => {

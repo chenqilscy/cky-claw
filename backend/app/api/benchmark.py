@@ -1,6 +1,7 @@
 """Benchmark 评测 API 路由。"""
 
 from __future__ import annotations
+import uuid
 
 from typing import TYPE_CHECKING
 
@@ -22,7 +23,6 @@ from app.schemas.benchmark import (
 from app.services import benchmark as bench_svc
 
 if TYPE_CHECKING:
-    import uuid
 
     from sqlalchemy.ext.asyncio import AsyncSession
 

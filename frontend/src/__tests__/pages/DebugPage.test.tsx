@@ -51,13 +51,6 @@ const MOCK_SESSION = {
   finished_at: null,
 };
 
-const _MOCK_PAUSED_SESSION = {
-  ...MOCK_SESSION,
-  id: 'sess-2',
-  state: 'paused',
-  current_turn: 2,
-};
-
 const MOCK_CONTEXT = {
   turn: 2,
   agent_name: 'test-agent',

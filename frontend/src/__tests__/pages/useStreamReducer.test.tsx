@@ -42,8 +42,8 @@ describe('useStreamReducer', () => {
     });
 
     expect(result.current.messages).toHaveLength(1);
-    expect(result.current.messages[0].role).toBe('user');
-    expect(result.current.messages[0].content).toBe('hello');
+    expect(result.current.messages[0]!.role).toBe('user');
+    expect(result.current.messages[0]!.content).toBe('hello');
   });
 
   it('createAssistantMessage 创建空的流式助手消息', () => {
@@ -56,7 +56,7 @@ describe('useStreamReducer', () => {
 
     expect(msgId).toMatch(/^assistant-/);
     expect(result.current.messages).toHaveLength(1);
-    const msg = result.current.messages[0];
+    const msg = result.current.messages[0]!;
     expect(msg.role).toBe('assistant');
     expect(msg.content).toBe('');
     expect(msg.streaming).toBe(true);
@@ -88,14 +88,14 @@ describe('useStreamReducer', () => {
     });
 
     // RAF 还没触发，内容还是空
-    expect(result.current.messages[0].content).toBe('');
+    expect(result.current.messages[0]!.content).toBe('');
 
     // 触发 RAF — 三个 delta 批处理为一次更新
     act(() => {
       flushRAF();
     });
 
-    expect(result.current.messages[0].content).toBe('Hello World!');
+    expect(result.current.messages[0]!.content).toBe('Hello World!');
     // requestAnimationFrame 只被调用一次（批处理）
     expect(window.requestAnimationFrame).toHaveBeenCalledTimes(1);
   });
@@ -115,7 +115,7 @@ describe('useStreamReducer', () => {
       });
     });
 
-    expect(result.current.messages[0].agentName).toBe('new-agent');
+    expect(result.current.messages[0]!.agentName).toBe('new-agent');
   });
 
   it('tool_call_start 添加运行中的工具调用', () => {
@@ -133,7 +133,7 @@ describe('useStreamReducer', () => {
       });
     });
 
-    const msg = result.current.messages[0];
+    const msg = result.current.messages[0]!;
     expect(msg.toolCalls).toHaveLength(1);
     expect(msg.toolCalls![0]).toEqual({ name: 'web_search', status: 'running' });
     expect(msg.statusText).toBe('调用工具: web_search...');
@@ -161,8 +161,8 @@ describe('useStreamReducer', () => {
       });
     });
 
-    const msg = result.current.messages[0];
-    expect(msg.toolCalls![0].status).toBe('done');
+    const msg = result.current.messages[0]!;
+    expect(msg.toolCalls![0]!.status).toBe('done');
     expect(msg.statusText).toBeUndefined();
   });
 
@@ -181,7 +181,7 @@ describe('useStreamReducer', () => {
       });
     });
 
-    const msg = result.current.messages[0];
+    const msg = result.current.messages[0]!;
     expect(msg.agentName).toBe('agent-b');
     expect(msg.statusText).toBe('移交到 agent-b');
   });
@@ -210,7 +210,7 @@ describe('useStreamReducer', () => {
       });
     });
 
-    const msg = result.current.messages[0];
+    const msg = result.current.messages[0]!;
     expect(msg.content).toBe('final text');
     expect(msg.streaming).toBe(false);
     expect(msg.statusText).toBeUndefined();
@@ -235,8 +235,8 @@ describe('useStreamReducer', () => {
       result.current.finalizeStream(msgId);
     });
 
-    expect(result.current.messages[0].content).toBe('pending');
-    expect(result.current.messages[0].streaming).toBe(false);
+    expect(result.current.messages[0]!.content).toBe('pending');
+    expect(result.current.messages[0]!.streaming).toBe(false);
   });
 
   it('cancelPendingFlush 取消 RAF 并刷新残余', () => {
@@ -259,7 +259,7 @@ describe('useStreamReducer', () => {
     });
 
     expect(window.cancelAnimationFrame).toHaveBeenCalled();
-    expect(result.current.messages[0].content).toBe('buffered');
+    expect(result.current.messages[0]!.content).toBe('buffered');
   });
 
   it('session 切换后消息列表重置', () => {
@@ -295,8 +295,8 @@ describe('useStreamReducer', () => {
       });
     });
 
-    expect(result.current.messages[0].toolCalls).toHaveLength(2);
-    expect(result.current.messages[0].statusText).toBe('调用工具: calculator...');
+    expect(result.current.messages[0]!.toolCalls).toHaveLength(2);
+    expect(result.current.messages[0]!.statusText).toBe('调用工具: calculator...');
 
     // 完成第一个工具
     act(() => {
@@ -306,9 +306,9 @@ describe('useStreamReducer', () => {
       });
     });
 
-    expect(result.current.messages[0].toolCalls![0].status).toBe('done');
-    expect(result.current.messages[0].toolCalls![1].status).toBe('running');
-    expect(result.current.messages[0].statusText).toBe('调用工具: calculator...');
+    expect(result.current.messages[0]!.toolCalls![0]!.status).toBe('done');
+    expect(result.current.messages[0]!.toolCalls![1]!.status).toBe('running');
+    expect(result.current.messages[0]!.statusText).toBe('调用工具: calculator...');
   });
 
   it('error 事件不修改消息', () => {
@@ -335,7 +335,7 @@ describe('useStreamReducer', () => {
     });
 
     // 消息不受 error 事件影响
-    expect(result.current.messages[0].content).toBe('content');
-    expect(result.current.messages[0].streaming).toBe(true);
+    expect(result.current.messages[0]!.content).toBe('content');
+    expect(result.current.messages[0]!.streaming).toBe(true);
   });
 });

@@ -151,8 +151,8 @@ async def _resolve_mcp_tools(
 
     # 实际连接 MCP Server，发现工具
     from app.core.crypto import decrypt_api_key
-    from ckyclaw_framework.mcp.connection import connect_and_discover
-    from ckyclaw_framework.mcp.server import MCPServerConfig as FrameworkMCPConfig
+    from kasaya.mcp.connection import connect_and_discover
+    from kasaya.mcp.server import MCPServerConfig as FrameworkMCPConfig
 
     all_tools: list[Any] = []
     for db_config in mcp_configs:
@@ -212,7 +212,7 @@ async def _resolve_tool_groups(
         return []
 
     from app.models.tool_group import ToolGroupConfig
-    from ckyclaw_framework.tools.function_tool import FunctionTool
+    from kasaya.tools.function_tool import FunctionTool
 
     stmt = select(ToolGroupConfig).where(
         ToolGroupConfig.name.in_(config.tool_groups),
@@ -302,16 +302,16 @@ def _build_agent_from_config(
     mcp_tools: list[Any] | None = None,
 ) -> Any:
     """从 DB AgentConfig 构造 Framework Agent 实例。"""
-    from ckyclaw_framework.agent.agent import Agent
-    from ckyclaw_framework.approval.mode import ApprovalMode
-    from ckyclaw_framework.guardrails.content_safety_guardrail import ContentSafetyGuardrail
-    from ckyclaw_framework.guardrails.input_guardrail import InputGuardrail
-    from ckyclaw_framework.guardrails.llm_guardrail import LLMGuardrail
-    from ckyclaw_framework.guardrails.output_guardrail import OutputGuardrail
-    from ckyclaw_framework.guardrails.prompt_injection_guardrail import PromptInjectionGuardrail
-    from ckyclaw_framework.guardrails.regex_guardrail import RegexGuardrail
-    from ckyclaw_framework.guardrails.tool_guardrail import ToolGuardrail
-    from ckyclaw_framework.model.settings import ModelSettings
+    from kasaya.agent.agent import Agent
+    from kasaya.approval.mode import ApprovalMode
+    from kasaya.guardrails.content_safety_guardrail import ContentSafetyGuardrail
+    from kasaya.guardrails.input_guardrail import InputGuardrail
+    from kasaya.guardrails.llm_guardrail import LLMGuardrail
+    from kasaya.guardrails.output_guardrail import OutputGuardrail
+    from kasaya.guardrails.prompt_injection_guardrail import PromptInjectionGuardrail
+    from kasaya.guardrails.regex_guardrail import RegexGuardrail
+    from kasaya.guardrails.tool_guardrail import ToolGuardrail
+    from kasaya.model.settings import ModelSettings
 
     model_settings = None
     if config.model_settings:
@@ -526,7 +526,7 @@ async def _resolve_handoff_agents(
     - 使用 depth 限制递归深度
     - 缺失或禁用的目标 Agent 被安全跳过（warn）
     """
-    from ckyclaw_framework.handoff.handoff import Handoff
+    from kasaya.handoff.handoff import Handoff
 
     if not config.handoffs:
         return []
@@ -941,10 +941,10 @@ async def execute_run(
     Args:
         resume_from: 若提供，从该 run_id 的最近 checkpoint 恢复执行。
     """
-    from ckyclaw_framework.model.litellm_provider import LiteLLMProvider
-    from ckyclaw_framework.runner.run_config import RunConfig as FrameworkRunConfig
-    from ckyclaw_framework.runner.runner import Runner
-    from ckyclaw_framework.session.session import Session
+    from kasaya.model.litellm_provider import LiteLLMProvider
+    from kasaya.runner.run_config import RunConfig as FrameworkRunConfig
+    from kasaya.runner.runner import Runner
+    from kasaya.session.session import Session
 
     # 获取 session 记录
     session_record = await get_session(db, session_id)
@@ -1041,7 +1041,7 @@ async def execute_run(
 
         # S3: CircuitBreaker — 配置后包装 LLM 调用
         if request.config.circuit_breaker_enabled:
-            from ckyclaw_framework.model.circuit_breaker import CircuitBreaker, CircuitBreakerConfig
+            from kasaya.model.circuit_breaker import CircuitBreaker, CircuitBreakerConfig
 
             framework_config.circuit_breaker = CircuitBreaker(
                 name=f"run-{agent.name}",
@@ -1053,7 +1053,7 @@ async def execute_run(
 
         # S3: FallbackChain — 配置降级 Provider 列表
         if request.config.fallback_provider_ids:
-            from ckyclaw_framework.model.fallback import FallbackChainProvider, FallbackEntry
+            from kasaya.model.fallback import FallbackChainProvider, FallbackEntry
 
             fallback_entries: list[FallbackEntry] = []
             for idx, pid in enumerate(request.config.fallback_provider_ids):
@@ -1070,13 +1070,13 @@ async def execute_run(
         # S3: ToolMiddleware — 工具执行中间件管道
         _tool_mw: list[Any] = []
         if request.config.tool_cache_enabled:
-            from ckyclaw_framework.tools.middleware import CacheMiddleware
+            from kasaya.tools.middleware import CacheMiddleware
             _tool_mw.append(CacheMiddleware(ttl=request.config.tool_cache_ttl))
         if request.config.tool_loop_guard_enabled:
-            from ckyclaw_framework.tools.middleware import LoopGuardMiddleware
+            from kasaya.tools.middleware import LoopGuardMiddleware
             _tool_mw.append(LoopGuardMiddleware(max_repeats=request.config.tool_loop_guard_max_repeats))
         if request.config.tool_rate_limit_enabled:
-            from ckyclaw_framework.tools.middleware import RateLimitMiddleware
+            from kasaya.tools.middleware import RateLimitMiddleware
             _tool_mw.append(RateLimitMiddleware(
                 max_calls=request.config.tool_rate_limit_max_calls,
                 window_seconds=request.config.tool_rate_limit_window,
@@ -1086,7 +1086,7 @@ async def execute_run(
 
         # S4: EventJournal — 配置后自动记录运行事件
         if request.config.event_journal_enabled:
-            from ckyclaw_framework.events.journal import InMemoryEventJournal
+            from kasaya.events.journal import InMemoryEventJournal
             framework_config.event_journal = InMemoryEventJournal()
 
         # S6: Checkpoint 恢复 — 配置 checkpoint_backend 以支持 resume_from
@@ -1099,13 +1099,13 @@ async def execute_run(
         start_time = time.monotonic()
 
         from app.services.run_registry import run_registry
-        from ckyclaw_framework.guardrails.result import (
+        from kasaya.guardrails.result import (
             InputGuardrailTripwireError,
             OutputGuardrailTripwireError,
         )
 
         # S6: CancellationToken — 注册到 RunRegistry 以支持外部取消
-        from ckyclaw_framework.runner.cancellation import CancellationToken
+        from kasaya.runner.cancellation import CancellationToken
 
         cancel_token = CancellationToken()
         framework_config.cancel_token = cancel_token
@@ -1200,11 +1200,11 @@ async def execute_run_stream(
     request: RunRequest,
 ) -> AsyncIterator[str]:
     """流式执行 Run：返回 SSE 事件字符串生成器。"""
-    from ckyclaw_framework.model.litellm_provider import LiteLLMProvider
-    from ckyclaw_framework.runner.result import StreamEventType
-    from ckyclaw_framework.runner.run_config import RunConfig as FrameworkRunConfig
-    from ckyclaw_framework.runner.runner import Runner
-    from ckyclaw_framework.session.session import Session
+    from kasaya.model.litellm_provider import LiteLLMProvider
+    from kasaya.runner.result import StreamEventType
+    from kasaya.runner.run_config import RunConfig as FrameworkRunConfig
+    from kasaya.runner.runner import Runner
+    from kasaya.session.session import Session
 
     # 获取 session 记录
     session_record = await get_session(db, session_id)
@@ -1310,7 +1310,7 @@ async def execute_run_stream(
 
     # S3: CircuitBreaker — 配置后包装 LLM 调用
     if request.config.circuit_breaker_enabled:
-        from ckyclaw_framework.model.circuit_breaker import CircuitBreaker, CircuitBreakerConfig
+        from kasaya.model.circuit_breaker import CircuitBreaker, CircuitBreakerConfig
 
         framework_config.circuit_breaker = CircuitBreaker(
             name=f"stream-{agent.name}",
@@ -1322,7 +1322,7 @@ async def execute_run_stream(
 
     # S3: FallbackChain — 配置降级 Provider 列表
     if request.config.fallback_provider_ids:
-        from ckyclaw_framework.model.fallback import FallbackChainProvider, FallbackEntry
+        from kasaya.model.fallback import FallbackChainProvider, FallbackEntry
 
         fallback_entries_s: list[FallbackEntry] = []
         for idx, pid in enumerate(request.config.fallback_provider_ids):
@@ -1339,13 +1339,13 @@ async def execute_run_stream(
     # S3: ToolMiddleware — 工具执行中间件管道
     _tool_mw_s: list[Any] = []
     if request.config.tool_cache_enabled:
-        from ckyclaw_framework.tools.middleware import CacheMiddleware
+        from kasaya.tools.middleware import CacheMiddleware
         _tool_mw_s.append(CacheMiddleware(ttl=request.config.tool_cache_ttl))
     if request.config.tool_loop_guard_enabled:
-        from ckyclaw_framework.tools.middleware import LoopGuardMiddleware
+        from kasaya.tools.middleware import LoopGuardMiddleware
         _tool_mw_s.append(LoopGuardMiddleware(max_repeats=request.config.tool_loop_guard_max_repeats))
     if request.config.tool_rate_limit_enabled:
-        from ckyclaw_framework.tools.middleware import RateLimitMiddleware
+        from kasaya.tools.middleware import RateLimitMiddleware
         _tool_mw_s.append(RateLimitMiddleware(
             max_calls=request.config.tool_rate_limit_max_calls,
             window_seconds=request.config.tool_rate_limit_window,
@@ -1355,12 +1355,12 @@ async def execute_run_stream(
 
     # S4: EventJournal — 配置后自动记录运行事件
     if request.config.event_journal_enabled:
-        from ckyclaw_framework.events.journal import InMemoryEventJournal
+        from kasaya.events.journal import InMemoryEventJournal
         framework_config.event_journal = InMemoryEventJournal()
 
     # S6: CancellationToken — 注册到 RunRegistry 以支持外部取消
     from app.services.run_registry import run_registry
-    from ckyclaw_framework.runner.cancellation import CancellationToken
+    from kasaya.runner.cancellation import CancellationToken
 
     cancel_token = CancellationToken()
     framework_config.cancel_token = cancel_token
@@ -1417,7 +1417,7 @@ async def execute_run_stream(
     except asyncio.CancelledError:
         yield _sse_event("error", {"code": "RUN_CANCELLED", "message": "Run 已被取消"})
     except Exception as exc:
-        from ckyclaw_framework.guardrails.result import (
+        from kasaya.guardrails.result import (
             InputGuardrailTripwireError,
             OutputGuardrailTripwireError,
         )

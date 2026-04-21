@@ -1,6 +1,7 @@
 """Memory 记忆管理 API 路由。"""
 
 from __future__ import annotations
+import uuid
 
 from typing import TYPE_CHECKING, Any
 
@@ -23,7 +24,6 @@ from app.schemas.memory import (
 from app.services import memory as memory_service
 
 if TYPE_CHECKING:
-    import uuid
 
     from sqlalchemy.ext.asyncio import AsyncSession
 

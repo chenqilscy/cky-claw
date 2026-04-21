@@ -1,4 +1,4 @@
-"""CkyClaw 性能基准测试脚本 (locust)。
+"""Kasaya 性能基准测试脚本 (locust)。
 
 使用方式:
     cd backend
@@ -19,7 +19,7 @@ import os
 from locust import HttpUser, between, tag, task
 
 
-class CkyClawUser(HttpUser):
+class KasayaUser(HttpUser):
     """模拟已认证用户对核心 API 的访问模式。"""
 
     wait_time = between(0.5, 2)

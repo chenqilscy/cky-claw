@@ -1,6 +1,7 @@
 """Debug Session REST API — Agent 交互式调试。"""
 
 from __future__ import annotations
+import uuid
 
 import contextlib
 from typing import TYPE_CHECKING
@@ -17,13 +18,12 @@ from app.schemas.debug import (
 from app.services import debug as debug_service
 
 if TYPE_CHECKING:
-    import uuid
 
     from sqlalchemy.ext.asyncio import AsyncSession
 
     from app.models.debug_session import DebugSession
     from app.models.user import User
-    from ckyclaw_framework.debug.controller import DebugEvent
+    from kasaya.debug.controller import DebugEvent
 
 router = APIRouter(prefix="/api/v1/debug", tags=["debug"])
 

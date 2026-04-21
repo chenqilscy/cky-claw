@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-echo "=== CkyClaw Backend Entrypoint ==="
+echo "=== Kasaya Backend Entrypoint ==="
 
 # 运行数据库迁移（--no-sync 避免容器内重复下载依赖）
 echo "[1/2] Running database migrations..."

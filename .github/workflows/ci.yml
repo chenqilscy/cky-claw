@@ -34,7 +34,7 @@ jobs:
           python-version: "3.12"
 
       - name: Lint Framework
-        working-directory: ckyclaw-framework
+        working-directory: kasaya
         run: |
           uv sync --extra dev
           uv run ruff check .
@@ -48,9 +48,9 @@ jobs:
           uv run ruff format --check .
 
       - name: Type Check Framework
-        working-directory: ckyclaw-framework
+        working-directory: kasaya
         run: |
-          uv run mypy ckyclaw_framework/ --ignore-missing-imports
+          uv run mypy kasaya/ --ignore-missing-imports
 
       - name: Type Check Backend
         working-directory: backend
@@ -93,13 +93,13 @@ jobs:
       postgres:
         image: postgres:16-alpine
         env:
-          POSTGRES_DB: ckyclaw_test
-          POSTGRES_USER: ckyclaw
+          POSTGRES_DB: kasaya_test
+          POSTGRES_USER: kasaya
           POSTGRES_PASSWORD: test
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U ckyclaw"
+          --health-cmd "pg_isready -U kasaya"
           --health-interval 5s
           --health-timeout 3s
           --health-retries 5
@@ -115,7 +115,7 @@ jobs:
           python-version: "3.12"
 
       - name: Test Framework
-        working-directory: ckyclaw-framework
+        working-directory: kasaya
         run: |
           uv sync --extra dev
           uv run pytest tests/ --ignore=tests/test_integration.py --ignore=tests/test_e2e_integration.py --ignore=tests/test_e2e_phase69.py --ignore=tests/test_mcp_integration.py -q --tb=short
@@ -123,7 +123,7 @@ jobs:
       - name: Test Backend
         working-directory: backend
         env:
-          CKYCLAW_DATABASE_URL: postgresql+asyncpg://ckyclaw:test@localhost:5432/ckyclaw_test
+          KASAYA_DATABASE_URL: postgresql+asyncpg://kasaya:test@localhost:5432/kasaya_test
         run: |
           uv sync --extra dev
           uv run pytest tests/ --ignore=tests/test_performance.py -q --tb=short

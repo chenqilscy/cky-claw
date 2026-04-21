@@ -4,7 +4,7 @@ import { BasePage } from './BasePage';
 /**
  * KnowledgeBasePage — 知识库管理页（/knowledge-bases）的 Page Object。
  *
- * 封装知识库页面的交互：新建/编辑 Modal、删除确认、详情弹窗。
+ * 封装知识库页面的交互：新建/编辑 Modal、删除确认、详情弹窗、文档上传、搜索、图谱操作。
  */
 export class KnowledgeBasePage extends BasePage {
   /* ---- 导航 ---- */
@@ -20,6 +20,8 @@ export class KnowledgeBasePage extends BasePage {
   async clickCreate() {
     await this.page.locator('button').getByText('新建知识库', { exact: true }).first().click();
     await this.waitForModalOpen();
+    // 等待表单字段渲染（destroyOnHidden + initialValues 确保立即可用）
+    await this.page.locator('#name').waitFor({ state: 'visible', timeout: 5_000 });
   }
 
   /** 在新建/编辑 Modal 中填写表单 */
@@ -74,12 +76,14 @@ export class KnowledgeBasePage extends BasePage {
     const row = this.findRowByName(name);
     await row.getByRole('button', { name: /编\s*辑/ }).first().click();
     await this.waitForModalOpen();
+    // 等待 afterOpenChange 填充编辑值
+    await this.page.locator('#name').waitFor({ state: 'visible', timeout: 5_000 });
+    await this.page.waitForTimeout(300);
   }
 
   /** 在编辑 Modal 中修改字段 */
   async fillEditForm(data: { name?: string; description?: string }) {
     if (data.name !== undefined) {
-      // 编辑模式时清空再填入
       const nameInput = this.page.locator('#name');
       await nameInput.clear();
       await nameInput.fill(data.name);
@@ -104,6 +108,168 @@ export class KnowledgeBasePage extends BasePage {
     const row = this.findRowByName(name);
     await row.getByRole('button', { name: /详\s*情/ }).first().click();
     await this.waitForModalOpen();
+  }
+
+  /** 在详情弹窗中切换 Tab */
+  async clickDetailTab(tabText: string) {
+    const modal = this.page.locator('.ant-modal-wrap:visible');
+    await modal.locator('.ant-tabs-tab').getByText(tabText, { exact: true }).click();
+  }
+
+  /* ---- 文档管理 ---- */
+
+  /** 点击"上传文档并索引"按钮 */
+  async clickUploadButton() {
+    const modal = this.page.locator('.ant-modal-wrap:visible');
+    await modal.locator('button').getByText('上传文档并索引').first().click();
+  }
+
+  /** 上传文档（通过 file input chooser） */
+  async uploadDocument(filePath: string) {
+    const modal = this.page.locator('.ant-modal-wrap:visible');
+    // Ant Design Upload 组件内部有隐藏的 file input
+    const fileInput = modal.locator('input[type="file"]').first();
+    await fileInput.setInputFiles(filePath);
+  }
+
+  /** 断言文档表格中包含指定文件名 */
+  async expectDocumentInTable(filename: string) {
+    const modal = this.page.locator('.ant-modal-wrap:visible');
+    const docTable = modal.locator('.ant-table').first();
+    await expect(docTable.locator('tbody')).toContainText(filename, { timeout: 5_000 });
+  }
+
+  /** 断言文档表格中不包含指定文件名 */
+  async expectDocumentNotInTable(filename: string) {
+    const modal = this.page.locator('.ant-modal-wrap:visible');
+    const docTable = modal.locator('.ant-table').first();
+    await expect(docTable.locator('tbody')).not.toContainText(filename);
+  }
+
+  /** 断言文档表格可见 */
+  async expectDocumentTableVisible() {
+    const modal = this.page.locator('.ant-modal-wrap:visible');
+    const docTable = modal.locator('.ant-table').first();
+    await expect(docTable).toBeVisible({ timeout: 5_000 });
+  }
+
+  /* ---- 向量搜索 ---- */
+
+  /** 填写搜索查询 */
+  async fillSearchQuery(query: string) {
+    const modal = this.page.locator('.ant-modal-wrap:visible');
+    // 搜索 Tab 中的 query input
+    const searchInput = modal.locator('input[placeholder*="输入问题"]').first();
+    await searchInput.click();
+    await searchInput.fill(query);
+  }
+
+  /** 点击搜索按钮 */
+  async clickSearchButton() {
+    const modal = this.page.locator('.ant-modal-wrap:visible');
+    await modal.locator('button').getByText('搜索').first().click();
+  }
+
+  /** 断言搜索结果包含指定文本 */
+  async expectSearchResult(text: string) {
+    const modal = this.page.locator('.ant-modal-wrap:visible');
+    await expect(modal.locator('.ant-card').first()).toContainText(text, { timeout: 5_000 });
+  }
+
+  /** 断言无搜索结果提示 */
+  async expectNoSearchResults() {
+    const modal = this.page.locator('.ant-modal-wrap:visible');
+    await expect(modal.locator('.ant-typography').getByText('暂无搜索结果')).toBeVisible({ timeout: 5_000 });
+  }
+
+  /* ---- 图谱操作 ---- */
+
+  /** 点击"构建图谱"按钮 */
+  async clickBuildGraph() {
+    const modal = this.page.locator('.ant-modal-wrap:visible');
+    await modal.locator('button').getByText('构建图谱').first().click();
+  }
+
+  /** 点击"清空图谱"按钮 */
+  async clickDeleteGraph() {
+    const modal = this.page.locator('.ant-modal-wrap:visible');
+    await modal.locator('button').getByText('清空图谱').first().click();
+  }
+
+  /** 断言构建进度条可见 */
+  async expectBuildProgress() {
+    const modal = this.page.locator('.ant-modal-wrap:visible');
+    await expect(modal.locator('.ant-progress')).toBeVisible({ timeout: 5_000 });
+  }
+
+  /** 断言实体表格中包含指定名称 */
+  async expectEntityInTable(name: string) {
+    const modal = this.page.locator('.ant-modal-wrap:visible');
+    // 实体 Tab 的活跃面板中的表格
+    const entityTabPane = modal.locator('.ant-tabs-tabpane-active');
+    await expect(entityTabPane.locator('.ant-table-tbody')).toContainText(name, { timeout: 5_000 });
+  }
+
+  /** 断言实体表格为空 */
+  async expectEntityTableEmpty() {
+    const modal = this.page.locator('.ant-modal-wrap:visible');
+    const entityTabPane = modal.locator('.ant-tabs-tabpane-active');
+    // Ant Design 空表格有一行 "暂无数据" 的 placeholder 行
+    const placeholder = entityTabPane.locator('.ant-table-placeholder');
+    await expect(placeholder).toBeVisible({ timeout: 5_000 });
+  }
+
+  /** 断言社区卡片中包含指定名称 */
+  async expectCommunityCard(name: string) {
+    const modal = this.page.locator('.ant-modal-wrap:visible');
+    await expect(modal.locator('.ant-card').filter({ hasText: name }).first()).toBeVisible({ timeout: 5_000 });
+  }
+
+  /** 断言无社区数据提示 */
+  async expectNoCommunities() {
+    const modal = this.page.locator('.ant-modal-wrap:visible');
+    await expect(modal.locator('.ant-typography').getByText('暂无社区数据')).toBeVisible({ timeout: 5_000 });
+  }
+
+  /** 填写图谱搜索查询 */
+  async fillGraphSearchQuery(query: string) {
+    const modal = this.page.locator('.ant-modal-wrap:visible');
+    const searchInput = modal.locator('input[placeholder*="输入查询"]').first();
+    await searchInput.click();
+    await searchInput.fill(query);
+  }
+
+  /** 选择图谱搜索模式 */
+  async selectGraphSearchMode(mode: string) {
+    const modal = this.page.locator('.ant-modal-wrap:visible');
+    // 找到 search_mode 的 Select
+    const select = modal.locator('.ant-select').filter({ hasText: '混合' }).first();
+    if (await select.isVisible().catch(() => false)) {
+      await select.click({ force: true });
+      const option = this.page.locator('.ant-select-dropdown:not(.ant-select-dropdown-hidden) .ant-select-item-option').getByText(mode, { exact: true }).first();
+      await option.waitFor({ state: 'visible', timeout: 5_000 });
+      await option.click();
+    }
+  }
+
+  /** 点击图谱搜索按钮 */
+  async clickGraphSearchButton() {
+    const modal = this.page.locator('.ant-modal-wrap:visible');
+    await modal.locator('button').getByText('搜索').first().click();
+  }
+
+  /** 断言图谱搜索结果包含指定文本 */
+  async expectGraphSearchResult(text: string) {
+    const modal = this.page.locator('.ant-modal-wrap:visible');
+    // 图谱搜索结果可能有多个 Card，检查整体区域包含文本
+    const searchTab = modal.locator('.ant-tabs-tabpane-active').last();
+    await expect(searchTab).toContainText(text, { timeout: 5_000 });
+  }
+
+  /** 断言图谱搜索无结果 */
+  async expectNoGraphSearchResults() {
+    const modal = this.page.locator('.ant-modal-wrap:visible');
+    await expect(modal.locator('.ant-typography').getByText('暂无搜索结果')).toBeVisible({ timeout: 5_000 });
   }
 
   /* ---- 断言 ---- */
@@ -134,6 +300,18 @@ export class KnowledgeBasePage extends BasePage {
   async expectModeTag(mode: string) {
     const table = this.page.locator('.ant-table');
     await expect(table.locator('.ant-tag').getByText(mode, { exact: true }).first()).toBeVisible({ timeout: 5_000 });
+  }
+
+  /** 断言详情弹窗中包含指定 Tab */
+  async expectDetailTab(tabText: string) {
+    const modal = this.page.locator('.ant-modal-wrap:visible');
+    await expect(modal.locator('.ant-tabs-tab').getByText(tabText, { exact: true })).toBeVisible({ timeout: 5_000 });
+  }
+
+  /** 断言详情弹窗中不包含指定 Tab */
+  async expectNoDetailTab(tabText: string) {
+    const modal = this.page.locator('.ant-modal-wrap:visible');
+    await expect(modal.locator('.ant-tabs-tab').getByText(tabText, { exact: true })).toHaveCount(0);
   }
 
   /* ---- 辅助 ---- */

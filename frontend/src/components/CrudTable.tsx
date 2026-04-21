@@ -411,10 +411,10 @@ export function buildActionColumn<T extends { id?: string; name?: string }>(
   const {
     extraItems,
     deleteConfirmTitle = '确认删除',
-    getRecordName = (r) => (r as Record<string, unknown>).name as string ?? '',
+    getRecordName = (r: T) => (r as Record<string, unknown>).name as string ?? '',
     hideEdit = false,
     width = 120,
-    getRecordId = (r) => (r as Record<string, unknown>).id as string,
+    getRecordId = (r: T) => (r as Record<string, unknown>).id as string,
     isDisabled,
     disabledTooltip,
   } = opts ?? {};

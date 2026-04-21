@@ -19,11 +19,11 @@ from app.models.knowledge_graph import (
     KnowledgeEntityRecord,
     KnowledgeRelationRecord,
 )
-from ckyclaw_framework.rag.graph.entity import (
+from kasaya.rag.graph.entity import (
     Entity,
     Relation,
 )
-from ckyclaw_framework.rag.graph.extractor import LLMGraphExtractor
+from kasaya.rag.graph.extractor import LLMGraphExtractor
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
@@ -118,7 +118,7 @@ async def _build_graph_task(
             total_chunks = len(chunks)
 
             # 2. 构造 LLM Provider
-            from ckyclaw_framework.model.litellm_provider import LiteLLMProvider
+            from kasaya.model.litellm_provider import LiteLLMProvider
 
             model_provider = LiteLLMProvider(**provider_kwargs)
             extractor = LLMGraphExtractor()

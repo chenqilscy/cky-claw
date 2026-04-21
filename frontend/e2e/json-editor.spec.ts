@@ -9,7 +9,7 @@ test.describe('JsonEditor 页面烟雾测试', () => {
   test.beforeEach(async ({ page }) => {
     await page.addInitScript(() => {
       localStorage.setItem(
-        'ckyclaw_token',
+        'kasaya_token',
         'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0QGV4YW1wbGUuY29tIiwiZXhwIjozMjUxODA0ODAwfQ.fake',
       );
     });

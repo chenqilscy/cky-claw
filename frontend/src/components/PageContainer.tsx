@@ -126,33 +126,52 @@ export const PageContainer: React.FC<PageContainerProps> = ({
   ];
 
   return (
-    <Flex vertical gap={20} style={fadeInStyle}>
+    <Flex vertical gap={0} style={fadeInStyle}>
       {/* 面包屑 */}
       {!hideBreadcrumb && (
-        <Breadcrumb items={breadcrumbItems} />
+        <div style={{ marginBottom: 12 }}>
+          <Breadcrumb items={breadcrumbItems} />
+        </div>
       )}
 
-      {/* 标题区 */}
-      <Flex justify="space-between" align="flex-start" wrap="wrap" gap={12}>
-        <Flex vertical gap={4}>
-          <Space size={8} align="center">
-            {icon && (
-              <span style={{ fontSize: 22, color: token.colorPrimary, display: 'flex' }}>
-                {icon}
-              </span>
+      {/* 标题区 — 白色背景卡片 */}
+      <div
+        style={{
+          background: token.colorBgContainer,
+          borderRadius: token.borderRadiusLG,
+          padding: '20px 24px',
+          marginBottom: 20,
+          boxShadow: token.boxShadow,
+        }}
+      >
+        <Flex justify="space-between" align="flex-start" wrap="wrap" gap={12}>
+          <Flex vertical gap={4}>
+            <Space size={8} align="center">
+              {icon && (
+                <span style={{
+                  fontSize: 22,
+                  color: token.colorPrimary,
+                  display: 'flex',
+                  background: token.colorPrimaryBg,
+                  borderRadius: 8,
+                  padding: 6,
+                }}>
+                  {icon}
+                </span>
+              )}
+              <Title level={4} style={{ margin: 0 }}>
+                {title}
+              </Title>
+            </Space>
+            {description && (
+              <Text type="secondary" style={{ fontSize: 13, marginLeft: icon ? 42 : 0 }}>
+                {description}
+              </Text>
             )}
-            <Title level={4} style={{ margin: 0 }}>
-              {title}
-            </Title>
-          </Space>
-          {description && (
-            <Text type="secondary" style={{ fontSize: 13 }}>
-              {description}
-            </Text>
-          )}
+          </Flex>
+          {extra && <Space wrap>{extra}</Space>}
         </Flex>
-        {extra && <Space wrap>{extra}</Space>}
-      </Flex>
+      </div>
 
       {/* 页面内容 */}
       {children}

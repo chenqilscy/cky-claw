@@ -1483,7 +1483,7 @@ class TestResolveMCPToolsR3:
 
         db = _mock_db()
         with patch("app.services.mcp_server.get_mcp_servers_by_names", new_callable=AsyncMock, return_value=[mock_mcp_config]), \
-             patch("ckyclaw_framework.mcp.connection.connect_and_discover", side_effect=ImportError("no mcp")):
+             patch("kasaya.mcp.connection.connect_and_discover", side_effect=ImportError("no mcp")):
             result = await _resolve_mcp_tools(db, config, stack=mock_stack)
         assert result == []
 
@@ -1505,7 +1505,7 @@ class TestResolveMCPToolsR3:
         db = _mock_db()
         with patch("app.services.mcp_server.get_mcp_servers_by_names", new_callable=AsyncMock, return_value=[mock_mcp_config]), \
              patch("app.core.crypto.decrypt_api_key", return_value="decrypted_token"), \
-             patch("ckyclaw_framework.mcp.connection.connect_and_discover", side_effect=Exception("connect fail")):
+             patch("kasaya.mcp.connection.connect_and_discover", side_effect=Exception("connect fail")):
             result = await _resolve_mcp_tools(db, config, stack=mock_stack)
         assert result == []
 

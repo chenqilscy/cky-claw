@@ -35,8 +35,8 @@ docker compose --profile loki up -d loki promtail grafana alertmanager
 ## 4. 预置内容
 
 - 数据源: Loki, Jaeger, Prometheus
-- 仪表盘: CkyClaw Logs Overview
-- Loki 规则: CkyclawBackendHighErrorRate, CkyclawBackendHasFatal
+- 仪表盘: Kasaya Logs Overview
+- Loki 规则: KasayaBackendHighErrorRate, KasayaBackendHasFatal
 
 ## 5. 常用 LogQL
 
@@ -85,7 +85,7 @@ powershell -ExecutionPolicy Bypass -File scripts/f3-loki-verify.ps1
 
 2) Grafana 无日志
 - 检查 Promtail 状态与日志：
-  - docker logs ckyclaw-promtail
+  - docker logs kasaya-promtail
 - 检查 Loki ready：
   - http://fn.cky:3100/ready
 

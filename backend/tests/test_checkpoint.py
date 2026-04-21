@@ -15,8 +15,8 @@ from app.main import app
 from app.models.checkpoint import CheckpointRecord
 from app.schemas.checkpoint import CheckpointListResponse, CheckpointResponse
 from app.services.checkpoint_backend import PostgresCheckpointBackend
-from ckyclaw_framework.checkpoint import Checkpoint, CheckpointBackend
-from ckyclaw_framework.model.message import Message, MessageRole
+from kasaya.checkpoint import Checkpoint, CheckpointBackend
+from kasaya.model.message import Message, MessageRole
 
 # ---------------------------------------------------------------------------
 # Fixtures

@@ -17,11 +17,11 @@ setup('authenticate', async ({ page }) => {
 
   // 直接注入 Mock JWT Token
   await page.evaluate((token) => {
-    localStorage.setItem('ckyclaw_token', token);
+    localStorage.setItem('kasaya_token', token);
   }, MOCK_JWT);
 
   // 验证 token 已写入
-  const stored = await page.evaluate(() => localStorage.getItem('ckyclaw_token'));
+  const stored = await page.evaluate(() => localStorage.getItem('kasaya_token'));
   expect(stored).toBe(MOCK_JWT);
 
   // 导航到受保护页面，确保 RequireAuth 放行

@@ -1,4 +1,4 @@
-# CkyClaw 前端优化总结报告
+# Kasaya 前端优化总结报告
 
 > 生成时间：2026-04-09
 > 范围：P0 Bug 修复 + P1 架构统一 + P2 体验优化 + Jaeger/Prometheus 可观测性集成
@@ -158,8 +158,8 @@
 - **`docker-compose.yml`**：
   - 后端加入 `1panel-network`（访问已有 Jaeger）
   - Prometheus 服务（`--profile otel`）端口 19090
-  - 环境变量：`CKYCLAW_OTEL_ENABLED`, `CKYCLAW_JAEGER_UI_URL`, `CKYCLAW_PROMETHEUS_UI_URL`
-- **`docker/prometheus.yml`**：Target 指向 `ckyclaw-backend:8000`
+  - 环境变量：`KASAYA_OTEL_ENABLED`, `KASAYA_JAEGER_UI_URL`, `KASAYA_PROMETHEUS_UI_URL`
+- **`docker/prometheus.yml`**：Target 指向 `kasaya-backend:8000`
 
 ### 验证结果
 | 服务 | 地址 | 状态 |

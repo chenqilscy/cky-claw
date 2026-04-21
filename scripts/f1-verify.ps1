@@ -16,7 +16,7 @@ function Test-Api($step, $scriptBlock) {
 
 # === 1. Auth Flow ===
 Write-Host "`n=== AUTH FLOW ==="
-Test-Api "Register" { try { Invoke-RestMethod -Uri "$base/auth/register" -Method POST -ContentType "application/json" -Body '{"email":"f1-test@ckyclaw.io","username":"f1-test","password":"F1Test!@#456"}' -TimeoutSec 10 | Out-Null; "new user" } catch { "already exists (ok)" } }
+Test-Api "Register" { try { Invoke-RestMethod -Uri "$base/auth/register" -Method POST -ContentType "application/json" -Body '{"email":"f1-test@kasaya.io","username":"f1-test","password":"F1Test!@#456"}' -TimeoutSec 10 | Out-Null; "new user" } catch { "already exists (ok)" } }
 
 $login = Invoke-RestMethod -Uri "$base/auth/login" -Method POST -ContentType "application/json" -Body '{"username":"f1-test","password":"F1Test!@#456"}' -TimeoutSec 10
 $tk = $login.access_token

@@ -9,14 +9,14 @@ clients:
   - url: http://loki:3100/loki/api/v1/push
 
 scrape_configs:
-  # 通过 Docker API 采集 ckyclaw-backend 容器日志
+  # 通过 Docker API 采集 kasaya-backend 容器日志
   - job_name: docker-logs
     docker_sd_configs:
       - host: unix:///var/run/docker.sock
         refresh_interval: 10s
         filters:
           - name: name
-            values: ["ckyclaw-backend"]
+            values: ["kasaya-backend"]
     relabel_configs:
       - source_labels: [__meta_docker_container_name]
         regex: /(.*)
@@ -24,7 +24,7 @@ scrape_configs:
       - target_label: job
         replacement: backend
       - target_label: service
-        replacement: ckyclaw-backend
+        replacement: kasaya-backend
     pipeline_stages:
       - docker: {}
       - json:

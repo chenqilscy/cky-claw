@@ -8,11 +8,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 项目概览
 
-CkyClaw 是基于自研 CkyClaw Framework 构建的 AI Agent 管理与运行平台。Monorepo 包含三个核心包：
+Kasaya 是基于自研 Kasaya Framework 构建的 AI Agent 管理与运行平台。Monorepo 包含三个核心包：
 
 | 包 | 路径 | 说明 |
 |---|---|---|
-| **ckyclaw-framework** | `ckyclaw-framework/` | Python Agent 运行时库（独立 pip 包） |
+| **kasaya** | `kasaya/` | Python Agent 运行时库（独立 pip 包） |
 | **backend** | `backend/` | FastAPI 后端服务，依赖 framework 作为 editable 包 |
 | **frontend** | `frontend/` | React SPA 管理面板 |
 
@@ -28,14 +28,14 @@ docker-compose up -d                    # 全部服务（含 backend/frontend）
 cp .env.example .env                    # 复制后按需修改
 ```
 
-### ckyclaw-framework
+### kasaya
 
 ```bash
-cd ckyclaw-framework && uv sync
+cd kasaya && uv sync
 uv run pytest tests/ -q                # 全部测试
 uv run pytest tests/test_foo.py -q     # 单个测试文件
 uv run ruff check .                     # Lint
-uv run mypy ckyclaw_framework/          # 类型检查
+uv run mypy kasaya/          # 类型检查
 ```
 
 ### backend
@@ -63,9 +63,9 @@ npx tsc --noEmit                        # 类型检查
 
 ## 架构
 
-### ckyclaw-framework — Agent 运行时
+### kasaya — Agent 运行时
 
-核心模块（均在 `ckyclaw_framework/` 下）：
+核心模块（均在 `kasaya/` 下）：
 
 - **`agent/`** — `Agent` 数据类：声明式 Agent 定义（指令、模型、工具、Handoff、Guardrail、审批模式）。`as_tool()` 支持将 Agent 包装为工具。
 - **`runner/`** — 执行引擎 `Runner`：`run()` / `run_sync()` / `run_streamed()`。核心循环：构建消息 → 调用 LLM → 并行执行工具(`asyncio.TaskGroup`) → 处理 Handoff → 重复直到最终输出或 `max_turns`。
@@ -77,7 +77,7 @@ npx tsc --noEmit                        # 类型检查
 - **`session/`** — 多轮对话：`Session` + `SessionBackend`（内存 / PostgreSQL），`HistoryTrimmer` 支持按 token 预算或消息数裁剪。
 - **`tracing/`** — 可观测性：`Trace` 包含 `Span`（AGENT / LLM / TOOL / GUARDRAIL / HANDOFF），`TraceProcessor` 抽象sink。
 - **`mcp/`** — Model Context Protocol 集成。
-- **`compat/`** — OpenAI Agents SDK 兼容层：`from_openai_agent/tool/handoff/guardrail` + `SdkAgentAdapter`，将 SDK 定义转换为 CkyClaw 原生对象。
+- **`compat/`** — OpenAI Agents SDK 兼容层：`from_openai_agent/tool/handoff/guardrail` + `SdkAgentAdapter`，将 SDK 定义转换为 Kasaya 原生对象。
 
 ### backend — 分层架构
 
@@ -85,7 +85,7 @@ npx tsc --noEmit                        # 类型检查
 app/
   main.py          → create_app() 工厂，注册路由和中间件
   core/
-    config.py      → Settings(BaseSettings)，环境变量前缀 CKYCLAW_
+    config.py      → Settings(BaseSettings)，环境变量前缀 KASAYA_
     database.py    → AsyncEngine, async_session_factory, Base, get_db 依赖
     auth.py        → JWT (python-jose + passlib/bcrypt)
     deps.py        → get_current_user, require_admin 依赖
@@ -96,7 +96,7 @@ app/
 ```
 
 关键模式：
-- 配置通过 `Settings(BaseSettings)` 单例，环境变量前缀 `CKYCLAW_`
+- 配置通过 `Settings(BaseSettings)` 单例，环境变量前缀 `KASAYA_`
 - 数据库用 asyncpg + SQLAlchemy async，`get_db()` 异步生成器依赖
 - Services 层是纯函数模块，`session_backend.py` 桥接 framework 的 `SessionBackend` 到 SQLAlchemy
 - Alembic 异步模式，`entrypoint.sh` 在 Docker 启动时自动运行迁移
@@ -112,7 +112,7 @@ src/
   stores/authStore.ts        → Zustand 管理认证状态
 ```
 
-API 调用：手写 fetch wrapper，JWT 从 `localStorage('ckyclaw_token')` 读取注入 `Authorization: Bearer`。
+API 调用：手写 fetch wrapper，JWT 从 `localStorage('kasaya_token')` 读取注入 `Authorization: Bearer`。
 
 ## 参考文档
 

@@ -1,15 +1,12 @@
 """Trace/Span 响应 Schema。"""
 
 from __future__ import annotations
+import uuid
+from datetime import datetime
 
 from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, Field
-
-if TYPE_CHECKING:
-    import uuid
-    from datetime import datetime
-
 
 class SpanResponse(BaseModel):
     """Span 响应。"""
@@ -32,7 +29,6 @@ class SpanResponse(BaseModel):
 
     model_config = {"from_attributes": True, "populate_by_name": True}
 
-
 class TraceResponse(BaseModel):
     """Trace 响应。"""
 
@@ -51,13 +47,11 @@ class TraceResponse(BaseModel):
 
     model_config = {"from_attributes": True, "populate_by_name": True}
 
-
 class TraceDetailResponse(BaseModel):
     """Trace 详情响应（含 Span 列表）。"""
 
     trace: TraceResponse
     spans: list[SpanResponse]
-
 
 class TraceListResponse(BaseModel):
     """Trace 列表响应。"""
@@ -67,7 +61,6 @@ class TraceListResponse(BaseModel):
     limit: int = 20
     offset: int = 0
 
-
 class SpanListResponse(BaseModel):
     """Span 列表响应。"""
 
@@ -76,14 +69,12 @@ class SpanListResponse(BaseModel):
     limit: int = 20
     offset: int = 0
 
-
 class TokenUsageStats(BaseModel):
     """Token 用量统计。"""
 
     prompt_tokens: int = 0
     completion_tokens: int = 0
     total_tokens: int = 0
-
 
 class SpanTypeCount(BaseModel):
     """按 Span 类型计数。"""
@@ -94,14 +85,12 @@ class SpanTypeCount(BaseModel):
     handoff: int = 0
     guardrail: int = 0
 
-
 class GuardrailStats(BaseModel):
     """Guardrail 统计。"""
 
     total: int = 0
     triggered: int = 0
     trigger_rate: float = 0.0
-
 
 class TraceStatsResponse(BaseModel):
     """Trace 统计响应。"""

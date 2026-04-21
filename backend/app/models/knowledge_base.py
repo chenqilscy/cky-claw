@@ -9,6 +9,7 @@ from typing import Any
 from sqlalchemy import DateTime, Float, ForeignKey, Integer, String, Text, text
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.sql.elements import quoted_name as qn
 
 from app.core.database import Base, SoftDeleteMixin
 
@@ -24,7 +25,7 @@ class KnowledgeBaseRecord(SoftDeleteMixin, Base):
     embedding_model: Mapped[str] = mapped_column(String(128), nullable=False, server_default=text("'hash-embedding-v1'"))
     chunk_strategy: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, server_default=text("'{}'::jsonb"))
     metadata_: Mapped[dict[str, Any]] = mapped_column("metadata", JSONB, nullable=False, server_default=text("'{}'::jsonb"))
-    mode: Mapped[str] = mapped_column(String(16), nullable=False, server_default=text("'vector'"))
+    mode: Mapped[str] = mapped_column(String(16), name=qn("mode", True), nullable=False, server_default=text("'vector'"))
     org_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("organizations.id"), nullable=True, index=True
     )

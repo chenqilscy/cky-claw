@@ -176,7 +176,7 @@ export function useStreamReducer(): UseStreamReducerReturn {
                 ...m,
                 toolCalls: calls,
                 statusText: running.length > 0
-                  ? `调用工具: ${running[0].name}...`
+                  ? `调用工具: ${running[0]?.name}...`
                   : undefined,
               };
             }),

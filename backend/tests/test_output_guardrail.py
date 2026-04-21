@@ -78,7 +78,7 @@ class TestExecuteRunInputGuardrailBlocked:
     async def test_input_guardrail_blocked_returns_response(self) -> None:
         from app.schemas.session import RunConfig, RunRequest
         from app.services.session import execute_run
-        from ckyclaw_framework.guardrails.result import InputGuardrailTripwireError
+        from kasaya.guardrails.result import InputGuardrailTripwireError
 
         sid = uuid.uuid4()
         session_mock = _make_session_record(id=sid)
@@ -103,7 +103,7 @@ class TestExecuteRunInputGuardrailBlocked:
             patch("app.services.session._resolve_mcp_tools", new_callable=AsyncMock, return_value=[]),
             patch("app.services.session._resolve_agent_tools", new_callable=AsyncMock, return_value=[]),
             patch("app.services.session._resolve_tool_groups", new_callable=AsyncMock, return_value=[]),
-            patch("ckyclaw_framework.runner.runner.Runner.run", new_callable=AsyncMock) as mock_run,
+            patch("kasaya.runner.runner.Runner.run", new_callable=AsyncMock) as mock_run,
         ):
             mock_run.side_effect = InputGuardrailTripwireError(
                 guardrail_name="block-injection", message="检测到注入攻击"
@@ -128,7 +128,7 @@ class TestExecuteRunOutputGuardrailBlocked:
     async def test_output_guardrail_blocked_returns_response(self) -> None:
         from app.schemas.session import RunConfig, RunRequest
         from app.services.session import execute_run
-        from ckyclaw_framework.guardrails.result import OutputGuardrailTripwireError
+        from kasaya.guardrails.result import OutputGuardrailTripwireError
 
         sid = uuid.uuid4()
         session_mock = _make_session_record(id=sid)
@@ -151,7 +151,7 @@ class TestExecuteRunOutputGuardrailBlocked:
             patch("app.services.session._resolve_mcp_tools", new_callable=AsyncMock, return_value=[]),
             patch("app.services.session._resolve_agent_tools", new_callable=AsyncMock, return_value=[]),
             patch("app.services.session._resolve_tool_groups", new_callable=AsyncMock, return_value=[]),
-            patch("ckyclaw_framework.runner.runner.Runner.run", new_callable=AsyncMock) as mock_run,
+            patch("kasaya.runner.runner.Runner.run", new_callable=AsyncMock) as mock_run,
         ):
             mock_run.side_effect = OutputGuardrailTripwireError(
                 guardrail_name="pii-filter", message="检测到敏感信息输出"
@@ -178,7 +178,7 @@ class TestExecuteRunStreamGuardrailErrors:
 
         from app.schemas.session import RunConfig, RunRequest
         from app.services.session import execute_run_stream
-        from ckyclaw_framework.guardrails.result import InputGuardrailTripwireError
+        from kasaya.guardrails.result import InputGuardrailTripwireError
 
         sid = uuid.uuid4()
         session_mock = _make_session_record(id=sid)
@@ -207,7 +207,7 @@ class TestExecuteRunStreamGuardrailErrors:
             patch("app.services.session._resolve_mcp_tools", new_callable=AsyncMock, return_value=[]),
             patch("app.services.session._resolve_agent_tools", new_callable=AsyncMock, return_value=[]),
             patch("app.services.session._resolve_tool_groups", new_callable=AsyncMock, return_value=[]),
-            patch("ckyclaw_framework.runner.runner.Runner.run_streamed") as mock_streamed,
+            patch("kasaya.runner.runner.Runner.run_streamed") as mock_streamed,
         ):
             mock_streamed.side_effect = InputGuardrailTripwireError(
                 guardrail_name="block-injection", message="注入攻击"
@@ -229,7 +229,7 @@ class TestExecuteRunStreamGuardrailErrors:
 
         from app.schemas.session import RunConfig, RunRequest
         from app.services.session import execute_run_stream
-        from ckyclaw_framework.guardrails.result import OutputGuardrailTripwireError
+        from kasaya.guardrails.result import OutputGuardrailTripwireError
 
         sid = uuid.uuid4()
         session_mock = _make_session_record(id=sid)
@@ -252,7 +252,7 @@ class TestExecuteRunStreamGuardrailErrors:
             patch("app.services.session._resolve_mcp_tools", new_callable=AsyncMock, return_value=[]),
             patch("app.services.session._resolve_agent_tools", new_callable=AsyncMock, return_value=[]),
             patch("app.services.session._resolve_tool_groups", new_callable=AsyncMock, return_value=[]),
-            patch("ckyclaw_framework.runner.runner.Runner.run_streamed") as mock_streamed,
+            patch("kasaya.runner.runner.Runner.run_streamed") as mock_streamed,
         ):
             mock_streamed.side_effect = OutputGuardrailTripwireError(
                 guardrail_name="pii-filter", message="敏感信息"
@@ -295,7 +295,7 @@ class TestExecuteRunStreamGuardrailErrors:
             patch("app.services.session._resolve_mcp_tools", new_callable=AsyncMock, return_value=[]),
             patch("app.services.session._resolve_agent_tools", new_callable=AsyncMock, return_value=[]),
             patch("app.services.session._resolve_tool_groups", new_callable=AsyncMock, return_value=[]),
-            patch("ckyclaw_framework.runner.runner.Runner.run_streamed") as mock_streamed,
+            patch("kasaya.runner.runner.Runner.run_streamed") as mock_streamed,
         ):
             mock_streamed.side_effect = RuntimeError("LLM 调用失败")
             events = []

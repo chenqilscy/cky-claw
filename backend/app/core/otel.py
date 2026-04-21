@@ -1,4 +1,4 @@
-"""OpenTelemetry 初始化 — 仅当 CKYCLAW_OTEL_ENABLED=true 时激活。"""
+"""OpenTelemetry 初始化 — 仅当 KASAYA_OTEL_ENABLED=true 时激活。"""
 
 from __future__ import annotations
 

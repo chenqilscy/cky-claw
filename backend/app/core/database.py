@@ -2,17 +2,15 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+import uuid
+from collections.abc import AsyncGenerator
+from datetime import datetime
 
 from sqlalchemy import Boolean, DateTime
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 from app.core.config import settings
-
-if TYPE_CHECKING:
-    from collections.abc import AsyncGenerator
-    from datetime import datetime
 
 engine = create_async_engine(
     settings.database_url,
@@ -31,7 +29,21 @@ async_session_factory = async_sessionmaker(
 class Base(DeclarativeBase):
     """SQLAlchemy 声明式基类。"""
 
-    pass
+    def __init_subclass__(cls, **kwargs: object) -> None:
+        """
+        在 from __future__ import annotations 模式下，
+        SQLAlchemy 需要在类命名空间中 eval() 解析 Mapped 注解。
+        将常用类型注入子类 __dict__，确保 eval('datetime | None') 等能找到。
+        必须在 super().__init_subclass__() 之前注入，因为 SQLAlchemy 在其中解析注解。
+        """
+        # 注入常用类型到类命名空间，供 SQLAlchemy de-stringify 使用
+        for _name, _val in (
+            ("datetime", datetime),
+            ("uuid", uuid),
+        ):
+            if _name not in cls.__dict__:
+                setattr(cls, _name, _val)
+        super().__init_subclass__(**kwargs)
 
 
 class SoftDeleteMixin:

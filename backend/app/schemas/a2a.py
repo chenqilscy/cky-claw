@@ -1,15 +1,12 @@
 """A2A 协议 Pydantic Schema。"""
 
 from __future__ import annotations
+import uuid
+from datetime import datetime
 
 from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, Field
-
-if TYPE_CHECKING:
-    import uuid
-    from datetime import datetime
-
 
 # ---------------------------------------------------------------------------
 # Agent Card
@@ -27,7 +24,6 @@ class A2AAgentCardCreate(BaseModel):
     authentication: dict[str, Any] = Field(default_factory=dict)
     metadata: dict[str, Any] = Field(default_factory=dict)
 
-
 class A2AAgentCardUpdate(BaseModel):
     """更新 Agent Card 请求。"""
 
@@ -39,7 +35,6 @@ class A2AAgentCardUpdate(BaseModel):
     skills: list[dict[str, Any]] | None = None
     authentication: dict[str, Any] | None = None
     metadata: dict[str, Any] | None = None
-
 
 class A2AAgentCardResponse(BaseModel):
     """Agent Card 响应。"""
@@ -59,7 +54,6 @@ class A2AAgentCardResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-
 class A2AAgentCardListResponse(BaseModel):
     """Agent Card 列表响应。"""
 
@@ -67,7 +61,6 @@ class A2AAgentCardListResponse(BaseModel):
     total: int
     limit: int
     offset: int
-
 
 # ---------------------------------------------------------------------------
 # Task
@@ -78,7 +71,6 @@ class A2ATaskCreate(BaseModel):
     agent_card_id: uuid.UUID
     input_messages: list[dict[str, Any]] = Field(default_factory=list)
     metadata: dict[str, Any] = Field(default_factory=dict)
-
 
 class A2ATaskResponse(BaseModel):
     """A2A Task 响应。"""
@@ -95,7 +87,6 @@ class A2ATaskResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-
 class A2ATaskListResponse(BaseModel):
     """A2A Task 列表响应。"""
 
@@ -103,7 +94,6 @@ class A2ATaskListResponse(BaseModel):
     total: int
     limit: int
     offset: int
-
 
 # ---------------------------------------------------------------------------
 # Discovery (/.well-known/agent.json 格式)

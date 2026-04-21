@@ -1,19 +1,16 @@
 """Session 与 Run 请求/响应模型。"""
 
 from __future__ import annotations
+import uuid
+from datetime import datetime
 
 from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
-if TYPE_CHECKING:
-    import uuid
-    from datetime import datetime
-
 # ---------------------------------------------------------------------------
 # Session
 # ---------------------------------------------------------------------------
-
 
 class SessionCreate(BaseModel):
     """创建 Session 请求体。"""
@@ -21,14 +18,12 @@ class SessionCreate(BaseModel):
     agent_name: str = Field(..., description="绑定的 Agent 名称")
     metadata: dict[str, Any] = Field(default_factory=dict, description="自定义元数据")
 
-
 class MessageItem(BaseModel):
     """单条消息。"""
 
     role: str
     content: str
     timestamp: datetime | None = None
-
 
 class SessionMessageItem(BaseModel):
     """持久化的会话消息（比 MessageItem 更详细）。"""
@@ -45,14 +40,12 @@ class SessionMessageItem(BaseModel):
     token_usage: dict[str, Any] | None = None
     created_at: datetime
 
-
 class SessionMessagesResponse(BaseModel):
     """会话消息列表响应。"""
 
     session_id: str
     messages: list[SessionMessageItem]
     total: int
-
 
 class SessionResponse(BaseModel):
     """Session 详情响应。"""
@@ -68,7 +61,6 @@ class SessionResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-
 class SessionListResponse(BaseModel):
     """Session 列表响应。"""
 
@@ -77,11 +69,9 @@ class SessionListResponse(BaseModel):
     limit: int
     offset: int
 
-
 # ---------------------------------------------------------------------------
 # Run
 # ---------------------------------------------------------------------------
-
 
 class RunConfig(BaseModel):
     """Run 配置。"""
@@ -111,13 +101,11 @@ class RunConfig(BaseModel):
     # S4: EventJournal 配置
     event_journal_enabled: bool = Field(default=False, description="是否启用事件日志（用于回放和审计）")
 
-
 class RunRequest(BaseModel):
     """发起 Run 请求体。"""
 
     input: str = Field(..., min_length=1, description="用户输入消息")
     config: RunConfig = Field(default_factory=RunConfig, description="执行配置")
-
 
 class TokenUsageResponse(BaseModel):
     """Token 消耗。"""
@@ -125,7 +113,6 @@ class TokenUsageResponse(BaseModel):
     prompt_tokens: int = 0
     completion_tokens: int = 0
     total_tokens: int = 0
-
 
 class RunResponse(BaseModel):
     """非流式 Run 响应。"""

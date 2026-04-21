@@ -1,0 +1,51 @@
+"""WorkflowResult — 工作流执行结果。"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from enum import StrEnum
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from datetime import datetime
+
+    from kasaya.tracing.trace import Trace
+    from kasaya.workflow.step import StepStatus
+
+
+class WorkflowStatus(StrEnum):
+    """工作流执行状态。"""
+
+    PENDING = "pending"
+    RUNNING = "running"
+    COMPLETED = "completed"
+    FAILED = "failed"
+    CANCELLED = "cancelled"
+
+
+@dataclass
+class StepResult:
+    """单步骤执行结果。"""
+
+    step_id: str
+    status: StepStatus
+    output: dict[str, Any] = field(default_factory=dict)
+    error: str | None = None
+    started_at: datetime | None = None
+    finished_at: datetime | None = None
+    duration_ms: int | None = None
+
+
+@dataclass
+class WorkflowResult:
+    """工作流执行结果。"""
+
+    workflow_name: str
+    status: WorkflowStatus
+    context: dict[str, Any] = field(default_factory=dict)
+    step_results: dict[str, StepResult] = field(default_factory=dict)
+    trace: Trace | None = None
+    started_at: datetime | None = None
+    finished_at: datetime | None = None
+    duration_ms: int | None = None
+    error: str | None = None

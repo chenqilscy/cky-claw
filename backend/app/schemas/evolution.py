@@ -1,18 +1,15 @@
 """进化建议 Pydantic Schema。"""
 
 from __future__ import annotations
+import uuid
+from datetime import datetime
 
 from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-if TYPE_CHECKING:
-    import uuid
-    from datetime import datetime
-
 _VALID_PROPOSAL_TYPES = {"instructions", "tools", "guardrails", "model", "memory"}
 _VALID_STATUSES = {"pending", "approved", "rejected", "applied", "rolled_back"}
-
 
 class EvolutionProposalCreate(BaseModel):
     """创建进化建议请求体。"""
@@ -34,7 +31,6 @@ class EvolutionProposalCreate(BaseModel):
             raise ValueError(msg)
         return v
 
-
 class EvolutionProposalUpdate(BaseModel):
     """更新进化建议请求体（PATCH 语义）。"""
 
@@ -51,7 +47,6 @@ class EvolutionProposalUpdate(BaseModel):
             msg = f"status 必须是 {_VALID_STATUSES} 之一"
             raise ValueError(msg)
         return v
-
 
 class EvolutionProposalResponse(BaseModel):
     """进化建议响应。"""
@@ -74,7 +69,6 @@ class EvolutionProposalResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-
 class EvolutionProposalListResponse(BaseModel):
     """进化建议列表响应。"""
 
@@ -83,13 +77,11 @@ class EvolutionProposalListResponse(BaseModel):
     limit: int
     offset: int
 
-
 # ────────────────────────────────────────────────────────────────
 # 进化信号 Schema
 # ────────────────────────────────────────────────────────────────
 
 _VALID_SIGNAL_TYPES = {"evaluation", "feedback", "tool_performance", "guardrail", "token_usage"}
-
 
 class EvolutionSignalCreate(BaseModel):
     """上报进化信号请求体。"""
@@ -114,7 +106,6 @@ class EvolutionSignalCreate(BaseModel):
             raise ValueError(msg)
         return v
 
-
 class EvolutionSignalResponse(BaseModel):
     """进化信号响应。"""
 
@@ -133,7 +124,6 @@ class EvolutionSignalResponse(BaseModel):
     metadata: dict[str, Any] = Field(alias="metadata_")
     created_at: datetime
 
-
 class EvolutionSignalListResponse(BaseModel):
     """进化信号列表响应。"""
 
@@ -142,20 +132,17 @@ class EvolutionSignalListResponse(BaseModel):
     limit: int
     offset: int
 
-
 class EvolutionAnalyzeResponse(BaseModel):
     """策略分析响应。"""
 
     proposals_created: int = Field(description="生成的建议数量")
     proposals: list[EvolutionProposalResponse] = Field(description="生成的建议列表")
 
-
 class RollbackCheckRequest(BaseModel):
     """回滚检查请求体。"""
 
     eval_after: float = Field(..., ge=0.0, le=1.0, description="应用后的最新评分")
     rollback_threshold: float = Field(default=0.1, ge=0.0, le=1.0, description="回滚阈值")
-
 
 class RollbackCheckResponse(BaseModel):
     """回滚检查响应。"""
@@ -164,7 +151,6 @@ class RollbackCheckResponse(BaseModel):
 
     rolled_back: bool = Field(description="是否触发了回滚")
     proposal: EvolutionProposalResponse = Field(description="更新后的建议记录")
-
 
 class ScanRollbackResponse(BaseModel):
     """批量回滚扫描响应。"""

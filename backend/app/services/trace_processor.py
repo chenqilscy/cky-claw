@@ -5,11 +5,11 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any
 
-from ckyclaw_framework.tracing.processor import TraceProcessor
+from kasaya.tracing.processor import TraceProcessor
 
 if TYPE_CHECKING:
-    from ckyclaw_framework.tracing.span import Span
-    from ckyclaw_framework.tracing.trace import Trace
+    from kasaya.tracing.span import Span
+    from kasaya.tracing.trace import Trace
 
 logger = logging.getLogger(__name__)
 

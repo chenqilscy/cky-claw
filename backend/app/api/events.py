@@ -1,6 +1,7 @@
 """Events Replay API — 事件日志查询与回放。"""
 
 from __future__ import annotations
+import uuid
 
 from typing import TYPE_CHECKING
 
@@ -12,7 +13,6 @@ from app.core.deps import get_db, require_permission
 from app.models.event import EventRecord
 
 if TYPE_CHECKING:
-    import uuid
     from datetime import datetime
 
     from sqlalchemy.ext.asyncio import AsyncSession

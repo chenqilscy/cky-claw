@@ -1,19 +1,16 @@
 """Agent 配置请求/响应模型。"""
 
 from __future__ import annotations
+import uuid
+from datetime import datetime
 
 import re
 from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-if TYPE_CHECKING:
-    import uuid
-    from datetime import datetime
-
 # Agent name 格式：小写字母/数字开头结尾，中间可含连字符，3-64 字符
 _AGENT_NAME_PATTERN = re.compile(r"^[a-z0-9][a-z0-9-]{1,62}[a-z0-9]$")
-
 
 class GuardrailsConfig(BaseModel):
     """护栏配置。"""
@@ -21,7 +18,6 @@ class GuardrailsConfig(BaseModel):
     input: list[str] = Field(default_factory=list)
     output: list[str] = Field(default_factory=list)
     tool: list[str] = Field(default_factory=list)
-
 
 class AgentCreate(BaseModel):
     """创建 Agent 请求体。"""
@@ -76,7 +72,6 @@ class AgentCreate(BaseModel):
             raise ValueError(f"approval_mode 必须是 {allowed} 之一")
         return v
 
-
 class AgentUpdate(BaseModel):
     """更新 Agent 请求体（PATCH 语义，所有字段可选）。"""
 
@@ -116,7 +111,6 @@ class AgentUpdate(BaseModel):
                 raise ValueError(f"approval_mode 必须是 {allowed} 之一")
         return v
 
-
 class AgentResponse(BaseModel):
     """Agent 详情响应。"""
 
@@ -146,7 +140,6 @@ class AgentResponse(BaseModel):
     created_by: uuid.UUID | None
     created_at: datetime
     updated_at: datetime
-
 
 class AgentListResponse(BaseModel):
     """Agent 列表响应。"""

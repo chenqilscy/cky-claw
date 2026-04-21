@@ -1,20 +1,17 @@
 """监督面板请求/响应模型。"""
 
 from __future__ import annotations
+import uuid
+from datetime import datetime
 
 from enum import StrEnum
 from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, Field
 
-if TYPE_CHECKING:
-    import uuid
-    from datetime import datetime
-
 # ---------------------------------------------------------------------------
 # 会话状态枚举
 # ---------------------------------------------------------------------------
-
 
 class SessionStatus(StrEnum):
     """会话状态。"""
@@ -23,11 +20,9 @@ class SessionStatus(StrEnum):
     paused = "paused"
     completed = "completed"
 
-
 # ---------------------------------------------------------------------------
 # 活跃会话
 # ---------------------------------------------------------------------------
-
 
 class SupervisionSessionItem(BaseModel):
     """活跃会话列表项。"""
@@ -41,7 +36,6 @@ class SupervisionSessionItem(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-
 class SupervisionSessionListResponse(BaseModel):
     """活跃会话列表响应。"""
 
@@ -50,7 +44,6 @@ class SupervisionSessionListResponse(BaseModel):
     limit: int = 20
     offset: int = 0
 
-
 class MessageItem(BaseModel):
     """消息项。"""
 
@@ -58,30 +51,25 @@ class MessageItem(BaseModel):
     content: str
     timestamp: datetime | None = None
 
-
 class SupervisionSessionDetail(SupervisionSessionItem):
     """会话详情（含消息历史）。"""
 
     messages: list[MessageItem] = Field(default_factory=list)
     metadata: dict[str, Any] = Field(default_factory=dict)
 
-
 # ---------------------------------------------------------------------------
 # 暂停 / 恢复
 # ---------------------------------------------------------------------------
-
 
 class PauseRequest(BaseModel):
     """暂停会话请求。"""
 
     reason: str = Field(default="", description="暂停原因")
 
-
 class ResumeRequest(BaseModel):
     """恢复会话请求。"""
 
     injected_instructions: str = Field(default="", description="恢复时注入的指令")
-
 
 class SupervisionActionResponse(BaseModel):
     """监督操作响应。"""

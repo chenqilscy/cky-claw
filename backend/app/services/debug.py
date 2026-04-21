@@ -13,7 +13,7 @@ from sqlalchemy import func, select
 
 from app.models.agent import AgentConfig
 from app.models.debug_session import DebugSession
-from ckyclaw_framework.debug.controller import DebugController, DebugMode
+from kasaya.debug.controller import DebugController, DebugMode
 
 if TYPE_CHECKING:
     import uuid

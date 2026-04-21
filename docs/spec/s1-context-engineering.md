@@ -13,7 +13,7 @@
 ### 2.1 新增模块：artifacts/
 
 ```
-ckyclaw_framework/
+kasaya/
 └── artifacts/
     ├── __init__.py       # 导出 Artifact, ArtifactStore, LocalArtifactStore
     ├── artifact.py       # Artifact 数据类

@@ -236,7 +236,9 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
             }}
           >
             <div style={{
-              maxWidth: isMobile ? '85%' : '70%',
+              maxWidth: msg.role === 'user'
+                ? (isMobile ? '85%' : '70%')
+                : (isMobile ? '92%' : '85%'),
               padding: '10px 14px',
               borderRadius: 12,
               background: msg.role === 'user' ? token.colorPrimary : token.colorBgContainer,
@@ -251,7 +253,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                 </Text>
               )}
               {/* 工具调用状态标签 */}
-              {(msg as StreamMessage).toolCalls && (msg as StreamMessage).toolCalls?.length > 0 && (
+              {(msg as StreamMessage).toolCalls && (msg as StreamMessage).toolCalls!.length > 0 && (
                 <div style={{ marginBottom: 4 }}>
                   {(msg as StreamMessage).toolCalls?.map((tc, i) => (
                     <Tag

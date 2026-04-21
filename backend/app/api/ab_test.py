@@ -88,8 +88,8 @@ async def run_ab_test(
     db: AsyncSession = Depends(get_db),
 ) -> ABTestResponse:
     """执行多模型 A/B 测试 — 并行调用多个模型并对比输出。"""
-    from ckyclaw_framework.model.litellm_provider import LiteLLMProvider
-    from ckyclaw_framework.model.settings import ModelSettings
+    from kasaya.model.litellm_provider import LiteLLMProvider
+    from kasaya.model.settings import ModelSettings
 
     provider_kwargs = await _resolve_provider_kwargs(db, request.provider_name)
     provider = LiteLLMProvider(**provider_kwargs)

@@ -1,6 +1,7 @@
 """AuditLog 审计日志 API 路由。"""
 
 from __future__ import annotations
+import uuid
 
 from typing import TYPE_CHECKING
 
@@ -12,7 +13,6 @@ from app.schemas.audit_log import AuditLogListResponse, AuditLogResponse
 from app.services import audit_log as audit_log_service
 
 if TYPE_CHECKING:
-    import uuid
 
     from sqlalchemy.ext.asyncio import AsyncSession
 

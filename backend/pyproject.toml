@@ -1,7 +1,7 @@
 [project]
-name = "ckyclaw-backend"
+name = "kasaya-backend"
 version = "0.1.0"
-description = "CkyClaw Backend — FastAPI 后端服务"
+description = "Kasaya Backend — FastAPI 后端服务"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
@@ -16,7 +16,7 @@ dependencies = [
     "python-jose[cryptography]>=3.3.0",
     "bcrypt>=4.0.0",
     "httpx>=0.27.0",
-    "ckyclaw-framework",
+    "kasaya",
     "croniter>=6.2.2",
     "pyyaml>=6.0.0",
     "python-multipart>=0.0.9",
@@ -66,7 +66,7 @@ ignore = [
 ]
 
 [tool.ruff.lint.isort]
-known-first-party = ["app", "ckyclaw_framework"]
+known-first-party = ["app", "kasaya"]
 
 [tool.ruff.format]
 quote-style = "double"
@@ -80,7 +80,7 @@ asyncio_mode = "auto"
 testpaths = ["tests"]
 
 [tool.uv.sources]
-ckyclaw-framework = { path = "../ckyclaw-framework", editable = true }
+kasaya = { path = "../kasaya", editable = true }
 
 [dependency-groups]
 dev = [

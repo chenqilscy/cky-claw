@@ -1,16 +1,13 @@
 """ScheduledTask Schema — 定时任务请求/响应。"""
 
 from __future__ import annotations
+import uuid
+from datetime import datetime
 
 from typing import TYPE_CHECKING
 
 from croniter import croniter
 from pydantic import BaseModel, ConfigDict, Field, field_validator
-
-if TYPE_CHECKING:
-    import uuid
-    from datetime import datetime
-
 
 class ScheduledTaskCreate(BaseModel):
     """创建定时任务请求。"""
@@ -33,7 +30,6 @@ class ScheduledTaskCreate(BaseModel):
             raise ValueError(f"无效的 Cron 表达式: {v}")
         return v
 
-
 class ScheduledTaskUpdate(BaseModel):
     """更新定时任务请求（PATCH 语义）。"""
 
@@ -49,7 +45,6 @@ class ScheduledTaskUpdate(BaseModel):
         if v is not None and not croniter.is_valid(v):
             raise ValueError(f"无效的 Cron 表达式: {v}")
         return v
-
 
 class ScheduledTaskResponse(BaseModel):
     """定时任务响应。"""
@@ -69,18 +64,15 @@ class ScheduledTaskResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-
 class ScheduledTaskListResponse(BaseModel):
     """定时任务列表响应。"""
 
     data: list[ScheduledTaskResponse]
     total: int
 
-
 # ---------------------------------------------------------------------------
 # 执行历史
 # ---------------------------------------------------------------------------
-
 
 class ScheduledRunResponse(BaseModel):
     """定时任务执行记录响应。"""
@@ -98,7 +90,6 @@ class ScheduledRunResponse(BaseModel):
     trace_id: uuid.UUID | None
     triggered_by: str
     created_at: datetime
-
 
 class ScheduledRunListResponse(BaseModel):
     """执行历史列表响应。"""

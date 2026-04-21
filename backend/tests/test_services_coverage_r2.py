@@ -637,7 +637,7 @@ class TestMCPServerR2:
             return [mock_tool]
 
         with patch("app.services.mcp_server.get_mcp_server", AsyncMock(return_value=mock_s)), \
-             patch("ckyclaw_framework.mcp.connection.connect_and_discover", side_effect=fake_connect):
+             patch("kasaya.mcp.connection.connect_and_discover", side_effect=fake_connect):
             result = await test_mcp_connection(db, mock_s.id)
         assert result["success"] is True
         assert len(result["tools"]) == 1
@@ -655,7 +655,7 @@ class TestMCPServerR2:
         db = _mock_db(_scalar_one_or_none(mock_s))
 
         with patch("app.services.mcp_server.get_mcp_server", AsyncMock(return_value=mock_s)), \
-             patch.dict("sys.modules", {"ckyclaw_framework.mcp.connection": None, "ckyclaw_framework.mcp.server": None}):
+             patch.dict("sys.modules", {"kasaya.mcp.connection": None, "kasaya.mcp.server": None}):
             # 让 import 存在但 connect_and_discover 抛出 ImportError
             result = await test_mcp_connection(db, mock_s.id)
         assert result["success"] is False
@@ -676,7 +676,7 @@ class TestMCPServerR2:
             raise Exception("timeout")
 
         with patch("app.services.mcp_server.get_mcp_server", AsyncMock(return_value=mock_s)), \
-             patch("ckyclaw_framework.mcp.connection.connect_and_discover", side_effect=fake_connect_err):
+             patch("kasaya.mcp.connection.connect_and_discover", side_effect=fake_connect_err):
             result = await test_mcp_connection(db, mock_s.id)
         assert result["success"] is False
         assert "timeout" in result.get("error", "")

@@ -1,4 +1,4 @@
-"""CkyClaw Backend 应用入口。"""
+"""Kasaya Backend 应用入口。"""
 
 from __future__ import annotations
 
@@ -70,6 +70,30 @@ if TYPE_CHECKING:
     from collections.abc import AsyncIterator
 
 
+async def _seed_default_admin(db: AsyncSession) -> None:
+    """首次启动时自动创建默认管理员（幂等）。"""
+    from sqlalchemy import select
+
+    from app.core.auth import hash_password
+    from app.models.user import User
+
+    stmt = select(User).where(User.username == "admin")
+    exists = (await db.execute(stmt)).scalar_one_or_none()
+    if exists is not None:
+        return
+    user = User(
+        username="admin",
+        email="admin@kasaya.local",
+        hashed_password=hash_password("admin123"),
+        role="admin",
+        is_active=True,
+    )
+    db.add(user)
+    await db.commit()
+    import logging
+    logging.getLogger(__name__).info("默认管理员已创建 — 用户名: admin / 密码: admin123")
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """应用生命周期管理 — 启动/关闭 Redis 订阅 + Seed 内置工具组。"""
@@ -85,6 +109,14 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     except Exception:
         import logging
         logging.getLogger(__name__).warning("Seed 内置工具组失败，跳过", exc_info=True)
+
+    # Seed 默认管理员（首次启动时自动创建）
+    try:
+        async with async_session_factory() as db:
+            await _seed_default_admin(db)
+    except Exception:
+        import logging
+        logging.getLogger(__name__).warning("Seed 默认管理员失败，跳过", exc_info=True)
 
     await start_subscriber()
 
@@ -115,7 +147,7 @@ def create_app() -> FastAPI:
     setup_otel()
 
     app = FastAPI(
-        title="CkyClaw",
+        title="Kasaya",
         description="AI Agent 管理与运行平台 — 提供 Agent 编排、多模型适配、工具管理、护栏、审批、链路追踪等完整 API。",
         version="0.1.0",
         docs_url="/docs" if settings.debug else None,

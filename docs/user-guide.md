@@ -1,6 +1,6 @@
-# CkyClaw 用户手册
+# Kasaya 用户手册
 
-> 本手册介绍 CkyClaw 平台的日常使用操作。
+> 本手册介绍 Kasaya 平台的日常使用操作。
 
 ## 登录
 
@@ -24,9 +24,9 @@
 3. 授权成功后自动回调并完成登录。
 4. 首次通过 SSO 登录时，系统会自动创建账号并关联企业身份。
 
-> **配置环境变量**：企微需设置 `CKYCLAW_OAUTH_WECOM_CORP_ID` / `CKYCLAW_OAUTH_WECOM_AGENT_ID` / `CKYCLAW_OAUTH_WECOM_SECRET`；
-> 钉钉需设置 `CKYCLAW_OAUTH_DINGTALK_CLIENT_ID` / `CKYCLAW_OAUTH_DINGTALK_CLIENT_SECRET`；
-> 飞书需设置 `CKYCLAW_OAUTH_FEISHU_APP_ID` / `CKYCLAW_OAUTH_FEISHU_APP_SECRET`。
+> **配置环境变量**：企微需设置 `KASAYA_OAUTH_WECOM_CORP_ID` / `KASAYA_OAUTH_WECOM_AGENT_ID` / `KASAYA_OAUTH_WECOM_SECRET`；
+> 钉钉需设置 `KASAYA_OAUTH_DINGTALK_CLIENT_ID` / `KASAYA_OAUTH_DINGTALK_CLIENT_SECRET`；
+> 飞书需设置 `KASAYA_OAUTH_FEISHU_APP_ID` / `KASAYA_OAUTH_FEISHU_APP_SECRET`。
 
 ### OAuth 账号绑定
 
@@ -174,7 +174,7 @@ curl -X POST http://localhost:8000/api/v1/auth/register \
 
 ## API 文档
 
-CkyClaw 后端基于 FastAPI，自动生成交互式 API 文档：
+Kasaya 后端基于 FastAPI，自动生成交互式 API 文档：
 
 - **Swagger UI**：`http://localhost:8000/docs`
 - **ReDoc**：`http://localhost:8000/redoc`
@@ -197,13 +197,13 @@ CkyClaw 后端基于 FastAPI，自动生成交互式 API 文档：
 ### 企业微信接入
 
 1. 在企业微信管理后台创建自建应用。
-2. 配置应用的「接收消息」URL 为 CkyClaw 提供的 Webhook URL。
+2. 配置应用的「接收消息」URL 为 Kasaya 提供的 Webhook URL。
 3. 将 Token、EncodingAESKey、CorpID 填入渠道配置。
 4. 企业微信用户发送的消息会自动路由到绑定的 Agent 处理。
 
 ### 钉钉接入
 
 1. 在钉钉开放平台创建机器人。
-2. 配置消息接收地址为 CkyClaw 的 Webhook URL。
+2. 配置消息接收地址为 Kasaya 的 Webhook URL。
 3. 将签名密钥（App Secret）和 Webhook URL 填入渠道配置。
 4. 钉钉用户 @机器人 的消息会自动路由到绑定的 Agent。

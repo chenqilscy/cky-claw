@@ -39,7 +39,7 @@ class TestABTestAPI:
         app.dependency_overrides.pop(get_db, None)
 
     @patch(f"{SVC}._resolve_provider_kwargs", new_callable=AsyncMock, return_value={})
-    @patch("ckyclaw_framework.model.litellm_provider.LiteLLMProvider.chat", new_callable=AsyncMock)
+    @patch("kasaya.model.litellm_provider.LiteLLMProvider.chat", new_callable=AsyncMock)
     def test_run_ab_test_success(self, mock_chat: AsyncMock, mock_resolve: AsyncMock) -> None:
         """两个模型都成功返回结果。"""
         mock_chat.return_value = _mock_chat_response()
@@ -56,7 +56,7 @@ class TestABTestAPI:
             assert "latency_ms" in r
 
     @patch(f"{SVC}._resolve_provider_kwargs", new_callable=AsyncMock, return_value={})
-    @patch("ckyclaw_framework.model.litellm_provider.LiteLLMProvider.chat", new_callable=AsyncMock)
+    @patch("kasaya.model.litellm_provider.LiteLLMProvider.chat", new_callable=AsyncMock)
     def test_run_ab_test_single_model_error(self, mock_chat: AsyncMock, mock_resolve: AsyncMock) -> None:
         """一个模型失败，其他正常返回。"""
         call_count = 0
@@ -104,7 +104,7 @@ class TestABTestAPI:
         assert resp.status_code in (200, 422)
 
     @patch(f"{SVC}._resolve_provider_kwargs", new_callable=AsyncMock)
-    @patch("ckyclaw_framework.model.litellm_provider.LiteLLMProvider.chat", new_callable=AsyncMock)
+    @patch("kasaya.model.litellm_provider.LiteLLMProvider.chat", new_callable=AsyncMock)
     def test_run_ab_test_with_provider(self, mock_chat: AsyncMock, mock_resolve: AsyncMock) -> None:
         """指定 provider_name 时使用 Provider 配置的密钥。"""
         mock_resolve.return_value = {"api_key": "sk-test", "api_base": "https://api.example.com"}

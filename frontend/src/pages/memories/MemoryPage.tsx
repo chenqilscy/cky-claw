@@ -209,10 +209,10 @@ const MemoryPage: React.FC = () => {
   }), [typeDistribution]);
 
   const confidenceBarOption = useMemo(() => {
-    const buckets = [0, 0, 0, 0, 0]; // [0-0.2, 0.2-0.4, 0.4-0.6, 0.6-0.8, 0.8-1.0]
+    const buckets: number[] = [0, 0, 0, 0, 0]; // [0-0.2, 0.2-0.4, 0.4-0.6, 0.6-0.8, 0.8-1.0]
     memories.forEach((m) => {
-      const idx = Math.min(Math.floor(m.confidence * 5), 4);
-      buckets[idx]++;
+      const i = Math.min(Math.floor(m.confidence * 5), 4);
+      buckets[i] = (buckets[i] ?? 0) + 1;
     });
     return {
       tooltip: {},

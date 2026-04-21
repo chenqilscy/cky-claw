@@ -1034,9 +1034,9 @@ def _build_link_xml(from_user: str, to_user: str) -> bytes:
         f"<FromUserName><![CDATA[{from_user}]]></FromUserName>"
         f"<CreateTime>{create_time}</CreateTime>"
         "<MsgType><![CDATA[link]]></MsgType>"
-        "<Title><![CDATA[CkyClaw 官网]]></Title>"
+        "<Title><![CDATA[Kasaya 官网]]></Title>"
         "<Description><![CDATA[AI Agent 平台]]></Description>"
-        "<Url><![CDATA[https://ckyclaw.com]]></Url>"
+        "<Url><![CDATA[https://kasaya.com]]></Url>"
         "<MsgId>123460</MsgId>"
         "</xml>"
     ).encode()
@@ -1187,8 +1187,8 @@ class TestWeChatOfficialAdapter:
         msg = adapter.parse_message(body, _WECHAT_OFFICIAL_CONFIG)
         assert msg is not None
         assert msg.message_type == "link"
-        assert "CkyClaw 官网" in msg.content
-        assert "https://ckyclaw.com" in msg.content
+        assert "Kasaya 官网" in msg.content
+        assert "https://kasaya.com" in msg.content
 
     # ---------- 消息解析：事件 ----------
 
@@ -1363,7 +1363,7 @@ class TestWeChatOfficialAdapter:
 
         with patch("app.services.channel_adapters.wechat_official.httpx.AsyncClient", return_value=mock_client):
             result = await adapter.send_template_message(
-                _WECHAT_OFFICIAL_CONFIG, "user_openid", "tpl_1234", template_data, url="https://ckyclaw.com"
+                _WECHAT_OFFICIAL_CONFIG, "user_openid", "tpl_1234", template_data, url="https://kasaya.com"
             )
         assert result is True
 

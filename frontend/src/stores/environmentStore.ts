@@ -7,7 +7,7 @@ interface EnvironmentState {
   setCurrent: (env: string | null) => void;
 }
 
-const STORAGE_KEY = 'ckyclaw_environment';
+const STORAGE_KEY = 'kasaya_environment';
 
 const getInitialEnv = (): string | null => {
   return localStorage.getItem(STORAGE_KEY);

@@ -1,15 +1,12 @@
 """Agent 版本管理请求/响应模型。"""
 
 from __future__ import annotations
+import uuid
+from datetime import datetime
 
 from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, ConfigDict, Field
-
-if TYPE_CHECKING:
-    import uuid
-    from datetime import datetime
-
 
 class AgentVersionResponse(BaseModel):
     """Agent 版本详情响应。"""
@@ -24,13 +21,11 @@ class AgentVersionResponse(BaseModel):
     created_by: uuid.UUID | None
     created_at: datetime
 
-
 class AgentVersionListResponse(BaseModel):
     """Agent 版本列表响应。"""
 
     data: list[AgentVersionResponse]
     total: int
-
 
 class AgentVersionDiffResponse(BaseModel):
     """Agent 版本对比响应。"""
@@ -39,7 +34,6 @@ class AgentVersionDiffResponse(BaseModel):
     version_b: int
     snapshot_a: dict[str, Any]
     snapshot_b: dict[str, Any]
-
 
 class AgentRollbackRequest(BaseModel):
     """回滚请求体。"""

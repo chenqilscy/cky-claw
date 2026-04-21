@@ -443,8 +443,8 @@ class TestPostgresTraceProcessor:
     async def test_collect_trace_and_spans(self) -> None:
         """收集完整 Trace + Span 数据。"""
         from app.services.trace_processor import PostgresTraceProcessor
-        from ckyclaw_framework.tracing.span import Span, SpanStatus, SpanType
-        from ckyclaw_framework.tracing.trace import Trace
+        from kasaya.tracing.span import Span, SpanStatus, SpanType
+        from kasaya.tracing.trace import Trace
 
         processor = PostgresTraceProcessor(session_id="sess-123")
 
@@ -493,7 +493,7 @@ class TestPostgresTraceProcessor:
     async def test_empty_trace(self) -> None:
         """无 Span 的 Trace。"""
         from app.services.trace_processor import PostgresTraceProcessor
-        from ckyclaw_framework.tracing.trace import Trace
+        from kasaya.tracing.trace import Trace
 
         processor = PostgresTraceProcessor()
 
@@ -520,8 +520,8 @@ class TestPostgresTraceProcessor:
     async def test_input_output_serialization(self) -> None:
         """Span input/output 安全序列化。"""
         from app.services.trace_processor import PostgresTraceProcessor
-        from ckyclaw_framework.tracing.span import Span, SpanStatus, SpanType
-        from ckyclaw_framework.tracing.trace import Trace
+        from kasaya.tracing.span import Span, SpanStatus, SpanType
+        from kasaya.tracing.trace import Trace
 
         processor = PostgresTraceProcessor()
         trace = Trace()

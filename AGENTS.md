@@ -1,8 +1,8 @@
-# CkyClaw 项目规则
+# Kasaya 项目规则
 
 ## 项目定位
 
-CkyClaw 是基于自研 **CkyClaw Framework** 构建的 AI Agent 管理与运行平台。CkyClaw Framework 汲取了 Claude Code、OpenAI Codex CLI、OpenAI Agents SDK、DeerFlow 等业界领先方案的优秀设计，提供一套开放、可扩展的 Agent 运行时基础设施。CkyClaw 在此基础上构建企业级的 Agent 配置管理、多模式编排、执行可视化、人工监督、多渠道接入和 APM 监控等上层能力。
+Kasaya 是基于自研 **Kasaya Framework** 构建的 AI Agent 管理与运行平台。Kasaya Framework 汲取了 Claude Code、OpenAI Codex CLI、OpenAI Agents SDK、DeerFlow 等业界领先方案的优秀设计，提供一套开放、可扩展的 Agent 运行时基础设施。Kasaya 在此基础上构建企业级的 Agent 配置管理、多模式编排、执行可视化、人工监督、多渠道接入和 APM 监控等上层能力。
 
 ## 项目现状（M0–M7 全部完成）
 
@@ -119,8 +119,8 @@ Windows 环境无需设置代理。
 
 ```
 cky-claw/
-├── ckyclaw-framework/           # CkyClaw Framework — Python Agent 运行时库
-│   ├── ckyclaw_framework/
+├── kasaya/           # Kasaya Framework — Python Agent 运行时库
+│   ├── kasaya/
 │   │   ├── agent/               # Agent 定义（Agent dataclass + as_tool）
 │   │   ├── runner/              # Runner 执行引擎（Agent Loop + Hooks + RunConfig）
 │   │   ├── model/               # Model Provider 抽象（LiteLLMProvider）
@@ -132,7 +132,7 @@ cky-claw/
 │   │   ├── session/             # Session 会话管理（InMemory/Postgres）
 │   │   └── tracing/             # Tracing 链路追踪（Trace/Span/Processor）
 │   └── tests/                   # 1134 个测试
-├── backend/                     # CkyClaw Backend — FastAPI 后端服务
+├── backend/                     # Kasaya Backend — FastAPI 后端服务
 │   ├── app/
 │   │   ├── api/                 # 44 个 REST API 路由模块
 │   │   ├── models/              # SQLAlchemy ORM（35 张表）
@@ -141,7 +141,7 @@ cky-claw/
 │   │   └── core/                # 基础设施（config/auth/crypto/database）
 │   ├── alembic/versions/        # 53 个 Alembic 迁移
 │   └── tests/                   # 1185 个测试
-├── frontend/                    # CkyClaw Frontend — React Web 前端
+├── frontend/                    # Kasaya Frontend — React Web 前端
 │   └── src/
 │       ├── pages/               # 25 个页面（React.lazy 懒加载）
 │       ├── services/            # API 服务层
@@ -208,7 +208,7 @@ cky-claw/
 ### Import 顺序
 1. 标准库
 2. 第三方库
-3. 本项目库（`ckyclaw_framework`）
+3. 本项目库（`kasaya`）
 4. 本应用库（`app`）
 
 各组之间空一行。
@@ -311,11 +311,11 @@ npx tsc --noEmit       # 类型检查
 每个需求开始前，产品经理必须回答：
 
 1. **AI 场景相关性**：是否直接服务于 AI Agent 平台场景？
-2. **差异化价值**：是否体现 CkyClaw 与竞品的差异化？
+2. **差异化价值**：是否体现 Kasaya 与竞品的差异化？
 3. **用户优先级**：目标用户（中国企业 AI 团队）是否真的需要？
 
 优先级：
-- **P0**：核心 Agent 能力（CkyClaw Framework 编排、Agent Loop、工具执行、Tracing）
+- **P0**：核心 Agent 能力（Kasaya Framework 编排、Agent Loop、工具执行、Tracing）
 - **P1**：支撑能力（LLM 多模型适配、Session 管理、Guardrails、Approval）
 - **P2**：垂直 Agent（代码审查、DevOps、客服、数据分析）
 - **P3**：锦上添花（高级 UI、非核心集成）
@@ -337,7 +337,7 @@ npx tsc --noEmit       # 类型检查
 
 | 层 | 技术 |
 |----|------|
-| **Framework** | Python 3.12+, CkyClaw Framework (自研) |
+| **Framework** | Python 3.12+, Kasaya Framework (自研) |
 | **Backend** | FastAPI, SQLAlchemy (async), Alembic, LiteLLM, Pydantic v2 |
 | **Frontend** | React 19, Vite 6, TypeScript 5.8, Ant Design 5, ProComponents, TanStack Query, ReactFlow, ECharts, Zustand |
 | **Database** | PostgreSQL 16, Redis 7 |

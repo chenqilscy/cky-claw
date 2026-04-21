@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from ckyclaw_framework.agent.template import (
+from kasaya.agent.template import (
     TemplateVariable,
     extract_variables,
     render_template,

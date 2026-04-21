@@ -29,5 +29,5 @@
 | 25 | 编辑 Agent：422 错误（limit 参数） | ✅ 已修复 | 2026-04-15.MD | — |
 | 26 | 版本历史页面包屑显示 UUID 而非 Agent 名称 | ✅ 已修复 | 2026-04-15.MD | — |
 | 27 | 知识库：添加 graphify 图谱方案研究报告 | ✅ 已完成 | 2026-04-15.MD | docs/spec/graphify-knowledge-base-research.md |
-| 28 | ckyclaw-cli 使用文档 | ✅ 已完成 | 2026-04-15.MD | docs/ckyclaw-cli-guide.md |
+| 28 | kasaya-cli 使用文档 | ✅ 已完成 | 2026-04-15.MD | docs/kasaya-cli-guide.md |
 | 29 | docs 目录文档整理 + todo.md 内容迁移 | ✅ 已完成 | 2026-04-15.MD | docs/plan/todo-list.md |

@@ -219,7 +219,7 @@ class TestApprovalManager:
     @pytest.mark.asyncio
     async def test_register_and_resolve(self) -> None:
         from app.services.approval_manager import ApprovalManager
-        from ckyclaw_framework.approval.mode import ApprovalDecision
+        from kasaya.approval.mode import ApprovalDecision
 
         mgr = ApprovalManager.get_instance()
         aid = uuid.uuid4()
@@ -239,7 +239,7 @@ class TestApprovalManager:
     @pytest.mark.asyncio
     async def test_resolve_rejected(self) -> None:
         from app.services.approval_manager import ApprovalManager
-        from ckyclaw_framework.approval.mode import ApprovalDecision
+        from kasaya.approval.mode import ApprovalDecision
 
         mgr = ApprovalManager.get_instance()
         aid = uuid.uuid4()
@@ -256,7 +256,7 @@ class TestApprovalManager:
     @pytest.mark.asyncio
     async def test_timeout(self) -> None:
         from app.services.approval_manager import ApprovalManager
-        from ckyclaw_framework.approval.mode import ApprovalDecision
+        from kasaya.approval.mode import ApprovalDecision
 
         mgr = ApprovalManager.get_instance()
         aid = uuid.uuid4()
@@ -268,7 +268,7 @@ class TestApprovalManager:
     @pytest.mark.asyncio
     async def test_wait_unregistered(self) -> None:
         from app.services.approval_manager import ApprovalManager
-        from ckyclaw_framework.approval.mode import ApprovalDecision
+        from kasaya.approval.mode import ApprovalDecision
 
         mgr = ApprovalManager.get_instance()
         decision = await mgr.wait_for_decision(uuid.uuid4(), timeout=1)
@@ -276,7 +276,7 @@ class TestApprovalManager:
 
     def test_resolve_unknown_returns_false(self) -> None:
         from app.services.approval_manager import ApprovalManager
-        from ckyclaw_framework.approval.mode import ApprovalDecision
+        from kasaya.approval.mode import ApprovalDecision
 
         mgr = ApprovalManager.get_instance()
         result = mgr.resolve(uuid.uuid4(), ApprovalDecision.APPROVED)
@@ -311,7 +311,7 @@ class TestHttpApprovalHandler:
         """验证 handler 创建 DB 记录并等待审批决策。"""
         from app.services.approval_handler import HttpApprovalHandler
         from app.services.approval_manager import ApprovalManager
-        from ckyclaw_framework.approval.mode import ApprovalDecision
+        from kasaya.approval.mode import ApprovalDecision
 
         handler = HttpApprovalHandler(
             session_id=str(uuid.uuid4()),
@@ -356,7 +356,7 @@ class TestHttpApprovalHandler:
     async def test_timeout_returns_timeout(self) -> None:
         """验证超时返回 TIMEOUT。"""
         from app.services.approval_handler import HttpApprovalHandler
-        from ckyclaw_framework.approval.mode import ApprovalDecision
+        from kasaya.approval.mode import ApprovalDecision
 
         handler = HttpApprovalHandler(
             session_id=str(uuid.uuid4()),
@@ -413,7 +413,7 @@ class TestBuildAgentApprovalMode:
 
     def test_suggest_mode(self) -> None:
         from app.services.session import _build_agent_from_config
-        from ckyclaw_framework.approval.mode import ApprovalMode
+        from kasaya.approval.mode import ApprovalMode
 
         config = self._make_agent_config(approval_mode="suggest")
         agent = _build_agent_from_config(config)
@@ -421,7 +421,7 @@ class TestBuildAgentApprovalMode:
 
     def test_auto_edit_mode(self) -> None:
         from app.services.session import _build_agent_from_config
-        from ckyclaw_framework.approval.mode import ApprovalMode
+        from kasaya.approval.mode import ApprovalMode
 
         config = self._make_agent_config(approval_mode="auto-edit")
         agent = _build_agent_from_config(config)
@@ -429,7 +429,7 @@ class TestBuildAgentApprovalMode:
 
     def test_full_auto_mode(self) -> None:
         from app.services.session import _build_agent_from_config
-        from ckyclaw_framework.approval.mode import ApprovalMode
+        from kasaya.approval.mode import ApprovalMode
 
         config = self._make_agent_config(approval_mode="full-auto")
         agent = _build_agent_from_config(config)
@@ -547,7 +547,7 @@ class TestApprovalNotifier:
             content={"tool_name": "send_email", "arguments": {"to": "a@b.com"}},
             approval_id="abc-123",
         )
-        assert "CkyClaw 审批通知" in msg
+        assert "Kasaya 审批通知" in msg
         assert "my-agent" in msg
         assert "send_email" in msg
         assert "abc-123" in msg
@@ -617,7 +617,7 @@ class TestApprovalNotifier:
         mock_adapter.send_message.assert_awaited_once()
         call_args = mock_adapter.send_message.call_args
         assert call_args[0][1] == "user001"  # recipient_id
-        assert "CkyClaw 审批通知" in call_args[0][2]  # message content
+        assert "Kasaya 审批通知" in call_args[0][2]  # message content
 
     @pytest.mark.asyncio
     async def test_notify_send_failure(self) -> None:

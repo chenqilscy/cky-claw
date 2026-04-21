@@ -29,7 +29,7 @@ interface LoginResponse {
 }
 
 const useAuthStore = create<AuthState>((set) => ({
-  token: localStorage.getItem('ckyclaw_token'),
+  token: localStorage.getItem('kasaya_token'),
   user: null,
   loading: false,
   error: null,
@@ -38,7 +38,7 @@ const useAuthStore = create<AuthState>((set) => ({
     set({ loading: true, error: null });
     try {
       const data = await api.post<LoginResponse>('/auth/login', { username, password });
-      localStorage.setItem('ckyclaw_token', data.access_token);
+      localStorage.setItem('kasaya_token', data.access_token);
       set({ token: data.access_token, loading: false });
 
       // 获取用户信息
@@ -52,12 +52,12 @@ const useAuthStore = create<AuthState>((set) => ({
   },
 
   setToken: (token: string) => {
-    localStorage.setItem('ckyclaw_token', token);
+    localStorage.setItem('kasaya_token', token);
     set({ token, error: null });
   },
 
   logout: () => {
-    localStorage.removeItem('ckyclaw_token');
+    localStorage.removeItem('kasaya_token');
     set({ token: null, user: null, error: null });
   },
 
@@ -67,7 +67,7 @@ const useAuthStore = create<AuthState>((set) => ({
       set({ user });
     } catch {
       // token 无效时静默清除
-      localStorage.removeItem('ckyclaw_token');
+      localStorage.removeItem('kasaya_token');
       set({ token: null, user: null });
     }
   },

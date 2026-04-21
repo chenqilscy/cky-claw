@@ -1,6 +1,6 @@
 """Framework/Backend 依赖边界守卫测试。
 
-确保 ckyclaw_framework 不会导入 backend 的任何模块（app.*），
+确保 kasaya 不会导入 backend 的任何模块（app.*），
 保障 Framework 可作为独立 pip 包发布。
 """
 
@@ -12,7 +12,7 @@ from pathlib import Path
 
 import pytest
 
-_FRAMEWORK_ROOT = Path(__file__).resolve().parents[1] / ".." / "ckyclaw-framework" / "ckyclaw_framework"
+_FRAMEWORK_ROOT = Path(__file__).resolve().parents[1] / ".." / "kasaya" / "kasaya"
 
 
 def _iter_python_files(root: Path):
@@ -27,7 +27,7 @@ class TestFrameworkBoundary:
     """Framework 包独立性守卫。"""
 
     def test_no_reverse_imports_from_app(self) -> None:
-        """ckyclaw_framework 不得包含 'from app' 或 'import app' 导入。"""
+        """kasaya 不得包含 'from app' 或 'import app' 导入。"""
         violations: list[str] = []
         framework_root = _FRAMEWORK_ROOT.resolve()
 
@@ -55,7 +55,7 @@ class TestFrameworkBoundary:
         )
 
     def test_no_backend_specific_imports(self) -> None:
-        """ckyclaw_framework 不得导入 backend 专有库（fastapi/uvicorn/alembic）。"""
+        """kasaya 不得导入 backend 专有库（fastapi/uvicorn/alembic）。"""
         forbidden = {"fastapi", "uvicorn", "alembic", "starlette"}
         violations: list[str] = []
         framework_root = _FRAMEWORK_ROOT.resolve()

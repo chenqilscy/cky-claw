@@ -1,14 +1,12 @@
 """Compliance 请求/响应模型。"""
 
 from __future__ import annotations
+import uuid
+from datetime import datetime
 
 from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, Field
-
-if TYPE_CHECKING:
-    import uuid
-    from datetime import datetime
 
 # --- 数据分类标签 ---
 
@@ -19,7 +17,6 @@ class ClassificationLabelCreate(BaseModel):
     resource_id: str = Field(..., max_length=128)
     classification: str = Field(..., pattern="^(public|internal|sensitive|pii|phi)$")
     reason: str = Field("", max_length=500)
-
 
 class ClassificationLabelResponse(BaseModel):
     """数据分类标签响应。"""
@@ -34,13 +31,11 @@ class ClassificationLabelResponse(BaseModel):
     reason: str
     created_at: datetime
 
-
 class ClassificationLabelListResponse(BaseModel):
     """标签列表响应。"""
 
     data: list[ClassificationLabelResponse]
     total: int
-
 
 # --- 数据保留策略 ---
 
@@ -51,13 +46,11 @@ class RetentionPolicyCreate(BaseModel):
     classification: str = Field(..., pattern="^(public|internal|sensitive|pii|phi)$")
     retention_days: int = Field(..., ge=1, le=3650)
 
-
 class RetentionPolicyUpdate(BaseModel):
     """更新保留策略。"""
 
     retention_days: int | None = Field(None, ge=1, le=3650)
     status: str | None = Field(None, pattern="^(active|expired|deleted)$")
-
 
 class RetentionPolicyResponse(BaseModel):
     """保留策略响应。"""
@@ -73,13 +66,11 @@ class RetentionPolicyResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-
 class RetentionPolicyListResponse(BaseModel):
     """保留策略列表响应。"""
 
     data: list[RetentionPolicyResponse]
     total: int
-
 
 # --- Right-to-Erasure ---
 
@@ -87,7 +78,6 @@ class ErasureRequestCreate(BaseModel):
     """创建删除请求。"""
 
     target_user_id: uuid.UUID
-
 
 class ErasureRequestResponse(BaseModel):
     """删除请求响应。"""
@@ -105,13 +95,11 @@ class ErasureRequestResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-
 class ErasureRequestListResponse(BaseModel):
     """删除请求列表响应。"""
 
     data: list[ErasureRequestResponse]
     total: int
-
 
 # --- SOC2 控制点 ---
 
@@ -124,14 +112,12 @@ class ControlPointCreate(BaseModel):
     implementation: str = ""
     evidence_links: dict | None = None
 
-
 class ControlPointUpdate(BaseModel):
     """更新控制点。"""
 
     implementation: str | None = None
     evidence_links: dict | None = None
     is_satisfied: bool | None = None
-
 
 class ControlPointResponse(BaseModel):
     """控制点响应。"""
@@ -148,13 +134,11 @@ class ControlPointResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-
 class ControlPointListResponse(BaseModel):
     """控制点列表响应。"""
 
     data: list[ControlPointResponse]
     total: int
-
 
 # --- 合规仪表盘 ---
 

@@ -72,7 +72,7 @@ describe('ToolEditor', () => {
         <ToolEditor value={[]} onChange={mockOnChange} />
       </Wrapper>,
     );
-    const addBtn = screen.getAllByText('添加工具')[0];
+    const addBtn = screen.getAllByText('添加工具')[0]!;
     await act(async () => { fireEvent.click(addBtn); });
     await waitFor(() => {
       expect(screen.getByText('添加工具', { selector: '.ant-modal-title' })).toBeTruthy();
@@ -154,7 +154,7 @@ describe('ToolEditor', () => {
     const templateSelect = document.querySelector('.ant-select:not(.ant-segmented *)') as HTMLElement;
     expect(templateSelect).toBeTruthy();
     await act(async () => {
-      fireEvent.mouseDown(templateSelect.querySelector('.ant-select-selector') as HTMLElement);
+      fireEvent.mouseDown(templateSelect!.querySelector('.ant-select-selector')!);
     });
     await waitFor(() => {
       expect(document.querySelector('.ant-select-dropdown')).toBeTruthy();
@@ -165,8 +165,8 @@ describe('ToolEditor', () => {
     expect(searchOption).toBeTruthy();
     await act(async () => { fireEvent.click(searchOption!); });
     expect(mockOnChange).toHaveBeenCalled();
-    const calledWith = mockOnChange.mock.calls[0][0] as ToolDefinition[];
+    const calledWith = mockOnChange.mock.calls[0]![0] as ToolDefinition[];
     expect(calledWith.length).toBe(2);
-    expect(calledWith[0].name).toBe('web_search');
+    expect(calledWith[0]!.name).toBe('web_search');
   });
 });

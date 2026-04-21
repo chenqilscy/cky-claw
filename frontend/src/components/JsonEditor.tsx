@@ -36,7 +36,7 @@ export interface JsonEditorProps {
   schema?: Record<string, unknown>;
   /**
    * Schema 绑定的唯一 URI。同一页面多个 JsonEditor 时需唯一，避免冲突。
-   * 默认 'http://ckyclaw/schema.json'。
+   * 默认 'http://kasaya/schema.json'。
    */
   schemaUri?: string;
 }
@@ -114,7 +114,7 @@ export default function JsonEditor({
   placeholder,
   onMount: onMountProp,
   schema,
-  schemaUri = 'http://ckyclaw/schema.json',
+  schemaUri = 'http://kasaya/schema.json',
 }: JsonEditorProps) {
   const mode = useThemeStore((s) => s.mode);
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);

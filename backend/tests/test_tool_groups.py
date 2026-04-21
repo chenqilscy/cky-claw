@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from ckyclaw_framework.tools.function_tool import FunctionTool
+from kasaya.tools.function_tool import FunctionTool
 
 # ---------------------------------------------------------------------------
 # Schema 测试

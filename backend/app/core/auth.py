@@ -71,8 +71,8 @@ def generate_password_reset_token() -> str:
 
 # --- Token 黑名单（Redis） ---
 
-_TOKEN_BLACKLIST_PREFIX = "ckyclaw:token_blacklist:"
-_RESET_TOKEN_PREFIX = "ckyclaw:password_reset:"
+_TOKEN_BLACKLIST_PREFIX = "kasaya:token_blacklist:"
+_RESET_TOKEN_PREFIX = "kasaya:password_reset:"
 
 
 async def blacklist_token(token: str, expires_in_seconds: int) -> None:

@@ -43,7 +43,7 @@ export function initOtel(): void {
   try {
     const resource = defaultResource().merge(
       resourceFromAttributes({
-        [ATTR_SERVICE_NAME]: 'ckyclaw-frontend',
+        [ATTR_SERVICE_NAME]: 'kasaya-frontend',
         [ATTR_SERVICE_VERSION]: import.meta.env.VITE_APP_VERSION || '0.1.0',
       }),
     );

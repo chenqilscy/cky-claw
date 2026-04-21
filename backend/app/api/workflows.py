@@ -1,6 +1,7 @@
 """Workflow 工作流管理 API 路由。"""
 
 from __future__ import annotations
+import uuid
 
 from typing import TYPE_CHECKING
 
@@ -19,7 +20,6 @@ from app.schemas.workflow import (
 from app.services import workflow as workflow_service
 
 if TYPE_CHECKING:
-    import uuid
 
     from sqlalchemy.ext.asyncio import AsyncSession
 

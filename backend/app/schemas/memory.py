@@ -1,16 +1,13 @@
 """Memory 记忆条目请求/响应模型。"""
 
 from __future__ import annotations
+import uuid
+from datetime import datetime
 
 from enum import StrEnum
 from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, ConfigDict, Field
-
-if TYPE_CHECKING:
-    import uuid
-    from datetime import datetime
-
 
 class MemoryTypeEnum(StrEnum):
     """记忆类型。"""
@@ -19,11 +16,9 @@ class MemoryTypeEnum(StrEnum):
     HISTORY_SUMMARY = "history_summary"
     STRUCTURED_FACT = "structured_fact"
 
-
 # ---------------------------------------------------------------------------
 # Request
 # ---------------------------------------------------------------------------
-
 
 class MemoryCreate(BaseModel):
     """创建记忆条目请求体。"""
@@ -38,7 +33,6 @@ class MemoryCreate(BaseModel):
     embedding: list[float] | None = Field(None, description="向量表示")
     tags: list[str] = Field(default_factory=list, description="分类标签")
 
-
 class MemoryUpdate(BaseModel):
     """更新记忆条目请求体。"""
 
@@ -49,14 +43,12 @@ class MemoryUpdate(BaseModel):
     embedding: list[float] | None = Field(None, description="向量表示")
     tags: list[str] | None = Field(None, description="分类标签")
 
-
 class MemorySearchRequest(BaseModel):
     """搜索记忆请求体。"""
 
     user_id: str = Field(..., min_length=1, description="用户标识")
     query: str = Field(..., min_length=1, max_length=500, description="搜索关键词")
     limit: int = Field(10, ge=1, le=100, description="返回上限")
-
 
 class MemoryTagSearchRequest(BaseModel):
     """按标签搜索记忆请求体。"""
@@ -65,13 +57,11 @@ class MemoryTagSearchRequest(BaseModel):
     tags: list[str] = Field(..., min_length=1, description="标签列表（OR 匹配）")
     limit: int = Field(10, ge=1, le=100, description="返回上限")
 
-
 class MemoryDecayModeEnum(StrEnum):
     """衰减模式。"""
 
     LINEAR = "linear"
     EXPONENTIAL = "exponential"
-
 
 class MemoryDecayRequest(BaseModel):
     """置信度衰减请求体。"""
@@ -83,11 +73,9 @@ class MemoryDecayRequest(BaseModel):
         description="衰减模式: linear（线性）/ exponential（指数-艾宾浩斯遗忘曲线）",
     )
 
-
 # ---------------------------------------------------------------------------
 # Response
 # ---------------------------------------------------------------------------
-
 
 class MemoryResponse(BaseModel):
     """记忆条目响应。"""
@@ -108,7 +96,6 @@ class MemoryResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-
 class MemoryListResponse(BaseModel):
     """记忆列表响应。"""
 
@@ -117,12 +104,10 @@ class MemoryListResponse(BaseModel):
     limit: int = 20
     offset: int = 0
 
-
 class MemoryDecayResponse(BaseModel):
     """衰减操作响应。"""
 
     affected: int
-
 
 class MemoryCountResponse(BaseModel):
     """记忆计数响应。"""

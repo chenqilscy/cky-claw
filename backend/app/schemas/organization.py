@@ -1,18 +1,15 @@
 """Organization 请求/响应 Schema。"""
 
 from __future__ import annotations
+import uuid
+from datetime import datetime
 
 import re
 from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-if TYPE_CHECKING:
-    import uuid
-    from datetime import datetime
-
 _SLUG_PATTERN = re.compile(r"^[a-z0-9][a-z0-9-]{1,62}[a-z0-9]$")
-
 
 class OrganizationCreate(BaseModel):
     """创建组织。"""
@@ -30,7 +27,6 @@ class OrganizationCreate(BaseModel):
             raise ValueError("slug 仅支持小写字母、数字和连字符，首尾必须是字母或数字，长度 3-64")
         return v
 
-
 class OrganizationUpdate(BaseModel):
     """更新组织（PATCH）。"""
 
@@ -39,7 +35,6 @@ class OrganizationUpdate(BaseModel):
     settings: dict[str, Any] | None = None
     quota: dict[str, Any] | None = None
     is_active: bool | None = None
-
 
 class OrganizationResponse(BaseModel):
     """组织响应。"""
@@ -55,7 +50,6 @@ class OrganizationResponse(BaseModel):
     is_active: bool
     created_at: datetime
     updated_at: datetime
-
 
 class OrganizationListResponse(BaseModel):
     """组织列表响应。"""

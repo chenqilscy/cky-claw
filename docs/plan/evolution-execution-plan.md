@@ -1,8 +1,8 @@
-# CkyClaw 演进执行计划
+# Kasaya 演进执行计划
 
 > 创建：2026-04-09
 > 状态：进行中
-> 基于：[CkyClaw 演进方向分析 v1.0](../spec/CkyClaw%20演进方向分析%20v1.0.md)
+> 基于：[Kasaya 演进方向分析 v1.0](../spec/Kasaya%20演进方向分析%20v1.0.md)
 
 ---
 
@@ -14,7 +14,7 @@
 | 2 | **Phase 2** | P0-2 代码审查 Agent 场景 | P0 | ✅ 完成 |
 | 3 | **Phase 3** | P0-3 Framework 独立化 | P0 | ✅ 完成 |
 | 4 | **Phase 4** | 技术债务清理 | P1 | ✅ 完成 |
-| 5 | **Phase 5** | ckyclaw-cli 命令行工具（仅 chat） | P2 | ✅ 完成 |
+| 5 | **Phase 5** | kasaya-cli 命令行工具（仅 chat） | P2 | ✅ 完成 |
 
 > **执行策略**：严格串行，一个 Phase 完成后再开始下一个（十角色团队讨论决策 2026-04-09）
 
@@ -66,7 +66,7 @@
 
 ## Phase 2：P0-3 Framework 独立化
 
-**目标**：`pip install ckyclaw-framework` 能独立使用，不依赖 Backend。
+**目标**：`pip install kasaya-framework` 能独立使用，不依赖 Backend。
 
 ### 2.1 包发布准备
 
@@ -82,8 +82,8 @@
 | # | 任务 | 说明 |
 |---|------|------|
 | 5 | 纯 Framework 示例 | 不依赖 Backend 的 3 个完整示例 |
-| 6 | 最小依赖安装测试 | 新 venv 中 `pip install ckyclaw-framework` 验证 |
-| 7 | 可选依赖分组测试 | `pip install ckyclaw-framework[postgres,mcp]` 验证 |
+| 6 | 最小依赖安装测试 | 新 venv 中 `pip install kasaya-framework` 验证 |
+| 7 | 可选依赖分组测试 | `pip install kasaya-framework[postgres,mcp]` 验证 |
 
 ### 2.3 文档站
 
@@ -136,16 +136,16 @@
 
 ---
 
-## Phase 5：ckyclaw-cli 命令行工具原型
+## Phase 5：kasaya-cli 命令行工具原型
 
 **目标**：类似 Claude Code 的终端 Agent 对话工具。
 
 | # | 任务 | 说明 |
 |---|------|------|
 | 1 | CLI 骨架 | typer/click 命令行框架 |
-| 2 | `ckyclaw chat` | 终端交互式对话 |
-| 3 | `ckyclaw run` | 执行 Agent 或 Workflow |
-| 4 | `ckyclaw agent list/create` | Agent 管理命令 |
+| 2 | `kasaya chat` | 终端交互式对话 |
+| 3 | `kasaya run` | 执行 Agent 或 Workflow |
+| 4 | `kasaya agent list/create` | Agent 管理命令 |
 | 5 | 流式输出 | Rich/Textual 美观的终端渲染 |
 
 ---
@@ -160,4 +160,4 @@
 | 2026-04-09 | 2 | P0-2 代码审查工具 3 个 + Backend 同步 | ✅ |
 | 2026-04-09 | 3 | P0-3 子模块导出 + pyproject.toml + README + 示例 | ✅ |
 | 2026-04-09 | 4 | 技术债评估：API 文档已完整、日志延期 | ✅ |
-| 2026-04-09 | 5 | ckyclaw-cli MVP：chat 命令 + 11 个测试 | ✅ |
+| 2026-04-09 | 5 | kasaya-cli MVP：chat 命令 + 11 个测试 | ✅ |

@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from ckyclaw_framework.tools.function_tool import FunctionTool
+from kasaya.tools.function_tool import FunctionTool
 
 # ---------------------------------------------------------------------------
 # _resolve_agent_tools 测试

@@ -42,14 +42,14 @@ def _format_approval_message(
         args_str = args_str[:197] + "..."
 
     lines = [
-        "🔔 CkyClaw 审批通知",
+        "🔔 Kasaya 审批通知",
         f"Agent: {agent_name}",
         f"触发: {trigger}",
         f"工具: {tool_name}",
         f"参数: {args_str}",
         f"审批 ID: {approval_id}",
         "",
-        "请登录 CkyClaw 平台进行审批操作。",
+        "请登录 Kasaya 平台进行审批操作。",
     ]
     return "\n".join(lines)
 

@@ -1,19 +1,16 @@
 """Workflow 工作流请求/响应模型。"""
 
 from __future__ import annotations
+import uuid
+from datetime import datetime
 
 from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
-if TYPE_CHECKING:
-    import uuid
-    from datetime import datetime
-
 # ---------------------------------------------------------------------------
 # Nested types — Step / Edge
 # ---------------------------------------------------------------------------
-
 
 class StepIOSchema(BaseModel):
     """步骤输入/输出映射。"""
@@ -21,14 +18,12 @@ class StepIOSchema(BaseModel):
     input_keys: dict[str, str] = Field(default_factory=dict)
     output_keys: dict[str, str] = Field(default_factory=dict)
 
-
 class RetryConfigSchema(BaseModel):
     """步骤重试配置。"""
 
     max_retries: int = Field(2, ge=0, le=10)
     delay_seconds: float = Field(1.0, ge=0)
     backoff_multiplier: float = Field(2.0, ge=1.0)
-
 
 class StepSchema(BaseModel):
     """步骤定义。"""
@@ -52,7 +47,6 @@ class StepSchema(BaseModel):
     body_step_ids: list[str] = Field(default_factory=list)
     max_iterations: int = Field(100, ge=1, le=1000)
 
-
 class EdgeSchema(BaseModel):
     """DAG 边。"""
 
@@ -60,11 +54,9 @@ class EdgeSchema(BaseModel):
     source_step_id: str = Field(..., min_length=1)
     target_step_id: str = Field(..., min_length=1)
 
-
 # ---------------------------------------------------------------------------
 # Request
 # ---------------------------------------------------------------------------
-
 
 class WorkflowCreate(BaseModel):
     """创建工作流请求体。"""
@@ -79,7 +71,6 @@ class WorkflowCreate(BaseModel):
     guardrail_names: list[str] = Field(default_factory=list, description="护栏名称列表")
     metadata: dict[str, Any] = Field(default_factory=dict, description="自定义元数据")
 
-
 class WorkflowUpdate(BaseModel):
     """更新工作流请求体。"""
 
@@ -92,11 +83,9 @@ class WorkflowUpdate(BaseModel):
     guardrail_names: list[str] | None = None
     metadata: dict[str, Any] | None = None
 
-
 # ---------------------------------------------------------------------------
 # Response
 # ---------------------------------------------------------------------------
-
 
 class WorkflowResponse(BaseModel):
     """工作流响应。"""
@@ -116,7 +105,6 @@ class WorkflowResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-
 class WorkflowListResponse(BaseModel):
     """工作流列表响应。"""
 
@@ -124,7 +112,6 @@ class WorkflowListResponse(BaseModel):
     total: int
     limit: int = 20
     offset: int = 0
-
 
 class WorkflowValidateResponse(BaseModel):
     """工作流验证结果。"""

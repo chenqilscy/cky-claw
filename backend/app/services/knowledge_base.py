@@ -13,10 +13,10 @@ from app.models.knowledge_base import (
     KnowledgeChunkRecord,
     KnowledgeDocumentRecord,
 )
-from ckyclaw_framework.rag.chunker import FixedSizeChunker
-from ckyclaw_framework.rag.document import Document
-from ckyclaw_framework.rag.embedding import InMemoryEmbeddingProvider
-from ckyclaw_framework.rag.vector_store import cosine_similarity
+from kasaya.rag.chunker import FixedSizeChunker
+from kasaya.rag.document import Document
+from kasaya.rag.embedding import InMemoryEmbeddingProvider
+from kasaya.rag.vector_store import cosine_similarity
 
 if TYPE_CHECKING:
     import uuid

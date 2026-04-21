@@ -1,6 +1,7 @@
 """知识图谱 API 路由。"""
 
 from __future__ import annotations
+import uuid
 
 from typing import TYPE_CHECKING
 
@@ -25,7 +26,6 @@ from app.schemas.knowledge_graph import (
 from app.services import knowledge_graph as kg_service
 
 if TYPE_CHECKING:
-    import uuid
 
     from sqlalchemy.ext.asyncio import AsyncSession
 

@@ -10,7 +10,7 @@ from sqlalchemy import select
 
 from app.core.deps import get_db, require_permission
 from app.models.provider import ProviderConfig
-from ckyclaw_framework.model.cost_router import (
+from kasaya.model.cost_router import (
     CostRouter,
     ModelTier,
     ProviderCandidate,

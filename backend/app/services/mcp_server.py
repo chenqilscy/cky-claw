@@ -192,8 +192,8 @@ async def test_mcp_connection(
     start_time = time.monotonic()
 
     try:
-        from ckyclaw_framework.mcp.connection import connect_and_discover
-        from ckyclaw_framework.mcp.server import MCPServerConfig as FrameworkMCPConfig
+        from kasaya.mcp.connection import connect_and_discover
+        from kasaya.mcp.server import MCPServerConfig as FrameworkMCPConfig
 
         fw_config = FrameworkMCPConfig(
             name=record.name,
@@ -230,7 +230,7 @@ async def test_mcp_connection(
         return {
             "success": False,
             "tools": [],
-            "error": "MCP SDK 未安装。请运行: pip install 'ckyclaw-framework[mcp]'",
+            "error": "MCP SDK 未安装。请运行: pip install 'kasaya[mcp]'",
             "duration_ms": duration_ms,
         }
     except Exception as e:

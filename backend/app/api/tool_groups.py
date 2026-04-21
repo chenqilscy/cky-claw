@@ -1,6 +1,7 @@
 """Tool Group 管理 API 路由。"""
 
 from __future__ import annotations
+import uuid
 
 from typing import TYPE_CHECKING
 
@@ -18,7 +19,6 @@ from app.schemas.tool_group import (
 from app.services import tool_group as tg_service
 
 if TYPE_CHECKING:
-    import uuid
 
     from sqlalchemy.ext.asyncio import AsyncSession
 

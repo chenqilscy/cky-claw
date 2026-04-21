@@ -1,4 +1,4 @@
-# CkyClaw 数据模型详细设计 v1.3
+# Kasaya 数据模型详细设计 v1.3
 
 ## 文档信息
 
@@ -7,10 +7,10 @@
 | 版本 | v1.3.0 |
 | 日期 | 2026-04-02 |
 | 状态 | 进行中 |
-| 维护人 | CkyClaw Team |
-| 依赖 | CkyClaw PRD v2.0、CkyClaw Framework Design v2.0 |
+| 维护人 | Kasaya Team |
+| 依赖 | Kasaya PRD v2.0、Kasaya Framework Design v2.0 |
 
-> 本文档从 CkyClaw PRD v2.0 的第十二章抽取，包含所有数据实体的列级 Schema 定义。
+> 本文档从 Kasaya PRD v2.0 的第十二章抽取，包含所有数据实体的列级 Schema 定义。
 > PRD 保留实体关系概览与核心字段摘要，本文档提供完整的字段类型、约束和索引设计。
 
 ---
@@ -149,7 +149,7 @@
 
 **ClickHouse（可选）：** MergeTree 引擎，按 `(org_id, toYYYYMM(timestamp))` 分区，按 `(org_id, timestamp, agent_name)` 排序。物化视图使用 AggregatingMergeTree 引擎预聚合。
 
-PostgreSQL DDL 详见 CkyClaw Framework Design v2.0 第七章 7.3 节；ClickHouse DDL 详见 7.4 节。
+PostgreSQL DDL 详见 Kasaya Framework Design v2.0 第七章 7.3 节；ClickHouse DDL 详见 7.4 节。
 
 ---
 
@@ -315,4 +315,4 @@ PostgreSQL DDL 详见 CkyClaw Framework Design v2.0 第七章 7.3 节；ClickHou
 
 *文档版本：v1.3.0*
 *最后更新：2026-04-02*
-*作者：CkyClaw Team*
+*作者：Kasaya Team*

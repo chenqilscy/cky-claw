@@ -814,7 +814,7 @@ class TestEvolutionSignalService:
 
         # mock StrategyEngine.generate_proposals 返回空列表（策略可能不生成建议）
         with patch(
-            "ckyclaw_framework.evolution.StrategyEngine"
+            "kasaya.evolution.StrategyEngine"
         ) as MockEngine:
             engine_instance = MagicMock()
             engine_instance.generate_proposals.return_value = []
@@ -842,7 +842,7 @@ class TestEvolutionSignalService:
         mock_result.scalars.return_value.all.return_value = [signal_row]
         mock_db.execute = AsyncMock(return_value=mock_result)
 
-        with patch("ckyclaw_framework.evolution.StrategyEngine") as MockEngine:
+        with patch("kasaya.evolution.StrategyEngine") as MockEngine:
             engine_instance = MagicMock()
             engine_instance.generate_proposals.return_value = []
             MockEngine.return_value = engine_instance
@@ -873,7 +873,7 @@ class TestEvolutionSignalService:
         mock_result.scalars.return_value.all.return_value = [signal_row]
         mock_db.execute = AsyncMock(return_value=mock_result)
 
-        with patch("ckyclaw_framework.evolution.StrategyEngine") as MockEngine:
+        with patch("kasaya.evolution.StrategyEngine") as MockEngine:
             engine_instance = MagicMock()
             engine_instance.generate_proposals.return_value = []
             MockEngine.return_value = engine_instance
@@ -932,7 +932,7 @@ class TestEvolutionSignalService:
         mock_proposal.confidence_score = 0.9
         mock_proposal.metadata = {}
 
-        with patch("ckyclaw_framework.evolution.StrategyEngine") as MockEngine:
+        with patch("kasaya.evolution.StrategyEngine") as MockEngine:
             engine_instance = MagicMock()
             engine_instance.generate_proposals.return_value = [mock_proposal]
             MockEngine.return_value = engine_instance

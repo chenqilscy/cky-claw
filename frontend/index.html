@@ -4,20 +4,20 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>CkyClaw — AI Agent 平台</title>
+    <title>Kasaya — AI Agent 平台</title>
   </head>
   <body>
     <script>
       // 同步读取主题，避免暗色模式下白屏闪烁
       (function(){
-        var t=localStorage.getItem('ckyclaw_theme');
+        var t=localStorage.getItem('kasaya_theme');
         if(!t)t=window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';
         if(t==='dark'){
-          document.documentElement.style.backgroundColor='#0A1628';
-          document.body.style.backgroundColor='#0A1628';
+          document.documentElement.style.backgroundColor='#141414';
+          document.body.style.backgroundColor='#141414';
         }else{
-          document.documentElement.style.backgroundColor='#F5F5F7';
-          document.body.style.backgroundColor='#F5F5F7';
+          document.documentElement.style.backgroundColor='#F0F2F5';
+          document.body.style.backgroundColor='#F0F2F5';
         }
       })();
     </script>

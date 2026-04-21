@@ -1,5 +1,5 @@
 {
-  "name": "ckyclaw-frontend",
+  "name": "kasaya-frontend",
   "private": true,
   "version": "0.1.0",
   "type": "module",
@@ -8,7 +8,15 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "vitest"
+    "test": "vitest",
+    "test:e2e": "npx playwright test --config=playwright.e2e.config.ts",
+    "test:e2e:provider": "npx playwright test --config=playwright.e2e.config.ts --project=provider-tests",
+    "test:e2e:agent": "npx playwright test --config=playwright.e2e.config.ts --project=agent-tests",
+    "test:e2e:chat": "npx playwright test --config=playwright.e2e.config.ts --project=chat-tests",
+    "test:e2e:skill": "npx playwright test --config=playwright.e2e.config.ts --project=skill-tests",
+    "test:e2e:kb": "npx playwright test --config=playwright.e2e.config.ts --project=kb-tests",
+    "test:e2e:headed": "npx playwright test --config=playwright.e2e.config.ts --headed",
+    "test:e2e:debug": "npx playwright test --config=playwright.e2e.config.ts --debug"
   },
   "dependencies": {
     "@ant-design/icons": "^5.4.0",

@@ -1,1 +1,1 @@
-"""CkyClaw Backend — FastAPI 后端服务。"""
+"""Kasaya Backend — FastAPI 后端服务。"""

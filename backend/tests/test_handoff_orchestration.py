@@ -72,8 +72,8 @@ class TestBuildAgentWithHandoffs:
         assert agent.handoffs == []
 
     def test_with_handoff_agents(self) -> None:
-        from ckyclaw_framework.agent.agent import Agent
-        from ckyclaw_framework.handoff.handoff import Handoff
+        from kasaya.agent.agent import Agent
+        from kasaya.handoff.handoff import Handoff
 
         specialist = Agent(name="specialist", description="专家")
         handoff = Handoff(agent=specialist)
@@ -86,8 +86,8 @@ class TestBuildAgentWithHandoffs:
         assert agent.handoffs[0].agent.name == "specialist"
 
     def test_with_multiple_handoffs(self) -> None:
-        from ckyclaw_framework.agent.agent import Agent
-        from ckyclaw_framework.handoff.handoff import Handoff
+        from kasaya.agent.agent import Agent
+        from kasaya.handoff.handoff import Handoff
 
         spec1 = Agent(name="specialist-a", description="A")
         spec2 = Agent(name="specialist-b", description="B")
@@ -392,13 +392,13 @@ class TestHandoffToolIntegration:
 
     def test_handoff_generates_transfer_tool(self) -> None:
         """Handoff 对象能被 _build_tool_schemas 正确处理。"""
-        from ckyclaw_framework.runner.runner import _build_tool_schemas
+        from kasaya.runner.runner import _build_tool_schemas
 
         config_triage = _make_agent_config(name="triage")
         config_specialist = _make_agent_config(name="specialist", description="处理专业问题")
 
         specialist_agent = _build_agent_from_config(config_specialist)
-        from ckyclaw_framework.handoff.handoff import Handoff
+        from kasaya.handoff.handoff import Handoff
 
         triage_agent = _build_agent_from_config(
             config_triage,
@@ -413,8 +413,8 @@ class TestHandoffToolIntegration:
 
     def test_multiple_handoffs_generate_tools(self) -> None:
         """多个 Handoff 目标生成多个 transfer 工具。"""
-        from ckyclaw_framework.handoff.handoff import Handoff
-        from ckyclaw_framework.runner.runner import _build_tool_schemas
+        from kasaya.handoff.handoff import Handoff
+        from kasaya.runner.runner import _build_tool_schemas
 
         agent_a = _build_agent_from_config(_make_agent_config(name="agent-a", description="A"))
         agent_b = _build_agent_from_config(_make_agent_config(name="agent-b", description="B"))
@@ -475,7 +475,7 @@ class TestExecuteRunHandoffIntegration:
             mock_result.turn_count = 1
             mock_result.last_agent_name = "triage"
             mock_result.trace = None
-            with patch("ckyclaw_framework.runner.runner.Runner.run", new_callable=AsyncMock, return_value=mock_result):
+            with patch("kasaya.runner.runner.Runner.run", new_callable=AsyncMock, return_value=mock_result):
                 from app.services.session import execute_run
 
                 request = RunRequest(input="hello", config=RunConfig(stream=False))

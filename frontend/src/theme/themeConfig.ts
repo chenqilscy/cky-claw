@@ -1,34 +1,44 @@
 /**
  * 企业级设计令牌配置。
  *
- * 参考方案：Ant Design Pro / Linear / Vercel Dashboard / Raycast。
- * 两套主题：亮色（专业克制）+ 暗色（低对比舒适），共享品牌色和圆角体系。
+ * 双色系 × 双模式：aurora（极光蓝紫）/ dawn（拂晓蓝） × light / dark。
+ * 参考：Ant Design Pro 官方配色 + Linear / Vercel 的克制感。
  */
 import type { ThemeConfig } from 'antd';
 import { theme } from 'antd';
 
-/* ---------- 品牌色系 ---------- */
+/* ------------------------------------------------------------------ */
+/*  色系定义                                                           */
+/* ------------------------------------------------------------------ */
 
-/** 主色 — 琥珀橙黄（蓝黑底配橙黄点缀，突出品牌轨达感） */
-const BRAND_PRIMARY = '#F59E0B';
+/** 色系类型 */
+export type PaletteType = 'aurora' | 'dawn';
 
-/** 成功 / 警告 / 错误 — 柔和企业风 */
-const COLOR_SUCCESS = '#16A34A';
-const COLOR_WARNING = '#EAB308';
-const COLOR_ERROR = '#DC2626';
-const COLOR_INFO = '#0EA5E9';
+/** 色系色板 */
+const PALETTES: Record<PaletteType, { primary: string; info: string }> = {
+  /** 极光蓝紫 — Indigo-600，企业级科技感 */
+  aurora: {
+    primary: '#4F46E5',
+    info: '#6366F1',
+  },
+  /** 拂晓蓝 — Ant Design Pro 经典蓝 */
+  dawn: {
+    primary: '#1677FF',
+    info: '#1677FF',
+  },
+};
 
-/* ---------- 共享令牌 ---------- */
+/** 共用功能色 */
+const COLOR_SUCCESS = '#52C41A';
+const COLOR_WARNING = '#FAAD14';
+const COLOR_ERROR = '#FF4D4F';
 
-const sharedToken = {
-  /* 品牌色 */
-  colorPrimary: BRAND_PRIMARY,
-  colorSuccess: COLOR_SUCCESS,
-  colorWarning: COLOR_WARNING,
-  colorError: COLOR_ERROR,
-  colorInfo: COLOR_INFO,
+/* ------------------------------------------------------------------ */
+/*  共享令牌                                                           */
+/* ------------------------------------------------------------------ */
 
-  /* 圆角体系 — 偏大圆角，现代感 */
+const sharedMeta = {
+  /* 圆角体系 — 现代感 */
   borderRadius: 8,
   borderRadiusLG: 12,
   borderRadiusSM: 6,
@@ -59,16 +69,18 @@ const sharedToken = {
   paddingLG: 24,
   paddingXL: 32,
 
-  /* 线宽 */
+  /* 线宽 & 控件高度 */
   lineWidth: 1,
   controlHeight: 36,
   controlHeightLG: 40,
   controlHeightSM: 28,
 };
 
-/* ---------- 组件级令牌 ---------- */
+/* ------------------------------------------------------------------ */
+/*  组件级令牌                                                         */
+/* ------------------------------------------------------------------ */
 
-const sharedComponents: ThemeConfig['components'] = {
+const buildSharedComponents = (primary: string): NonNullable<ThemeConfig['components']> => ({
   Layout: {
     headerBg: 'transparent',
     siderBg: 'transparent',
@@ -76,6 +88,8 @@ const sharedComponents: ThemeConfig['components'] = {
   Card: {
     borderRadiusLG: 12,
     paddingLG: 20,
+    boxShadowTertiary:
+      '0 1px 2px 0 rgba(0,0,0,0.03), 0 1px 6px -1px rgba(0,0,0,0.02), 0 2px 4px 0 rgba(0,0,0,0.02)',
   },
   Table: {
     borderRadiusLG: 8,
@@ -87,6 +101,8 @@ const sharedComponents: ThemeConfig['components'] = {
     controlHeightLG: 40,
     controlHeightSM: 28,
     paddingInline: 16,
+    defaultShadow: '0 2px 0 rgba(0,0,0,0.02)',
+    primaryShadow: '0 2px 0 rgba(0,0,0,0.04)',
   },
   Input: {
     borderRadius: 8,
@@ -103,77 +119,152 @@ const sharedComponents: ThemeConfig['components'] = {
     borderRadiusSM: 6,
   },
   Tabs: {
-    itemActiveColor: BRAND_PRIMARY,
-    itemSelectedColor: BRAND_PRIMARY,
-    inkBarColor: BRAND_PRIMARY,
+    itemActiveColor: primary,
+    itemSelectedColor: primary,
+    inkBarColor: primary,
   },
   Menu: {
     itemBorderRadius: 8,
     subMenuItemBorderRadius: 8,
+    itemMarginInline: 4,
   },
   Dropdown: {
     borderRadiusLG: 10,
   },
-};
-
-/* ---------- 亮色主题 ---------- */
-
-export const lightTheme: ThemeConfig = {
-  algorithm: theme.defaultAlgorithm,
-  token: {
-    ...sharedToken,
-    /* 亮色微调 */
-    colorBgContainer: '#FFFFFF',
-    colorBgLayout: '#F5F5F7',
-    colorBgElevated: '#FFFFFF',
-    colorBorder: '#E5E7EB',
-    colorBorderSecondary: '#F0F0F0',
-    colorText: '#1F2937',
-    colorTextSecondary: '#6B7280',
-    colorTextTertiary: '#9CA3AF',
-    boxShadow: '0 1px 3px 0 rgba(0,0,0,0.06), 0 1px 2px -1px rgba(0,0,0,0.06)',
-    boxShadowSecondary: '0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -2px rgba(0,0,0,0.05)',
+  Statistic: {
+    titleFontSize: 14,
+    contentFontSize: 24,
   },
-  components: {
-    ...sharedComponents,
-    Layout: {
-      ...sharedComponents.Layout,
-      bodyBg: '#F5F5F7',
-    },
-    Card: {
-      ...sharedComponents.Card,
+});
+
+/* ------------------------------------------------------------------ */
+/*  亮色主题                                                           */
+/* ------------------------------------------------------------------ */
+
+const PRO_BOX_SHADOW =
+  '0 1px 2px 0 rgba(0,0,0,0.03), 0 1px 6px -1px rgba(0,0,0,0.02), 0 2px 4px 0 rgba(0,0,0,0.02)';
+const PRO_BOX_SHADOW_SECONDARY =
+  '0 6px 16px 0 rgba(0,0,0,0.08), 0 3px 6px -4px rgba(0,0,0,0.12), 0 9px 28px 8px rgba(0,0,0,0.05)';
+
+const buildLightTheme = (palette: PaletteType): ThemeConfig => {
+  const { primary, info } = PALETTES[palette];
+  const comps = buildSharedComponents(primary);
+  return {
+    algorithm: theme.defaultAlgorithm,
+    token: {
+      ...sharedMeta,
+      colorPrimary: primary,
+      colorSuccess: COLOR_SUCCESS,
+      colorWarning: COLOR_WARNING,
+      colorError: COLOR_ERROR,
+      colorInfo: info,
+      /* 亮色背景 */
       colorBgContainer: '#FFFFFF',
+      colorBgLayout: '#F0F2F5',
+      colorBgElevated: '#FFFFFF',
+      /* 亮色边框 */
+      colorBorder: '#F0F0F0',
+      colorBorderSecondary: '#F5F5F5',
+      /* 亮色文字 */
+      colorText: 'rgba(0, 0, 0, 0.88)',
+      colorTextSecondary: 'rgba(0, 0, 0, 0.45)',
+      colorTextTertiary: 'rgba(0, 0, 0, 0.25)',
+      /* 阴影 */
+      boxShadow: PRO_BOX_SHADOW,
+      boxShadowSecondary: PRO_BOX_SHADOW_SECONDARY,
     },
-  },
+    components: {
+      ...comps,
+      Layout: {
+        headerBg: 'transparent',
+        siderBg: 'transparent',
+        bodyBg: '#F0F2F5',
+      },
+      Card: {
+        ...comps.Card,
+        colorBgContainer: '#FFFFFF',
+      },
+      Table: {
+        ...comps.Table,
+        headerBg: '#FAFAFA',
+      },
+    },
+  };
 };
 
-/* ---------- 暗色主题 ---------- */
+/* ------------------------------------------------------------------ */
+/*  暗色主题                                                           */
+/* ------------------------------------------------------------------ */
 
-export const darkTheme: ThemeConfig = {
-  algorithm: theme.darkAlgorithm,
-  token: {
-    ...sharedToken,
-    /* 暗色微调 — 低对比度，护眼 */
-    colorBgContainer: '#111827',
-    colorBgLayout: '#0A1628',
-    colorBgElevated: '#1F2937',
-    colorBorder: '#374151',
-    colorBorderSecondary: '#1F2937',
-    colorText: '#F4F4F5',
-    colorTextSecondary: '#A1A1AA',
-    colorTextTertiary: '#71717A',
-    boxShadow: '0 1px 3px 0 rgba(0,0,0,0.3), 0 1px 2px -1px rgba(0,0,0,0.3)',
-    boxShadowSecondary: '0 4px 6px -1px rgba(0,0,0,0.4), 0 2px 4px -2px rgba(0,0,0,0.3)',
-  },
-  components: {
-    ...sharedComponents,
-    Layout: {
-      ...sharedComponents.Layout,
-      bodyBg: '#0A1628',
+const DARK_BOX_SHADOW =
+  '0 1px 2px 0 rgba(0,0,0,0.4), 0 1px 6px -1px rgba(0,0,0,0.3), 0 2px 4px 0 rgba(0,0,0,0.3)';
+const DARK_BOX_SHADOW_SECONDARY =
+  '0 6px 16px 0 rgba(0,0,0,0.32), 0 3px 6px -4px rgba(0,0,0,0.48), 0 9px 28px 8px rgba(0,0,0,0.2)';
+
+const buildDarkTheme = (palette: PaletteType): ThemeConfig => {
+  const { primary, info } = PALETTES[palette];
+  const comps = buildSharedComponents(primary);
+  return {
+    algorithm: theme.darkAlgorithm,
+    token: {
+      ...sharedMeta,
+      colorPrimary: primary,
+      colorSuccess: COLOR_SUCCESS,
+      colorWarning: COLOR_WARNING,
+      colorError: COLOR_ERROR,
+      colorInfo: info,
+      /* 暗色背景 — antd 标准暗色 */
+      colorBgContainer: '#1F1F1F',
+      colorBgLayout: '#141414',
+      colorBgElevated: '#262626',
+      /* 暗色边框 */
+      colorBorder: '#424242',
+      colorBorderSecondary: '#303030',
+      /* 暗色文字 */
+      colorText: 'rgba(255, 255, 255, 0.85)',
+      colorTextSecondary: 'rgba(255, 255, 255, 0.45)',
+      colorTextTertiary: 'rgba(255, 255, 255, 0.25)',
+      /* 阴影 */
+      boxShadow: DARK_BOX_SHADOW,
+      boxShadowSecondary: DARK_BOX_SHADOW_SECONDARY,
     },
-    Card: {
-      ...sharedComponents.Card,
-      colorBgContainer: '#111827',
+    components: {
+      ...comps,
+      Layout: {
+        headerBg: 'transparent',
+        siderBg: 'transparent',
+        bodyBg: '#141414',
+      },
+      Card: {
+        ...comps.Card,
+        colorBgContainer: '#1F1F1F',
+      },
+      Table: {
+        ...comps.Table,
+        headerBg: '#1F1F1F',
+      },
     },
-  },
+  };
 };
+
+/* ------------------------------------------------------------------ */
+/*  导出                                                               */
+/* ------------------------------------------------------------------ */
+
+/** 根据 palette + mode 组合获取完整主题配置 */
+export function getTheme(palette: PaletteType, mode: 'light' | 'dark'): ThemeConfig {
+  return mode === 'dark' ? buildDarkTheme(palette) : buildLightTheme(palette);
+}
+
+/** 保留旧导出名（兼容） */
+export const lightTheme: ThemeConfig = buildLightTheme('dawn');
+export const darkTheme: ThemeConfig = buildDarkTheme('dawn');
+
+/** 获取色系主色值 */
+export function getPrimaryColor(palette: PaletteType): string {
+  return PALETTES[palette].primary;
+}
+
+/** 暗色模式布局背景色（用于闪烁预防） */
+export const DARK_LAYOUT_BG = '#141414';
+export const LIGHT_LAYOUT_BG = '#F0F2F5';

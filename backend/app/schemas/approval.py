@@ -1,15 +1,12 @@
 """Approval 审批请求 Schema。"""
 
 from __future__ import annotations
+import uuid
+from datetime import datetime
 
 from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
-
-if TYPE_CHECKING:
-    import uuid
-    from datetime import datetime
-
 
 class ApprovalResolveRequest(BaseModel):
     """审批操作请求体。"""
@@ -24,7 +21,6 @@ class ApprovalResolveRequest(BaseModel):
         if v not in allowed:
             raise ValueError(f"action 必须是 {allowed} 之一")
         return v
-
 
 class ApprovalResponse(BaseModel):
     """审批请求响应。"""
@@ -41,7 +37,6 @@ class ApprovalResponse(BaseModel):
     comment: str
     resolved_at: datetime | None = None
     created_at: datetime
-
 
 class ApprovalListResponse(BaseModel):
     """审批请求列表响应。"""

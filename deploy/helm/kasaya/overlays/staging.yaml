@@ -1,0 +1,54 @@
+# Kasaya Kustomize — Staging 环境
+# 用法: helm install kasaya ./deploy/helm/kasaya -f deploy/helm/kasaya/overlays/staging.yaml
+
+backend:
+  replicaCount: 2
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 70
+  podDisruptionBudget:
+    enabled: true
+    minAvailable: 1
+  env:
+    KASAYA_DEBUG: "false"
+    KASAYA_OTEL_ENABLED: "true"
+    KASAYA_OTEL_SERVICE_NAME: "kasaya-backend-staging"
+
+frontend:
+  replicaCount: 2
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 3
+
+postgresql:
+  enabled: true
+  persistence:
+    size: 20Gi
+
+redis:
+  enabled: true
+  persistence:
+    size: 5Gi
+
+ingress:
+  enabled: true
+  className: nginx
+  hosts:
+    - host: kasaya-staging.example.com
+      paths:
+        - path: /api
+          pathType: Prefix
+          service: backend
+        - path: /health
+          pathType: Exact
+          service: backend
+        - path: /
+          pathType: Prefix
+          service: frontend
+  tls:
+    - secretName: kasaya-staging-tls
+      hosts:
+        - kasaya-staging.example.com

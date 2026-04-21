@@ -4,7 +4,7 @@ import { registerMocks } from './mocks/index';
 import { skillMocks, skillStore } from './mocks/skillMocks';
 
 /**
- * CkyClaw 技能管理 E2E 测试。
+ * Kasaya 技能管理 E2E 测试。
  *
  * 使用 API Mock 拦截所有 /api/v1/skills/** 请求，不依赖真实后端。
  */
@@ -19,7 +19,7 @@ test.describe('技能管理', () => {
     // 模拟已登录状态
     await page.goto('/');
     await page.evaluate(() => {
-      localStorage.setItem('ckyclaw_token', 'mock-e2e-token');
+      localStorage.setItem('kasaya_token', 'mock-e2e-token');
     });
   });
 

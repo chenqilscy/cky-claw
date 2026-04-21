@@ -1,6 +1,7 @@
 """进化建议 & 信号 API。"""
 
 from __future__ import annotations
+import uuid
 
 from typing import TYPE_CHECKING, Any
 
@@ -24,7 +25,6 @@ from app.schemas.evolution import (
 from app.services import evolution as svc
 
 if TYPE_CHECKING:
-    import uuid
 
     from sqlalchemy.ext.asyncio import AsyncSession
 

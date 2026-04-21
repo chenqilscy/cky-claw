@@ -1,6 +1,7 @@
 """Token 审计 API 路由。"""
 
 from __future__ import annotations
+import uuid
 
 from typing import TYPE_CHECKING
 
@@ -18,7 +19,6 @@ from app.schemas.token_usage import (
 from app.services import token_usage as token_usage_service
 
 if TYPE_CHECKING:
-    import uuid
     from datetime import datetime
 
     from sqlalchemy.ext.asyncio import AsyncSession

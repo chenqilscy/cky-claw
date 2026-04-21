@@ -34,7 +34,7 @@ describe('themeStore', () => {
     useThemeStore.getState().toggle();
 
     expect(useThemeStore.getState().mode).toBe('dark');
-    expect(storage['ckyclaw_theme']).toBe('dark');
+    expect(storage['kasaya_theme']).toBe('dark');
   });
 
   it('toggle 从 dark 切换到 light', async () => {
@@ -44,7 +44,7 @@ describe('themeStore', () => {
     useThemeStore.getState().toggle();
 
     expect(useThemeStore.getState().mode).toBe('light');
-    expect(storage['ckyclaw_theme']).toBe('light');
+    expect(storage['kasaya_theme']).toBe('light');
   });
 
   it('setMode 设置并持久化到 localStorage', async () => {
@@ -53,6 +53,6 @@ describe('themeStore', () => {
     useThemeStore.getState().setMode('dark');
 
     expect(useThemeStore.getState().mode).toBe('dark');
-    expect(storage['ckyclaw_theme']).toBe('dark');
+    expect(storage['kasaya_theme']).toBe('dark');
   });
 });

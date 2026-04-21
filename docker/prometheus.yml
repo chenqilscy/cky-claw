@@ -3,7 +3,7 @@ global:
   evaluation_interval: 15s
 
 scrape_configs:
-  - job_name: "ckyclaw-backend"
+  - job_name: "kasaya-backend"
     static_configs:
-      - targets: ["ckyclaw-backend:8000"]
+      - targets: ["kasaya-backend:8000"]
     metrics_path: "/metrics"

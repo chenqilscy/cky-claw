@@ -12,7 +12,7 @@
 
 本文档是 [knowledge-base-graph-design.md](knowledge-base-graph-design.md) 的**补充调研报告**，聚焦于一个具体问题：
 
-> **能否将外部工具 graphify 的图谱构建能力，应用到 CkyClaw 知识库的 Ingest Pipeline 中？**
+> **能否将外部工具 graphify 的图谱构建能力，应用到 Kasaya 知识库的 Ingest Pipeline 中？**
 
 本文档的结论将影响 `knowledge-base-graph-design.md` 第 9 章中 graphify 整合策略的选型。两份文档的术语和表名以 `knowledge-base-graph-design.md` 为准。
 
@@ -89,7 +89,7 @@ Pass 3: LLM 语义抽取（文档/论文/图片/转录稿）
 | **Python API 可调用性** | **不可行** | graphify 是 CLI 技能插件，非 Python SDK。其 LLM 抽取依赖 Claude 子代理，无法从 FastAPI 后端直接调用 |
 | **pip install 可用性** | 部分 | `pip install graphifyy` 可安装，但其核心功能依赖 Claude Code 运行时环境 |
 | **AST 分析能力** | 有价值 | Pass 1 的 tree-sitter 静态分析是独立可用的，但仅适用于代码文件，不适用于知识库的文档场景 |
-| **LLM 抽取能力** | 不可复用 | Pass 3 的 LLM 抽取硬编码使用 Claude 子代理，无法替换为 CkyClaw 的 `LiteLLMProvider` |
+| **LLM 抽取能力** | 不可复用 | Pass 3 的 LLM 抽取硬编码使用 Claude 子代理，无法替换为 Kasaya 的 `LiteLLMProvider` |
 | **MCP Server** | 可用 | `python -m graphify.serve` 可作为独立 MCP 服务运行，Agent 可通过 MCP 协议查询 |
 
 ### 2.2 三种集成路径
@@ -107,7 +107,7 @@ Agent 通过 query_graph / get_neighbors / shortest_path 查询
 ```
 
 - **优势**：零开发量，立即可用
-- **劣势**：不经过 CkyClaw 管控（无审计、无权限控制、无持久化）；仅能查询 graphify 构建的固定图谱，无法按知识库隔离
+- **劣势**：不经过 Kasaya 管控（无审计、无权限控制、无持久化）；仅能查询 graphify 构建的固定图谱，无法按知识库隔离
 - **适合**：开发者自测、POC 验证
 
 #### 路径 B：graphify 输出导入（中等开发量）
@@ -115,15 +115,15 @@ Agent 通过 query_graph / get_neighbors / shortest_path 查询
 ```
 离线：graphify CLI 构建图谱 → graph.json
     ↓
-CkyClaw 管理接口：上传 graph.json → 解析 nodes/edges
+Kasaya 管理接口：上传 graph.json → 解析 nodes/edges
     ↓
 写入 knowledge_entities / knowledge_relations 表
     ↓
-CkyClaw GraphRetriever 基于 PG 数据检索
+Kasaya GraphRetriever 基于 PG 数据检索
 ```
 
 - **优势**：利用 graphify 成熟的 AST 分析和 LLM 抽取；数据在 PG 中可控
-- **劣势**：图谱构建仍在 CkyClaw 外部；需要手动或半自动触发 graphify；`graph.json` 格式需适配
+- **劣势**：图谱构建仍在 Kasaya 外部；需要手动或半自动触发 graphify；`graph.json` 格式需适配
 - **适合**：知识库内容为代码仓库或大型文档集的场景
 
 #### 路径 C：自研 LLM 抽取引擎（完整开发量）
@@ -131,7 +131,7 @@ CkyClaw GraphRetriever 基于 PG 数据检索
 ```
 用户上传文档
     ↓
-CkyClaw Ingest Pipeline
+Kasaya Ingest Pipeline
 ├── 文件解析（PDF/DOCX/MD → 纯文本）
 ├── 分段（按章节/段落）
 ├── GraphExtractor（自研，基于 ModelProvider）
@@ -151,7 +151,7 @@ CkyClaw Ingest Pipeline
 
 理由：
 1. graphify 的核心价值（AST 静态分析）不适用于知识库文档场景
-2. graphify 的 LLM 抽取硬编码 Claude 子代理，无法复用 CkyClaw 的多 LLM 厂商能力
+2. graphify 的 LLM 抽取硬编码 Claude 子代理，无法复用 Kasaya 的多 LLM 厂商能力
 3. 知识库需要按用户/组织隔离，graphify 无法满足
 4. `knowledge-base-graph-design.md` 已设计完整的自研方案，路径 C 与之完全对齐
 
@@ -179,8 +179,8 @@ graphify 的价值在于**设计参考**：
 |------|------|------|
 | 图存储 | PostgreSQL + 递归 CTE | `knowledge-base-graph-design.md` §8 |
 | 社区检测 | python-igraph + Leiden | `knowledge-base-graph-design.md` §3.3 / §8 |
-| LLM 抽取 | CkyClaw ModelProvider（LiteLLM） | `knowledge-base-graph-design.md` §3.2 |
-| Embedding（可选） | LiteLLMEmbeddingProvider | [embedding.py](../../ckyclaw-framework/ckyclaw_framework/rag/embedding.py) |
+| LLM 抽取 | Kasaya ModelProvider（LiteLLM） | `knowledge-base-graph-design.md` §3.2 |
+| Embedding（可选） | LiteLLMEmbeddingProvider | [embedding.py](../../kasaya-framework/kasaya/rag/embedding.py) |
 | 图可视化 | ReactFlow | `knowledge-base-graph-design.md` §8 |
 
 ### 3.3 当前 Embedding 现状

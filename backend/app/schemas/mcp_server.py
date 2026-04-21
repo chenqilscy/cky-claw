@@ -1,20 +1,17 @@
 """MCP Server 配置请求/响应模型。"""
 
 from __future__ import annotations
+import uuid
+from datetime import datetime
 
 from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-if TYPE_CHECKING:
-    import uuid
-    from datetime import datetime
-
 VALID_TRANSPORT_TYPES = {"stdio", "sse", "http"}
 
 # auth_config 中需要脱敏的字段名
 _SENSITIVE_AUTH_FIELDS = {"api_key", "secret", "token", "password", "client_secret", "refresh_token"}
-
 
 def _mask_auth_config(auth: dict[str, Any] | None) -> dict[str, Any] | None:
     """对 auth_config 中的敏感字段进行脱敏。"""
@@ -27,7 +24,6 @@ def _mask_auth_config(auth: dict[str, Any] | None) -> dict[str, Any] | None:
         else:
             masked[key] = value
     return masked
-
 
 class MCPServerCreate(BaseModel):
     """创建 MCP Server 配置。"""
@@ -56,7 +52,6 @@ class MCPServerCreate(BaseModel):
             raise ValueError(f"{self.transport_type} 模式必须提供 url")
         return self
 
-
 class MCPServerUpdate(BaseModel):
     """更新 MCP Server 配置（PATCH 语义）。"""
 
@@ -74,7 +69,6 @@ class MCPServerUpdate(BaseModel):
         if v is not None and v not in VALID_TRANSPORT_TYPES:
             raise ValueError(f"transport_type 必须是 {VALID_TRANSPORT_TYPES} 之一")
         return v
-
 
 class MCPServerResponse(BaseModel):
     """MCP Server 配置响应。"""
@@ -99,7 +93,6 @@ class MCPServerResponse(BaseModel):
     def mask_auth(cls, v: dict[str, Any] | None) -> dict[str, Any] | None:
         return _mask_auth_config(v)
 
-
 class MCPServerListResponse(BaseModel):
     """MCP Server 列表响应。"""
 
@@ -108,14 +101,12 @@ class MCPServerListResponse(BaseModel):
     limit: int = 20
     offset: int = 0
 
-
 class MCPToolInfo(BaseModel):
     """MCP Server 发现的单个工具信息。"""
 
     name: str
     description: str = ""
     parameters_schema: dict[str, Any] = Field(default_factory=dict)
-
 
 class MCPTestResult(BaseModel):
     """MCP Server 连接测试结果。"""

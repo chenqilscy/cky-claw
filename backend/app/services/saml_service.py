@@ -236,7 +236,7 @@ async def create_authn_request(
     assert idp is not None
 
     # 生成 AuthnRequest
-    request_id = f"_ckyclaw_{secrets.token_hex(16)}"
+    request_id = f"_kasaya_{secrets.token_hex(16)}"
     issue_instant = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
 
     authn_request = (

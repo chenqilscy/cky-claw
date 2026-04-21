@@ -1,6 +1,7 @@
 """SAML 2.0 认证与 IdP 配置管理路由。"""
 
 from __future__ import annotations
+import uuid
 
 from typing import TYPE_CHECKING
 
@@ -21,7 +22,6 @@ from app.schemas.saml import (
 from app.services import saml_service
 
 if TYPE_CHECKING:
-    import uuid
 
     from sqlalchemy.ext.asyncio import AsyncSession
 

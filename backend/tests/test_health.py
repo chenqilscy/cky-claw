@@ -19,7 +19,7 @@ class TestHealthSimple:
         assert resp.status_code == 200
         body = resp.json()
         assert body["status"] == "ok"
-        assert body["service"] == "ckyclaw-backend"
+        assert body["service"] == "kasaya-backend"
 
 
 class TestHealthDeep:

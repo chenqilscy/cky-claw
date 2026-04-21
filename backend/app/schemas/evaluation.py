@@ -1,17 +1,14 @@
 """Agent 评估请求/响应模型。"""
 
 from __future__ import annotations
+import uuid
+from datetime import datetime
 
 from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
-if TYPE_CHECKING:
-    import uuid
-    from datetime import datetime
-
 VALID_EVAL_METHODS = {"manual", "auto", "llm_judge"}
-
 
 class RunEvaluationCreate(BaseModel):
     """创建运行评估。"""
@@ -29,7 +26,6 @@ class RunEvaluationCreate(BaseModel):
     evaluator: str = Field(default="", description="评估者")
     comment: str = Field(default="", description="评语")
     metadata: dict[str, Any] = Field(default_factory=dict)
-
 
 class RunEvaluationResponse(BaseModel):
     """运行评估响应。"""
@@ -52,7 +48,6 @@ class RunEvaluationResponse(BaseModel):
     comment: str
     created_at: datetime
 
-
 class RunEvaluationListResponse(BaseModel):
     """运行评估列表。"""
 
@@ -61,7 +56,6 @@ class RunEvaluationListResponse(BaseModel):
     limit: int = 20
     offset: int = 0
 
-
 class RunFeedbackCreate(BaseModel):
     """创建用户反馈。"""
 
@@ -69,7 +63,6 @@ class RunFeedbackCreate(BaseModel):
     rating: int = Field(..., ge=-1, le=1, description="评分：-1(差)/0(中)/1(好)")
     comment: str = Field(default="", description="反馈内容")
     tags: list[str] = Field(default_factory=list, description="标签")
-
 
 class RunFeedbackResponse(BaseModel):
     """用户反馈响应。"""
@@ -84,7 +77,6 @@ class RunFeedbackResponse(BaseModel):
     tags: list[Any] | dict[str, Any]
     created_at: datetime
 
-
 class RunFeedbackListResponse(BaseModel):
     """用户反馈列表。"""
 
@@ -92,7 +84,6 @@ class RunFeedbackListResponse(BaseModel):
     total: int
     limit: int = 20
     offset: int = 0
-
 
 class AgentQualitySummary(BaseModel):
     """Agent 质量度量汇总。"""
@@ -109,7 +100,6 @@ class AgentQualitySummary(BaseModel):
     avg_overall: float = 0.0
     feedback_count: int = 0
     positive_rate: float = 0.0
-
 
 class AutoEvaluateRequest(BaseModel):
     """自动评估请求（提供上下文）。"""

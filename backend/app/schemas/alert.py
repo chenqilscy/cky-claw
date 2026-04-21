@@ -1,14 +1,12 @@
 """AlertRule / AlertEvent Schema — 告警规则请求/响应。"""
 
 from __future__ import annotations
+import uuid
+from datetime import datetime
 
 from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
-
-if TYPE_CHECKING:
-    import uuid
-    from datetime import datetime
 
 # ---------------------------------------------------------------------------
 # AlertRule
@@ -17,7 +15,6 @@ if TYPE_CHECKING:
 VALID_METRICS = {"error_rate", "avg_duration_ms", "total_cost", "total_tokens", "trace_count"}
 VALID_OPERATORS = {">", ">=", "<", "<=", "=="}
 VALID_SEVERITIES = {"critical", "warning", "info"}
-
 
 class AlertRuleCreate(BaseModel):
     """创建告警规则请求。"""
@@ -53,7 +50,6 @@ class AlertRuleCreate(BaseModel):
         if v not in VALID_SEVERITIES:
             raise ValueError(f"不支持的严重级别: {v}，可选: {VALID_SEVERITIES}")
         return v
-
 
 class AlertRuleUpdate(BaseModel):
     """更新告警规则请求（PATCH 语义）。"""
@@ -91,7 +87,6 @@ class AlertRuleUpdate(BaseModel):
             raise ValueError(f"不支持的严重级别: {v}")
         return v
 
-
 class AlertRuleResponse(BaseModel):
     """告警规则响应。"""
 
@@ -113,18 +108,15 @@ class AlertRuleResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-
 class AlertRuleListResponse(BaseModel):
     """告警规则列表响应。"""
 
     data: list[AlertRuleResponse]
     total: int
 
-
 # ---------------------------------------------------------------------------
 # AlertEvent
 # ---------------------------------------------------------------------------
-
 
 class AlertEventResponse(BaseModel):
     """告警事件响应。"""
@@ -141,13 +133,11 @@ class AlertEventResponse(BaseModel):
     resolved_at: datetime | None
     created_at: datetime
 
-
 class AlertEventListResponse(BaseModel):
     """告警事件列表响应。"""
 
     data: list[AlertEventResponse]
     total: int
-
 
 class AlertRuleCheckResponse(BaseModel):
     """告警规则手动检测响应。"""

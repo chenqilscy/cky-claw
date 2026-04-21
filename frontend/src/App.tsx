@@ -6,7 +6,7 @@ import BasicLayout from './layouts/BasicLayout';
 import RouteErrorBoundary from './components/RouteErrorBoundary';
 import useAuthStore from './stores/authStore';
 import useThemeStore from './stores/themeStore';
-import { lightTheme, darkTheme } from './theme/themeConfig';
+import { getTheme } from './theme/themeConfig';
 
 const LoginPage = lazy(() => import('./pages/Login'));
 const DashboardPage = lazy(() => import('./pages/dashboard/DashboardPage'));
@@ -82,11 +82,14 @@ const RequireAuth: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
 const App: React.FC = () => {
   const themeMode = useThemeStore((s) => s.mode);
+  const palette = useThemeStore((s) => s.palette);
+
+  const currentTheme = getTheme(palette, themeMode);
 
   return (
     <ConfigProvider
       locale={zhCN}
-      theme={themeMode === 'dark' ? darkTheme : lightTheme}
+      theme={currentTheme}
     >
       <Suspense fallback={<PageLoading />}>
         <Routes>

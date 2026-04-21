@@ -1,6 +1,7 @@
 """Mailbox API 路由 — Agent 间通信。"""
 
 from __future__ import annotations
+import uuid
 
 from typing import TYPE_CHECKING
 
@@ -16,7 +17,6 @@ from app.schemas.mailbox import (
 from app.services import mailbox as mailbox_service
 
 if TYPE_CHECKING:
-    import uuid
 
     from sqlalchemy.ext.asyncio import AsyncSession
 

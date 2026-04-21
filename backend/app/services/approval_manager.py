@@ -10,7 +10,7 @@ import asyncio
 import logging
 from typing import TYPE_CHECKING
 
-from ckyclaw_framework.approval.mode import ApprovalDecision
+from kasaya.approval.mode import ApprovalDecision
 
 if TYPE_CHECKING:
     import uuid

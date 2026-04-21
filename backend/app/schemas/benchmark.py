@@ -1,14 +1,12 @@
 """Benchmark 评测请求/响应模型。"""
 
 from __future__ import annotations
+import uuid
+from datetime import datetime
 
 from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, Field
-
-if TYPE_CHECKING:
-    import uuid
-    from datetime import datetime
 
 # ─── Suite ───
 
@@ -22,7 +20,6 @@ class BenchmarkSuiteCreate(BaseModel):
     config: dict | None = None
     tags: list[str] | None = None
 
-
 class BenchmarkSuiteUpdate(BaseModel):
     """更新评测套件。"""
 
@@ -32,7 +29,6 @@ class BenchmarkSuiteUpdate(BaseModel):
     model: str | None = Field(None, max_length=120)
     config: dict | None = None
     tags: list[str] | None = None
-
 
 class BenchmarkSuiteResponse(BaseModel):
     """评测套件响应。"""
@@ -50,13 +46,11 @@ class BenchmarkSuiteResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-
 class BenchmarkSuiteListResponse(BaseModel):
     """套件列表响应。"""
 
     data: list[BenchmarkSuiteResponse]
     total: int
-
 
 # ─── Run ───
 
@@ -64,7 +58,6 @@ class BenchmarkRunCreate(BaseModel):
     """创建评测运行（通常由系统内部调用）。"""
 
     suite_id: uuid.UUID
-
 
 class BenchmarkRunUpdate(BaseModel):
     """更新运行结果。"""
@@ -80,7 +73,6 @@ class BenchmarkRunUpdate(BaseModel):
     total_tokens: int | None = None
     dimension_summaries: dict | None = None
     report: dict | None = None
-
 
 class BenchmarkRunResponse(BaseModel):
     """评测运行响应。"""
@@ -105,13 +97,11 @@ class BenchmarkRunResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-
 class BenchmarkRunListResponse(BaseModel):
     """运行列表响应。"""
 
     data: list[BenchmarkRunResponse]
     total: int
-
 
 # ─── Dashboard ───
 

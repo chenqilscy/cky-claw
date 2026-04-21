@@ -9,15 +9,19 @@ import TraceStatsPanel from '../../pages/traces/TraceStatsPanel';
 const baseSpan = {
   id: 'span-001',
   trace_id: 'trace-001',
+  parent_span_id: null,
   name: 'llm-call',
   type: 'llm' as const,
   status: 'completed' as const,
   model: 'gpt-4o',
   duration_ms: 123.4,
   start_time: '2026-01-01T12:00:00Z',
-  token_usage: { prompt_tokens: 100, completion_tokens: 50 },
+  end_time: '2026-01-01T12:00:01Z',
+  token_usage: { prompt_tokens: 100, completion_tokens: 50, total_tokens: 150 },
   input: { role: 'user', content: 'hello' },
   output: { role: 'assistant', content: 'hi' },
+  metadata: {},
+  created_at: '2026-01-01T12:00:00Z',
 };
 
 describe('SpanDetailsPanel', () => {
@@ -60,11 +64,19 @@ describe('SpanDetailsPanel', () => {
     const minimalSpan = {
       id: 's2',
       trace_id: 't2',
+      parent_span_id: null,
       name: 'test',
       type: 'tool' as const,
       status: 'completed' as const,
       duration_ms: 10,
       start_time: '2026-01-01T12:00:00Z',
+      end_time: '2026-01-01T12:00:01Z',
+      input: null,
+      output: null,
+      metadata: {},
+      model: null,
+      token_usage: null,
+      created_at: '2026-01-01T12:00:00Z',
     };
     const { container } = render(<SpanDetailsPanel span={minimalSpan} />);
     expect(container).toBeTruthy();
@@ -78,7 +90,8 @@ const baseStats = {
   total_spans: 500,
   avg_duration_ms: 234.5,
   total_tokens: { total_tokens: 12000, prompt_tokens: 8000, completion_tokens: 4000 },
-  guardrail_stats: { total: 20, triggered: 3 },
+  span_type_counts: { agent: 10, llm: 200, tool: 150, handoff: 20, guardrail: 120 },
+  guardrail_stats: { total: 20, triggered: 3, trigger_rate: 0.15 },
   error_rate: 0.05,
 };
 
@@ -119,7 +132,8 @@ describe('TraceStatsPanel', () => {
       total_spans: 0,
       avg_duration_ms: 0,
       total_tokens: { total_tokens: 0, prompt_tokens: 0, completion_tokens: 0 },
-      guardrail_stats: { total: 0, triggered: 0 },
+      span_type_counts: { agent: 0, llm: 0, tool: 0, handoff: 0, guardrail: 0 },
+      guardrail_stats: { total: 0, triggered: 0, trigger_rate: 0 },
       error_rate: 0,
     };
     const { container } = render(<TraceStatsPanel stats={zeroStats} />);

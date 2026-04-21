@@ -1,4 +1,4 @@
-"""CkyClaw 结构化日志配置。
+"""Kasaya 结构化日志配置。
 
 使用 python-json-logger 将标准库 logging 输出格式化为 JSON，
 便于 Promtail 采集后写入 Loki 进行聚合查询。

@@ -205,7 +205,7 @@ POST /api/v1/agents/{name}/prompt/validate
 
 ### 5.1 模板渲染器
 
-新增 `ckyclaw_framework/agent/template.py`：
+新增 `kasaya/agent/template.py`：
 
 ```python
 def render_template(template: str, variables: dict[str, Any]) -> str:

@@ -1,15 +1,12 @@
 """知识库请求/响应模型。"""
 
 from __future__ import annotations
+import uuid
+from datetime import datetime
 
 from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, ConfigDict, Field
-
-if TYPE_CHECKING:
-    import uuid
-    from datetime import datetime
-
 
 class KnowledgeBaseCreate(BaseModel):
     """创建知识库请求。"""
@@ -21,7 +18,6 @@ class KnowledgeBaseCreate(BaseModel):
     metadata: dict[str, Any] = Field(default_factory=dict, description="自定义元数据")
     mode: str = Field("vector", pattern=r"^(vector|graph|hybrid)$", description="知识库模式")
 
-
 class KnowledgeBaseUpdate(BaseModel):
     """更新知识库请求。"""
 
@@ -31,7 +27,6 @@ class KnowledgeBaseUpdate(BaseModel):
     chunk_strategy: dict[str, Any] | None = Field(None, description="分块策略")
     metadata: dict[str, Any] | None = Field(None, description="自定义元数据")
     mode: str | None = Field(None, pattern=r"^(vector|graph|hybrid)$", description="知识库模式")
-
 
 class KnowledgeBaseResponse(BaseModel):
     """知识库响应。"""
@@ -48,7 +43,6 @@ class KnowledgeBaseResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-
 class KnowledgeBaseListResponse(BaseModel):
     """知识库列表响应。"""
 
@@ -56,7 +50,6 @@ class KnowledgeBaseListResponse(BaseModel):
     total: int
     limit: int = 20
     offset: int = 0
-
 
 class KnowledgeDocumentResponse(BaseModel):
     """知识库文档响应。"""
@@ -74,14 +67,12 @@ class KnowledgeDocumentResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-
 class KnowledgeSearchRequest(BaseModel):
     """知识库检索请求。"""
 
     query: str = Field(..., min_length=1, max_length=500, description="检索问题")
     top_k: int = Field(5, ge=1, le=20, description="返回分块数量")
     min_score: float = Field(0.0, ge=-1.0, le=1.0, description="最低相似度")
-
 
 class KnowledgeSearchItem(BaseModel):
     """检索结果项。"""
@@ -91,7 +82,6 @@ class KnowledgeSearchItem(BaseModel):
     content: str
     score: float
     metadata: dict[str, Any] = Field(default_factory=dict)
-
 
 class KnowledgeSearchResponse(BaseModel):
     """知识库检索响应。"""

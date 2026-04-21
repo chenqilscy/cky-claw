@@ -1,6 +1,6 @@
-# CkyClaw
+# Kasaya
 
-基于自研 **CkyClaw Framework** 构建的 AI Agent 管理与运行平台。CkyClaw 汲取了 Claude Code、OpenAI Agents SDK、DeerFlow 等业界方案的优秀设计，提供开放、可扩展的 Agent 运行时基础设施，并在此之上构建企业级的 Agent 配置管理、多模式编排、执行可视化、人工监督、多渠道接入和 APM 监控等上层能力。
+基于自研 **Kasaya Framework** 构建的 AI Agent 管理与运行平台。Kasaya 汲取了 Claude Code、OpenAI Agents SDK、DeerFlow 等业界方案的优秀设计，提供开放、可扩展的 Agent 运行时基础设施，并在此之上构建企业级的 Agent 配置管理、多模式编排、执行可视化、人工监督、多渠道接入和 APM 监控等上层能力。
 
 ## 关键指标
 
@@ -18,7 +18,7 @@
 
 ```
 cky-claw/
-├── ckyclaw-framework/   # CkyClaw Framework — Python Agent 运行时库
+├── kasaya/   # Kasaya Framework — Python Agent 运行时库
 │   ├── agent/           #   Agent 定义（Agent dataclass + as_tool）
 │   ├── runner/          #   Runner 执行引擎（Agent Loop + Hooks + RunConfig）
 │   ├── model/           #   Model Provider 抽象 + CostRouter
@@ -33,8 +33,8 @@ cky-claw/
 │   ├── intent/          #   意图检测与飘移处理
 │   ├── evolution/       #   自动进化（Signal + Strategy）
 │   └── mcp/             #   MCP 客户端（stdio/sse/http）
-├── backend/             # CkyClaw Backend — FastAPI 后端服务（37 路由模块）
-├── frontend/            # CkyClaw Frontend — React SPA（38 页面）
+├── backend/             # Kasaya Backend — FastAPI 后端服务（37 路由模块）
+├── frontend/            # Kasaya Frontend — React SPA（38 页面）
 ├── docs/                # 产品与技术文档
 ├── scripts/             # 灾备 + 压测脚本
 ├── .github/             # GitHub Actions CI（6 Job）+ 编辑器指令
@@ -43,7 +43,7 @@ cky-claw/
 
 ## 核心能力
 
-### CkyClaw Framework
+### Kasaya Framework
 
 | 能力 | 说明 |
 |------|------|
@@ -74,7 +74,7 @@ Dashboard（6 统计 + 趋势图 + 自动刷新）· 对话页（SSE 流式 + Ma
 
 | 层 | 技术 |
 |----|------|
-| **Framework** | Python 3.12+, CkyClaw Framework (自研) |
+| **Framework** | Python 3.12+, Kasaya Framework (自研) |
 | **Backend** | FastAPI, SQLAlchemy (async), Alembic, LiteLLM, Pydantic v2 |
 | **Frontend** | React 19, Vite 6, TypeScript 5.8, Ant Design 5, ProComponents, TanStack Query, ReactFlow, ECharts, Zustand |
 | **Database** | PostgreSQL 16, Redis 7 |
@@ -101,7 +101,7 @@ Dashboard（6 统计 + 趋势图 + 自动刷新）· 对话页（SSE 流式 + Ma
 cp .env.example .env
 
 # 2.（可选）修改 .env 中的密码和密钥
-#   生产环境务必更换 CKYCLAW_SECRET_KEY 和 POSTGRES_PASSWORD
+#   生产环境务必更换 KASAYA_SECRET_KEY 和 POSTGRES_PASSWORD
 
 # 3. 一键启动全部服务
 docker-compose up -d
@@ -123,7 +123,7 @@ docker-compose up -d db redis
 # 2. Backend
 cd backend && uv sync
 cp ../.env.example ../.env  # 首次配置
-# 修改 .env 中 CKYCLAW_DATABASE_URL 的 host 为 localhost
+# 修改 .env 中 KASAYA_DATABASE_URL 的 host 为 localhost
 uv run alembic upgrade head
 uv run uvicorn app.main:app --reload --port 8000
 
@@ -153,13 +153,13 @@ pnpm dev
 
 ## 开发命令
 
-### ckyclaw-framework
+### kasaya
 
 ```bash
-cd ckyclaw-framework && uv sync
+cd kasaya && uv sync
 uv run pytest tests/ -q          # 全部测试（1218）
 uv run ruff check .               # Lint
-uv run mypy ckyclaw_framework/    # 类型检查
+uv run mypy kasaya/    # 类型检查
 ```
 
 ### backend
@@ -189,15 +189,15 @@ npx tsc --noEmit  # TypeScript 类型检查
 
 | 变量 | 默认值 | 说明 |
 |------|--------|------|
-| `POSTGRES_PASSWORD` | `ckyclaw_dev` | PostgreSQL 密码 |
-| `CKYCLAW_DATABASE_URL` | `postgresql+asyncpg://...` | 数据库连接字符串 |
-| `CKYCLAW_REDIS_URL` | `redis://localhost:6379/0` | Redis 连接字符串 |
-| `CKYCLAW_SECRET_KEY` | `dev-secret-key-...` | JWT 签名密钥（**生产必须更换**） |
-| `CKYCLAW_ACCESS_TOKEN_EXPIRE_MINUTES` | `1440` | JWT 过期时间（分钟） |
-| `CKYCLAW_DEBUG` | `true` | 调试模式 |
-| `CKYCLAW_DB_POOL_SIZE` | `5` | 数据库连接池大小 |
-| `CKYCLAW_DB_MAX_OVERFLOW` | `10` | 连接池最大溢出 |
-| `CKYCLAW_OTEL_ENABLED` | `false` | OpenTelemetry 启用 |
+| `POSTGRES_PASSWORD` | `kasaya_dev` | PostgreSQL 密码 |
+| `KASAYA_DATABASE_URL` | `postgresql+asyncpg://...` | 数据库连接字符串 |
+| `KASAYA_REDIS_URL` | `redis://localhost:6379/0` | Redis 连接字符串 |
+| `KASAYA_SECRET_KEY` | `dev-secret-key-...` | JWT 签名密钥（**生产必须更换**） |
+| `KASAYA_ACCESS_TOKEN_EXPIRE_MINUTES` | `1440` | JWT 过期时间（分钟） |
+| `KASAYA_DEBUG` | `true` | 调试模式 |
+| `KASAYA_DB_POOL_SIZE` | `5` | 数据库连接池大小 |
+| `KASAYA_DB_MAX_OVERFLOW` | `10` | 连接池最大溢出 |
+| `KASAYA_OTEL_ENABLED` | `false` | OpenTelemetry 启用 |
 
 详见 [.env.example](.env.example)。
 
@@ -205,9 +205,9 @@ npx tsc --noEmit  # TypeScript 类型检查
 
 | 文档 | 路径 |
 |------|------|
-| 产品需求文档 (PRD) | [docs/spec/CkyClaw PRD v2.0.md](docs/spec/CkyClaw%20PRD%20v2.0.md) |
-| API 设计文档 | [docs/spec/CkyClaw API Design v1.2.md](docs/spec/CkyClaw%20API%20Design%20v1.2.md) |
-| 数据模型文档 | [docs/spec/CkyClaw Data Model v1.3.md](docs/spec/CkyClaw%20Data%20Model%20v1.3.md) |
+| 产品需求文档 (PRD) | [docs/spec/Kasaya PRD v2.0.md](docs/spec/Kasaya%20PRD%20v2.0.md) |
+| API 设计文档 | [docs/spec/Kasaya API Design v1.2.md](docs/spec/Kasaya%20API%20Design%20v1.2.md) |
+| 数据模型文档 | [docs/spec/Kasaya Data Model v1.3.md](docs/spec/Kasaya%20Data%20Model%20v1.3.md) |
 | 部署指南 | [docs/deployment-guide.md](docs/deployment-guide.md) |
 | 用户指南 | [docs/user-guide.md](docs/user-guide.md) |
 | 待办与演进 | [docs/todo.md](docs/todo.md) |
@@ -236,7 +236,7 @@ uv run alembic downgrade -1
 
 ```bash
 # Framework 测试
-cd ckyclaw-framework && uv run pytest tests/ -q
+cd kasaya && uv run pytest tests/ -q
 
 # Backend 测试
 cd backend && uv run pytest tests/ -q

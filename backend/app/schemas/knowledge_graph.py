@@ -1,15 +1,12 @@
 """知识图谱请求/响应模型。"""
 
 from __future__ import annotations
+import uuid
+from datetime import datetime
 
 from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, ConfigDict, Field
-
-if TYPE_CHECKING:
-    import uuid
-    from datetime import datetime
-
 
 class BuildGraphRequest(BaseModel):
     """触发图谱构建请求。"""
@@ -19,7 +16,6 @@ class BuildGraphRequest(BaseModel):
     chunk_size: int = Field(1024, ge=256, le=4096, description="分块大小")
     overlap: int = Field(128, ge=0, le=512, description="分块重叠")
     resolution: float = Field(1.0, gt=0.0, description="Leiden 社区检测分辨率")
-
 
 class GraphBuildStatusResponse(BaseModel):
     """图谱构建状态响应。"""
@@ -31,7 +27,6 @@ class GraphBuildStatusResponse(BaseModel):
     relation_count: int = 0
     community_count: int = 0
     error: str | None = None
-
 
 class EntityResponse(BaseModel):
     """实体响应。"""
@@ -50,7 +45,6 @@ class EntityResponse(BaseModel):
     content_hash: str = ""
     created_at: datetime
 
-
 class EntityListResponse(BaseModel):
     """实体列表响应。"""
 
@@ -58,7 +52,6 @@ class EntityListResponse(BaseModel):
     total: int
     limit: int = 50
     offset: int = 0
-
 
 class RelationResponse(BaseModel):
     """关系响应。"""
@@ -75,7 +68,6 @@ class RelationResponse(BaseModel):
     confidence: float
     confidence_label: str
 
-
 class RelationListResponse(BaseModel):
     """关系列表响应。"""
 
@@ -83,7 +75,6 @@ class RelationListResponse(BaseModel):
     total: int
     limit: int = 50
     offset: int = 0
-
 
 class CommunityResponse(BaseModel):
     """社区响应。"""
@@ -100,7 +91,6 @@ class CommunityResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-
 class CommunityListResponse(BaseModel):
     """社区列表响应。"""
 
@@ -109,13 +99,11 @@ class CommunityListResponse(BaseModel):
     limit: int = 50
     offset: int = 0
 
-
 class GraphDataResponse(BaseModel):
     """图谱可视化数据响应。"""
 
     nodes: list[dict[str, Any]] = Field(default_factory=list)
     edges: list[dict[str, Any]] = Field(default_factory=list)
-
 
 class GraphSearchRequest(BaseModel):
     """图谱检索请求。"""
@@ -125,7 +113,6 @@ class GraphSearchRequest(BaseModel):
     max_depth: int = Field(2, ge=1, le=4, description="关系遍历深度")
     search_mode: str = Field("hybrid", pattern=r"^(entity|traverse|community|hybrid)$")
 
-
 class GraphSearchResultItem(BaseModel):
     """图谱检索结果项。"""
 
@@ -134,7 +121,6 @@ class GraphSearchResultItem(BaseModel):
     community: CommunityResponse | None = None
     score: float
     source: str  # entity_match / relation_traverse / community_summary
-
 
 class GraphSearchResponse(BaseModel):
     """图谱检索响应。"""

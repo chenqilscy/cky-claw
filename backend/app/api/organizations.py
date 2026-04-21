@@ -1,6 +1,7 @@
 """Organization 管理 API。"""
 
 from __future__ import annotations
+import uuid
 
 from typing import TYPE_CHECKING, Any
 
@@ -17,7 +18,6 @@ from app.schemas.organization import (
 from app.services import organization as svc
 
 if TYPE_CHECKING:
-    import uuid
 
     from sqlalchemy.ext.asyncio import AsyncSession
 

@@ -1,15 +1,12 @@
 """多环境管理 Schema。"""
 
 from __future__ import annotations
+import uuid
+from datetime import datetime
 
 from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, ConfigDict, Field
-
-if TYPE_CHECKING:
-    import uuid
-    from datetime import datetime
-
 
 class EnvironmentCreate(BaseModel):
     """创建环境请求。"""
@@ -22,7 +19,6 @@ class EnvironmentCreate(BaseModel):
     is_protected: bool = Field(default=False)
     settings_override: dict[str, Any] = Field(default_factory=dict)
 
-
 class EnvironmentUpdate(BaseModel):
     """更新环境请求。"""
 
@@ -32,7 +28,6 @@ class EnvironmentUpdate(BaseModel):
     sort_order: int | None = None
     is_protected: bool | None = None
     settings_override: dict[str, Any] | None = None
-
 
 class EnvironmentResponse(BaseModel):
     """环境响应。"""
@@ -51,13 +46,11 @@ class EnvironmentResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-
 class EnvironmentListResponse(BaseModel):
     """环境列表响应。"""
 
     data: list[EnvironmentResponse]
     total: int
-
 
 class PublishRequest(BaseModel):
     """发布请求。"""
@@ -65,13 +58,11 @@ class PublishRequest(BaseModel):
     version_id: uuid.UUID | None = None
     notes: str = Field(default="")
 
-
 class RollbackRequest(BaseModel):
     """回滚请求。"""
 
     target_version_id: uuid.UUID | None = None
     notes: str = Field(default="")
-
 
 class BindingResponse(BaseModel):
     """发布绑定响应。"""
@@ -89,13 +80,11 @@ class BindingResponse(BaseModel):
     notes: str
     org_id: uuid.UUID | None
 
-
 class EnvironmentAgentsResponse(BaseModel):
     """环境内 Agent 列表响应。"""
 
     environment: str
     data: list[BindingResponse]
-
 
 class EnvironmentDiffResponse(BaseModel):
     """环境间差异响应。"""

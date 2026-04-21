@@ -1,0 +1,30 @@
+1. This chart will install Kasaya with the following components:
+   - Backend (FastAPI) — {{ .Values.backend.replicaCount }} replica(s)
+   - Frontend (React/Nginx) — {{ .Values.frontend.replicaCount }} replica(s)
+   {{- if .Values.postgresql.enabled }}
+   - PostgreSQL 16 (built-in)
+   {{- else }}
+   - External PostgreSQL: {{ .Values.externalDatabase.host }}:{{ .Values.externalDatabase.port }}
+   {{- end }}
+   {{- if .Values.redis.enabled }}
+   - Redis 7 (built-in)
+   {{- else }}
+   - External Redis: {{ .Values.externalRedis.host }}:{{ .Values.externalRedis.port }}
+   {{- end }}
+
+2. Access Kasaya:
+   {{- if .Values.ingress.enabled }}
+   {{- range .Values.ingress.hosts }}
+   URL: http{{ if $.Values.ingress.tls }}s{{ end }}://{{ .host }}
+   {{- end }}
+   {{- else }}
+   kubectl port-forward svc/{{ include "kasaya.fullname" . }}-frontend 3000:{{ .Values.frontend.service.port }}
+   URL: http://localhost:3000
+   {{- end }}
+
+3. Default admin credentials:
+   Username: admin
+   Password: Admin888!  (change immediately after first login)
+
+4. Check deployment status:
+   kubectl get pods -l app.kubernetes.io/part-of=kasaya

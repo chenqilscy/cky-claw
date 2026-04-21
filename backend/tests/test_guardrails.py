@@ -406,7 +406,7 @@ class TestRegexGuardrail:
     @pytest.mark.asyncio
     async def test_pattern_match(self) -> None:
         """正则匹配触发。"""
-        from ckyclaw_framework.guardrails.regex_guardrail import RegexGuardrail
+        from kasaya.guardrails.regex_guardrail import RegexGuardrail
 
         rg = RegexGuardrail(patterns=[r"DROP\s+TABLE"], message="SQL injection")
         result = await rg.check("please DROP TABLE users")
@@ -416,7 +416,7 @@ class TestRegexGuardrail:
     @pytest.mark.asyncio
     async def test_pattern_no_match(self) -> None:
         """正则不匹配通过。"""
-        from ckyclaw_framework.guardrails.regex_guardrail import RegexGuardrail
+        from kasaya.guardrails.regex_guardrail import RegexGuardrail
 
         rg = RegexGuardrail(patterns=[r"DROP\s+TABLE"], message="SQL injection")
         result = await rg.check("SELECT * FROM users")
@@ -425,7 +425,7 @@ class TestRegexGuardrail:
     @pytest.mark.asyncio
     async def test_keyword_match(self) -> None:
         """关键词匹配触发。"""
-        from ckyclaw_framework.guardrails.regex_guardrail import RegexGuardrail
+        from kasaya.guardrails.regex_guardrail import RegexGuardrail
 
         rg = RegexGuardrail(keywords=["暴力", "色情"], message="违禁内容")
         result = await rg.check("这段话包含暴力内容")
@@ -434,7 +434,7 @@ class TestRegexGuardrail:
     @pytest.mark.asyncio
     async def test_keyword_no_match(self) -> None:
         """关键词不匹配通过。"""
-        from ckyclaw_framework.guardrails.regex_guardrail import RegexGuardrail
+        from kasaya.guardrails.regex_guardrail import RegexGuardrail
 
         rg = RegexGuardrail(keywords=["暴力", "色情"], message="违禁内容")
         result = await rg.check("这是一段正常的文本")
@@ -443,7 +443,7 @@ class TestRegexGuardrail:
     @pytest.mark.asyncio
     async def test_case_insensitive(self) -> None:
         """默认大小写不敏感。"""
-        from ckyclaw_framework.guardrails.regex_guardrail import RegexGuardrail
+        from kasaya.guardrails.regex_guardrail import RegexGuardrail
 
         rg = RegexGuardrail(patterns=[r"drop table"])
         result = await rg.check("DROP TABLE users")
@@ -452,7 +452,7 @@ class TestRegexGuardrail:
     @pytest.mark.asyncio
     async def test_case_sensitive(self) -> None:
         """大小写敏感模式。"""
-        from ckyclaw_framework.guardrails.regex_guardrail import RegexGuardrail
+        from kasaya.guardrails.regex_guardrail import RegexGuardrail
 
         rg = RegexGuardrail(patterns=[r"drop table"], case_sensitive=True)
         result = await rg.check("DROP TABLE users")
@@ -460,7 +460,7 @@ class TestRegexGuardrail:
 
     def test_invalid_regex_raises(self) -> None:
         """无效正则表达式抛异常。"""
-        from ckyclaw_framework.guardrails.regex_guardrail import RegexGuardrail
+        from kasaya.guardrails.regex_guardrail import RegexGuardrail
 
         with pytest.raises(ValueError, match="无效的正则表达式"):
             RegexGuardrail(patterns=["[invalid"])
@@ -468,7 +468,7 @@ class TestRegexGuardrail:
     @pytest.mark.asyncio
     async def test_as_input_fn(self) -> None:
         """as_input_fn 返回兼容 InputGuardrail 的函数。"""
-        from ckyclaw_framework.guardrails.regex_guardrail import RegexGuardrail
+        from kasaya.guardrails.regex_guardrail import RegexGuardrail
 
         rg = RegexGuardrail(patterns=[r"hack"], name="hack-detect")
         fn = rg.as_input_fn()
@@ -480,7 +480,7 @@ class TestRegexGuardrail:
     @pytest.mark.asyncio
     async def test_multiple_patterns(self) -> None:
         """多模式匹配 — 任一命中即触发。"""
-        from ckyclaw_framework.guardrails.regex_guardrail import RegexGuardrail
+        from kasaya.guardrails.regex_guardrail import RegexGuardrail
 
         rg = RegexGuardrail(
             patterns=[r"DROP\s+TABLE", r"DELETE\s+FROM", r"TRUNCATE"],

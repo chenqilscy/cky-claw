@@ -1,6 +1,7 @@
 """定时任务 API。"""
 
 from __future__ import annotations
+import uuid
 
 from typing import TYPE_CHECKING
 
@@ -21,7 +22,6 @@ from app.services import scheduled_task as svc
 from app.services import scheduler_engine
 
 if TYPE_CHECKING:
-    import uuid
 
     from sqlalchemy.ext.asyncio import AsyncSession
 

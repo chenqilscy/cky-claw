@@ -1,5 +1,5 @@
 #!/usr/bin/env pwsh
-# CkyClaw Docker E2E API 验证脚本
+# Kasaya Docker E2E API 验证脚本
 param(
     [string]$Base = "http://localhost:8000",
     [string]$Username = "e2eadmin",
@@ -25,7 +25,7 @@ function Test-Api {
     }
 }
 
-Write-Host "`n========== CkyClaw E2E API Test ==========" -ForegroundColor Cyan
+Write-Host "`n========== Kasaya E2E API Test ==========" -ForegroundColor Cyan
 
 # --- Auth ---
 Write-Host "`n--- Auth ---" -ForegroundColor Yellow
@@ -124,7 +124,7 @@ Test-Api "Frontend index.html" {
     $frontendUrl = "http://$($uri.Host):3000"
     $resp = Invoke-WebRequest $frontendUrl -UseBasicParsing
     if ($resp.StatusCode -ne 200) { throw "Status $($resp.StatusCode)" }
-    if ($resp.Content -notmatch "CkyClaw") { throw "Content mismatch" }
+    if ($resp.Content -notmatch "Kasaya") { throw "Content mismatch" }
     $resp
 }
 

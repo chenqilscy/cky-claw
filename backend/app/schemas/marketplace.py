@@ -1,15 +1,12 @@
 """Marketplace 请求/响应模型。"""
 
 from __future__ import annotations
+import uuid
+from datetime import datetime
 
 from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, Field
-
-if TYPE_CHECKING:
-    import uuid
-    from datetime import datetime
-
 
 class MarketplaceTemplateResponse(BaseModel):
     """市场模板展示响应。"""
@@ -31,7 +28,6 @@ class MarketplaceTemplateResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-
 class MarketplaceListResponse(BaseModel):
     """市场模板列表响应。"""
 
@@ -40,12 +36,10 @@ class MarketplaceListResponse(BaseModel):
     limit: int
     offset: int
 
-
 class PublishTemplateRequest(BaseModel):
     """发布模板到市场。"""
 
     template_id: uuid.UUID = Field(..., description="要发布的模板 ID")
-
 
 class InstallTemplateRequest(BaseModel):
     """从市场安装模板。"""
@@ -53,13 +47,11 @@ class InstallTemplateRequest(BaseModel):
     agent_name: str = Field(..., min_length=3, max_length=64, description="创建的 Agent 名称")
     overrides: dict[str, object] = Field(default_factory=dict, description="覆盖参数")
 
-
 class ReviewCreate(BaseModel):
     """提交评价。"""
 
     score: int = Field(..., ge=1, le=5, description="评分（1-5 星）")
     comment: str = Field("", max_length=2000, description="评论")
-
 
 class ReviewResponse(BaseModel):
     """评价响应。"""
@@ -72,7 +64,6 @@ class ReviewResponse(BaseModel):
     score: int
     comment: str
     created_at: datetime
-
 
 class ReviewListResponse(BaseModel):
     """评价列表响应。"""

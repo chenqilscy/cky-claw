@@ -103,22 +103,26 @@ const KnowledgeBasePage: React.FC = () => {
 
   const openCreate = () => {
     setEditing(null);
-    form.resetFields();
-    form.setFieldsValue({ embedding_model: 'hash-embedding-v1', chunk_size: 512, overlap: 64, mode: 'vector' });
     setModalOpen(true);
   };
 
   const openEdit = (record: KnowledgeBaseItem) => {
     setEditing(record);
-    form.setFieldsValue({
-      name: record.name,
-      description: record.description,
-      embedding_model: record.embedding_model,
-      chunk_size: Number((record.chunk_strategy as Record<string, unknown>)?.chunk_size ?? 512),
-      overlap: Number((record.chunk_strategy as Record<string, unknown>)?.overlap ?? 64),
-      mode: record.mode || 'vector',
-    });
     setModalOpen(true);
+  };
+
+  const handleModalOpen = (open: boolean) => {
+    if (!open) return;
+    if (editing) {
+      form.setFieldsValue({
+        name: editing.name,
+        description: editing.description,
+        embedding_model: editing.embedding_model,
+        chunk_size: Number((editing.chunk_strategy as Record<string, unknown>)?.chunk_size ?? 512),
+        overlap: Number((editing.chunk_strategy as Record<string, unknown>)?.overlap ?? 64),
+        mode: editing.mode || 'vector',
+      });
+    }
   };
 
   const handleSave = async () => {
@@ -541,9 +545,10 @@ const KnowledgeBasePage: React.FC = () => {
         open={modalOpen}
         onCancel={() => setModalOpen(false)}
         onOk={handleSave}
-        destroyOnClose
+        afterOpenChange={handleModalOpen}
+        destroyOnHidden
       >
-        <Form form={form} layout="vertical">
+        <Form form={form} layout="vertical" initialValues={{ embedding_model: 'hash-embedding-v1', chunk_size: 512, overlap: 64, mode: 'vector' }}>
           <Form.Item name="name" label="名称" rules={[{ required: true, message: '请输入名称' }]}>
             <Input />
           </Form.Item>
@@ -559,17 +564,25 @@ const KnowledgeBasePage: React.FC = () => {
               ]}
             />
           </Form.Item>
-          <Form.Item name="embedding_model" label="Embedding 模型" rules={[{ required: true }]}>
-            <Input />
+          <Form.Item noStyle shouldUpdate={(prev, cur) => prev.mode !== cur.mode}>
+            {({ getFieldValue }) =>
+              getFieldValue('mode') !== 'graph' ? (
+                <>
+                  <Form.Item name="embedding_model" label="Embedding 模型" rules={[{ required: true }]}>
+                    <Input />
+                  </Form.Item>
+                  <Space style={{ width: '100%' }}>
+                    <Form.Item name="chunk_size" label="Chunk Size" rules={[{ required: true }]}>
+                      <InputNumber min={64} max={4096} />
+                    </Form.Item>
+                    <Form.Item name="overlap" label="Overlap" rules={[{ required: true }]}>
+                      <InputNumber min={0} max={1024} />
+                    </Form.Item>
+                  </Space>
+                </>
+              ) : null
+            }
           </Form.Item>
-          <Space style={{ width: '100%' }}>
-            <Form.Item name="chunk_size" label="Chunk Size" rules={[{ required: true }]}>
-              <InputNumber min={64} max={4096} />
-            </Form.Item>
-            <Form.Item name="overlap" label="Overlap" rules={[{ required: true }]}>
-              <InputNumber min={0} max={1024} />
-            </Form.Item>
-          </Space>
         </Form>
       </Modal>
 

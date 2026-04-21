@@ -5,7 +5,7 @@ import { AgentListPage } from './pom/AgentListPage';
 import { AgentEditPage } from './pom/AgentEditPage';
 
 /**
- * CkyClaw Agent（智能体）模块 E2E 测试。
+ * Kasaya Agent（智能体）模块 E2E 测试。
  *
  * 覆盖：列表渲染、五步向导创建、编辑、删除、搜索、校验、分页。
  * 所有 API 通过 agentMocks 拦截，无需后端服务。
@@ -17,7 +17,7 @@ test.beforeEach(async ({ page }) => {
   // 注入 JWT token 模拟已认证状态
   await page.addInitScript(() => {
     localStorage.setItem(
-      'ckyclaw_token',
+      'kasaya_token',
       'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0QGV4YW1wbGUuY29tIiwiZXhwIjozMjUxODA0ODAwfQ.fake',
     );
   });

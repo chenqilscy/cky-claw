@@ -10,7 +10,7 @@ from sqlalchemy import func, select
 from app.core.exceptions import NotFoundError, ValidationError
 from app.models.approval import ApprovalRequest
 from app.services.approval_manager import ApprovalManager
-from ckyclaw_framework.approval.mode import ApprovalDecision
+from kasaya.approval.mode import ApprovalDecision
 
 if TYPE_CHECKING:
     import uuid

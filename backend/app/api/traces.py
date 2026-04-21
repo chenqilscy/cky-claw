@@ -1,6 +1,7 @@
 """Trace 查询 API。"""
 
 from __future__ import annotations
+import uuid
 
 from typing import TYPE_CHECKING, Any
 
@@ -19,7 +20,6 @@ from app.schemas.trace import (
 from app.services import trace as trace_service
 
 if TYPE_CHECKING:
-    import uuid
     from datetime import datetime
 
     from sqlalchemy.ext.asyncio import AsyncSession

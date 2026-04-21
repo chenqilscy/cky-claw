@@ -1,0 +1,47 @@
+{{- if .Values.backend.migration.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "kasaya.fullname" . }}-migration-{{ .Release.Revision }}
+  labels:
+    {{- include "kasaya.labels" . | nindent 4 }}
+    app.kubernetes.io/component: migration
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: 3
+  activeDeadlineSeconds: 300
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: migration
+    spec:
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      restartPolicy: OnFailure
+      containers:
+        - name: migration
+          image: {{ include "kasaya.image" (dict "global" .Values.global "image" .Values.backend.image) }}
+          command: ["uv", "run", "--no-sync", "alembic", "upgrade", "head"]
+          env:
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "kasaya.postgresql.secretName" . }}
+                  key: {{ .Values.postgresql.auth.secretKeys.password }}
+            - name: KASAYA_DATABASE_URL
+              value: {{ include "kasaya.databaseUrl" . }}
+            - name: KASAYA_SECRET_KEY
+              value: "migration-not-needed"
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+{{- end }}

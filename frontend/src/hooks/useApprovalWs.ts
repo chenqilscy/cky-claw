@@ -42,7 +42,7 @@ export function useApprovalWs({ onEvent, enabled = true }: UseApprovalWsOptions)
   }, []);
 
   const connect = useCallback(() => {
-    const token = localStorage.getItem('ckyclaw_token');
+    const token = localStorage.getItem('kasaya_token');
     if (!token) return;
 
     cleanup();

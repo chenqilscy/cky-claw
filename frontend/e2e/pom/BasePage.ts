@@ -71,10 +71,10 @@ export class BasePage {
 
   /** 选择 Ant Design Select 下拉值 */
   async selectOption(name: string, value: string) {
-    // 点击 Select 的 .ant-select-selector 触发器（避免被 selection-item 遮挡）
-    const selector = this.page.locator(`#${name} + .ant-select-selector, #${name}`).first();
-    // 使用 force: true 绕过遮挡元素
-    await selector.click({ force: true });
+    // 找到包含 #name 隐藏 input 的 .ant-select 可见容器
+    const select = this.page.locator('.ant-select').filter({ has: this.page.locator(`#${name}`) }).first();
+    await select.waitFor({ state: 'visible', timeout: 5_000 });
+    await select.click();
     // 等待下拉出现并点击选项
     const option = this.page.locator(`.ant-select-dropdown:not(.ant-select-dropdown-hidden) .ant-select-item-option`).getByText(value, { exact: true }).first();
     await option.waitFor({ state: 'visible', timeout: 5_000 });
@@ -83,9 +83,9 @@ export class BasePage {
 
   /** 多选 Ant Design Select */
   async multiSelect(name: string, values: string[]) {
-    const selector = this.page.locator(`#${name} + .ant-select-selector, #${name}`).first();
+    const select = this.page.locator('.ant-select').filter({ has: this.page.locator(`#${name}`) }).first();
     for (const val of values) {
-      await selector.click({ force: true });
+      await select.click();
       const option = this.page.locator(`.ant-select-dropdown:not(.ant-select-dropdown-hidden) .ant-select-item-option`).getByText(val, { exact: true }).first();
       await option.waitFor({ state: 'visible', timeout: 5_000 });
       await option.click();

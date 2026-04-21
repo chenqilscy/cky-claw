@@ -6,8 +6,8 @@ from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
 
 from app.core.deps import get_current_user
-from ckyclaw_framework.intent import IntentSignal, KeywordIntentDetector
-from ckyclaw_framework.model.message import Message, MessageRole
+from kasaya.intent import IntentSignal, KeywordIntentDetector
+from kasaya.model.message import Message, MessageRole
 
 router = APIRouter(prefix="/api/v1/intent", tags=["intent"])
 

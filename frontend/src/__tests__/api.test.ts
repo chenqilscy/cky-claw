@@ -48,7 +48,7 @@ describe('api.get / api.post / api.put / api.delete', () => {
 
   beforeEach(() => {
     // Mock localStorage
-    const storage: Record<string, string> = { ckyclaw_token: 'test-jwt' };
+    const storage: Record<string, string> = { kasaya_token: 'test-jwt' };
     vi.stubGlobal('localStorage', {
       getItem: (key: string) => storage[key] ?? null,
       setItem: (key: string, val: string) => { storage[key] = val; },

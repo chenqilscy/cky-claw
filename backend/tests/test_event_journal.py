@@ -12,7 +12,7 @@ from app.services.event_journal import SQLAlchemyEventJournal
 
 
 def _make_event_entry(**overrides: object) -> MagicMock:
-    """构造 mock EventEntry（ckyclaw_framework 事件对象）。"""
+    """构造 mock EventEntry（kasaya 事件对象）。"""
     entry = MagicMock()
     entry.event_id = str(uuid.uuid4())
     entry.sequence = overrides.get("sequence", 0)

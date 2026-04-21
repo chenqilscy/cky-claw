@@ -1,7 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
 /**
- * CkyClaw 本地 E2E 测试配置。
+ * Kasaya 本地 E2E 测试配置。
  * 依赖：前端 localhost:3000 + 后端 localhost:8000 已启动。
  */
 

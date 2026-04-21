@@ -1,6 +1,7 @@
 """IM 渠道管理 API + Webhook 接收端点。"""
 
 from __future__ import annotations
+import uuid
 
 import logging
 from typing import TYPE_CHECKING, Any
@@ -21,7 +22,6 @@ from app.services import im_channel as svc
 from app.services.channel_adapters import get_adapter
 
 if TYPE_CHECKING:
-    import uuid
 
     from sqlalchemy.ext.asyncio import AsyncSession
 

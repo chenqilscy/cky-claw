@@ -51,7 +51,7 @@ const TracesPage: React.FC = () => {
         params.set('start_time', timeRange[0].toISOString());
         params.set('end_time', timeRange[1].toISOString());
       }
-      const token = localStorage.getItem('ckyclaw_token');
+      const token = localStorage.getItem('kasaya_token');
       const resp = await fetch(`/api/v1/export/runs?${params.toString()}`, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });

@@ -142,7 +142,7 @@ export const knowledgeBaseService = {
   uploadDocument: async (id: string, file: File): Promise<KnowledgeDocumentItem> => {
     const form = new FormData();
     form.append('file', file);
-    const token = localStorage.getItem('ckyclaw_token');
+    const token = localStorage.getItem('kasaya_token');
     const response = await fetch(`/api/v1/knowledge-bases/${id}/documents`, {
       method: 'POST',
       headers: token ? { Authorization: `Bearer ${token}` } : undefined,
@@ -160,7 +160,7 @@ export const knowledgeBaseService = {
   uploadMedia: async (file: File): Promise<MediaUploadResponse> => {
     const form = new FormData();
     form.append('file', file);
-    const token = localStorage.getItem('ckyclaw_token');
+    const token = localStorage.getItem('kasaya_token');
     const response = await fetch('/api/v1/media/upload', {
       method: 'POST',
       headers: token ? { Authorization: `Bearer ${token}` } : undefined,

@@ -1,15 +1,12 @@
 """Provider Model 请求/响应模型。"""
 
 from __future__ import annotations
+import uuid
+from datetime import datetime
 
 from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, Field
-
-if TYPE_CHECKING:
-    import uuid
-    from datetime import datetime
-
 
 class ProviderModelCreate(BaseModel):
     """创建 Provider Model 请求体。"""
@@ -22,7 +19,6 @@ class ProviderModelCreate(BaseModel):
     completion_price_per_1k: float = Field(default=0.0, ge=0, description="输出价格/千 Token")
     is_enabled: bool = Field(default=True, description="是否启用")
 
-
 class ProviderModelUpdate(BaseModel):
     """更新 Provider Model 请求体。"""
 
@@ -33,7 +29,6 @@ class ProviderModelUpdate(BaseModel):
     prompt_price_per_1k: float | None = Field(default=None, ge=0)
     completion_price_per_1k: float | None = Field(default=None, ge=0)
     is_enabled: bool | None = None
-
 
 class ProviderModelResponse(BaseModel):
     """Provider Model 详情响应。"""
@@ -51,7 +46,6 @@ class ProviderModelResponse(BaseModel):
     is_enabled: bool
     created_at: datetime
     updated_at: datetime
-
 
 class ProviderModelListResponse(BaseModel):
     """Provider Model 列表响应。"""

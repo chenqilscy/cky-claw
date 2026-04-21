@@ -83,7 +83,7 @@ const LoginPage: React.FC = () => {
     }}>
       <Card style={{ width: 400, maxWidth: '90vw' }}>
         <Title level={3} style={{ textAlign: 'center', marginBottom: 32 }}>
-          CkyClaw
+          Kasaya
         </Title>
         {error && (
           <div role="alert" style={{ color: token.colorError, textAlign: 'center', marginBottom: 16 }}>

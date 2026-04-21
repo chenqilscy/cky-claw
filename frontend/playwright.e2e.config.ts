@@ -1,7 +1,7 @@
 import { defineConfig } from '@playwright/test';
 
 /**
- * CkyClaw E2E 功能测试配置。
+ * Kasaya E2E 功能测试配置。
  * 使用 API Mock 模式，仅依赖前端 dev server（localhost:3000），不需要后端。
  * 认证状态复用 auth.setup.ts 保存的 storageState。
  */

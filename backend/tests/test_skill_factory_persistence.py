@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from ckyclaw_framework.skills.factory import SkillDefinition
+from kasaya.skills.factory import SkillDefinition
 
 
 class _FakeResult:

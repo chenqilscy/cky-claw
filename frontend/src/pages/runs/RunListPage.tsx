@@ -43,7 +43,7 @@ const RunListPage: React.FC = () => {
         params.set('start_time', timeRange[0]);
         params.set('end_time', timeRange[1]);
       }
-      const token = localStorage.getItem('ckyclaw_token');
+      const token = localStorage.getItem('kasaya_token');
       const resp = await fetch(`/api/v1/export/token-usage?${params.toString()}`, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });

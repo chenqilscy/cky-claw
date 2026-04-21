@@ -1,6 +1,6 @@
 """HttpApprovalHandler — 基于 DB + 进程内事件的审批处理器。
 
-实现 Framework 的 ApprovalHandler 接口，对接 CkyClaw Backend：
+实现 Framework 的 ApprovalHandler 接口，对接 Kasaya Backend：
 1. 创建 approval_request 记录（持久化）
 2. 通过 ApprovalManager 等待审批结果
 3. 返回 ApprovalDecision
@@ -16,11 +16,11 @@ from typing import TYPE_CHECKING, Any
 from app.core.database import async_session_factory
 from app.models.approval import ApprovalRequest
 from app.services.approval_manager import ApprovalManager
-from ckyclaw_framework.approval.handler import ApprovalHandler
-from ckyclaw_framework.approval.mode import ApprovalDecision
+from kasaya.approval.handler import ApprovalHandler
+from kasaya.approval.mode import ApprovalDecision
 
 if TYPE_CHECKING:
-    from ckyclaw_framework.runner.run_context import RunContext
+    from kasaya.runner.run_context import RunContext
 
 logger = logging.getLogger(__name__)
 

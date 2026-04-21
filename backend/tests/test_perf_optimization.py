@@ -70,14 +70,14 @@ class TestQueryCache:
         with patch("app.services.query_cache.get_redis", return_value=mock_redis):
             await query_cache.invalidate("test:key")
 
-        mock_redis.delete.assert_awaited_once_with("ckyclaw:qcache:test:key")
+        mock_redis.delete.assert_awaited_once_with("kasaya:qcache:test:key")
 
     @pytest.mark.asyncio
     async def test_invalidate_pattern_scans_and_deletes(self) -> None:
         """invalidate_pattern 按模式扫描并删除。"""
         mock_redis = AsyncMock()
         mock_redis.scan = AsyncMock(
-            return_value=(0, ["ckyclaw:qcache:agent:foo", "ckyclaw:qcache:agent:bar"])
+            return_value=(0, ["kasaya:qcache:agent:foo", "kasaya:qcache:agent:bar"])
         )
         mock_redis.delete = AsyncMock()
 

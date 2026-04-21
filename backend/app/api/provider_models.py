@@ -1,6 +1,7 @@
 """Provider Model 管理 API 路由。"""
 
 from __future__ import annotations
+import uuid
 
 from typing import TYPE_CHECKING
 
@@ -17,7 +18,6 @@ from app.schemas.provider_model import (
 from app.services import provider_model as pm_service
 
 if TYPE_CHECKING:
-    import uuid
 
     from sqlalchemy.ext.asyncio import AsyncSession
 

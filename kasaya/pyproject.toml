@@ -1,0 +1,107 @@
+[project]
+name = "kasaya"
+version = "0.1.0"
+description = "Kasaya — Python Agent 运行时库，支持多 LLM 适配、工具编排、Guardrails 护栏、Handoff 交接、Tracing 链路追踪"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.12"
+authors = [
+    {name = "Kasaya Team"},
+]
+keywords = ["agent", "llm", "framework", "ai", "guardrails", "tracing", "handoff", "tools"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Typing :: Typed",
+]
+dependencies = [
+    "litellm>=1.40.0",
+    "pydantic>=2.0.0",
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+postgres = [
+    "asyncpg>=0.29.0",
+    "sqlalchemy[asyncio]>=2.0.0",
+]
+redis = [
+    "redis>=5.0.0",
+]
+mcp = [
+    "mcp>=1.0.0",
+]
+graph = [
+    "python-igraph>=0.11.0",
+]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+    "ruff>=0.4.0",
+    "mypy>=1.10.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/kasaya/kasaya"
+Repository = "https://github.com/kasaya/kasaya"
+Documentation = "https://github.com/kasaya/kasaya#readme"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["kasaya"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 120
+
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "F",    # pyflakes
+    "I",    # isort
+    "N",    # pep8-naming
+    "UP",   # pyupgrade
+    "B",    # flake8-bugbear
+    "SIM",  # flake8-simplify
+    "TCH",  # flake8-type-checking
+]
+ignore = [
+    "E501",   # line-too-long: 格式问题，不阻塞
+    "E402",   # module-import-not-at-top: conftest / __init__.py 合理延迟导入
+    "N806",   # non-lowercase-variable: SQLAlchemy JSON 字段、API 响应映射
+    "N817",   # camelcase-imported-as-acronym: Pydantic/SDK 常见模式
+    "B027",   # empty-method-without-abstract: Mixin 占位方法
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["kasaya"]
+
+[tool.ruff.format]
+quote-style = "double"
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+markers = [
+    "integration: 端到端集成测试（需要真实 LLM API Key）",
+]
+
+[dependency-groups]
+dev = [
+    "pytest-cov>=7.1.0",
+]

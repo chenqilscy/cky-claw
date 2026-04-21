@@ -23,8 +23,8 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 # Redis channel 名称
-APPROVAL_CHANNEL = "ckyclaw:approvals"
-EVENTS_CHANNEL = "ckyclaw:events"
+APPROVAL_CHANNEL = "kasaya:approvals"
+EVENTS_CHANNEL = "kasaya:events"
 
 # 活跃 WebSocket 连接集合
 _active_connections: set[WebSocket] = set()

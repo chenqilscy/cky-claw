@@ -7,7 +7,7 @@ import asyncpg
 
 
 async def main() -> None:
-    c = await asyncpg.connect("postgresql://admin:Admin888@fn.cky:15432/ckyclaw")
+    c = await asyncpg.connect("postgresql://admin:Admin888@fn.cky:15432/kasaya")
     tables = await c.fetch(
         "SELECT tablename FROM pg_tables WHERE schemaname='public' ORDER BY tablename"
     )

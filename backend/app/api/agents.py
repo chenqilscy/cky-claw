@@ -1,6 +1,7 @@
 """Agent 管理 API 路由。"""
 
 from __future__ import annotations
+import uuid
 
 import json
 from typing import TYPE_CHECKING, Any
@@ -16,7 +17,6 @@ from app.schemas.agent import AgentCreate, AgentListResponse, AgentResponse, Age
 from app.services import agent as agent_service
 
 if TYPE_CHECKING:
-    import uuid
 
     from sqlalchemy.ext.asyncio import AsyncSession
 

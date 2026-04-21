@@ -215,7 +215,7 @@ export const providerService = {
     api.post<ProviderResponse>(`/providers/${id}/rotate-key`, data),
 
   listModels: (providerId: string, isEnabled?: boolean) =>
-    api.get<ProviderModelListResponse>(`/providers/${providerId}/models`, isEnabled != null ? { is_enabled: isEnabled } as Record<string, string | number | undefined> : undefined),
+    api.get<ProviderModelListResponse>(`/providers/${providerId}/models`, isEnabled != null ? { is_enabled: isEnabled } as unknown as Record<string, string | number | undefined> : undefined),
 
   createModel: (providerId: string, data: ProviderModelCreateRequest) =>
     api.post<ProviderModelResponse>(`/providers/${providerId}/models`, data),

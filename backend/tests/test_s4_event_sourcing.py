@@ -133,8 +133,8 @@ class TestSQLAlchemyEventJournal:
     @pytest.mark.anyio()
     async def test_append_creates_record(self) -> None:
         """append 写入 EventRecord 并 flush。"""
-        from ckyclaw_framework.events.journal import EventEntry
-        from ckyclaw_framework.events.types import EventType
+        from kasaya.events.journal import EventEntry
+        from kasaya.events.types import EventType
 
         mock_db = AsyncMock()
         mock_db.add = MagicMock()
@@ -158,8 +158,8 @@ class TestSQLAlchemyEventJournal:
     @pytest.mark.anyio()
     async def test_append_assigns_sequence(self) -> None:
         """多次 append 序列号递增。"""
-        from ckyclaw_framework.events.journal import EventEntry
-        from ckyclaw_framework.events.types import EventType
+        from kasaya.events.journal import EventEntry
+        from kasaya.events.types import EventType
 
         mock_db = AsyncMock()
         mock_db.add = MagicMock()
@@ -184,7 +184,7 @@ class TestSQLAlchemyEventJournal:
     @pytest.mark.anyio()
     async def test_query_with_filters(self) -> None:
         """_query 构建正确的 SQLAlchemy 条件。"""
-        from ckyclaw_framework.events.types import EventType
+        from kasaya.events.types import EventType
 
         # 构造 mock 数据库返回
         mock_record = MagicMock()
@@ -231,7 +231,7 @@ class TestSaveEventsFromJournal:
     async def test_empty_journal_noop(self) -> None:
         """空 journal 不写入。"""
         from app.services.session import _save_events_from_journal
-        from ckyclaw_framework.events.journal import InMemoryEventJournal
+        from kasaya.events.journal import InMemoryEventJournal
 
         mock_db = AsyncMock()
         mock_db.add_all = MagicMock()
@@ -247,8 +247,8 @@ class TestSaveEventsFromJournal:
     async def test_saves_events(self) -> None:
         """有事件时通过 savepoint 写入 EventRecord 列表。"""
         from app.services.session import _save_events_from_journal
-        from ckyclaw_framework.events.journal import EventEntry, InMemoryEventJournal
-        from ckyclaw_framework.events.types import EventType
+        from kasaya.events.journal import EventEntry, InMemoryEventJournal
+        from kasaya.events.types import EventType
 
         mock_db = AsyncMock()
         mock_db.add_all = MagicMock()
@@ -278,8 +278,8 @@ class TestSaveEventsFromJournal:
     async def test_handles_exception(self) -> None:
         """异常时不影响外部事务。"""
         from app.services.session import _save_events_from_journal
-        from ckyclaw_framework.events.journal import EventEntry, InMemoryEventJournal
-        from ckyclaw_framework.events.types import EventType
+        from kasaya.events.journal import EventEntry, InMemoryEventJournal
+        from kasaya.events.types import EventType
 
         # 模拟 begin_nested 抛出异常
         mock_db = AsyncMock()

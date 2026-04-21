@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 # 缓存 key 前缀
-_PREFIX = "ckyclaw:token:"
+_PREFIX = "kasaya:token:"
 
 # 默认 TTL：7000 秒（平台一般有效期 7200 秒，预留 200 秒安全余量）
 _DEFAULT_TTL = 7000

@@ -1,16 +1,13 @@
 """Model Provider 请求/响应模型。"""
 
 from __future__ import annotations
+import uuid
+from datetime import datetime
 
 from enum import StrEnum
 from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
-
-if TYPE_CHECKING:
-    import uuid
-    from datetime import datetime
-
 
 class ModelTierEnum(StrEnum):
     """模型层级枚举。"""
@@ -21,7 +18,6 @@ class ModelTierEnum(StrEnum):
     REASONING = "reasoning"
     MULTIMODAL = "multimodal"
 
-
 _VALID_CAPABILITIES = {"text", "code", "vision", "reasoning", "function_calling"}
 
 _VALID_PROVIDER_TYPES = {
@@ -30,7 +26,6 @@ _VALID_PROVIDER_TYPES = {
 }
 
 _VALID_AUTH_TYPES = {"api_key", "azure_ad", "custom_header"}
-
 
 class ProviderCreate(BaseModel):
     """创建 Provider 请求体。"""
@@ -69,7 +64,6 @@ class ProviderCreate(BaseModel):
         if invalid:
             raise ValueError(f"capabilities 包含无效值 {invalid}，合法值: {_VALID_CAPABILITIES}")
         return list(dict.fromkeys(v))
-
 
 class ProviderUpdate(BaseModel):
     """更新 Provider 请求体（PATCH 语义，所有字段可选）。"""
@@ -111,12 +105,10 @@ class ProviderUpdate(BaseModel):
             return list(dict.fromkeys(v))
         return v
 
-
 class ProviderToggle(BaseModel):
     """启用/禁用请求体。"""
 
     is_enabled: bool
-
 
 class ProviderResponse(BaseModel):
     """Provider 详情响应。"""
@@ -144,7 +136,6 @@ class ProviderResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-
 class ProviderListResponse(BaseModel):
     """Provider 列表响应。"""
 
@@ -153,7 +144,6 @@ class ProviderListResponse(BaseModel):
     limit: int
     offset: int
 
-
 class ProviderTestResult(BaseModel):
     """Provider 连通性测试结果。"""
 
@@ -161,7 +151,6 @@ class ProviderTestResult(BaseModel):
     latency_ms: int = 0
     error: str | None = None
     model_used: str | None = None
-
 
 class ProviderRotateKey(BaseModel):
     """轮换 API Key 请求体。"""

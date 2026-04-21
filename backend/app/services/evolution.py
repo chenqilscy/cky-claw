@@ -257,7 +257,7 @@ async def analyze_agent(
     Returns:
         生成的建议列表。
     """
-    from ckyclaw_framework.evolution import (
+    from kasaya.evolution import (
         EvolutionConfig,
         MetricSignal,
         SignalType,
@@ -275,7 +275,7 @@ async def analyze_agent(
     rows = (await db.execute(stmt)).scalars().all()
 
     # 转换为 Framework EvolutionSignal
-    from ckyclaw_framework.evolution.signals import EvolutionSignal, FeedbackSignal
+    from kasaya.evolution.signals import EvolutionSignal, FeedbackSignal
 
     signals: list[EvolutionSignal] = []
     for row in rows:

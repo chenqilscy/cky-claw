@@ -1,6 +1,6 @@
 """SQLAlchemySessionBackend — 基于 SQLAlchemy Async 的 Session 存储后端。
 
-实现 Framework 的 SessionBackend 接口，使用 CkyClaw Backend 已有的 SQLAlchemy 连接池。
+实现 Framework 的 SessionBackend 接口，使用 Kasaya Backend 已有的 SQLAlchemy 连接池。
 """
 
 from __future__ import annotations
@@ -12,9 +12,9 @@ from typing import TYPE_CHECKING, Any
 from sqlalchemy import select
 
 from app.models.session_message import SessionMessage, SessionMetadataRecord
-from ckyclaw_framework.model.content_block import content_block_from_dict
-from ckyclaw_framework.model.message import Message, MessageRole, TokenUsage
-from ckyclaw_framework.session.session import SessionBackend, SessionMetadata
+from kasaya.model.content_block import content_block_from_dict
+from kasaya.model.message import Message, MessageRole, TokenUsage
+from kasaya.session.session import SessionBackend, SessionMetadata
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession

@@ -54,7 +54,7 @@ async def _probe_redis() -> dict[str, Any]:
 @router.get("/health")
 async def health_check() -> dict[str, str]:
     """轻量健康检查端点 — 适用于负载均衡器。"""
-    return {"status": "ok", "service": "ckyclaw-backend"}
+    return {"status": "ok", "service": "kasaya-backend"}
 
 
 @router.get("/health/deep")
@@ -74,7 +74,7 @@ async def deep_health_check() -> dict[str, Any]:
 
     return {
         "status": overall,
-        "service": "ckyclaw-backend",
+        "service": "kasaya-backend",
         "components": {
             "database": db_result,
             "redis": redis_result,

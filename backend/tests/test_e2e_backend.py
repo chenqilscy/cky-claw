@@ -12,7 +12,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from ckyclaw_framework.tools.function_tool import FunctionTool
+from kasaya.tools.function_tool import FunctionTool
 
 if TYPE_CHECKING:
     from fastapi.testclient import TestClient
@@ -70,7 +70,7 @@ class TestBuildAgentCombined:
         rule.config = {"keywords": ["危险", "违法"], "message": "内容不安全"}
 
         # Handoff 目标
-        from ckyclaw_framework.agent.agent import Agent as FrameworkAgent
+        from kasaya.agent.agent import Agent as FrameworkAgent
         expert = FrameworkAgent(name="expert")
 
         agent = _build_agent_from_config(
@@ -331,7 +331,7 @@ class TestCombinedBuild:
     def test_full_featured_agent_build(self) -> None:
         """构建拥有所有特性的 Agent：Guardrail + Handoff + Tools(三路)。"""
         from app.services.session import _build_agent_from_config
-        from ckyclaw_framework.agent.agent import Agent as FrameworkAgent
+        from kasaya.agent.agent import Agent as FrameworkAgent
 
         config = MagicMock()
         config.name = "full-agent"
@@ -678,7 +678,7 @@ class TestE2ENewEndpoints:
     def test_cost_router_classify(self, client: TestClient) -> None:
         """classify 端点返回分类层级。"""
         with patch("app.api.cost_router.classify_complexity") as mock_classify:
-            from ckyclaw_framework.model.cost_router import ModelTier
+            from kasaya.model.cost_router import ModelTier
 
             mock_classify.return_value = ModelTier.MODERATE
             resp = client.post(
@@ -1306,7 +1306,7 @@ class TestE2ENewEndpoints:
 
         try:
             with patch(
-                "ckyclaw_framework.model.litellm_provider.LiteLLMProvider",
+                "kasaya.model.litellm_provider.LiteLLMProvider",
             ) as MockProvider:
                 instance = MockProvider.return_value
                 instance.chat = AsyncMock(return_value=mock_response)

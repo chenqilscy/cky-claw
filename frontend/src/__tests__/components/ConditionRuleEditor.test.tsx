@@ -60,12 +60,12 @@ describe('ConditionRuleEditor', () => {
     const addBtn = screen.getByText('添加规则');
     await act(async () => { fireEvent.click(addBtn); });
     expect(mockOnChange).toHaveBeenCalled();
-    const called = mockOnChange.mock.calls[0][0] as Record<string, unknown>;
+    const called = mockOnChange.mock.calls[0]![0] as Record<string, unknown>;
     expect(called).toHaveProperty('match', 'all');
     expect(called).toHaveProperty('rules');
     const rules = called.rules as Array<Record<string, unknown>>;
     expect(rules.length).toBe(1);
-    expect(rules[0].field).toBe('env');
+    expect(rules[0]!.field).toBe('env');
   });
 
   it('删除规则触发 onChange', async () => {

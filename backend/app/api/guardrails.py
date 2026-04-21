@@ -1,6 +1,7 @@
 """Guardrail 规则 CRUD API。"""
 
 from __future__ import annotations
+import uuid
 
 from typing import TYPE_CHECKING
 
@@ -17,7 +18,6 @@ from app.schemas.guardrail import (
 from app.services import guardrail as guardrail_service
 
 if TYPE_CHECKING:
-    import uuid
 
     from sqlalchemy.ext.asyncio import AsyncSession
 

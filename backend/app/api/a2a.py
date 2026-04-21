@@ -1,6 +1,7 @@
 """A2A 协议 API 路由。"""
 
 from __future__ import annotations
+import uuid
 
 from typing import TYPE_CHECKING
 
@@ -22,7 +23,6 @@ from app.schemas.a2a import (
 from app.services import a2a as a2a_service
 
 if TYPE_CHECKING:
-    import uuid
 
     from sqlalchemy.ext.asyncio import AsyncSession
 

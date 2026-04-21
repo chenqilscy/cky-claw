@@ -1,4 +1,4 @@
-# CkyClaw 待办清单
+# Kasaya 待办清单
 
 > 从 `docs/todo.md` 提取的当前可操作待办项。  
 > 已完成项归档于 `docs/todo.md`。  
@@ -33,7 +33,7 @@
 |---|------|:------:|:----:|
 | 17 | 记忆管理功能文档 | P2 | ✅ [memory-management.md](../spec/memory-management.md) |
 | 27 | graphify 知识库方案研究 | P2 | ✅ [graphify-knowledge-base-research.md](../spec/graphify-knowledge-base-research.md) |
-| 28 | CLI 使用指南 | P2 | ✅ [ckyclaw-cli-guide.md](../ckyclaw-cli-guide.md) |
+| 28 | CLI 使用指南 | P2 | ✅ [kasaya-cli-guide.md](../kasaya-cli-guide.md) |
 | 29 | docs 目录整理 + todo.md 迁移 | P3 | ✅ 本文件已更新 |
 
 ---
@@ -74,7 +74,7 @@
 | 2 | IdP 元数据解析 + 证书管理 | ⬜ |
 | 3 | SSO 登录流程：SP-Initiated + IdP-Initiated | ⬜ |
 | 4 | SLO（Single Logout） | ⬜ |
-| 5 | 属性映射（email/name/role → CkyClaw User） | ⬜ |
+| 5 | 属性映射（email/name/role → Kasaya User） | ⬜ |
 | 6 | 前端 SSO 按钮 + 回调页 | ⬜ |
 | 7 | 对接测试（Azure AD / Okta / OneLogin） | ⬜ |
 
@@ -85,10 +85,10 @@
 
 | # | 交付物 | 状态 |
 |---|--------|:----:|
-| 1 | Adapter 类：SDK Agent → CkyClaw Agent 映射 | ⬜ |
+| 1 | Adapter 类：SDK Agent → Kasaya Agent 映射 | ⬜ |
 | 2 | 工具转换：SDK function schema → FunctionTool | ⬜ |
-| 3 | Handoff 映射：SDK transfer → CkyClaw Handoff | ⬜ |
-| 4 | Runner 桥接：SDK Runner → CkyClaw Runner | ⬜ |
+| 3 | Handoff 映射：SDK transfer → Kasaya Handoff | ⬜ |
+| 4 | Runner 桥接：SDK Runner → Kasaya Runner | ⬜ |
 | 5 | 兼容性测试（SDK 示例直接运行） | ⬜ |
 
 ---
@@ -134,7 +134,7 @@
 | 2 | Cost Router 分析报告 | P1 | ✅ [cost-router-analysis.md](../spec/cost-router-analysis.md) |
 | 3 | 知识库 + graphify 研究 | P2 | ✅ [knowledge-base-graph-design.md §9](../spec/knowledge-base-graph-design.md) |
 | 4 | Memory 管理功能文档 | P2 | ✅ [memory-management.md](../spec/memory-management.md) |
-| 5 | CLI 使用指南 | P2 | ✅ [ckyclaw-cli-guide.md](../ckyclaw-cli-guide.md) |
+| 5 | CLI 使用指南 | P2 | ✅ [kasaya-cli-guide.md](../kasaya-cli-guide.md) |
 
 ---
 

@@ -1,11 +1,11 @@
-# CkyClaw 记忆管理功能文档
+# Kasaya 记忆管理功能文档
 
 > 版本：v1.0
 > 日期：2026-04-15
 
 ## 1. 功能定位
 
-**记忆管理**（Memory Management）是 CkyClaw 平台的核心能力之一，让 AI Agent 能够在多轮对话和多次运行之间积累并利用"经验"。
+**记忆管理**（Memory Management）是 Kasaya 平台的核心能力之一，让 AI Agent 能够在多轮对话和多次运行之间积累并利用"经验"。
 
 核心价值：
 - **Agent 不再"健忘"**：跨会话记住用户偏好、历史决策、过往经验
@@ -16,7 +16,7 @@
 
 ## 2. 记忆类型
 
-CkyClaw 支持三种记忆类型：
+Kasaya 支持三种记忆类型：
 
 | 类型 | 标识 | 说明 | 示例 |
 |------|------|------|------|
@@ -66,7 +66,7 @@ CkyClaw 支持三种记忆类型：
 └──────────────────────┬──────────────────────────────────┘
                        │
 ┌──────────────────────▼──────────────────────────────────┐
-│              Framework (ckyclaw_framework)                │
+│              Framework (kasaya)                │
 │  MemoryBackend ABC → InMemory / Postgres 两种实现         │
 │  MemoryExtractionHook: 运行结束后自动提取记忆              │
 │  MemoryRetriever: 检索相关记忆并注入 Agent 上下文          │

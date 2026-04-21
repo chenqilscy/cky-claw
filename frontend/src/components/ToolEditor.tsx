@@ -207,7 +207,8 @@ function paramRowsToSchema(rows: ParamRow[]): Record<string, unknown> {
 }
 
 /* ---- 参数摘要文本 ---- */
-function paramSummary(schema: Record<string, unknown>): string {
+function paramSummary(schema: Record<string, unknown> | undefined): string {
+  if (!schema) return '无参数';
   const props = (schema.properties ?? {}) as Record<string, Record<string, unknown>>;
   const required = new Set((schema.required ?? []) as string[]);
   const parts = Object.entries(props).map(([name, def]) => {
@@ -533,7 +534,7 @@ export default function ToolEditor({ value = [], onChange, readOnly }: ToolEdito
             onChange={setJsonText}
             readOnly={readOnly}
             schema={TOOL_ARRAY_META_SCHEMA}
-            schemaUri="http://ckyclaw/tool-definitions-schema.json"
+            schemaUri="http://kasaya/tool-definitions-schema.json"
             placeholder='[\n  {\n    "name": "tool_name",\n    "description": "工具描述",\n    "parameters_schema": { "type": "object", "properties": {} }\n  }\n]'
           />
         </div>

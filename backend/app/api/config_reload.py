@@ -1,6 +1,7 @@
 """配置热加载 API — 手动刷新配置缓存 + 配置变更审计 + 回滚。"""
 
 from __future__ import annotations
+import uuid
 
 from typing import TYPE_CHECKING, Any
 
@@ -18,7 +19,6 @@ from app.schemas.config_change_log import (
 from app.services import config_change as change_service
 
 if TYPE_CHECKING:
-    import uuid
 
     from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -38,7 +38,7 @@ async def reload_entity_type(entity_type: str) -> dict[str, Any]:
     allowed = {"agents", "guardrails", "tool-groups", "providers", "sessions", "teams", "workflows"}
     if entity_type not in allowed:
         raise HTTPException(status_code=400, detail=f"entity_type 必须是 {allowed} 之一")
-    count = config_cache.invalidate_prefix(f"ckyclaw:{entity_type}:")
+    count = config_cache.invalidate_prefix(f"kasaya:{entity_type}:")
     return {"message": f"{entity_type} 配置缓存已清除", "cleared": count}
 
 

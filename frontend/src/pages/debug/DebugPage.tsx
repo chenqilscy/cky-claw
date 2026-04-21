@@ -57,7 +57,7 @@ const DebugPage: React.FC = () => {
   const [createOpen, setCreateOpen] = useState(false);
   const [agents, setAgents] = useState<AgentConfig[]>([]);
   const [agentsLoading, setAgentsLoading] = useState(false);
-  const [createForm, setCreateForm] = useState({ agent_id: '', input_message: '', mode: 'step_turn' });
+  const [createForm, setCreateForm] = useState({ agent_id: '', input_message: '', mode: 'step_turn' as 'step_turn' | 'step_tool' | 'continue' });
   const [creating, setCreating] = useState(false);
 
   // 详情抽屉
@@ -86,7 +86,7 @@ const DebugPage: React.FC = () => {
     setAgentsLoading(true);
     try {
       const res = await agentService.list({ limit: 100 });
-      setAgents(res.items);
+      setAgents(res.data);
     } catch {
       message.error('加载 Agent 列表失败');
     } finally {

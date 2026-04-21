@@ -86,7 +86,7 @@ class TestHostedToolGroupsSeed:
 
     def test_all_tool_names_match_framework(self) -> None:
         """后端 seed 工具名称与 Framework 定义一致。"""
-        from ckyclaw_framework.tools.hosted_tools import _build_hosted_groups
+        from kasaya.tools.hosted_tools import _build_hosted_groups
 
         framework_names: set[str] = set()
         for group in _build_hosted_groups():

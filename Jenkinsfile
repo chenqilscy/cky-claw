@@ -1,4 +1,4 @@
-// CkyClaw Jenkins Pipeline
+// Kasaya Jenkins Pipeline
 // 使用 --volumes-from jenkins 共享 Jenkins 容器的工作空间
 
 pipeline {
@@ -14,7 +14,7 @@ pipeline {
             parallel {
                 stage('Framework Lint') {
                     steps {
-                        sh '''docker run --rm --volumes-from jenkins -w ${WS}/ckyclaw-framework python:3.12-slim bash -c '
+                        sh '''docker run --rm --volumes-from jenkins -w ${WS}/kasaya python:3.12-slim bash -c '
                             pip install -q uv 2>/dev/null
                             uv sync --extra dev
                             . .venv/bin/activate
@@ -51,7 +51,7 @@ pipeline {
             parallel {
                 stage('Framework Test') {
                     steps {
-                        sh '''docker run --rm --volumes-from jenkins -w ${WS}/ckyclaw-framework python:3.12-slim bash -c '
+                        sh '''docker run --rm --volumes-from jenkins -w ${WS}/kasaya python:3.12-slim bash -c '
                             pip install -q uv 2>/dev/null
                             uv sync --extra dev
                             . .venv/bin/activate
@@ -70,7 +70,7 @@ pipeline {
                             pip install -q uv 2>/dev/null
                             uv sync --extra dev
                             . .venv/bin/activate
-                            CKYCLAW_DATABASE_URL=postgresql+asyncpg://admin:Admin888@127.0.0.1:15432/ckyclaw \
+                            KASAYA_DATABASE_URL=postgresql+asyncpg://admin:Admin888@127.0.0.1:15432/kasaya \
                             pytest tests/ \
                                 --ignore=tests/test_smoke.py \
                                 --ignore=tests/test_performance.py \
@@ -105,9 +105,9 @@ pipeline {
         stage('Docker Build') {
             steps {
                 sh """
-                    docker build -t ckyclaw-backend:\${IMAGE_TAG} -t ckyclaw-backend:latest \
+                    docker build -t kasaya-backend:\${IMAGE_TAG} -t kasaya-backend:latest \
                         -f \${WS}/backend/Dockerfile \${WS}
-                    docker build -t ckyclaw-frontend:\${IMAGE_TAG} -t ckyclaw-frontend:latest \
+                    docker build -t kasaya-frontend:\${IMAGE_TAG} -t kasaya-frontend:latest \
                         -f \${WS}/frontend/Dockerfile \${WS}/frontend/
                 """
             }

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# CkyClaw 数据恢复脚本
+# Kasaya 数据恢复脚本
 # 用法: ./scripts/restore.sh <pg_backup_file> [redis_backup_file]
 #
 # 功能:
@@ -20,8 +20,8 @@ set -euo pipefail
 # ── 配置 ─────────────────────────────────────────────
 PGHOST="${PGHOST:-localhost}"
 PGPORT="${PGPORT:-5432}"
-PGUSER="${PGUSER:-ckyclaw}"
-PGDATABASE="${PGDATABASE:-ckyclaw}"
+PGUSER="${PGUSER:-kasaya}"
+PGDATABASE="${PGDATABASE:-kasaya}"
 
 REDIS_HOST="${REDIS_HOST:-localhost}"
 REDIS_PORT="${REDIS_PORT:-6379}"
@@ -40,8 +40,8 @@ if [ -z "${PG_BACKUP}" ]; then
     echo "用法: $0 <pg_backup_file> [redis_backup_file]"
     echo ""
     echo "示例:"
-    echo "  $0 /var/backups/ckyclaw/postgresql/ckyclaw_20260405_020000.dump"
-    echo "  $0 /var/backups/ckyclaw/postgresql/ckyclaw_20260405_020000.dump /var/backups/ckyclaw/redis/dump_20260405_020000.rdb"
+    echo "  $0 /var/backups/kasaya/postgresql/kasaya_20260405_020000.dump"
+    echo "  $0 /var/backups/kasaya/postgresql/kasaya_20260405_020000.dump /var/backups/kasaya/redis/dump_20260405_020000.rdb"
     exit 1
 fi
 
@@ -62,7 +62,7 @@ if [ "${RESTORE_CONFIRM}" != "yes" ]; then
 fi
 
 # ── 恢复前安全备份 ────────────────────────────────────
-SAFETY_DIR="/tmp/ckyclaw_pre_restore_$(date +%Y%m%d_%H%M%S)"
+SAFETY_DIR="/tmp/kasaya_pre_restore_$(date +%Y%m%d_%H%M%S)"
 mkdir -p "${SAFETY_DIR}"
 log "创建恢复前安全备份到 ${SAFETY_DIR}..."
 
@@ -104,9 +104,9 @@ if [ -n "${REDIS_BACKUP}" ]; then
     log "开始 Redis 恢复..."
 
     # 尝试 Docker 模式恢复
-    if docker ps --format '{{.Names}}' 2>/dev/null | grep -q ckyclaw-redis; then
-        docker cp "${REDIS_BACKUP}" ckyclaw-redis:/data/dump.rdb
-        docker restart ckyclaw-redis
+    if docker ps --format '{{.Names}}' 2>/dev/null | grep -q kasaya-redis; then
+        docker cp "${REDIS_BACKUP}" kasaya-redis:/data/dump.rdb
+        docker restart kasaya-redis
         log "Redis 恢复完成 (Docker) ✓"
     else
         # 非 Docker 模式：直接替换 RDB

@@ -1,6 +1,7 @@
 """Marketplace API 路由 — 模板市场浏览/发布/安装/评价。"""
 
 from __future__ import annotations
+import uuid
 
 from typing import TYPE_CHECKING
 
@@ -20,7 +21,6 @@ from app.schemas.marketplace import (
 from app.services import marketplace as mp_svc
 
 if TYPE_CHECKING:
-    import uuid
 
     from sqlalchemy.ext.asyncio import AsyncSession
 

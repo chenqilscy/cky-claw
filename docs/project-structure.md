@@ -1,4 +1,4 @@
-# CkyClaw 项目目录结构说明
+# Kasaya 项目目录结构说明
 
 ## 顶层结构
 
@@ -11,26 +11,26 @@ cky-claw/
 ├── .editorconfig              # 编辑器统一配置
 ├── .gitignore
 ├── .gitattributes
-├── ckyclaw-framework/         # CkyClaw Framework — Python Agent 运行时库
-├── backend/                   # CkyClaw Backend — FastAPI 后端服务
-├── frontend/                  # CkyClaw Frontend — React Web 前端
+├── kasaya/         # Kasaya Framework — Python Agent 运行时库
+├── backend/                   # Kasaya Backend — FastAPI 后端服务
+├── frontend/                  # Kasaya Frontend — React Web 前端
 ├── docs/                      # 产品与技术文档
 └── .github/                   # GitHub Actions CI + 编辑器指令
 ```
 
 ---
 
-## ckyclaw-framework/ — Agent 运行时库
+## kasaya/ — Agent 运行时库
 
 自研 Python Agent Framework，提供 Agent 编排、工具执行、Guardrails、Tracing 等核心能力。
 
 ```
-ckyclaw-framework/
+kasaya/
 ├── pyproject.toml                        # 包定义与依赖（uv 管理）
 ├── py.typed                              # PEP 561 类型标记
 ├── README.md
 ├── uv.lock
-├── ckyclaw_framework/
+├── kasaya/
 │   ├── __init__.py
 │   ├── _internal/
 │   │   └── types.py                      # 内部共享类型
@@ -421,15 +421,15 @@ docs/
 ├── plan/
 │   └── mvp-progress.md               # MVP 进度追踪
 ├── spec/                              # 产品与技术规格
-│   ├── CkyClaw PRD v2.0.md           # 产品需求文档
-│   ├── CkyClaw PRD-Agent编排 v2.0.md # Agent 编排 PRD
-│   ├── CkyClaw PRD-企业能力 v2.0.md  # 企业能力 PRD
-│   ├── CkyClaw PRD-基础设施 v2.0.md  # 基础设施 PRD
-│   ├── CkyClaw Application Design v1.2.md  # 应用设计
-│   ├── CkyClaw API Design v1.2.md    # API 设计
-│   ├── CkyClaw Data Model v1.3.md    # 数据模型
-│   ├── CkyClaw Framework Design v2.0.md    # Framework 设计
-│   └── CkyClaw Workflow Engine Design v1.0.md # 工作流引擎设计
+│   ├── Kasaya PRD v2.0.md           # 产品需求文档
+│   ├── Kasaya PRD-Agent编排 v2.0.md # Agent 编排 PRD
+│   ├── Kasaya PRD-企业能力 v2.0.md  # 企业能力 PRD
+│   ├── Kasaya PRD-基础设施 v2.0.md  # 基础设施 PRD
+│   ├── Kasaya Application Design v1.2.md  # 应用设计
+│   ├── Kasaya API Design v1.2.md    # API 设计
+│   ├── Kasaya Data Model v1.3.md    # 数据模型
+│   ├── Kasaya Framework Design v2.0.md    # Framework 设计
+│   └── Kasaya Workflow Engine Design v1.0.md # 工作流引擎设计
 └── references/                        # 参考资料
     ├── competitive-analysis.md        # 竞品分析（双维度）
     ├── codex-cli-architecture.md      # Codex CLI 架构参考

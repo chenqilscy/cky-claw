@@ -1,4 +1,4 @@
-# CkyClaw PRD-基础设施 v2.0
+# Kasaya PRD-基础设施 v2.0
 
 ## 文档信息
 
@@ -7,10 +7,10 @@
 | 版本 | v2.0.8 |
 | 日期 | 2026-04-02 |
 | 状态 | 进行中 |
-| 维护人 | CkyClaw Team |
-| 依赖 | CkyClaw PRD v2.0（总纲）、CkyClaw API Design v1.2、CkyClaw 数据模型详细设计 v1.3 |
+| 维护人 | Kasaya Team |
+| 依赖 | Kasaya PRD v2.0（总纲）、Kasaya API Design v1.2、Kasaya 数据模型详细设计 v1.3 |
 
-> 本文档是 CkyClaw PRD v2.0 的分册，包含第十一章（API 设计）、第十二章（数据模型）、第十三章（用户系统与安全管理）、第十四章（部署与运维）、第十五章（非功能性需求）。
+> 本文档是 Kasaya PRD v2.0 的分册，包含第十一章（API 设计）、第十二章（数据模型）、第十三章（用户系统与安全管理）、第十四章（部署与运维）、第十五章（非功能性需求）。
 
 ---
 
@@ -18,9 +18,9 @@
 
 ### 11.1 API 概览
 
-CkyClaw 对外暴露 RESTful API。由于 CkyClaw Framework嵌入后端运行，所有 Agent/Session/Run 操作由 CkyClaw 统一管理，不再需要代理转发。
+Kasaya 对外暴露 RESTful API。由于 Kasaya Framework嵌入后端运行，所有 Agent/Session/Run 操作由 Kasaya 统一管理，不再需要代理转发。
 
-> 各 API 的详细请求/响应 Schema、错误码清单、SSE/WebSocket 事件协议、通用 JSON Schema 定义详见《CkyClaw API 接口设计 v1.2》。
+> 各 API 的详细请求/响应 Schema、错误码清单、SSE/WebSocket 事件协议、通用 JSON Schema 定义详见《Kasaya API 接口设计 v1.2》。
 
 ### 11.2 认证方式
 
@@ -226,7 +226,7 @@ CkyClaw 对外暴露 RESTful API。由于 CkyClaw Framework嵌入后端运行，
 | **Trace** | 执行链路追踪 | id, run_id, workflow_name, group_id, duration, span_count, created_at |
 | **Span** | 追踪中的执行步骤 | id, trace_id, parent_span_id, type(agent/llm/tool/handoff), name, status, duration, token_usage, input, output |
 
-> 各实体的完整列级 Schema（字段类型、约束、索引）详见《CkyClaw 数据模型详细设计 v1.3》。
+> 各实体的完整列级 Schema（字段类型、约束、索引）详见《Kasaya 数据模型详细设计 v1.3》。
 
 #### 12.2.2 用户与组织
 
@@ -268,16 +268,16 @@ CkyClaw 对外暴露 RESTful API。由于 CkyClaw Framework嵌入后端运行，
 
 **存储引擎：** ClickHouse MergeTree，按 `(org_id, toYYYYMM(timestamp))` 分区。物化视图使用 AggregatingMergeTree 引擎预聚合。
 
-> TokenUsageLog 完整字段定义详见《CkyClaw 数据模型详细设计 v1.3》第三章；ClickHouse DDL 详见《CkyClaw Framework Design v2.0》第七章 7.3 节。
+> TokenUsageLog 完整字段定义详见《Kasaya 数据模型详细设计 v1.3》第三章；ClickHouse DDL 详见《Kasaya Framework Design v2.0》第七章 7.3 节。
 
-> ProviderConfig、ModelConfig 完整列级 Schema 详见《CkyClaw 数据模型详细设计 v1.3》第二章。
+> ProviderConfig、ModelConfig 完整列级 Schema 详见《Kasaya 数据模型详细设计 v1.3》第二章。
 
 ### 12.3 数据存储策略
 
 | 数据类型 | 存储后端 | 说明 |
 |---------|---------|------|
 | 业务实体 | PostgreSQL | AgentConfig、Session、Run、User 等 |
-| 对话历史 | PostgreSQL / Redis | Session 内消息通过 CkyClaw Framework Session 机制管理 |
+| 对话历史 | PostgreSQL / Redis | Session 内消息通过 Kasaya Framework Session 机制管理 |
 | Token 审计 | PostgreSQL（默认）/ ClickHouse（可选） | MVP 用 PostgreSQL；日均 > 50 万条时可切换到 ClickHouse |
 | Trace/Span | OTel Collector → Jaeger/Tempo（推荐）/ PostgreSQL（MVP） | 推荐通过 OTel Collector 导出到 Jaeger/Tempo；MVP 可直写 PostgreSQL |
 | Metrics | Prometheus（通过 OTel Collector） | OTel Collector 采集指标后通过 Remote Write 导出到 Prometheus |
@@ -515,11 +515,11 @@ CkyClaw 对外暴露 RESTful API。由于 CkyClaw Framework嵌入后端运行，
 ┌─────────────────────────────────────────────────────────────────┐│                        生产环境拓扑                               │
 │
 │
-│   [用户] ──► [反向代理] ──┬──► CkyClaw Frontend (React SPA)  │
+│   [用户] ──► [反向代理] ──┬──► Kasaya Frontend (React SPA)  │
 │
-└──► CkyClaw Backend (FastAPI)        │
+└──► Kasaya Backend (FastAPI)        │
 │
-├── CkyClaw Framework          │
+├── Kasaya Framework          │
 │
 ├── Agent Runner Pool           │
 │
@@ -567,7 +567,7 @@ CkyClaw 对外暴露 RESTful API。由于 CkyClaw Framework嵌入后端运行，
 |------|---------|
 | 前端 | React 18+（Vite 5 + Ant Design 5 + ProComponents + Zustand + TanStack Query + ReactFlow + ECharts） |
 | 后端 | FastAPI (Python 3.12+) |
-| Agent 框架 | CkyClaw Framework（自研，Python 库） |
+| Agent 框架 | Kasaya Framework（自研，Python 库） |
 | 模型适配 | LiteLLM（100+ 模型适配） |
 | 数据库 | PostgreSQL 16 |
 | 缓存/消息 | Redis 7 |
@@ -579,8 +579,8 @@ CkyClaw 对外暴露 RESTful API。由于 CkyClaw Framework嵌入后端运行，
 
 | 组件 | 策略 |
 |------|------|
-| CkyClaw Frontend | CDN + 多节点 Nginx |
-| CkyClaw Backend | 多实例 + 负载均衡 |
+| Kasaya Frontend | CDN + 多节点 Nginx |
+| Kasaya Backend | 多实例 + 负载均衡 |
 | Agent Runner | 水平扩展（无状态，Session 持久化到 PostgreSQL/Redis） |
 | PostgreSQL | 主从复制 + 自动故障切换 |
 | Redis | Sentinel / Cluster 模式 |
@@ -640,7 +640,7 @@ CkyClaw 对外暴露 RESTful API。由于 CkyClaw Framework嵌入后端运行，
 
 | 指标 | 目标 | 说明 |
 |------|------|------|
-| API 响应时间 | p95 < 200ms | CkyClaw 自身 API（不含 LLM 调用） |
+| API 响应时间 | p95 < 200ms | Kasaya 自身 API（不含 LLM 调用） |
 | Agent 执行响应 | p95 < 10s | 含 LLM 调用的端到端时间 |
 | 首 Token 延迟 | p95 < 2s | SSE 流式响应首个 Token |
 | 并发用户数 | ≥ 100 | 同时在线用户 |
@@ -686,4 +686,4 @@ CkyClaw 对外暴露 RESTful API。由于 CkyClaw Framework嵌入后端运行，
 
 *文档版本：v2.0.8*
 *最后更新：2026-04-02*
-*作者：CkyClaw Team*
+*作者：Kasaya Team*

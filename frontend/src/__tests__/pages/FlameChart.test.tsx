@@ -44,10 +44,15 @@ describe('FlameChart', () => {
 
   it('渲染单个节点', () => {
     const node = {
+      span_id: 's1',
+      parent_span_id: null,
       name: 'agent-root',
       type: 'agent',
+      status: 'completed',
+      start_time: '2026-01-01T00:00:00Z',
+      end_time: '2026-01-01T00:00:01Z',
       duration_ms: 100,
-      start_offset_ms: 0,
+      model: null,
       children: [],
     };
     const { container } = render(
@@ -59,8 +64,8 @@ describe('FlameChart', () => {
 
   it('渲染数组节点', () => {
     const nodes = [
-      { name: 'span-1', type: 'llm', duration_ms: 50, start_offset_ms: 0, children: [] },
-      { name: 'span-2', type: 'tool', duration_ms: 30, start_offset_ms: 50, children: [] },
+      { span_id: 's2', parent_span_id: null, name: 'span-1', type: 'llm', status: 'completed', start_time: '2026-01-01T00:00:00Z', end_time: '2026-01-01T00:00:01Z', duration_ms: 50, model: null, children: [] },
+      { span_id: 's3', parent_span_id: null, name: 'span-2', type: 'tool', status: 'completed', start_time: '2026-01-01T00:00:01Z', end_time: '2026-01-01T00:00:02Z', duration_ms: 30, model: null, children: [] },
     ];
     const { container } = render(
       <FlameChart nodes={nodes} totalSpans={2} />,
@@ -70,16 +75,26 @@ describe('FlameChart', () => {
 
   it('嵌套节点不崩溃', () => {
     const node = {
+      span_id: 's4',
+      parent_span_id: null,
       name: 'root',
       type: 'agent',
+      status: 'completed',
+      start_time: '2026-01-01T00:00:00Z',
+      end_time: '2026-01-01T00:00:02Z',
       duration_ms: 200,
-      start_offset_ms: 0,
+      model: null,
       children: [
         {
+          span_id: 's5',
+          parent_span_id: 's4',
           name: 'child-llm',
           type: 'llm',
+          status: 'completed',
+          start_time: '2026-01-01T00:00:00Z',
+          end_time: '2026-01-01T00:00:01Z',
           duration_ms: 100,
-          start_offset_ms: 10,
+          model: 'gpt-4o',
           children: [],
         },
       ],

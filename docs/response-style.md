@@ -1,6 +1,6 @@
 # Agent 输出风格控制
 
-CkyClaw 支持为每个 Agent 配置输出风格，控制 LLM 响应的冗余程度和结构。
+Kasaya 支持为每个 Agent 配置输出风格，控制 LLM 响应的冗余程度和结构。
 
 ## 内置风格
 
@@ -51,7 +51,7 @@ curl -X PUT /api/v1/agents/my-agent \
 ### 方式三：Framework 直接使用
 
 ```python
-from ckyclaw_framework.agent import Agent
+from kasaya.agent import Agent
 
 agent = Agent(
     name="concise-assistant",
@@ -73,7 +73,7 @@ agent = Agent(
 
 ## 扩展自定义风格
 
-在 `ckyclaw_framework/agent/response_style.py` 的 `RESPONSE_STYLES` 字典中注册：
+在 `kasaya/agent/response_style.py` 的 `RESPONSE_STYLES` 字典中注册：
 
 ```python
 RESPONSE_STYLES["formal"] = "Use formal academic tone. Avoid contractions..."

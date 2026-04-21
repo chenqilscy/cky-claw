@@ -1,16 +1,16 @@
-# CkyClaw MVP 开发进度追踪
+# Kasaya MVP 开发进度追踪
 
 > 此文件记录 MVP 开发的全部任务及完成状态。每次会话可从此文件回溯进度。
 
 ## M0：项目启动与基础搭建
 
 ### Phase 0.1：Monorepo 骨架 ✅
-- [x] 0.1.1 创建 monorepo 根目录结构（backend/ + frontend/ + ckyclaw-framework/）
+- [x] 0.1.1 创建 monorepo 根目录结构（backend/ + frontend/ + kasaya-framework/）
 - [x] 0.1.2 根级配置文件（.editorconfig + .gitignore + docker-compose.yml）
 - [x] 0.1.3 根级 README.md
 - [x] Git 初始化 + 推送至 GitHub
 
-### Phase 0.2：CkyClaw Framework 包骨架 ✅
+### Phase 0.2：Kasaya Framework 包骨架 ✅
 - [x] 0.2.1 Python 包初始化（pyproject.toml + __init__.py + py.typed）
 - [x] 0.2.2 核心模块空壳 — agent/（agent.py, config.py, output.py）
 - [x] 0.2.3 核心模块空壳 — runner/（runner.py, run_config.py, run_context.py, result.py）
@@ -498,7 +498,7 @@
 ### Phase 7.13：部署与文档完善（P1）✅
 - [x] 7.13.1 `.env.example` — 所有环境变量注释说明（数据库/Redis/JWT/CORS/调试模式）
 - [x] 7.13.2 `backend/entrypoint.sh` — 启动前自动执行 `alembic upgrade head` + `set -e` 安全退出
-- [x] 7.13.3 `docker-compose.yml` 增强 — 添加 `CKYCLAW_SECRET_KEY` 环境变量 + 后端 Python 健康检查 + 前端依赖后端健康
+- [x] 7.13.3 `docker-compose.yml` 增强 — 添加 `KASAYA_SECRET_KEY` 环境变量 + 后端 Python 健康检查 + 前端依赖后端健康
 - [x] 7.13.4 `backend/Dockerfile` 更新 — 使用 entrypoint.sh 替代直接 CMD
 - [x] 7.13.5 `README.md` 全面更新 — Docker 一键部署 / 本地开发 / 环境变量表格 / 数据库迁移 / 测试命令 / 功能列表
 - [x] 7.13.6 五轮代码审查（第 2 轮修复 curl → Python 健康检查，其余全部通过）

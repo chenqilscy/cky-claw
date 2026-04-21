@@ -13,6 +13,7 @@ interface TestRecord {
 function makeActions(overrides?: Partial<CrudTableActions<TestRecord>>): CrudTableActions<TestRecord> {
   return {
     openEdit: vi.fn(),
+    openCreate: vi.fn(),
     handleDelete: vi.fn(),
     ...overrides,
   };

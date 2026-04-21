@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends
 
 from app.core.deps import get_current_user
 from app.schemas.sandbox import SandboxExecRequest, SandboxExecResponse
-from ckyclaw_framework.sandbox import LocalSandbox, SandboxConfig
+from kasaya.sandbox import LocalSandbox, SandboxConfig
 
 if TYPE_CHECKING:
     from app.models.user import User

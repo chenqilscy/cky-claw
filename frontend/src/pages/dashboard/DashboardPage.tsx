@@ -185,81 +185,47 @@ const DashboardPage: React.FC = () => {
 
         {/* Row 1: Key Metrics */}
         <Row gutter={[16, 16]}>
-          <Col xs={12} sm={12} md={8} lg={4}>
-            <Card
-              size="small"
-              hoverable
-              onClick={() => navigate('/agents')}
-              style={{ cursor: 'pointer' }}
-            >
-              <Statistic
-                title="Agent 总数"
-                value={agentCount}
-                prefix={<RobotOutlined />}
-                valueStyle={{ color: token.colorPrimary }}
-              />
-            </Card>
-          </Col>
-          <Col xs={12} sm={12} md={8} lg={4}>
-            <Card
-              size="small"
-              hoverable
-              onClick={() => navigate('/chat')}
-              style={{ cursor: 'pointer' }}
-            >
-              <Statistic
-                title="Session 总数"
-                value={sessionCount}
-                prefix={<MessageOutlined />}
-                valueStyle={{ color: token.colorSuccess }}
-              />
-            </Card>
-          </Col>
-          <Col xs={12} sm={12} md={8} lg={4}>
-            <Card
-              size="small"
-              hoverable
-              onClick={() => navigate('/traces')}
-              style={{ cursor: 'pointer' }}
-            >
-              <Statistic
-                title="Trace 总数"
-                value={traceStats?.total_traces ?? 0}
-                prefix={<ApartmentOutlined />}
-              />
-            </Card>
-          </Col>
-          <Col xs={12} sm={12} md={8} lg={4}>
-            <Card size="small">
-              <Statistic
-                title="Span 总数"
-                value={traceStats?.total_spans ?? 0}
-              />
-            </Card>
-          </Col>
-          <Col xs={12} sm={12} md={8} lg={4}>
-            <Card size="small">
-              <Statistic
-                title="平均耗时"
-                value={traceStats?.avg_duration_ms !== null && traceStats?.avg_duration_ms !== undefined
-                  ? traceStats.avg_duration_ms.toFixed(0)
-                  : '-'}
-                suffix="ms"
-                prefix={<ThunderboltOutlined />}
-              />
-            </Card>
-          </Col>
-          <Col xs={12} sm={12} md={8} lg={4}>
-            <Card size="small">
-              <Statistic
-                title="错误率"
-                value={traceStats ? (traceStats.error_rate * 100).toFixed(1) : '-'}
-                suffix="%"
-                valueStyle={traceStats && traceStats.error_rate > 0.1 ? { color: token.colorError } : undefined}
-                prefix={<WarningOutlined />}
-              />
-            </Card>
-          </Col>
+          {[
+            { title: 'Agent 总数', value: agentCount, icon: <RobotOutlined />, color: token.colorPrimary, path: '/agents' },
+            { title: 'Session 总数', value: sessionCount, icon: <MessageOutlined />, color: token.colorSuccess, path: '/chat' },
+            { title: 'Trace 总数', value: traceStats?.total_traces ?? 0, icon: <ApartmentOutlined />, color: token.colorInfo, path: '/traces' },
+            { title: 'Span 总数', value: traceStats?.total_spans ?? 0, icon: <ApartmentOutlined />, color: token.colorTextSecondary },
+            { title: '平均耗时', value: traceStats?.avg_duration_ms !== null && traceStats?.avg_duration_ms !== undefined ? traceStats.avg_duration_ms.toFixed(0) : '-', suffix: 'ms', icon: <ThunderboltOutlined />, color: token.colorWarning },
+            { title: '错误率', value: traceStats ? (traceStats.error_rate * 100).toFixed(1) : '-', suffix: '%', icon: <WarningOutlined />, color: traceStats && traceStats.error_rate > 0.1 ? token.colorError : token.colorSuccess },
+          ].map((item, idx) => (
+            <Col key={idx} xs={12} sm={12} md={8} lg={4}>
+              <Card
+                size="small"
+                hoverable={!!item.path}
+                onClick={item.path ? () => navigate(item.path) : undefined}
+                style={{ cursor: item.path ? 'pointer' : 'default', overflow: 'hidden', position: 'relative' }}
+                styles={{ body: { padding: '16px 20px' } }}
+              >
+                {/* 顶部品牌色条 */}
+                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: item.color }} />
+                <Statistic
+                  title={<span style={{ fontSize: 12, color: token.colorTextSecondary }}>{item.title}</span>}
+                  value={item.value}
+                  suffix={item.suffix}
+                  prefix={
+                    <span style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: 32,
+                      height: 32,
+                      borderRadius: 8,
+                      background: `${item.color}15`,
+                      marginRight: 8,
+                    }}>
+                      {item.icon && <span style={{ color: item.color, fontSize: 16 }}>{item.icon}</span>}
+                    </span>
+                  }
+                  valueStyle={{ color: item.color, fontWeight: 600, fontSize: 22 }}
+                />
+              </Card>
+            </Col>
+          ))}
         </Row>
 
         {/* Row 2: Token + Guardrail + Span Types */}

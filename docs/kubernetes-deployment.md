@@ -1,8 +1,8 @@
-# CkyClaw Kubernetes 部署指南
+# Kasaya Kubernetes 部署指南
 
 ## 概述
 
-CkyClaw 提供 Helm Chart 实现 Kubernetes 一键部署，支持以下能力：
+Kasaya 提供 Helm Chart 实现 Kubernetes 一键部署，支持以下能力：
 
 - **四服务编排**：Backend + Frontend + PostgreSQL + Redis
 - **三环境 Overlay**：dev / staging / prod 差异化配置
@@ -15,7 +15,7 @@ CkyClaw 提供 Helm Chart 实现 Kubernetes 一键部署，支持以下能力：
 ## 目录结构
 
 ```
-deploy/helm/ckyclaw/
+deploy/helm/kasaya/
 ├── Chart.yaml                    # Chart 元数据（v0.1.0）
 ├── values.yaml                   # 默认配置
 ├── overlays/
@@ -53,22 +53,22 @@ deploy/helm/ckyclaw/
 
 ```bash
 # Backend 镜像
-docker build -t ckyclaw/backend:latest -f backend/Dockerfile .
+docker build -t kasaya/backend:latest -f backend/Dockerfile .
 
 # Frontend 镜像
-docker build -t ckyclaw/frontend:latest -f frontend/Dockerfile frontend/
+docker build -t kasaya/frontend:latest -f frontend/Dockerfile frontend/
 ```
 
 ### 2. 开发环境部署
 
 ```bash
 # 创建命名空间
-kubectl create namespace ckyclaw-dev
+kubectl create namespace kasaya-dev
 
 # 安装（使用开发配置）
-helm install ckyclaw deploy/helm/ckyclaw \
-  -n ckyclaw-dev \
-  -f deploy/helm/ckyclaw/overlays/dev.yaml \
+helm install kasaya deploy/helm/kasaya \
+  -n kasaya-dev \
+  -f deploy/helm/kasaya/overlays/dev.yaml \
   --set postgresql.auth.password=dev-password \
   --set redis.auth.password=dev-password
 ```
@@ -76,11 +76,11 @@ helm install ckyclaw deploy/helm/ckyclaw \
 ### 3. Staging 环境部署
 
 ```bash
-kubectl create namespace ckyclaw-staging
+kubectl create namespace kasaya-staging
 
-helm install ckyclaw deploy/helm/ckyclaw \
-  -n ckyclaw-staging \
-  -f deploy/helm/ckyclaw/overlays/staging.yaml \
+helm install kasaya deploy/helm/kasaya \
+  -n kasaya-staging \
+  -f deploy/helm/kasaya/overlays/staging.yaml \
   --set postgresql.auth.password=$(openssl rand -base64 32) \
   --set redis.auth.password=$(openssl rand -base64 32) \
   --set secret.jwtSecretKey=$(openssl rand -base64 64)
@@ -90,24 +90,24 @@ helm install ckyclaw deploy/helm/ckyclaw \
 
 ```bash
 # 先创建外部 Secret
-kubectl create namespace ckyclaw
+kubectl create namespace kasaya
 
-kubectl create secret generic ckyclaw-db-secret \
-  -n ckyclaw \
+kubectl create secret generic kasaya-db-secret \
+  -n kasaya \
   --from-literal=postgresql-password='<RDS密码>'
 
-kubectl create secret generic ckyclaw-redis-secret \
-  -n ckyclaw \
+kubectl create secret generic kasaya-redis-secret \
+  -n kasaya \
   --from-literal=redis-password='<Redis密码>'
 
-kubectl create secret generic ckyclaw-app-secret \
-  -n ckyclaw \
+kubectl create secret generic kasaya-app-secret \
+  -n kasaya \
   --from-literal=jwt-secret-key="$(openssl rand -base64 64)"
 
 # 安装
-helm install ckyclaw deploy/helm/ckyclaw \
-  -n ckyclaw \
-  -f deploy/helm/ckyclaw/overlays/prod.yaml \
+helm install kasaya deploy/helm/kasaya \
+  -n kasaya \
+  -f deploy/helm/kasaya/overlays/prod.yaml \
   --set externalDatabase.host=your-rds.amazonaws.com \
   --set externalRedis.host=your-redis.cache.amazonaws.com
 ```
@@ -116,9 +116,9 @@ helm install ckyclaw deploy/helm/ckyclaw \
 
 ```bash
 # 修改镜像版本或配置后升级
-helm upgrade ckyclaw deploy/helm/ckyclaw \
-  -n ckyclaw \
-  -f deploy/helm/ckyclaw/overlays/prod.yaml
+helm upgrade kasaya deploy/helm/kasaya \
+  -n kasaya \
+  -f deploy/helm/kasaya/overlays/prod.yaml
 
 # 迁移 Job 会自动在 upgrade 前执行
 ```
@@ -127,13 +127,13 @@ helm upgrade ckyclaw deploy/helm/ckyclaw \
 
 ```bash
 # 查看发布历史
-helm history ckyclaw -n ckyclaw
+helm history kasaya -n kasaya
 
 # 回滚到上一版本
-helm rollback ckyclaw -n ckyclaw
+helm rollback kasaya -n kasaya
 
 # 回滚到指定版本
-helm rollback ckyclaw 3 -n ckyclaw
+helm rollback kasaya 3 -n kasaya
 ```
 
 ## 配置说明
@@ -162,9 +162,9 @@ postgresql:
 externalDatabase:
   host: "your-rds-endpoint"
   port: 5432
-  database: ckyclaw
-  username: ckyclaw
-  existingSecret: "ckyclaw-db-secret"
+  database: kasaya
+  username: kasaya
+  existingSecret: "kasaya-db-secret"
 ```
 
 ### TLS 配置
@@ -176,16 +176,16 @@ ingress:
   annotations:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
   tls:
-    - secretName: ckyclaw-tls
+    - secretName: kasaya-tls
       hosts:
-        - ckyclaw.example.com
+        - kasaya.example.com
 ```
 
 ### 私有镜像仓库
 
 ```yaml
 global:
-  imageRegistry: "harbor.example.com/ckyclaw"
+  imageRegistry: "harbor.example.com/kasaya"
   imagePullSecrets:
     - name: harbor-pull-secret
 ```
@@ -196,39 +196,39 @@ global:
 
 ```bash
 # Pod 状态
-kubectl get pods -n ckyclaw -l app.kubernetes.io/part-of=ckyclaw
+kubectl get pods -n kasaya -l app.kubernetes.io/part-of=kasaya
 
 # HPA 状态
-kubectl get hpa -n ckyclaw
+kubectl get hpa -n kasaya
 
 # PDB 状态
-kubectl get pdb -n ckyclaw
+kubectl get pdb -n kasaya
 ```
 
 ### 查看日志
 
 ```bash
 # Backend 日志
-kubectl logs -n ckyclaw -l app.kubernetes.io/component=backend --tail=100 -f
+kubectl logs -n kasaya -l app.kubernetes.io/component=backend --tail=100 -f
 
 # 迁移 Job 日志
-kubectl logs -n ckyclaw -l app.kubernetes.io/component=migration
+kubectl logs -n kasaya -l app.kubernetes.io/component=migration
 ```
 
 ### 手动扩缩
 
 ```bash
-kubectl scale deployment ckyclaw-backend -n ckyclaw --replicas=5
+kubectl scale deployment kasaya-backend -n kasaya --replicas=5
 ```
 
 ### 端口转发（调试）
 
 ```bash
 # 访问 Backend API
-kubectl port-forward -n ckyclaw svc/ckyclaw-backend 8000:8000
+kubectl port-forward -n kasaya svc/kasaya-backend 8000:8000
 
 # 访问 Frontend
-kubectl port-forward -n ckyclaw svc/ckyclaw-frontend 3000:3000
+kubectl port-forward -n kasaya svc/kasaya-frontend 3000:3000
 ```
 
 ## 健康检查

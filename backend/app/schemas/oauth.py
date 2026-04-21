@@ -1,15 +1,12 @@
 """OAuth 请求/响应模型。"""
 
 from __future__ import annotations
+import uuid
+from datetime import datetime
 
 from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict
-
-if TYPE_CHECKING:
-    import uuid
-    from datetime import datetime
-
 
 class OAuthAuthorizeResponse(BaseModel):
     """OAuth 授权 URL 响应。"""
@@ -17,13 +14,11 @@ class OAuthAuthorizeResponse(BaseModel):
     authorize_url: str
     state: str
 
-
 class OAuthCallbackRequest(BaseModel):
     """OAuth 回调请求。"""
 
     code: str
     state: str
-
 
 class OAuthConnectionResponse(BaseModel):
     """OAuth 绑定信息响应。"""

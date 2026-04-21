@@ -1,4 +1,4 @@
-# CkyClaw 知识库方案：基于 LLM Wiki 图谱的知识管理
+# Kasaya 知识库方案：基于 LLM Wiki 图谱的知识管理
 
 > 版本：v1.0  
 > 日期：2026-04-14  
@@ -118,7 +118,7 @@
 ### 3.1 模块结构
 
 ```
-ckyclaw_framework/rag/
+kasaya/rag/
 ├── document.py       # 保留：文档加载
 ├── chunker.py        # 保留：分块（用于 LLM 抽取前的预分块）
 ├── graph/
@@ -326,7 +326,7 @@ Runner 在构建 system message 时：
 |------|------|------|
 | **图存储** | PostgreSQL（实体/关系表 + 递归 CTE 遍历） | 不引入图数据库，复用现有 PG |
 | **社区检测** | Python igraph + Leiden 算法 | 轻量级，无需额外服务 |
-| **LLM 抽取** | CkyClaw Framework ModelProvider | 复用现有 LLM 集成 |
+| **LLM 抽取** | Kasaya Framework ModelProvider | 复用现有 LLM 集成 |
 | **图可视化** | ReactFlow（已集成） | 复用现有依赖 |
 | **缓存** | Redis（图谱检索结果缓存） | 复用现有 Redis |
 
@@ -444,11 +444,11 @@ python -m graphify.serve graphify-out/graph.json
 | Cypher | `--neo4j` | Neo4j 导入脚本 |
 | Neo4j Push | `--neo4j-push bolt://...` | 直接推送到 Neo4j |
 
-### 9.5 与 CkyClaw 知识库的整合方案
+### 9.5 与 Kasaya 知识库的整合方案
 
 #### 9.5.1 方案对比
 
-| 维度 | CkyClaw 当前方案（第 2-8 章） | graphify 方案 |
+| 维度 | Kasaya 当前方案（第 2-8 章） | graphify 方案 |
 |------|----------------------------|---------------|
 | 抽取引擎 | 自研 GraphExtractor | graphify（tree-sitter + Claude 子代理） |
 | 代码分析 | 仅 LLM 抽取 | AST 静态分析（精确）+ LLM 补充 |
@@ -467,18 +467,18 @@ python -m graphify.serve graphify-out/graph.json
 ```
 用户上传文档/代码
     ↓
-CkyClaw 后端调用 graphify Python API
+Kasaya 后端调用 graphify Python API
     ↓
 graphify 执行三阶段抽取 → 生成 graph.json
     ↓
-CkyClaw 解析 graph.json → 导入到 PostgreSQL 图谱表
+Kasaya 解析 graph.json → 导入到 PostgreSQL 图谱表
     ↓
-CkyClaw GraphRetriever 基于 PG 数据检索
+Kasaya GraphRetriever 基于 PG 数据检索
 ```
 
 **优势**：
 - 利用 graphify 成熟的 AST 分析和 LLM 抽取能力
-- 保持 CkyClaw 自身的图存储和检索系统
+- 保持 Kasaya 自身的图存储和检索系统
 - graphify 的 MCP 服务器可直接暴露给 Agent 使用
 
 **实施步骤**：
@@ -500,7 +500,7 @@ Agent 通过 query_graph / get_neighbors 查询
 直接返回结构化结果
 ```
 
-**优势**：零开发量。**劣势**：不经过 CkyClaw 管控，无法审计和权限控制。
+**优势**：零开发量。**劣势**：不经过 Kasaya 管控，无法审计和权限控制。
 
 #### 9.5.3 建议路径
 
@@ -512,7 +512,7 @@ Agent 通过 query_graph / get_neighbors 查询
 
 | 风险 | 等级 | 缓解 |
 |------|:----:|------|
-| graphify 依赖 Claude API（LLM 抽取） | 中 | CkyClaw 可替换为自有 Provider |
+| graphify 依赖 Claude API（LLM 抽取） | 中 | Kasaya 可替换为自有 Provider |
 | PyPI 包名 `graphifyy`（双 y）易混淆 | 低 | 锁定版本 + 内部文档标注 |
 | tree-sitter 安装可能需要编译 | 低 | Docker 镜像预装 |
 | graphify API 不稳定（快速迭代中） | 中 | 锁定版本 + 封装适配层 |

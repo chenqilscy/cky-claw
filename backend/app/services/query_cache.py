@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 T = TypeVar("T")
 
 # 缓存 key 前缀
-_PREFIX = "ckyclaw:qcache:"
+_PREFIX = "kasaya:qcache:"
 
 # 默认 TTL：5 分钟
 _DEFAULT_TTL = 300

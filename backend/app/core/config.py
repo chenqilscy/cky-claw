@@ -9,11 +9,11 @@ class Settings(BaseSettings):
     """应用配置。"""
 
     # 应用
-    app_name: str = "CkyClaw"
+    app_name: str = "Kasaya"
     debug: bool = True
 
     # 数据库
-    database_url: str = "postgresql+asyncpg://ckyclaw:ckyclaw_dev@localhost:5432/ckyclaw"
+    database_url: str = "postgresql+asyncpg://kasaya:kasaya_dev@localhost:5432/kasaya"
     db_pool_size: int = 5
     db_max_overflow: int = 10
 
@@ -29,7 +29,7 @@ class Settings(BaseSettings):
 
     # OpenTelemetry
     otel_enabled: bool = False
-    otel_service_name: str = "ckyclaw-backend"
+    otel_service_name: str = "kasaya-backend"
     otel_exporter_endpoint: str = "http://localhost:4317"
 
     # 可观测性 UI 外链（供前端展示跳转按钮）
@@ -77,7 +77,7 @@ class Settings(BaseSettings):
     saml_want_name_id: bool = True
     saml_want_assertions_signed: bool = True
 
-    model_config = {"env_prefix": "CKYCLAW_", "env_file": ".env", "extra": "ignore"}
+    model_config = {"env_prefix": "KASAYA_", "env_file": ".env", "extra": "ignore"}
 
 
 settings = Settings()

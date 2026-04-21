@@ -62,13 +62,13 @@ class TestConfigCache:
 
     def test_invalidate_prefix(self) -> None:
         cache = ConfigCache()
-        cache.set("ckyclaw:agents:1", "a")
-        cache.set("ckyclaw:agents:2", "b")
-        cache.set("ckyclaw:guardrails:1", "c")
-        count = cache.invalidate_prefix("ckyclaw:agents:")
+        cache.set("kasaya:agents:1", "a")
+        cache.set("kasaya:agents:2", "b")
+        cache.set("kasaya:guardrails:1", "c")
+        count = cache.invalidate_prefix("kasaya:agents:")
         assert count == 2
-        assert cache.get("ckyclaw:agents:1") is None
-        assert cache.get("ckyclaw:guardrails:1") == "c"
+        assert cache.get("kasaya:agents:1") is None
+        assert cache.get("kasaya:guardrails:1") == "c"
 
     def test_clear(self) -> None:
         cache = ConfigCache()
@@ -90,16 +90,16 @@ class TestCacheKeyHelpers:
 
     def test_make_cache_key(self) -> None:
         key = make_cache_key("agents", "abc-123")
-        assert key == "ckyclaw:agents:abc-123"
+        assert key == "kasaya:agents:abc-123"
 
     def test_make_list_cache_key_no_params(self) -> None:
         key = make_list_cache_key("agents")
-        assert key == "ckyclaw:agents:list:all"
+        assert key == "kasaya:agents:list:all"
 
     def test_make_list_cache_key_with_params(self) -> None:
         key = make_list_cache_key("agents", {"limit": 20, "offset": 0})
-        assert key.startswith("ckyclaw:agents:list:")
-        assert key != "ckyclaw:agents:list:all"
+        assert key.startswith("kasaya:agents:list:")
+        assert key != "kasaya:agents:list:all"
 
     def test_make_list_cache_key_deterministic(self) -> None:
         k1 = make_list_cache_key("agents", {"a": 1, "b": 2})
@@ -132,8 +132,8 @@ class TestReloadAPI:
         config_cache.clear()
 
     def test_reload_all(self) -> None:
-        config_cache.set("ckyclaw:agents:1", "val")
-        config_cache.set("ckyclaw:guardrails:1", "val")
+        config_cache.set("kasaya:agents:1", "val")
+        config_cache.set("kasaya:guardrails:1", "val")
 
         client = TestClient(app)
         resp = client.post("/api/v1/config/reload")
@@ -143,9 +143,9 @@ class TestReloadAPI:
         assert config_cache.size == 0
 
     def test_reload_entity_type(self) -> None:
-        config_cache.set("ckyclaw:agents:1", "val")
-        config_cache.set("ckyclaw:agents:2", "val")
-        config_cache.set("ckyclaw:guardrails:1", "val")
+        config_cache.set("kasaya:agents:1", "val")
+        config_cache.set("kasaya:agents:2", "val")
+        config_cache.set("kasaya:guardrails:1", "val")
 
         client = TestClient(app)
         resp = client.post("/api/v1/config/reload/agents")
@@ -153,7 +153,7 @@ class TestReloadAPI:
         data = resp.json()
         assert data["cleared"] == 2
         # guardrails 应该不受影响
-        assert config_cache.get("ckyclaw:guardrails:1") == "val"
+        assert config_cache.get("kasaya:guardrails:1") == "val"
 
     def test_reload_invalid_entity_type(self) -> None:
         client = TestClient(app)

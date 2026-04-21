@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from ckyclaw_framework.tools.function_tool import FunctionTool
+from kasaya.tools.function_tool import FunctionTool
 
 # ---------------------------------------------------------------------------
 # _resolve_mcp_tools 测试
@@ -108,7 +108,7 @@ class TestResolveMCPTools:
                 return_value=[srv_a, srv_b],
             ),
             patch(
-                "ckyclaw_framework.mcp.connection.connect_and_discover",
+                "kasaya.mcp.connection.connect_and_discover",
                 side_effect=mock_connect,
             ),
         ):
@@ -149,7 +149,7 @@ class TestResolveMCPTools:
                 return_value=[db_cfg],
             ),
             patch(
-                "ckyclaw_framework.mcp.connection.connect_and_discover",
+                "kasaya.mcp.connection.connect_and_discover",
                 new_callable=AsyncMock,
                 return_value=[tool],
             ),
@@ -193,7 +193,7 @@ class TestResolveMCPTools:
                 return_value=[db_cfg],
             ),
             patch(
-                "ckyclaw_framework.mcp.connection.connect_and_discover",
+                "kasaya.mcp.connection.connect_and_discover",
                 side_effect=capture_connect,
             ),
             patch("app.core.crypto.decrypt_api_key", return_value="Bearer real_token"),
@@ -240,7 +240,7 @@ class TestResolveMCPTools:
                 return_value=[db_cfg],
             ),
             patch(
-                "ckyclaw_framework.mcp.connection.connect_and_discover",
+                "kasaya.mcp.connection.connect_and_discover",
                 side_effect=capture_connect,
             ),
         ):

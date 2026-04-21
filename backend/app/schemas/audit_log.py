@@ -1,15 +1,12 @@
 """AuditLog 审计日志请求/响应模型。"""
 
 from __future__ import annotations
+import uuid
+from datetime import datetime
 
 from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, ConfigDict, Field
-
-if TYPE_CHECKING:
-    import uuid
-    from datetime import datetime
-
 
 class AuditLogResponse(BaseModel):
     """审计日志响应。"""
@@ -28,7 +25,6 @@ class AuditLogResponse(BaseModel):
     status_code: int | None
     created_at: datetime
 
-
 class AuditLogListResponse(BaseModel):
     """审计日志列表响应。"""
 
@@ -36,7 +32,6 @@ class AuditLogListResponse(BaseModel):
     total: int
     limit: int = 20
     offset: int = 0
-
 
 class AuditLogQuery(BaseModel):
     """审计日志查询参数。"""

@@ -204,11 +204,11 @@ Hermes 集成了 **Honcho** 辩证式用户建模系统：
 | **Agent Harness（理论）** | 架构模式/方法论 | 语言无关 | N/A | 理论框架 |
 | **Hermes Agent** | 自改进 Agent 框架 | Python | MIT, 43.7k stars | v0.8.0 |
 | **NextCrab** | 全栈 Agent 平台 | Rust + React | 企业内部 | v0.1-0.2 |
-| **CkyClaw** | Agent 运行时 + 管理平台 | Python + React | 内部 | v0.1.0 |
+| **Kasaya** | Agent 运行时 + 管理平台 | Python + React | 内部 | v0.1.0 |
 
 ### 3.2 Harness 五层架构契合度
 
-| Harness 层 | Agent Harness 理论 | Hermes Agent | NextCrab | CkyClaw |
+| Harness 层 | Agent Harness 理论 | Hermes Agent | NextCrab | Kasaya |
 |-------------|-------------------|--------------|----------|---------|
 | **Execution Runtime** | 三 Agent 分离 + 迭代循环 | Core Loop + Skill Factory | engine_loop + CancellationToken | Runner + asyncio TaskGroup |
 | **Context System** | 5 级 Tier 压缩 + Cache-First | FTS5 Session Search + Procedural Memory | 5 层压缩管道 + Deferred Tool | HistoryTrimmer (2 策略) |
@@ -218,7 +218,7 @@ Hermes 集成了 **Honcho** 辩证式用户建模系统：
 
 ### 3.3 记忆系统对比
 
-| 维度 | Hermes Agent | NextCrab | CkyClaw |
+| 维度 | Hermes Agent | NextCrab | Kasaya |
 |------|-------------|----------|---------|
 | 记忆类型 | Episodic + Semantic + Procedural | Episodic + Semantic + Procedural | 单一 MemoryEntry |
 | 自创技能 | Skill Factory（核心特色） | Skill marketplace | 无 |
@@ -229,7 +229,7 @@ Hermes 集成了 **Honcho** 辩证式用户建模系统：
 
 ### 3.4 多 Agent 协作对比
 
-| 维度 | Agent Harness | Hermes | NextCrab | CkyClaw |
+| 维度 | Agent Harness | Hermes | NextCrab | Kasaya |
 |------|-------------|--------|----------|---------|
 | 协作模式 | Planning→Gen→Eval 三 Agent | 单 Agent + 自扩展 | Brain Coordinator + Mailbox | Sequential/Parallel/Coordinator |
 | Agent 间通信 | 结构化 JSON 特性列表 | 无（单 Agent） | DB-backed Mailbox | Handoff + InputFilter |
@@ -238,7 +238,7 @@ Hermes 集成了 **Honcho** 辩证式用户建模系统：
 
 ### 3.5 可观测性对比
 
-| 维度 | Hermes | NextCrab | CkyClaw |
+| 维度 | Hermes | NextCrab | Kasaya |
 |------|--------|----------|---------|
 | 核心机制 | 内置 logging | Event Journal (25+ 事件类型) | Trace/Span (6 类型) |
 | 事件重放 | 无 | DB 持久化 + 按 session 重放 | 无 |
@@ -250,7 +250,7 @@ Hermes 集成了 **Honcho** 辩证式用户建模系统：
 ## 四、四平台各有千秋的优势域
 
 ```
-Agent Harness          Hermes Agent          NextCrab             CkyClaw
+Agent Harness          Hermes Agent          NextCrab             Kasaya
 ━━━━━━━━━━━━━━        ━━━━━━━━━━━━━━        ━━━━━━━━━━━━         ━━━━━━━━
 • 理论完整度 ●●●●●    • 自创技能 ●●●●●     • 性能 ●●●●●         • 开发效率 ●●●●●
 • 工程方法论 ●●●●●    • 记忆系统 ●●●●●     • 上下文管理 ●●●●●   • 生态兼容 ●●●●●
@@ -262,7 +262,7 @@ Agent Harness          Hermes Agent          NextCrab             CkyClaw
 
 ---
 
-## 五、对 CkyClaw 的启示与行动建议
+## 五、对 Kasaya 的启示与行动建议
 
 ### 5.1 短期可落地（1-2 周）
 
@@ -291,9 +291,9 @@ Agent Harness          Hermes Agent          NextCrab             CkyClaw
 | 11 | **Soul 成长模型** | NextCrab | 三类记忆 + 成熟度等级 + 情绪 + 目标系统 |
 | 12 | **多终端 + 消息网关** | Hermes | Telegram/Discord/Slack/微信/钉钉接入 |
 
-### 5.4 独特竞争力（CkyClaw 应保持的优势）
+### 5.4 独特竞争力（Kasaya 应保持的优势）
 
-1. **Python 生态 + LiteLLM 多厂商** — Hermes 虽支持 OpenRouter 但不直接集成；CkyClaw 的 LiteLLM 原生支持更灵活
+1. **Python 生态 + LiteLLM 多厂商** — Hermes 虽支持 OpenRouter 但不直接集成；Kasaya 的 LiteLLM 原生支持更灵活
 2. **三阶段护栏体系** — Input/Output/Tool 三阶段 + 7 种内置护栏，比 Hermes 的 Prompt 约束更可靠
 3. **ApprovalHandler 审批模式** — FULL_AUTO/SUGGEST/AUTO_EDIT 三模式，比 NextCrab 的 ConfirmPolicy 更清晰
 4. **声明式 Agent 定义** — `@dataclass` + `InstructionsType`，比 Hermes 和 NextCrab 更简洁
@@ -302,15 +302,15 @@ Agent Harness          Hermes Agent          NextCrab             CkyClaw
 
 ## 六、关键洞察
 
-1. **Harness 不是可选配件，是必须品。** 0.95^20 = 36% 的可靠性问题在所有 Agent 系统中都存在。CkyClaw 的 Guardrails + Approval + Handoff 已经是 Harness 实现，但缺少 **Checkpoint（检查点）** 和 **Replay（重放）** 能力。
+1. **Harness 不是可选配件，是必须品。** 0.95^20 = 36% 的可靠性问题在所有 Agent 系统中都存在。Kasaya 的 Guardrails + Approval + Handoff 已经是 Harness 实现，但缺少 **Checkpoint（检查点）** 和 **Replay（重放）** 能力。
 
 2. **Hermes 的自改进循环是差异化方向。** 当前所有框架中，只有 Hermes 让 Agent 自主创建技能。这是 Agent 从"工具使用者"到"工具创造者"的关键跃迁。
 
 3. **Anthropic 的三 Agent 分离是工程最佳实践。** Planning/Generation/Evaluation 分离使每个 Agent 的上下文更小、目标更明确、错误更容易定位。
 
-4. **记忆系统是下一竞争焦点。** NextCrab 的 Soul 和 Hermes 的三种记忆都远超简单的 key-value 存储。CkyClaw 需要从"简单记忆"升级到"认知成长模型"。
+4. **记忆系统是下一竞争焦点。** NextCrab 的 Soul 和 Hermes 的三种记忆都远超简单的 key-value 存储。Kasaya 需要从"简单记忆"升级到"认知成长模型"。
 
-5. **Cache-First 是 2026 最被低估的技术。** 上下文缓存直接降低成本和延迟。CkyClaw 应优先实现固定前缀 + 追加式历史模式。
+5. **Cache-First 是 2026 最被低估的技术。** 上下文缓存直接降低成本和延迟。Kasaya 应优先实现固定前缀 + 追加式历史模式。
 
 ---
 

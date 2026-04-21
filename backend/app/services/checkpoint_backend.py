@@ -7,8 +7,8 @@ from typing import TYPE_CHECKING
 from sqlalchemy import delete, select
 
 from app.models.checkpoint import CheckpointRecord
-from ckyclaw_framework.checkpoint import Checkpoint, CheckpointBackend
-from ckyclaw_framework.model.message import Message
+from kasaya.checkpoint import Checkpoint, CheckpointBackend
+from kasaya.model.message import Message
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession

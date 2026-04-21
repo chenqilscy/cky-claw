@@ -1,16 +1,13 @@
 """Guardrail 规则请求/响应 Schema。"""
 
 from __future__ import annotations
+import uuid
+from datetime import datetime
 
 import re
 from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
-
-if TYPE_CHECKING:
-    import uuid
-    from datetime import datetime
-
 
 class GuardrailRuleCreate(BaseModel):
     """创建 Guardrail 规则请求。"""
@@ -45,7 +42,6 @@ class GuardrailRuleCreate(BaseModel):
             raise ValueError("名称只能包含小写字母、数字、下划线和连字符")
         return v
 
-
 class GuardrailRuleUpdate(BaseModel):
     """更新 Guardrail 规则请求（PATCH 语义）。"""
 
@@ -74,7 +70,6 @@ class GuardrailRuleUpdate(BaseModel):
                 raise ValueError(f"mode 必须是 {allowed} 之一")
         return v
 
-
 class GuardrailRuleResponse(BaseModel):
     """Guardrail 规则响应。"""
 
@@ -90,7 +85,6 @@ class GuardrailRuleResponse(BaseModel):
     is_enabled: bool
     created_at: datetime
     updated_at: datetime
-
 
 class GuardrailRuleListResponse(BaseModel):
     """Guardrail 规则列表响应。"""

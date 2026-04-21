@@ -57,7 +57,7 @@ describe('LoginPage', () => {
       <AntApp><MemoryRouter><LoginPage />
       </MemoryRouter></AntApp>,
     );
-    expect(screen.getByText('CkyClaw')).toBeDefined();
+    expect(screen.getByText('Kasaya')).toBeDefined();
     expect(screen.getByPlaceholderText('用户名')).toBeDefined();
     expect(screen.getByPlaceholderText('密码')).toBeDefined();
   });

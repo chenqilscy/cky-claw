@@ -1,4 +1,4 @@
-# CkyClaw 工具组方案重设计
+# Kasaya 工具组方案重设计
 
 > 版本：v1.1
 > 日期：2026-04-15
@@ -8,7 +8,7 @@
 
 ### 1.1 现状
 
-工具组（ToolGroup）是 CkyClaw Framework 的核心抽象之一，用于将工具按功能域分组管理。当前系统已有完整的 CRUD 能力：
+工具组（ToolGroup）是 Kasaya Framework 的核心抽象之一，用于将工具按功能域分组管理。当前系统已有完整的 CRUD 能力：
 
 - **Framework 层**：`ToolGroup` 数据类 + `ToolRegistry` 全局注册表 + `FunctionTool` 工具定义
 - **Backend 层**：`ToolGroupConfig` ORM + 5 个 REST API（`/api/v1/tool-groups`）
@@ -30,7 +30,7 @@
 
 ### 2.1 四种工具来源
 
-CkyClaw 平台上的"工具"有以下四种来源：
+Kasaya 平台上的"工具"有以下四种来源：
 
 | 来源 | 说明 | 工具组支持 | 配置方式 |
 |------|------|:----------:|---------|

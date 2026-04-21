@@ -1,4 +1,4 @@
-"""CkyClaw Backend 基础冒烟测试。"""
+"""Kasaya Backend 基础冒烟测试。"""
 
 from __future__ import annotations
 

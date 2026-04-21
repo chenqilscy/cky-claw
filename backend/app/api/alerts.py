@@ -1,6 +1,7 @@
 """告警规则 & 告警事件 API 路由。"""
 
 from __future__ import annotations
+import uuid
 
 from typing import TYPE_CHECKING
 
@@ -22,7 +23,6 @@ from app.schemas.alert import (
 from app.services import alert as alert_service
 
 if TYPE_CHECKING:
-    import uuid
 
     from sqlalchemy.ext.asyncio import AsyncSession
 

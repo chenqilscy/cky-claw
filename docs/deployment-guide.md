@@ -1,6 +1,6 @@
-# CkyClaw 部署指南
+# Kasaya 部署指南
 
-> 本文档介绍如何使用 Docker Compose 一键部署 CkyClaw 平台。
+> 本文档介绍如何使用 Docker Compose 一键部署 Kasaya 平台。
 
 ## 环境要求
 
@@ -29,14 +29,14 @@ cd cky-claw
 POSTGRES_PASSWORD=your_secure_password_here
 
 # JWT 密钥（必须修改，建议 32 位随机字符串）
-CKYCLAW_SECRET_KEY=your-random-jwt-secret-key-32chars
+KASAYA_SECRET_KEY=your-random-jwt-secret-key-32chars
 
 # 可选配置
-CKYCLAW_DEBUG=false
-CKYCLAW_CORS_ORIGINS=["http://localhost:3000"]
+KASAYA_DEBUG=false
+KASAYA_CORS_ORIGINS=["http://localhost:3000"]
 ```
 
-> **安全警告**：生产环境必须修改 `POSTGRES_PASSWORD` 和 `CKYCLAW_SECRET_KEY`，不要使用默认值。
+> **安全警告**：生产环境必须修改 `POSTGRES_PASSWORD` 和 `KASAYA_SECRET_KEY`，不要使用默认值。
 
 ### 3. 启动服务
 
@@ -67,7 +67,7 @@ docker-compose exec backend uv run alembic upgrade head
 curl http://localhost:8000/health
 
 # 预期响应
-# {"status":"ok","service":"CkyClaw","version":"0.1.0"}
+# {"status":"ok","service":"Kasaya","version":"0.1.0"}
 ```
 
 访问 `http://localhost:3000` 进入 Web 界面。
@@ -76,23 +76,23 @@ curl http://localhost:8000/health
 
 | 变量名 | 默认值 | 说明 |
 |--------|--------|------|
-| `POSTGRES_PASSWORD` | `ckyclaw_dev` | PostgreSQL 密码 |
-| `CKYCLAW_DATABASE_URL` | 自动拼接 | 数据库连接字符串（Docker 内自动设置） |
-| `CKYCLAW_REDIS_URL` | `redis://redis:6379/0` | Redis 连接字符串 |
-| `CKYCLAW_SECRET_KEY` | `dev-secret-key-...` | JWT 签名密钥 |
-| `CKYCLAW_ACCESS_TOKEN_EXPIRE_MINUTES` | `1440`（24h） | Token 有效期（分钟） |
-| `CKYCLAW_DEBUG` | `true` | 调试模式 |
-| `CKYCLAW_CORS_ORIGINS` | `["http://localhost:3000", "http://localhost:5173"]` | CORS 允许来源 |
-| `CKYCLAW_OAUTH_GITHUB_CLIENT_ID` | （空） | GitHub OAuth App Client ID |
-| `CKYCLAW_OAUTH_GITHUB_CLIENT_SECRET` | （空） | GitHub OAuth App Client Secret |
-| `CKYCLAW_OAUTH_REDIRECT_BASE_URL` | `http://localhost:3000` | OAuth 回调基础 URL |
-| `CKYCLAW_OAUTH_WECOM_CORP_ID` | （空） | 企微 CorpID |
-| `CKYCLAW_OAUTH_WECOM_AGENT_ID` | （空） | 企微应用 AgentID |
-| `CKYCLAW_OAUTH_WECOM_SECRET` | （空） | 企微应用 Secret |
-| `CKYCLAW_OAUTH_DINGTALK_CLIENT_ID` | （空） | 钉钉 OAuth AppKey (ClientID) |
-| `CKYCLAW_OAUTH_DINGTALK_CLIENT_SECRET` | （空） | 钉钉 OAuth AppSecret (ClientSecret) |
-| `CKYCLAW_OAUTH_FEISHU_APP_ID` | （空） | 飞书 App ID |
-| `CKYCLAW_OAUTH_FEISHU_APP_SECRET` | （空） | 飞书 App Secret |
+| `POSTGRES_PASSWORD` | `kasaya_dev` | PostgreSQL 密码 |
+| `KASAYA_DATABASE_URL` | 自动拼接 | 数据库连接字符串（Docker 内自动设置） |
+| `KASAYA_REDIS_URL` | `redis://redis:6379/0` | Redis 连接字符串 |
+| `KASAYA_SECRET_KEY` | `dev-secret-key-...` | JWT 签名密钥 |
+| `KASAYA_ACCESS_TOKEN_EXPIRE_MINUTES` | `1440`（24h） | Token 有效期（分钟） |
+| `KASAYA_DEBUG` | `true` | 调试模式 |
+| `KASAYA_CORS_ORIGINS` | `["http://localhost:3000", "http://localhost:5173"]` | CORS 允许来源 |
+| `KASAYA_OAUTH_GITHUB_CLIENT_ID` | （空） | GitHub OAuth App Client ID |
+| `KASAYA_OAUTH_GITHUB_CLIENT_SECRET` | （空） | GitHub OAuth App Client Secret |
+| `KASAYA_OAUTH_REDIRECT_BASE_URL` | `http://localhost:3000` | OAuth 回调基础 URL |
+| `KASAYA_OAUTH_WECOM_CORP_ID` | （空） | 企微 CorpID |
+| `KASAYA_OAUTH_WECOM_AGENT_ID` | （空） | 企微应用 AgentID |
+| `KASAYA_OAUTH_WECOM_SECRET` | （空） | 企微应用 Secret |
+| `KASAYA_OAUTH_DINGTALK_CLIENT_ID` | （空） | 钉钉 OAuth AppKey (ClientID) |
+| `KASAYA_OAUTH_DINGTALK_CLIENT_SECRET` | （空） | 钉钉 OAuth AppSecret (ClientSecret) |
+| `KASAYA_OAUTH_FEISHU_APP_ID` | （空） | 飞书 App ID |
+| `KASAYA_OAUTH_FEISHU_APP_SECRET` | （空） | 飞书 App Secret |
 
 ## 服务架构
 
@@ -172,10 +172,10 @@ pnpm dev
 
 ```bash
 # 检查 PostgreSQL 是否就绪
-docker-compose exec db pg_isready -U ckyclaw
+docker-compose exec db pg_isready -U kasaya
 
 # 检查数据库是否存在
-docker-compose exec db psql -U ckyclaw -c "\l"
+docker-compose exec db psql -U kasaya -c "\l"
 ```
 
 ### 端口冲突

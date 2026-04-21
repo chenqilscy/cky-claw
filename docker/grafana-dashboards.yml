@@ -1,9 +1,9 @@
 apiVersion: 1
 
 providers:
-  - name: CkyClaw Logs
+  - name: Kasaya Logs
     orgId: 1
-    folder: CkyClaw
+    folder: Kasaya
     type: file
     disableDeletion: false
     editable: true

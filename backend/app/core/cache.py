@@ -72,7 +72,7 @@ config_cache = ConfigCache()
 
 def make_cache_key(entity_type: str, *parts: str) -> str:
     """构造缓存 key。"""
-    return f"ckyclaw:{entity_type}:" + ":".join(parts)
+    return f"kasaya:{entity_type}:" + ":".join(parts)
 
 
 def make_list_cache_key(entity_type: str, params: dict[str, Any] | None = None) -> str:
@@ -80,5 +80,5 @@ def make_list_cache_key(entity_type: str, params: dict[str, Any] | None = None) 
     if params:
         raw = json.dumps(params, sort_keys=True, default=str)
         h = hashlib.md5(raw.encode(), usedforsecurity=False).hexdigest()[:8]
-        return f"ckyclaw:{entity_type}:list:{h}"
-    return f"ckyclaw:{entity_type}:list:all"
+        return f"kasaya:{entity_type}:list:{h}"
+    return f"kasaya:{entity_type}:list:all"

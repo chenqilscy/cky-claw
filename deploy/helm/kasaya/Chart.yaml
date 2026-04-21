@@ -1,0 +1,14 @@
+apiVersion: v2
+name: kasaya
+description: Kasaya AI Agent 管理与运行平台
+type: application
+version: 0.1.0
+appVersion: "4.1.0"
+keywords:
+  - ai
+  - agent
+  - llm
+  - platform
+home: https://github.com/cky-claw/kasaya
+maintainers:
+  - name: Kasaya Team

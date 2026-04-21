@@ -98,12 +98,12 @@ describe('JsonEditor', () => {
   });
 
   it('createJsonValidatorRule 对合法 JSON 放行', async () => {
-    const rule = createJsonValidatorRule();
-    await expect(rule.validator?.({}, '{"ok":true}')).resolves.toBeUndefined();
+    const rule = createJsonValidatorRule() as { validator: (_: unknown, value: unknown) => Promise<void> };
+    await expect(rule.validator({}, '{"ok":true}')).resolves.toBeUndefined();
   });
 
   it('createJsonValidatorRule 对非法 JSON 报错', async () => {
-    const rule = createJsonValidatorRule('bad json');
-    await expect(rule.validator?.({}, '{bad')).rejects.toThrow('bad json');
+    const rule = createJsonValidatorRule('bad json') as { validator: (_: unknown, value: unknown) => Promise<void> };
+    await expect(rule.validator({}, '{bad')).rejects.toThrow('bad json');
   });
 });

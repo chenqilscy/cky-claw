@@ -1,6 +1,7 @@
 """MCP Server 配置管理 API。"""
 
 from __future__ import annotations
+import uuid
 
 from typing import TYPE_CHECKING
 
@@ -17,7 +18,6 @@ from app.schemas.mcp_server import (
 from app.services import mcp_server as mcp_service
 
 if TYPE_CHECKING:
-    import uuid
 
     from sqlalchemy.ext.asyncio import AsyncSession
 
